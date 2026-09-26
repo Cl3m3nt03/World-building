@@ -2,6 +2,7 @@ mod commands;
 mod db;
 mod error;
 mod logging;
+mod paths;
 mod protocol;
 mod settings;
 mod state;
@@ -20,6 +21,7 @@ pub const BINDINGS_PATH: &str = "../src/lib/bindings.ts";
 pub fn specta_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new().commands(collect_commands![
         commands::app::app_info,
+        commands::app::default_worlds_dir,
         commands::assets::import_asset,
         commands::settings::get_settings,
         commands::settings::update_preferences,
@@ -40,11 +42,11 @@ pub fn run() -> tauri::Result<()> {
         .invoke_handler(builder.invoke_handler())
         .register_asynchronous_uri_scheme_protocol(protocol::SCHEME, protocol::handle)
         .setup(|app| {
-            let log_dir = app.path().app_log_dir()?;
+            let log_dir = paths::log_dir(app.handle())?;
             let guard = logging::init(&log_dir)?;
             app.manage(guard);
 
-            let config_dir = app.path().app_config_dir()?;
+            let config_dir = paths::config_dir(app.handle())?;
             let settings = settings::load(&config_dir);
             app.manage(state::AppState::new(config_dir, settings));
             tracing::info!(

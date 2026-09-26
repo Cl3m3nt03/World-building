@@ -1,4 +1,3 @@
-import { documentDir, join } from "@tauri-apps/api/path";
 import { open as pickFolder } from "@tauri-apps/plugin-dialog";
 import { FolderOpen } from "lucide-react";
 import { type FormEvent, useEffect, useId, useState } from "react";
@@ -14,11 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { commands } from "@/lib/bindings";
+import { unwrap } from "@/lib/ipc";
 import { useCreateWorld } from "../hooks/useWorlds";
 
-/** Suggested location for new worlds: Documents\BuilderZ. */
-async function defaultParentDir(): Promise<string> {
-  return join(await documentDir(), "BuilderZ");
+/** Suggested location for new worlds, from Rust (Documents\BuilderZ by default). */
+function defaultParentDir(): Promise<string> {
+  return unwrap(commands.defaultWorldsDir());
 }
 
 type CreateWorldDialogProps = {

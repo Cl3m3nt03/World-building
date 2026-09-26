@@ -75,3 +75,62 @@ jobs:
             echo "::error file=src/lib/bindings.ts::Bindings are out of date. Run 'pnpm bindings' and commit the result."
             exit 1
           fi
+
+  e2e:
+    name: End-to-end tests
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          # Also caches ~/.cargo/bin, so tauri-driver is not rebuilt every run.
+          cache-bin: true
+
+      - name: Install tauri-driver
+        shell: bash
+        run: |
+          if ! command -v tauri-driver >/dev/null; then
+            cargo install tauri-driver@2.0.6 --locked
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: WebView2 and Edge versions
+        shell: pwsh
+        run: |
+          foreach ($dir in "${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application", "${env:ProgramFiles(x86)}\Microsoft\Edge\Application") {
+            if (Test-Path $dir) { Get-ChildItem $dir -Directory | Where-Object Name -match '^\d' | ForEach-Object { "$dir\$($_.Name)" } }
+          }
+
+      # Installs the msedgedriver matching the runner's WebView2, builds the
+      # app in debug mode, then runs e2e/specs with a temporary BUILDERZ_HOME.
+      - name: End-to-end tests
+        run: pnpm test:e2e
+        env:
+          # Kept for the artifact below (the runner context only exists at step level).
+          BUILDERZ_HOME: ${{ runner.temp }}\builderz-e2e
+          E2E_KEEP_HOME: "1"
+          E2E_DRIVER_LOG: ${{ runner.temp }}\msedgedriver.log
+
+      - name: Upload e2e logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            ${{ runner.temp }}\msedgedriver.log
+            ${{ runner.temp }}\builderz-e2e\logs
+          if-no-files-found: warn

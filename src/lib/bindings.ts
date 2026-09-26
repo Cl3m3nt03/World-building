@@ -5,6 +5,8 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	appInfo: () => typedError<AppInfo, AppError>(__TAURI_INVOKE("app_info")),
+	/**  Suggested parent folder for new worlds (`Documents\BuilderZ` by default). */
+	defaultWorldsDir: () => typedError<string, AppError>(__TAURI_INVOKE("default_worlds_dir")),
 	/**
 	 *  Copies the file at `path` into the open world's `assets/`, named by its
 	 *  content hash. Importing the same content again returns the existing asset.
