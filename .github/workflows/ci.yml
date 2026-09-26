@@ -170,5 +170,6 @@ jobs:
           path: |
             ${{ runner.temp }}\msedgedriver.log
             ${{ runner.temp }}\builderz-e2e\logs
+            ${{ runner.temp }}\builderz-e2e\webview2\**\*.log
             ${{ runner.temp }}\webview2-logs
           if-no-files-found: warn
