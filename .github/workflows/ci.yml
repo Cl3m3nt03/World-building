@@ -115,6 +115,15 @@ jobs:
             if (Test-Path $dir) { Get-ChildItem $dir -Directory | Where-Object Name -match '^\d' | ForEach-Object { "$dir\$($_.Name)" } }
           }
 
+      # Diagnostic: records the command lines of the app, WebView2 and driver
+      # processes while the tests run, to see which arguments WebView2 gets.
+      - name: Start process watcher
+        shell: pwsh
+        run: |
+          $log = Join-Path $env:RUNNER_TEMP 'processes.log'
+          Start-Process pwsh -WindowStyle Hidden -ArgumentList '-NoProfile', '-File', 'scripts/watch-processes.ps1', '-LogPath', "`"$log`""
+          "Watching processes into $log"
+
       # Installs the msedgedriver matching the runner's WebView2, builds the
       # app in debug mode, then runs e2e/specs with a temporary BUILDERZ_HOME.
       - name: End-to-end tests
@@ -171,5 +180,6 @@ jobs:
             ${{ runner.temp }}\msedgedriver.log
             ${{ runner.temp }}\builderz-e2e\logs
             ${{ runner.temp }}\builderz-e2e\webview2\**\*.log
+            ${{ runner.temp }}\processes.log
             ${{ runner.temp }}\webview2-logs
           if-no-files-found: warn
