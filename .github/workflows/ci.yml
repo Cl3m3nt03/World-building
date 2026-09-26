@@ -63,3 +63,13 @@ jobs:
 
       - name: Tests (cargo)
         run: pnpm test:rust
+
+      # `cargo test` regenerates src/lib/bindings.ts (export_bindings test):
+      # any difference means the committed bindings are out of date.
+      - name: Bindings up to date
+        shell: bash
+        run: |
+          if ! git diff --exit-code -- src/lib/bindings.ts; then
+            echo "::error file=src/lib/bindings.ts::Bindings are out of date. Run 'pnpm bindings' and commit the result."
+            exit 1
+          fi

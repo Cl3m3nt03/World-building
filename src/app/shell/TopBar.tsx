@@ -4,11 +4,13 @@ import {
   Feather,
   Globe,
   House,
+  Info,
   LayoutGrid,
   type LucideIcon,
   Radio,
   Settings,
 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import type { ThemePreference } from "@/app/theme";
@@ -17,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -25,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AboutDialog } from "@/features/settings";
 import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
@@ -75,6 +79,7 @@ export function TopBar({ activeTab }: TopBarProps) {
   const setTheme = useUiStore((state) => state.setTheme);
   const transparency = useUiStore((state) => state.transparency);
   const setTransparency = useUiStore((state) => state.setTransparency);
+  const [aboutOpen, setAboutOpen] = useState(false);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
@@ -176,8 +181,14 @@ export function TopBar({ activeTab }: TopBarProps) {
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setAboutOpen(true)}>
+              <Info />
+              {t("shell.actions.about")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
         <Button asChild variant="secondary" size="sm" className="ml-0.5 rounded-full">
           <Link to="/">

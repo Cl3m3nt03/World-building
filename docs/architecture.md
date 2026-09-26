@@ -72,7 +72,30 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 
 ## Back (`src-tauri/`)
 
-À compléter (issues 0.8, 0.9, 0.10) : couches `commands` / `domain` / `db` / `world`, `AppError`, logs.
+À compléter (issues 0.9, 0.10) : couches `domain` / `db` / `world`.
+
+### Commandes et contrat front ↔ back
+
+- Les commandes vivent dans `src-tauri/src/commands/` (couche fine : validation, appel du domaine, conversion des erreurs). Chacune est annotée `#[tauri::command]` et `#[specta::specta]`, puis enregistrée dans `specta_builder()` (`src-tauri/src/lib.rs`).
+- **Bindings** : `src/lib/bindings.ts` est généré par **tauri-specta** à partir de `specta_builder()`. La génération se fait dans le test Rust `export_bindings`, donc à chaque `cargo test`. Pour la lancer seule : `pnpm bindings`. Le fichier est versionné, et la CI échoue s'il diffère de ce que produit le code (`git diff --exit-code`).
+- Côté front, une commande renvoie `{ status: "ok", data } | { status: "error", error }`. Dans les hooks TanStack Query, `unwrap()` (`src/lib/ipc.ts`) transforme l'erreur en `IpcError`.
+- **Permissions** : une permission par commande (ADR 0001). La liste des commandes est déclarée dans `src-tauri/build.rs` (`COMMANDS`). Tauri génère une permission `allow-<commande>` pour chacune, à accorder dans `capabilities/default.json`. Une commande absente de ces deux endroits est refusée à l'exécution.
+
+Ajouter une commande : l'écrire dans `commands/`, l'ajouter à `specta_builder()` et à `COMMANDS`, accorder `allow-<commande>`, lancer `pnpm bindings` et committer `bindings.ts`.
+
+### Erreurs
+
+- Un seul type, `AppError` (`src-tauri/src/error.rs`, `thiserror`). Il est sérialisé en `{ code, message }` : `code` (`io`, `path_unavailable`, `internal`…) est traduit côté front par la clé i18n `errors.<code>`, et `message` n'est affiché que comme détail technique.
+- Côté front, `AppErrorMessage` affiche le message traduit et le détail.
+- Pas de `unwrap()` ni d'`expect()` hors des tests : clippy les refuse (`Cargo.toml`, `[lints.clippy]`).
+
+### Logs
+
+`tracing` écrit dans un fichier journalier de `%LOCALAPPDATA%\app.builderz.desktop\logs\` (14 fichiers gardés), et aussi sur la sortie d'erreur en debug. Le niveau par défaut est `info` (`debug` pour BuilderZ), modifiable avec `RUST_LOG`. Initialisation dans `src-tauri/src/logging.rs`.
+
+### Windows : manifeste et tests
+
+Tauri n'embarque le manifeste Windows (Common Controls v6) que dans l'exécutable de l'app. Les binaires de test plantaient donc au lancement (`STATUS_ENTRYPOINT_NOT_FOUND`). `build.rs` désactive ce manifeste et embarque `windows-app-manifest.xml` dans toutes les cibles via l'éditeur de liens.
 
 ## Format d'un monde
 
