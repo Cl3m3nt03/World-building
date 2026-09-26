@@ -1,4 +1,3 @@
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { FolderOpen, FolderSearch, Globe, MoreHorizontal, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -11,9 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { RecentWorld } from "@/lib/bindings";
 import { genreLabel } from "../genres";
-
-/** Protocol serving cached world thumbnails (src-tauri/src/thumbnails.rs). */
-const THUMBNAIL_SCHEME = "bzthumb";
+import { thumbnailUrl } from "../thumbnails";
 
 function formatDate(iso: string, language: string): string {
   const date = new Date(iso);
@@ -45,11 +42,7 @@ export function WorldCard({
   onRemove,
 }: WorldCardProps) {
   const { t, i18n } = useTranslation();
-  // The query only busts the WebView cache when the thumbnail is regenerated.
-  const thumbnail =
-    world.thumbnail && world.id && !missing
-      ? `${convertFileSrc(world.id, THUMBNAIL_SCHEME)}?v=${encodeURIComponent(world.lastOpenedAt)}`
-      : undefined;
+  const thumbnail = missing ? undefined : thumbnailUrl(world);
 
   return (
     <div className="glass group relative flex w-full flex-col overflow-hidden rounded-lg">

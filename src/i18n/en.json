@@ -1,5 +1,5 @@
 {
-  "shell.world.label": "Current world",
+  "shell.world.label": "Current world: {{name}}. Edit the world",
   "shell.tabs.label": "Modes",
   "shell.tabs.home": "Home",
   "shell.tabs.world": "World",
@@ -139,5 +139,17 @@
   "imagePicker.listLabel": "Media library images",
   "imagePicker.empty": "No image in the media library yet. Import one.",
   "imagePicker.choose": "Choose",
-  "imagePicker.notAnImage": "This file was imported into the media library, but it is not an image."
+  "imagePicker.notAnImage": "This file was imported into the media library, but it is not an image.",
+  "worldPanel.title": "The world",
+  "worldPanel.description": "Changes are saved automatically.",
+  "worldPanel.mainImage": "Main image of the world",
+  "worldPanel.chooseImage": "Choose an image",
+  "worldPanel.changeImage": "Change image",
+  "worldPanel.removeImage": "Remove",
+  "worldPanel.pickerTitle": "Main image of the world",
+  "worldPanel.name": "Name",
+  "worldPanel.nameRequired": "The name cannot be empty: the previous name is kept.",
+  "worldPanel.worldDescription": "Description",
+  "worldPanel.descriptionPlaceholder": "What is this world about?",
+  "worldPanel.saving": "Saving…"
 }

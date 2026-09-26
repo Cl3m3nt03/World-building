@@ -1,10 +1,12 @@
 import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon, Radio } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AssetImage } from "@/features/media";
 import { SettingsButton } from "@/features/settings";
-import { useCloseWorld, useCurrentWorld } from "@/features/world";
+import { useCloseWorld, useCurrentWorld, WorldPanel } from "@/features/world";
 import type { TranslationKey } from "@/i18n";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
@@ -38,18 +40,32 @@ export function TopBar({ activeTab }: TopBarProps) {
   const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
+  const [panelOpen, setPanelOpen] = useState(false);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
       <div className="justify-self-start">
         <Button
           variant="ghost"
-          aria-label={t("shell.world.label")}
-          className="glass h-10 rounded-lg px-2.5 font-heading text-sm"
+          aria-label={t("shell.world.label", { name: world?.name ?? "" })}
+          aria-haspopup="dialog"
+          aria-expanded={panelOpen}
+          onClick={() => setPanelOpen(true)}
+          disabled={!world}
+          className="glass h-10 max-w-64 rounded-lg px-2.5 font-heading text-sm"
         >
-          <span aria-hidden className="size-5 rounded-sm bg-primary/80" />
-          {world?.name}
+          {world?.mainImage ? (
+            <AssetImage
+              assetId={world.mainImage}
+              alt=""
+              className="size-5 shrink-0 rounded-sm object-cover"
+            />
+          ) : (
+            <span aria-hidden className="size-5 shrink-0 rounded-sm bg-primary/80" />
+          )}
+          <span className="truncate">{world?.name}</span>
         </Button>
+        {world && <WorldPanel world={world} open={panelOpen} onOpenChange={setPanelOpen} />}
       </div>
 
       {/* Center island: modes */}
