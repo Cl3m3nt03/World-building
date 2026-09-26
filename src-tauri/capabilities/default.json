@@ -9,6 +9,7 @@
     "allow-app-info",
     "allow-default-worlds-dir",
     "allow-import-asset",
+    "allow-import-asset-data",
     "allow-list-assets",
     "allow-rename-asset",
     "allow-delete-asset",

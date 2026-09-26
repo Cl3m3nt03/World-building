@@ -63,7 +63,7 @@ Ces réglages sont stockés dans le dossier de config de l'app, pas dans un mond
 
 ## Médiathèque
 
-C'est la galerie de tous les fichiers importés dans le monde (images et, plus tard, sons). Elle permet d'importer par glisser-déposer ou collage, de renommer, de filtrer par type et de supprimer. Un fichier encore utilisé demande une confirmation avant d'être supprimé, et le message indique où il est utilisé. Tous les sélecteurs d'image de l'app (carte, map, canvas…) passent par la médiathèque.
+C'est la galerie de tous les fichiers importés dans le monde (images, sons et autres fichiers), en grille de vignettes avec le nom, le type et la taille. On y accède depuis l'onglet Home (bloc « Gérer »). On importe avec le bouton « Importer » (plusieurs fichiers à la fois), en glissant des fichiers sur la fenêtre, ou en collant une image (`Ctrl+V`, hors champ de saisie ; elle est nommée « Image collée » suivi de la date). On filtre par type (Tout, Images, Sons, Autres) et on recherche par nom. Elle permet d'importer par glisser-déposer ou collage, de renommer, de filtrer par type et de supprimer. Un fichier encore utilisé demande une confirmation avant d'être supprimé, et le message indique où il est utilisé. Tous les sélecteurs d'image de l'app (carte, map, canvas…) passent par la médiathèque.
 
 ## Radio
 

@@ -15,6 +15,8 @@ export const commands = {
 	 *  its content hash. Importing the same content again returns the existing asset.
 	 */
 	importAsset: (path: string) => typedError<ImportedAsset, AppError>(__TAURI_INVOKE("import_asset", { path })),
+	/**  Imports raw content (an image pasted from the clipboard) under `name`. */
+	importAssetData: (name: string, data: number[]) => typedError<ImportedAsset, AppError>(__TAURI_INVOKE("import_asset_data", { name, data })),
 	/**  Assets of the open world, newest first. */
 	listAssets: (filter: AssetFilter) => typedError<Asset[], AppError>(__TAURI_INVOKE("list_assets", { filter })),
 	/**  Changes the name shown for an asset (its file keeps its hash name). */

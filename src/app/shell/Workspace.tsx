@@ -1,11 +1,18 @@
-import { LayoutGrid, type LucideIcon, Map as MapIcon, Share2, SquareUser } from "lucide-react";
+import { Link, useParams } from "@tanstack/react-router";
+import {
+  Images,
+  LayoutGrid,
+  type LucideIcon,
+  Map as MapIcon,
+  Share2,
+  SquareUser,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ImportDropZone } from "@/features/media";
 import type { TranslationKey } from "@/i18n";
 
 /** Document kinds and the milestone that brings each one (docs/roadmap). */
@@ -89,12 +96,18 @@ export function WorldWorkspace() {
 
 export function HomePlaceholder() {
   const { t } = useTranslation();
+  const { worldId } = useParams({ from: "/world/$worldId" });
   return (
     <main className="mx-auto flex h-full w-full max-w-5xl flex-col gap-2 px-8 pt-10">
       <h1 className="text-4xl font-bold">{t("home.welcome")}</h1>
       <p className="text-sm text-muted-foreground">{t("placeholder.comingSoon")}</p>
-      <div className="mt-6 max-w-md">
-        <ImportDropZone />
+      <div className="mt-6">
+        <Button asChild variant="secondary" className="rounded-full">
+          <Link to="/world/$worldId/media" params={{ worldId }}>
+            <Images />
+            {t("media.title")}
+          </Link>
+        </Button>
       </div>
     </main>
   );

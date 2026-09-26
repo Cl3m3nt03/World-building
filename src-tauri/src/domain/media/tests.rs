@@ -230,3 +230,38 @@ async fn delete_removes_the_row_and_the_file() {
         Err(AppError::InvalidInput(_))
     ));
 }
+
+#[tokio::test]
+async fn pasted_content_is_imported_under_the_given_name() {
+    let fx = Fixture::new().await;
+
+    let imported = import_bytes(
+        fx.pool(),
+        &fx.assets(),
+        "Image collée.png",
+        PIXEL_PNG.to_vec(),
+    )
+    .await
+    .unwrap();
+
+    assert!(imported.created);
+    assert_eq!(imported.asset.name, "Image collée.png");
+    assert_eq!(imported.asset.kind, AssetKind::Image);
+    assert!(imported.asset.id.ends_with(".png"));
+    // Only the asset itself is left in assets/, no temporary file.
+    let files: Vec<_> = std::fs::read_dir(fx.assets()).unwrap().collect();
+    assert_eq!(files.len(), 1);
+}
+
+#[tokio::test]
+async fn empty_or_nameless_pasted_content_is_refused() {
+    let fx = Fixture::new().await;
+    assert!(matches!(
+        import_bytes(fx.pool(), &fx.assets(), "a.png", Vec::new()).await,
+        Err(AppError::InvalidInput(_))
+    ));
+    assert!(matches!(
+        import_bytes(fx.pool(), &fx.assets(), "  ", PIXEL_PNG.to_vec()).await,
+        Err(AppError::InvalidInput(_))
+    ));
+}
