@@ -6,6 +6,7 @@
   "permissions": [
     "core:default",
     "allow-app-info",
+    "allow-import-asset",
     "allow-get-settings",
     "allow-update-preferences",
     "allow-create-world",

@@ -57,5 +57,12 @@
   "errors.world_too_new": "This world was saved by a newer version of BuilderZ. Update the app to open it.",
   "errors.no_world_open": "No world is open.",
   "errors.database": "The world database returned an error.",
-  "errors.migration": "Updating the world failed. A backup was kept in its folder."
+  "errors.migration": "Updating the world failed. A backup was kept in its folder.",
+  "media.dropZone": "File import",
+  "media.dropHint": "Drop an image on the window to import it into the open world.",
+  "media.dropActive": "Release to import",
+  "media.importing": "Importing…",
+  "media.previewAlt": "Preview of {{name}}",
+  "media.imported": "Imported: {{name}}",
+  "media.alreadyImported": "Already in the world: {{name}}"
 }

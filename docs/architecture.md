@@ -81,7 +81,16 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 | `state.rs` | État partagé : réglages et monde ouvert (un seul à la fois) |
 | `domain/` | Logique métier, à venir avec M1 et M2 |
 
-À compléter (issue 0.10) : assets.
+### Assets
+
+- **Import** (`import_asset`, `src-tauri/src/world/assets.rs`) : le fichier est copié dans `assets/` du monde ouvert sous le nom `<sha256>.<ext>` (extension en minuscules, gardée seulement si elle est courte et alphanumérique). Le hachage se fait pendant la copie, dans un fichier temporaire ensuite renommé. Importer deux fois le même contenu ne le stocke qu'une fois (`created: false`). L'**identifiant d'un asset est ce nom de fichier**.
+- **Affichage** : protocole dédié `bzasset://` (`src-tauri/src/protocol.rs`), servi sur Windows à `http://bzasset.localhost/<id>`. Côté front, `useAssetUrl(assetId)` / `assetUrl(assetId)` (`src/lib/assets.ts`) construisent l'URL, et `AssetImage` affiche une image.
+- **Sécurité** (règle de l'ADR 0001 : « le protocole d'assets est limité au dossier `assets/` du monde ouvert ») :
+  - le protocole `asset:` générique de Tauri n'est **pas** activé : il donne accès à des chemins arbitraires dans son scope ;
+  - `bzasset://` n'accepte qu'un identifiant au format exact `<64 hexa>[.<ext>]`, vérifié avant tout accès disque (pas de séparateur, pas de `..`, pas de chemin absolu), et ne lit que dans `assets/` du monde **ouvert** : sans monde ouvert, tout est 404 ;
+  - réponses avec `X-Content-Type-Options: nosniff` et une CSP `default-src 'none'` (un SVG ouvert seul ne peut pas exécuter de script) ;
+  - la CSP de l'app n'autorise `bzasset:` que pour `img-src` et `media-src`.
+- La médiathèque (M1) ajoutera les métadonnées des assets (nom, type, usages) dans la base.
 
 ### Base de données
 

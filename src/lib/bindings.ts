@@ -5,6 +5,11 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	appInfo: () => typedError<AppInfo, AppError>(__TAURI_INVOKE("app_info")),
+	/**
+	 *  Copies the file at `path` into the open world's `assets/`, named by its
+	 *  content hash. Importing the same content again returns the existing asset.
+	 */
+	importAsset: (path: string) => typedError<AssetInfo, AppError>(__TAURI_INVOKE("import_asset", { path })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -66,6 +71,18 @@ export type AppSettings = {
 	preferences: Preferences,
 	/**  Most recently opened first. */
 	recentWorlds: RecentWorld[],
+};
+
+/**  An imported file. */
+export type AssetInfo = {
+	/**  `<sha256>.<ext>`: file name in `assets/`, used by `useAssetUrl`. */
+	id: string,
+	/**  Name of the imported file, for display. */
+	originalName: string,
+	/**  Size in bytes (u32 is not enough, and u64 has no safe JS type). */
+	size: number | null,
+	/**  False when the same content was already in the world. */
+	created: boolean,
 };
 
 export type Language = "fr" | "en";

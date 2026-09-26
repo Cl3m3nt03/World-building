@@ -4,6 +4,7 @@ import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ImportDropZone } from "@/features/media";
 import type { TranslationKey } from "@/i18n";
 
 const CREATE_TILES: { icon: LucideIcon; label: TranslationKey }[] = [
@@ -75,6 +76,9 @@ export function HomePlaceholder() {
     <main className="mx-auto flex h-full w-full max-w-5xl flex-col gap-2 px-8 pt-10">
       <h1 className="text-4xl font-bold">{t("home.welcome")}</h1>
       <p className="text-sm text-muted-foreground">{t("placeholder.comingSoon")}</p>
+      <div className="mt-6 max-w-md">
+        <ImportDropZone />
+      </div>
     </main>
   );
 }

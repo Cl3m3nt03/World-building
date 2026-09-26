@@ -3,5 +3,6 @@
 //! and allowed in `build.rs` / `capabilities/default.json`.
 
 pub mod app;
+pub mod assets;
 pub mod settings;
 pub mod world;

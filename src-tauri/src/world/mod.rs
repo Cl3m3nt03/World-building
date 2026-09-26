@@ -23,6 +23,8 @@ use uuid::Uuid;
 use crate::db;
 use crate::error::{AppError, AppResult};
 
+pub mod assets;
+
 pub const WORLD_FILE: &str = "world.json";
 pub const DB_FILE: &str = "world.db";
 pub const ASSETS_DIR: &str = "assets";
@@ -77,6 +79,10 @@ impl OpenWorld {
             created_at: format_date(self.file.created_at),
             last_opened_at: format_date(self.file.last_opened_at),
         }
+    }
+
+    pub fn assets_dir(&self) -> PathBuf {
+        self.root.join(ASSETS_DIR)
     }
 
     /// Closes the database pool; WAL is checkpointed when the last connection closes.
