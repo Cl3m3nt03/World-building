@@ -37,7 +37,6 @@
   "notFound.description": "Cette page n'existe pas.",
   "worlds.title": "Mondes",
   "worlds.empty": "Aucun monde récent. Créez un monde ou ouvrez un dossier monde existant.",
-  "shell.actions.about": "À propos",
   "about.title": "À propos de BuilderZ",
   "about.description": "Version de l'application et dossiers utilisés sur ce PC.",
   "about.version": "Version",
@@ -80,5 +79,15 @@
   "createWorld.creating": "Création…",
   "placeholder.comingIn": "Bientôt disponible : arrive avec {{milestone}}",
   "placeholder.wiki": "Le wiki présentera votre monde en pages soignées, une par carte ou par map, et pourra être exporté en site web.",
-  "placeholder.quill": "Quill servira à écrire vos histoires à côté de votre monde, avec vos cartes toujours à portée de main."
+  "placeholder.quill": "Quill servira à écrire vos histoires à côté de votre monde, avec vos cartes toujours à portée de main.",
+  "settings.title": "Réglages",
+  "settings.description": "Préférences de BuilderZ sur ce PC. Elles ne sont pas enregistrées dans vos mondes.",
+  "settings.transparencyHint": "Désactivez-les pour des panneaux opaques, plus contrastés et plus légers pour la machine.",
+  "settings.worldsDir": "Dossier des nouveaux mondes",
+  "settings.worldsDirHint": "Emplacement proposé quand vous créez un monde. Chaque monde y reçoit son propre dossier.",
+  "settings.worldsDirDefault": "Documents\\BuilderZ (par défaut)",
+  "settings.worldsDirChoose": "Choisir…",
+  "settings.worldsDirReset": "Par défaut",
+  "settings.worldsDirPickerTitle": "Choisir le dossier des nouveaux mondes",
+  "settings.about": "À propos"
 }

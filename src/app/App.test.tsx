@@ -26,6 +26,7 @@ const WORLD: WorldInfo = {
 const SETTINGS: AppSettings = {
   preferences: { language: "fr", theme: "system", transparencyEffects: true },
   recentWorlds: [],
+  defaultWorldsDir: null,
 };
 
 let openWorld: WorldInfo | null;

@@ -1,9 +1,10 @@
 use serde::Serialize;
 use specta::Type;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 
 use crate::error::{AppError, AppResult};
 use crate::paths;
+use crate::state::AppState;
 
 /// Version and system directories of the running app.
 #[derive(Debug, Serialize, Type)]
@@ -32,9 +33,13 @@ pub fn app_info(app: AppHandle) -> AppResult<AppInfo> {
     Ok(info)
 }
 
-/// Suggested parent folder for new worlds (`Documents\BuilderZ` by default).
+/// Suggested parent folder for new worlds: the one chosen in the settings,
+/// else `Documents/BuilderZ`.
 #[tauri::command]
 #[specta::specta]
-pub fn default_worlds_dir(app: AppHandle) -> AppResult<String> {
+pub async fn default_worlds_dir(app: AppHandle, state: State<'_, AppState>) -> AppResult<String> {
+    if let Some(dir) = state.settings.lock().await.default_worlds_dir.clone() {
+        return Ok(dir);
+    }
     Ok(paths::default_worlds_dir(&app)?.display().to_string())
 }

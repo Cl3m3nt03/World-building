@@ -26,6 +26,7 @@ const SETTINGS: AppSettings = {
   recentWorlds: [
     { path: ELDEFLEUR.path, name: ELDEFLEUR.name, lastOpenedAt: ELDEFLEUR.lastOpenedAt },
   ],
+  defaultWorldsDir: null,
 };
 
 type Call = { command: string; payload: unknown };

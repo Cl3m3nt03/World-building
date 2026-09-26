@@ -12,6 +12,7 @@ const COMMANDS: &[&str] = &[
     "delete_asset",
     "get_settings",
     "update_preferences",
+    "set_default_worlds_dir",
     "create_world",
     "open_world",
     "close_world",

@@ -14,6 +14,7 @@
     "allow-delete-asset",
     "allow-get-settings",
     "allow-update-preferences",
+    "allow-set-default-worlds-dir",
     "allow-create-world",
     "allow-open-world",
     "allow-close-world",
