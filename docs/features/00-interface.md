@@ -10,7 +10,7 @@ Définir la coque de l'application : comment on choisit un monde, comment on cir
 
 C'est le premier écran au lancement, et on peut y revenir à tout moment par le bouton « Mondes » en haut à droite.
 
-- Les mondes sont affichés en grille, avec l'image principale, le nom, le genre et la date de dernière ouverture.
+- Les mondes sont affichés en grille, avec l'image principale, le nom, le genre et la date de dernière ouverture. L'image est une **vignette** mise en cache à part : elle s'affiche sans ouvrir le monde. Un monde sans image montre un visuel par défaut.
 - On peut créer un monde (nom, genre, dossier sur le disque), ouvrir un dossier monde existant ou retirer un monde de la liste. Retirer un monde de la liste ne le supprime pas du disque.
 - Un nouveau monde est créé dans un **nouveau dossier à son nom**, à l'emplacement choisi (par défaut `Documents\BuilderZ`). L'emplacement doit donc être le dossier parent, pas le dossier du monde lui-même.
 - Revenir à la liste des mondes (bouton « Mondes ») ferme le monde ouvert.

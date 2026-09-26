@@ -123,6 +123,10 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 - Connexion : journal WAL, `synchronous = NORMAL`, clés étrangères actives, `busy_timeout` de 5 s, pool de 4 connexions. Sans l'extension `load-extension` de SQLite.
 - Tests : requêtes non vérifiées (`sqlx::query`) autorisées dans les tests qui utilisent les migrations de test (`src-tauri/tests/fixtures/`), dont les tables n'existent pas dans le vrai schéma.
 
+### Vignettes des mondes
+
+La liste des mondes affiche l'image principale de chaque monde **sans l'ouvrir** : une vignette (640 px au plus sur le grand côté, jamais agrandie, PNG) est mise en cache dans `<dossier de config>	humbnails\<id du monde>.png` (`src-tauri/src/thumbnails.rs`, crate `image`). Elle est regénérée quand l'image principale change (`set_world_main_image`), créée à l'ouverture d'un monde si elle manque, et supprimée si le monde n'a plus d'image. Les mondes récents mémorisent l'identifiant, le genre et la présence d'une vignette. Le protocole `bzthumb://<id>` la sert en lecture seule ; il n'accepte qu'un UUID, donc aucun autre fichier du dossier de config n'est atteignable. La CSP l'autorise pour `img-src` seulement.
+
 ### Réglages de l'app
 
 `settings.json` dans `%APPDATA%pp.builderz.desktop\` : préférences (langue, thème, effets de transparence), dossier des nouveaux mondes (`defaultWorldsDir`, chemin absolu ou `null` pour `Documents\BuilderZ`, via `set_default_worlds_dir` ; `default_worlds_dir` renvoie ce choix sinon la valeur par défaut) et mondes récents (10 au plus, le plus récent d'abord). Écriture atomique. Un fichier absent donne les valeurs par défaut ; un fichier illisible est mis de côté (`settings.corrupted.json`) et remplacé par les valeurs par défaut, sans bloquer le démarrage. Les champs manquants ou inconnus sont tolérés.

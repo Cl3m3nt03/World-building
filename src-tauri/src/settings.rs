@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 use crate::error::{AppError, AppResult};
+use crate::world::Genre;
 
 pub const SETTINGS_FILE: &str = "settings.json";
 const CORRUPTED_FILE: &str = "settings.corrupted.json";
@@ -52,12 +53,17 @@ impl Default for Preferences {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct RecentWorld {
     /// Absolute path of the world folder.
     pub path: String,
     pub name: String,
+    /// World id (unknown for entries saved by 0.1.0).
+    pub id: Option<String>,
+    pub genre: Option<Genre>,
+    /// Whether a thumbnail is cached (`bzthumb://<id>`).
+    pub thumbnail: bool,
     /// RFC 3339 date.
     pub last_opened_at: String,
 }
@@ -71,6 +77,38 @@ pub struct AppSettings {
     /// Folder proposed for new worlds; `None` means the default one
     /// (`Documents/BuilderZ`, see `paths::default_worlds_dir`).
     pub default_worlds_dir: Option<String>,
+}
+
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "camelCase", default)]
+struct RawRecentWorld {
+    path: String,
+    name: String,
+    id: Option<String>,
+    genre: Option<Genre>,
+    thumbnail: bool,
+    last_opened_at: String,
+}
+
+impl<'de> Deserialize<'de> for RecentWorld {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let RawRecentWorld {
+            path,
+            name,
+            id,
+            genre,
+            thumbnail,
+            last_opened_at,
+        } = RawRecentWorld::deserialize(deserializer)?;
+        Ok(Self {
+            path,
+            name,
+            id,
+            genre,
+            thumbnail,
+            last_opened_at,
+        })
+    }
 }
 
 // Reading is tolerant: missing fields take their default and unknown fields
@@ -140,11 +178,11 @@ impl<'de> Deserialize<'de> for AppSettings {
 }
 
 impl AppSettings {
-    /// Updates the displayed name of a recent world, keeping its position.
-    pub fn rename_recent_world(&mut self, path: &str, name: &str) {
+    /// Updates a recent world in place, keeping its position.
+    pub fn update_recent_world(&mut self, path: &str, update: impl Fn(&mut RecentWorld)) {
         for recent in &mut self.recent_worlds {
             if same_path(&recent.path, path) {
-                name.clone_into(&mut recent.name);
+                update(recent);
             }
         }
     }
@@ -232,6 +270,9 @@ mod tests {
         RecentWorld {
             path: path.into(),
             name: path.into(),
+            id: None,
+            genre: None,
+            thumbnail: false,
             last_opened_at: String::new(),
         }
     }
@@ -301,7 +342,7 @@ mod tests {
         settings.record_recent_world(recent("C:/A"));
         settings.record_recent_world(recent("C:/B"));
 
-        settings.rename_recent_world("c:/a", "Nouveau nom");
+        settings.update_recent_world("c:/a", |recent| recent.name = "Nouveau nom".into());
 
         assert_eq!(settings.recent_worlds[1].path, "C:/A");
         assert_eq!(settings.recent_worlds[1].name, "Nouveau nom");

@@ -7,6 +7,7 @@ mod paths;
 mod protocol;
 mod settings;
 mod state;
+mod thumbnails;
 mod window;
 mod world;
 
@@ -49,6 +50,7 @@ pub fn run() -> tauri::Result<()> {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .register_asynchronous_uri_scheme_protocol(protocol::SCHEME, protocol::handle)
+        .register_asynchronous_uri_scheme_protocol(thumbnails::SCHEME, protocol::handle_thumbnail)
         .setup(|app| {
             let log_dir = paths::log_dir(app.handle())?;
             let guard = logging::init(&log_dir)?;

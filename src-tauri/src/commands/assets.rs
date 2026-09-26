@@ -55,11 +55,25 @@ pub async fn delete_asset(state: State<'_, AppState>, id: String) -> AppResult<(
     let (pool, assets_dir) = open_world(&state, "delete_asset").await?;
     media::delete(&pool, &assets_dir, &id).await?;
 
-    let mut guard = state.world.lock().await;
-    if let Some(world) = guard.as_mut()
-        && world.file.main_image.as_deref() == Some(id.as_str())
-    {
-        world.set_main_image(None)?;
+    let cleared = {
+        let mut guard = state.world.lock().await;
+        match guard.as_mut() {
+            Some(world) if world.file.main_image.as_deref() == Some(id.as_str()) => {
+                world.set_main_image(None)?;
+                Some(world.info())
+            }
+            _ => None,
+        }
+    };
+
+    // The main image is gone: so is the world's thumbnail in the world list.
+    if let Some(info) = cleared {
+        let thumbnail = super::world::sync_thumbnail(&state.config_dir, &info, true).await;
+        let mut settings = state.settings.lock().await;
+        settings.update_recent_world(&info.path, |recent| recent.thumbnail = thumbnail);
+        if let Err(error) = crate::settings::save(&state.config_dir, &settings) {
+            tracing::warn!(%error, "cannot save the recent worlds");
+        }
     }
     Ok(())
 }
