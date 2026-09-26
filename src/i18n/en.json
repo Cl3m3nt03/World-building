@@ -24,5 +24,9 @@
   "workspace.create.canvas": "Canvas",
   "workspace.create.graph": "Graph",
   "home.welcome": "Welcome",
-  "placeholder.comingSoon": "Coming soon"
+  "placeholder.comingSoon": "Coming soon",
+  "settings.language": "Language",
+  "settings.language.fr": "Français",
+  "settings.language.en": "English",
+  "common.close": "Close"
 }

@@ -1,8 +1,9 @@
 import { LayoutGrid, type LucideIcon, Map as MapIcon, Share2, SquareUser } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { type TranslationKey, t } from "@/i18n";
+import type { TranslationKey } from "@/i18n";
 
 const CREATE_TILES: { icon: LucideIcon; label: TranslationKey }[] = [
   { icon: SquareUser, label: "workspace.create.card" },
@@ -13,6 +14,7 @@ const CREATE_TILES: { icon: LucideIcon; label: TranslationKey }[] = [
 
 /** Empty-workspace prompt: "Start with…" and one tile per document kind. */
 function StartWith() {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
@@ -36,6 +38,7 @@ function StartWith() {
 
 /** World tab: resizable sidebar + central workspace. */
 export function WorldWorkspace() {
+  const { t } = useTranslation();
   return (
     <ResizablePanelGroup orientation="horizontal" className="gap-1">
       <ResizablePanel defaultSize={280} minSize={200} maxSize={480}>
@@ -59,6 +62,7 @@ export function WorldWorkspace() {
 }
 
 export function HomePlaceholder() {
+  const { t } = useTranslation();
   return (
     <main className="mx-auto flex h-full w-full max-w-5xl flex-col gap-2 px-8 pt-10">
       <h1 className="text-4xl font-bold">{t("home.welcome")}</h1>
@@ -68,6 +72,7 @@ export function HomePlaceholder() {
 }
 
 export function ComingSoon({ title }: { title: TranslationKey }) {
+  const { t } = useTranslation();
   return (
     <main className="flex h-full flex-col items-center justify-center gap-2">
       <h1 className="text-2xl font-bold">{t(title)}</h1>

@@ -48,7 +48,8 @@
         "noExplicitAny": "error"
       },
       "style": {
-        "noNonNullAssertion": "error"
+        "noNonNullAssertion": "error",
+        "noJsxLiterals": "error"
       }
     }
   },
