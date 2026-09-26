@@ -5,7 +5,7 @@ import { act, cleanup, render, renderHook, screen } from "@testing-library/react
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { assetUrl, useAssetUrl } from "@/lib/assets";
-import type { AssetInfo } from "@/lib/bindings";
+import type { ImportedAsset } from "@/lib/bindings";
 import { IpcError } from "@/lib/ipc";
 import { createQueryClient } from "@/lib/query";
 import { AssetImage } from "./components/AssetImage";
@@ -40,7 +40,19 @@ test("AssetImage renders the asset URL", () => {
 });
 
 test("useImportAsset sends the path to import_asset", async () => {
-  const imported: AssetInfo = { id: ID, originalName: "portrait.png", size: 5, created: true };
+  const imported: ImportedAsset = {
+    asset: {
+      id: ID,
+      name: "portrait.png",
+      kind: "image",
+      mime: "image/png",
+      size: 5,
+      width: 1,
+      height: 1,
+      createdAt: "2026-09-26T10:00:00Z",
+    },
+    created: true,
+  };
   let received: unknown;
   mockIPC((command, payload) => {
     if (command === "import_asset") {
@@ -51,7 +63,7 @@ test("useImportAsset sends the path to import_asset", async () => {
   });
   const { result } = renderHook(() => useImportAsset(), { wrapper });
 
-  let asset: AssetInfo | undefined;
+  let asset: ImportedAsset | undefined;
   await act(async () => {
     asset = await result.current.mutateAsync("C:/Pictures/portrait.png");
   });

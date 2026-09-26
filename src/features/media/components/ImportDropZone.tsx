@@ -52,7 +52,7 @@ export function ImportDropZone() {
     };
   }, [mutate]);
 
-  const asset = importAsset.data;
+  const imported = importAsset.data;
 
   return (
     <section
@@ -68,16 +68,16 @@ export function ImportDropZone() {
       </p>
       {importAsset.isPending && <p className="text-sm">{t("media.importing")}</p>}
       {importAsset.isError && <AppErrorMessage error={importAsset.error} />}
-      {asset && (
+      {imported && (
         <figure className="flex flex-col items-center gap-2">
           <AssetImage
-            assetId={asset.id}
-            alt={t("media.previewAlt", { name: asset.originalName })}
+            assetId={imported.asset.id}
+            alt={t("media.previewAlt", { name: imported.asset.name })}
             className="max-h-64 rounded-md object-contain"
           />
           <figcaption className="text-xs text-muted-foreground">
-            {t(asset.created ? "media.imported" : "media.alreadyImported", {
-              name: asset.originalName,
+            {t(imported.created ? "media.imported" : "media.alreadyImported", {
+              name: imported.asset.name,
             })}
           </figcaption>
         </figure>

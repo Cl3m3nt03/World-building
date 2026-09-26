@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-rename-asset"
+description = "Enables the rename_asset command without any pre-configured scope."
+commands.allow = ["rename_asset"]
+
+[[permission]]
+identifier = "deny-rename-asset"
+description = "Denies the rename_asset command without any pre-configured scope."
+commands.deny = ["rename_asset"]

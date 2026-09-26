@@ -112,7 +112,8 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
   - `bzasset://` n'accepte qu'un identifiant au format exact `<64 hexa>[.<ext>]`, vérifié avant tout accès disque (pas de séparateur, pas de `..`, pas de chemin absolu), et ne lit que dans `assets/` du monde **ouvert** : sans monde ouvert, tout est 404 ;
   - réponses avec `X-Content-Type-Options: nosniff` et une CSP `default-src 'none'` (un SVG ouvert seul ne peut pas exécuter de script) ;
   - la CSP de l'app n'autorise `bzasset:` que pour `img-src` et `media-src`.
-- La médiathèque (M1) ajoutera les métadonnées des assets (nom, type, usages) dans la base.
+- **Médiathèque** (`src-tauri/src/domain/media.rs`, requêtes dans `src-tauri/src/db/assets.rs`) : table `assets` (migration `0002`) avec, pour chaque fichier, le nom affiché (modifiable, le fichier garde son hash), le type (`image`, `audio`, `other`, déduit du type MIME), la taille, les dimensions des images (lues dans l'en-tête avec `imagesize`) et la date d'import. Commandes : `import_asset` (renvoie `{ asset, created }` ; un contenu déjà présent renvoie l'asset existant avec son nom actuel), `list_assets({ kind?, search? })` (plus récents d'abord ; les caractères `%` et `_` de la recherche sont pris littéralement), `rename_asset`, `delete_asset` (supprime la ligne et le fichier ; si c'était l'image principale du monde, le monde n'en a plus).
+- **Reprise des fichiers existants** : à l'ouverture d'un monde, les fichiers de `assets/` sans ligne en base (importés en 0.1.0) sont enregistrés, avec leur identifiant comme nom.
 
 ### Base de données
 
