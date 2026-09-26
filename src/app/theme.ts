@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useUiStore } from "@/app/stores/ui";
 
 export type ThemePreference = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
@@ -20,53 +21,38 @@ function systemPrefersDark(): boolean {
   return window.matchMedia(DARK_QUERY).matches;
 }
 
-export function applyTheme(theme: ResolvedTheme): void {
+function applyTheme(theme: ResolvedTheme): void {
   document.documentElement.dataset.theme = theme;
 }
 
-export function applyTransparency(transparency: TransparencyPreference): void {
+function applyTransparency(transparency: TransparencyPreference): void {
   document.documentElement.dataset.transparency = transparency;
-}
-
-/**
- * Theme preference, applied to <html data-theme>. Follows the OS by default.
- * Kept in component state for now: the UI store arrives in 0.7 and persistence
- * in the app settings (config dir) in 0.9.
- */
-export function useTheme() {
-  const [preference, setPreference] = useState<ThemePreference>("system");
-  const [resolved, setResolved] = useState<ResolvedTheme>(() =>
-    resolveTheme("system", systemPrefersDark()),
-  );
-
-  useEffect(() => {
-    const query = window.matchMedia(DARK_QUERY);
-    const update = () => {
-      const next = resolveTheme(preference, query.matches);
-      applyTheme(next);
-      setResolved(next);
-    };
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, [preference]);
-
-  return { preference, resolved, setPreference };
-}
-
-export function useTransparency() {
-  const [transparency, setTransparencyState] = useState<TransparencyPreference>("on");
-
-  const setTransparency = useCallback((next: TransparencyPreference) => {
-    applyTransparency(next);
-    setTransparencyState(next);
-  }, []);
-
-  return { transparency, setTransparency };
 }
 
 /** Sets the initial theme before the first render to avoid a flash. */
 export function initTheme(): void {
-  applyTheme(resolveTheme("system", systemPrefersDark()));
-  applyTransparency("on");
+  const { theme, transparency } = useUiStore.getState();
+  applyTheme(resolveTheme(theme, systemPrefersDark()));
+  applyTransparency(transparency);
+}
+
+/**
+ * Applies the UI store's theme and transparency to <html data-theme> and
+ * <html data-transparency>, and follows OS theme changes in "system" mode.
+ */
+export function useThemeSync(): void {
+  const theme = useUiStore((state) => state.theme);
+  const transparency = useUiStore((state) => state.transparency);
+
+  useEffect(() => {
+    const query = window.matchMedia(DARK_QUERY);
+    const update = () => applyTheme(resolveTheme(theme, query.matches));
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, [theme]);
+
+  useEffect(() => {
+    applyTransparency(transparency);
+  }, [transparency]);
 }

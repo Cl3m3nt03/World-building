@@ -15,7 +15,36 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
 
 ## Front (`src/`)
 
-À compléter (issue 0.7) : routing, état.
+### Démarrage
+
+`src/main.tsx` applique le thème initial, initialise i18n, puis rend `App`. `App` empile, de l'extérieur vers l'intérieur : `ErrorBoundary` global, `QueryClientProvider`, `TooltipProvider` et `RouterProvider`.
+
+### Routing
+
+**TanStack Router**, routes déclarées en code et typées dans `src/app/router.tsx` :
+
+| Route | Écran |
+|---|---|
+| `/` | Liste des mondes (`src/features/world`) |
+| `/world/$worldId` | Redirige vers `/world/$worldId/home` |
+| `/world/$worldId/home` · `/world` · `/wiki` · `/quill` | Onglets de la coque (`WorldLayout`) |
+
+- L'historique est en **hash** (`#/world/…`) : l'app desktop n'a pas de serveur pour réécrire les liens profonds, et un rechargement garde la route courante.
+- Les onglets de la barre du haut sont pilotés par l'URL (`WorldLayout`).
+- Une route inconnue affiche `NotFoundScreen`.
+
+### État
+
+- **Données du monde** : TanStack Query, par-dessus les commandes Tauri (à partir de 0.8). Client configuré dans `src/lib/query.ts` (pas de retry, données fraîches jusqu'à invalidation, puisque le Rust est le seul à écrire). Conventions de clés décrites dans ce fichier : le domaine d'abord, puis le détail (`["cards", worldId, "detail", cardId]`), avec une fabrique de clés par feature dans `src/features/<module>/hooks/keys.ts`.
+- **État d'interface** : Zustand, `src/app/stores/ui.ts` (thème, transparence, largeur de la sidebar). Jamais de données du monde dans ce store. `useThemeSync` répercute le thème et la transparence sur `<html>`.
+
+### Erreurs
+
+- Une erreur de rendu dans une route est captée par le router (`defaultErrorComponent`), une erreur hors du router par l'`ErrorBoundary` global. Les deux affichent `ErrorScreen` : message, détails techniques repliés, boutons « Recharger » et « Retour aux mondes ». Jamais d'écran blanc.
+
+### Tests front
+
+Vitest, avec Testing Library et jsdom pour les tests de composants (directive `// @vitest-environment jsdom` en tête de fichier). `src/test/setup.ts` initialise i18n et fournit les API absentes de jsdom (`matchMedia`, `ResizeObserver`, `scrollTo`).
 
 ### Internationalisation
 
