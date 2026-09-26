@@ -30,6 +30,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::world::open_world,
         commands::world::close_world,
         commands::world::current_world,
+        commands::world::update_world,
+        commands::world::set_world_main_image,
     ])
 }
 

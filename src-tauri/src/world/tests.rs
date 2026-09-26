@@ -181,6 +181,114 @@ async fn reopen_recreates_a_missing_assets_folder() {
     assert!(root.join(ASSETS_DIR).is_dir());
 }
 
+// --- Metadata ---------------------------------------------------------------
+
+#[tokio::test]
+async fn a_world_from_0_1_0_opens_with_default_metadata() {
+    let (_dir, root) = temp_root();
+    create(&root, "Ancien", &V1).await.unwrap().close().await;
+    // world.json as written by 0.1.0: no genre, description or main image.
+    let json = r#"{
+  "format": "builderz-world",
+  "id": "5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11",
+  "name": "Ancien",
+  "schemaVersion": 1,
+  "createdAt": "2026-09-26T10:00:00Z",
+  "updatedAt": "2026-09-26T10:00:00Z",
+  "lastOpenedAt": "2026-09-26T10:00:00Z"
+}"#;
+    std::fs::write(root.join(WORLD_FILE), json).unwrap();
+
+    let world = open(&root, &V1).await.unwrap();
+
+    assert_eq!(world.file.genre, Genre::Other);
+    assert_eq!(world.file.description, "");
+    assert_eq!(world.file.main_image, None);
+    world.close().await;
+}
+
+#[tokio::test]
+async fn metadata_updates_survive_a_reopening() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "Eldefleur", &V1).await.unwrap();
+    std::fs::write(
+        world.assets_dir().join(format!("{}.png", "a".repeat(64))),
+        "png",
+    )
+    .unwrap();
+
+    world
+        .update(WorldPatch {
+            name: Some("  Terres du Nord ".into()),
+            genre: Some(Genre::ScienceFiction),
+            description: Some("Une planète gelée.".into()),
+        })
+        .unwrap();
+    world
+        .set_main_image(Some(format!("{}.png", "a".repeat(64))))
+        .unwrap();
+    // A partial patch leaves the other fields alone.
+    world
+        .update(WorldPatch {
+            genre: Some(Genre::Fantasy),
+            ..WorldPatch::default()
+        })
+        .unwrap();
+    world.close().await;
+
+    let reopened = open(&root, &V1).await.unwrap();
+    let info = reopened.info();
+    assert_eq!(info.name, "Terres du Nord");
+    assert_eq!(info.genre, Genre::Fantasy);
+    assert_eq!(info.description, "Une planète gelée.");
+    assert_eq!(info.main_image, Some(format!("{}.png", "a".repeat(64))));
+    reopened.close().await;
+}
+
+#[tokio::test]
+async fn invalid_metadata_is_refused_and_nothing_changes() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "Eldefleur", &V1).await.unwrap();
+    let before = std::fs::read(root.join(WORLD_FILE)).unwrap();
+
+    let empty = world.update(WorldPatch {
+        name: Some("   ".into()),
+        ..WorldPatch::default()
+    });
+    let too_long = world.update(WorldPatch {
+        description: Some("x".repeat(MAX_DESCRIPTION_LEN + 1)),
+        ..WorldPatch::default()
+    });
+    let missing = world.set_main_image(Some(format!("{}.png", "b".repeat(64))));
+    let outside = world.set_main_image(Some("../world.db".into()));
+
+    for result in [empty, too_long, missing, outside] {
+        assert!(
+            matches!(result, Err(AppError::InvalidInput(_))),
+            "{result:?}"
+        );
+    }
+    assert_eq!(world.file.name, "Eldefleur");
+    assert_eq!(std::fs::read(root.join(WORLD_FILE)).unwrap(), before);
+    world.close().await;
+}
+
+#[tokio::test]
+async fn the_main_image_can_be_cleared() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "W", &V1).await.unwrap();
+    let id = format!("{}.png", "c".repeat(64));
+    std::fs::write(world.assets_dir().join(&id), "png").unwrap();
+
+    world.set_main_image(Some(id)).unwrap();
+    world.set_main_image(None).unwrap();
+
+    assert_eq!(world.info().main_image, None);
+    let json = std::fs::read_to_string(root.join(WORLD_FILE)).unwrap();
+    assert!(!json.contains("mainImage"));
+    world.close().await;
+}
+
 // --- Migration --------------------------------------------------------------
 
 #[tokio::test]

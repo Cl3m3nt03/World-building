@@ -134,6 +134,15 @@ impl<'de> Deserialize<'de> for AppSettings {
 }
 
 impl AppSettings {
+    /// Updates the displayed name of a recent world, keeping its position.
+    pub fn rename_recent_world(&mut self, path: &str, name: &str) {
+        for recent in &mut self.recent_worlds {
+            if same_path(&recent.path, path) {
+                name.clone_into(&mut recent.name);
+            }
+        }
+    }
+
     /// Moves (or adds) a world to the top of the recent list.
     pub fn record_recent_world(&mut self, world: RecentWorld) {
         self.recent_worlds
@@ -263,6 +272,19 @@ mod tests {
 
         assert_eq!(load(dir.path()).preferences.language, Language::En);
         assert!(!dir.path().join(CORRUPTED_FILE).exists());
+    }
+
+    #[test]
+    fn renaming_a_recent_world_keeps_its_position() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent("C:/A"));
+        settings.record_recent_world(recent("C:/B"));
+
+        settings.rename_recent_world("c:/a", "Nouveau nom");
+
+        assert_eq!(settings.recent_worlds[1].path, "C:/A");
+        assert_eq!(settings.recent_worlds[1].name, "Nouveau nom");
+        assert_eq!(settings.recent_worlds[0].name, "C:/B");
     }
 
     #[test]

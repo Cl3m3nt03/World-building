@@ -5,10 +5,10 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
 use crate::db;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::settings::{self, RecentWorld};
 use crate::state::AppState;
-use crate::world::{self, OpenWorld, WorldInfo};
+use crate::world::{self, OpenWorld, WorldInfo, WorldPatch};
 
 /// Creates a world named `name` in a new folder inside `parent_dir` (the
 /// folder is named after the world), and opens it.
@@ -46,6 +46,42 @@ pub async fn close_world(state: State<'_, AppState>) -> AppResult<()> {
 #[specta::specta]
 pub async fn current_world(state: State<'_, AppState>) -> AppResult<Option<WorldInfo>> {
     Ok(state.world.lock().await.as_ref().map(OpenWorld::info))
+}
+
+/// Changes the name, genre or description of the open world.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_world(state: State<'_, AppState>, patch: WorldPatch) -> AppResult<WorldInfo> {
+    let info = {
+        let mut guard = state.world.lock().await;
+        let world = guard
+            .as_mut()
+            .ok_or_else(|| AppError::NoWorldOpen("update_world".into()))?;
+        world.update(patch)?;
+        world.info()
+    };
+
+    let mut settings = state.settings.lock().await;
+    settings.rename_recent_world(&info.path, &info.name);
+    if let Err(error) = settings::save(&state.config_dir, &settings) {
+        tracing::warn!(%error, "cannot save the recent worlds");
+    }
+    Ok(info)
+}
+
+/// Sets (asset id) or clears (`null`) the main image of the open world.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_world_main_image(
+    state: State<'_, AppState>,
+    asset_id: Option<String>,
+) -> AppResult<WorldInfo> {
+    let mut guard = state.world.lock().await;
+    let world = guard
+        .as_mut()
+        .ok_or_else(|| AppError::NoWorldOpen("set_world_main_image".into()))?;
+    world.set_main_image(asset_id)?;
+    Ok(world.info())
 }
 
 /// Makes `world` the open world (closing the previous one) and records it in
