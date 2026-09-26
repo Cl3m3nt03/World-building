@@ -178,6 +178,64 @@ impl<'de> Deserialize<'de> for AppSettings {
 }
 
 impl AppSettings {
+    /// Removes a world from the recent list (its folder is not touched).
+    /// Returns whether it was there.
+    pub fn remove_recent_world(&mut self, path: &str) -> bool {
+        let before = self.recent_worlds.len();
+        self.recent_worlds
+            .retain(|recent| !same_path(&recent.path, path));
+        self.recent_worlds.len() != before
+    }
+
+    /// Whether `path` is one of the recent worlds.
+    pub fn is_recent_world(&self, path: &str) -> bool {
+        self.recent_worlds
+            .iter()
+            .any(|recent| same_path(&recent.path, path))
+    }
+
+    /// Points the recent world at `old_path` to `new_path`, where the world
+    /// described by `id`, `name` and `genre` now lives. Keeps its position.
+    /// Refuses a different world than the one recorded.
+    pub fn relocate_recent_world(
+        &mut self,
+        old_path: &str,
+        new_path: &str,
+        id: &str,
+        name: &str,
+        genre: Genre,
+    ) -> AppResult<()> {
+        let index = self
+            .recent_worlds
+            .iter()
+            .position(|recent| same_path(&recent.path, old_path))
+            .ok_or_else(|| AppError::InvalidInput(format!("not a recent world: {old_path}")))?;
+        if let Some(known) = &self.recent_worlds[index].id
+            && known != id
+        {
+            return Err(AppError::WorldInvalid(format!(
+                "{new_path} holds another world (id {id}, expected {known})"
+            )));
+        }
+        // The new folder may already be in the list: keep a single entry.
+        let duplicate = self
+            .recent_worlds
+            .iter()
+            .enumerate()
+            .find(|(other, recent)| *other != index && same_path(&recent.path, new_path))
+            .map(|(other, _)| other);
+
+        let recent = &mut self.recent_worlds[index];
+        new_path.clone_into(&mut recent.path);
+        name.clone_into(&mut recent.name);
+        recent.id = Some(id.to_owned());
+        recent.genre = Some(genre);
+        if let Some(other) = duplicate {
+            self.recent_worlds.remove(other);
+        }
+        Ok(())
+    }
+
     /// Updates a recent world in place, keeping its position.
     pub fn update_recent_world(&mut self, path: &str, update: impl Fn(&mut RecentWorld)) {
         for recent in &mut self.recent_worlds {
@@ -365,6 +423,57 @@ mod tests {
 
         settings.set_default_worlds_dir(Some("   ")).unwrap();
         assert_eq!(settings.default_worlds_dir, None);
+    }
+
+    fn recent_with_id(path: &str, id: &str) -> RecentWorld {
+        RecentWorld {
+            id: Some(id.into()),
+            ..recent(path)
+        }
+    }
+
+    #[test]
+    fn a_recent_world_can_be_removed() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent("C:/A"));
+        settings.record_recent_world(recent("C:/B"));
+
+        assert!(settings.remove_recent_world("c:/a"));
+        assert!(!settings.remove_recent_world("C:/A"));
+        assert_eq!(settings.recent_worlds.len(), 1);
+        assert!(settings.is_recent_world("C:/B"));
+    }
+
+    #[test]
+    fn relocating_keeps_the_position_and_refuses_another_world() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent_with_id("C:/Old", "id-1"));
+        settings.record_recent_world(recent("C:/Other"));
+
+        let other_world =
+            settings.relocate_recent_world("C:/Old", "D:/New", "id-2", "X", Genre::Other);
+        assert!(matches!(other_world, Err(AppError::WorldInvalid(_))));
+
+        settings
+            .relocate_recent_world("C:/Old", "D:/New", "id-1", "Eldefleur", Genre::Fantasy)
+            .unwrap();
+        assert_eq!(settings.recent_worlds[1].path, "D:/New");
+        assert_eq!(settings.recent_worlds[1].name, "Eldefleur");
+        assert_eq!(settings.recent_worlds[1].genre, Some(Genre::Fantasy));
+    }
+
+    #[test]
+    fn relocating_onto_a_listed_folder_leaves_one_entry() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent_with_id("D:/New", "id-1"));
+        settings.record_recent_world(recent_with_id("C:/Old", "id-1"));
+
+        settings
+            .relocate_recent_world("C:/Old", "D:/New", "id-1", "W", Genre::Other)
+            .unwrap();
+
+        assert_eq!(settings.recent_worlds.len(), 1);
+        assert_eq!(settings.recent_worlds[0].path, "D:/New");
     }
 
     #[test]

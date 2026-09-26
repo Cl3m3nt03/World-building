@@ -35,6 +35,23 @@ export const commands = {
 	 *  worlds, and returns the updated settings.
 	 */
 	setDefaultWorldsDir: (path: string | null) => typedError<AppSettings, AppError>(__TAURI_INVOKE("set_default_worlds_dir", { path })),
+	/**  Removes a world from the recent list. Its folder is not touched. */
+	removeRecentWorld: (path: string) => typedError<AppSettings, AppError>(__TAURI_INVOKE("remove_recent_world", { path })),
+	/**
+	 *  Paths of the recent worlds whose folder no longer holds a world
+	 *  (moved, renamed or deleted).
+	 */
+	missingRecentWorlds: () => typedError<string[], AppError>(__TAURI_INVOKE("missing_recent_worlds")),
+	/**
+	 *  Points a recent world whose folder moved to `new_path`, after checking
+	 *  that the world there is the same one (same id).
+	 */
+	relocateRecentWorld: (oldPath: string, newPath: string) => typedError<AppSettings, AppError>(__TAURI_INVOKE("relocate_recent_world", { oldPath, newPath })),
+	/**
+	 *  Shows a world folder in the Windows Explorer. Only recent worlds are
+	 *  accepted, so the front cannot make the app open arbitrary locations.
+	 */
+	revealInExplorer: (path: string) => typedError<null, AppError>(__TAURI_INVOKE("reveal_in_explorer", { path })),
 	/**
 	 *  Creates a world named `name`, of the given genre, in a new folder inside
 	 *  `parent_dir` (the folder is named after the world), and opens it.

@@ -107,5 +107,16 @@
   "media.kind.other": "Fichier",
   "media.empty": "La médiathèque est vide. Importez des images ou des sons, glissez-les sur la fenêtre, ou collez une image.",
   "media.noMatch": "Aucun fichier ne correspond à ce filtre.",
-  "media.pastedName": "Image collée"
+  "media.pastedName": "Image collée",
+  "worlds.missing": "Introuvable",
+  "worlds.missingHint": "Le dossier a été déplacé ou supprimé.",
+  "worlds.relocate": "Relocaliser…",
+  "worlds.relocateNamed": "Relocaliser {{name}}",
+  "worlds.relocatePickerTitle": "Où se trouve maintenant « {{name}} » ?",
+  "worlds.menu": "Actions pour {{name}}",
+  "worlds.openAction": "Ouvrir",
+  "worlds.reveal": "Afficher dans l'Explorateur",
+  "worlds.remove": "Retirer de la liste",
+  "worlds.removeTitle": "Retirer « {{name}} » de la liste ?",
+  "worlds.removeDescription": "Le monde disparaît seulement de cette liste : son dossier et tout son contenu restent sur le disque. Vous pourrez le rouvrir avec « Ouvrir un monde »."
 }

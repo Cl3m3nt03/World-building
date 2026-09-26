@@ -196,7 +196,8 @@ fn write_world_file(root: &Path, file: &WorldFile) -> AppResult<()> {
     Ok(())
 }
 
-fn read_world_file(root: &Path) -> AppResult<WorldFile> {
+/// Reads and checks `world.json` in `root`, without opening the world.
+pub fn read_world_file(root: &Path) -> AppResult<WorldFile> {
     let path = root.join(WORLD_FILE);
     let json = std::fs::read_to_string(&path).map_err(|error| {
         AppError::WorldInvalid(format!("cannot read {}: {error}", path.display()))

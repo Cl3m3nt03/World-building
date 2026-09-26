@@ -39,11 +39,13 @@ const SETTINGS: AppSettings = {
 type Call = { command: string; payload: unknown };
 let calls: Call[];
 let openWorld: WorldInfo | null;
+let missingPaths: string[];
 
 beforeEach(() => {
   mockConvertFileSrc("windows");
   calls = [];
   openWorld = null;
+  missingPaths = [];
   mockIPC((command, payload) => {
     calls.push({ command, payload });
     switch (command) {
@@ -59,6 +61,21 @@ beforeEach(() => {
         openWorld = { ...ELDEFLEUR, id: "w-new", name };
         return openWorld;
       }
+      case "missing_recent_worlds":
+        return missingPaths;
+      case "remove_recent_world":
+        return { ...SETTINGS, recentWorlds: [] };
+      case "relocate_recent_world":
+        missingPaths = [];
+        return {
+          ...SETTINGS,
+          recentWorlds: SETTINGS.recentWorlds.map((recent) => ({
+            ...recent,
+            path: (payload as { newPath: string }).newPath,
+          })),
+        };
+      case "plugin:dialog|open":
+        return "E:/Mondes/Eldefleur";
       case "default_worlds_dir":
         return "C:/Users/me/Documents/BuilderZ";
       default:
@@ -179,4 +196,53 @@ test("shows a translated error when a world cannot be opened", async () => {
 
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("n'est pas un monde BuilderZ valide");
+});
+
+test("a world whose folder moved is flagged and can be relocated", async () => {
+  missingPaths = [ELDEFLEUR.path];
+  await renderStartScreen();
+
+  const card = await screen.findByRole("button", { name: "Relocaliser Eldefleur" });
+  expect(card.textContent).toContain("Introuvable");
+
+  await act(async () => {
+    fireEvent.click(card);
+  });
+
+  await waitFor(() =>
+    expect(calls.find((call) => call.command === "relocate_recent_world")?.payload).toEqual({
+      oldPath: ELDEFLEUR.path,
+      newPath: "E:/Mondes/Eldefleur",
+    }),
+  );
+  expect(await screen.findByRole("button", { name: "Ouvrir Eldefleur" })).toBeTruthy();
+});
+
+test("removing a world from the list asks for confirmation first", async () => {
+  await renderStartScreen();
+
+  await act(async () => {
+    fireEvent.pointerDown(await screen.findByRole("button", { name: "Actions pour Eldefleur" }), {
+      button: 0,
+      pointerType: "mouse",
+    });
+  });
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Retirer de la liste" }));
+  });
+
+  const dialog = await screen.findByRole("dialog");
+  expect(dialog.textContent).toContain("son dossier et tout son contenu restent sur le disque");
+  expect(calls.some((call) => call.command === "remove_recent_world")).toBe(false);
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Retirer de la liste" }));
+  });
+
+  expect(calls.find((call) => call.command === "remove_recent_world")?.payload).toEqual({
+    path: ELDEFLEUR.path,
+  });
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Ouvrir Eldefleur" })).toBeNull(),
+  );
 });
