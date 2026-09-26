@@ -107,5 +107,16 @@
   "media.kind.other": "File",
   "media.empty": "The media library is empty. Import images or sounds, drop them on the window, or paste an image.",
   "media.noMatch": "No file matches this filter.",
-  "media.pastedName": "Pasted image"
+  "media.pastedName": "Pasted image",
+  "worlds.missing": "Not found",
+  "worlds.missingHint": "The folder was moved or deleted.",
+  "worlds.relocate": "Relocate…",
+  "worlds.relocateNamed": "Relocate {{name}}",
+  "worlds.relocatePickerTitle": "Where is \"{{name}}\" now?",
+  "worlds.menu": "Actions for {{name}}",
+  "worlds.openAction": "Open",
+  "worlds.reveal": "Show in Explorer",
+  "worlds.remove": "Remove from list",
+  "worlds.removeTitle": "Remove \"{{name}}\" from the list?",
+  "worlds.removeDescription": "The world only disappears from this list: its folder and all its content stay on the disk. You can open it again with \"Open a world\"."
 }

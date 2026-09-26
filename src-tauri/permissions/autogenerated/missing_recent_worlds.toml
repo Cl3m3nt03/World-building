@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-missing-recent-worlds"
+description = "Enables the missing_recent_worlds command without any pre-configured scope."
+commands.allow = ["missing_recent_worlds"]
+
+[[permission]]
+identifier = "deny-missing-recent-worlds"
+description = "Denies the missing_recent_worlds command without any pre-configured scope."
+commands.deny = ["missing_recent_worlds"]

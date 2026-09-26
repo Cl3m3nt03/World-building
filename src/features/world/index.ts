@@ -1,6 +1,7 @@
 export { WorldListScreen } from "./components/WorldListScreen";
 export { DEFAULT_GENRE, GENRES, genreLabel, isGenre } from "./genres";
 export { worldKeys } from "./hooks/keys";
+export { useMissingWorlds } from "./hooks/useRecentWorlds";
 export {
   currentWorldQuery,
   useCloseWorld,
