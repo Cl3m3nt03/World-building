@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use tauri::State;
 use time::OffsetDateTime;
@@ -9,6 +9,7 @@ use crate::domain::media;
 use crate::error::{AppError, AppResult};
 use crate::settings::{self, RecentWorld};
 use crate::state::AppState;
+use crate::thumbnails;
 use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch};
 
 /// Creates a world named `name`, of the given genre, in a new folder inside
@@ -68,7 +69,10 @@ pub async fn update_world(state: State<'_, AppState>, patch: WorldPatch) -> AppR
     };
 
     let mut settings = state.settings.lock().await;
-    settings.rename_recent_world(&info.path, &info.name);
+    settings.update_recent_world(&info.path, |recent| {
+        info.name.clone_into(&mut recent.name);
+        recent.genre = Some(info.genre);
+    });
     if let Err(error) = settings::save(&state.config_dir, &settings) {
         tracing::warn!(%error, "cannot save the recent worlds");
     }
@@ -82,12 +86,53 @@ pub async fn set_world_main_image(
     state: State<'_, AppState>,
     asset_id: Option<String>,
 ) -> AppResult<WorldInfo> {
-    let mut guard = state.world.lock().await;
-    let world = guard
-        .as_mut()
-        .ok_or_else(|| AppError::NoWorldOpen("set_world_main_image".into()))?;
-    world.set_main_image(asset_id)?;
-    Ok(world.info())
+    let info = {
+        let mut guard = state.world.lock().await;
+        let world = guard
+            .as_mut()
+            .ok_or_else(|| AppError::NoWorldOpen("set_world_main_image".into()))?;
+        world.set_main_image(asset_id)?;
+        world.info()
+    };
+
+    let thumbnail = sync_thumbnail(&state.config_dir, &info, true).await;
+    let mut settings = state.settings.lock().await;
+    settings.update_recent_world(&info.path, |recent| recent.thumbnail = thumbnail);
+    if let Err(error) = settings::save(&state.config_dir, &settings) {
+        tracing::warn!(%error, "cannot save the recent worlds");
+    }
+    Ok(info)
+}
+
+/// Makes the cached thumbnail match the world's main image (regenerated when
+/// `force`, else only if missing). Returns whether a thumbnail exists. A
+/// failure only loses the thumbnail, never the world.
+pub(crate) async fn sync_thumbnail(config_dir: &Path, info: &WorldInfo, force: bool) -> bool {
+    let source: Option<PathBuf> = info
+        .main_image
+        .as_ref()
+        .map(|id| Path::new(&info.path).join(world::ASSETS_DIR).join(id));
+    let exists = thumbnails::path(config_dir, &info.id).is_ok_and(|path| path.is_file());
+    if !force && source.is_some() == exists {
+        return exists;
+    }
+
+    let (config_dir, id) = (config_dir.to_path_buf(), info.id.clone());
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        thumbnails::refresh(&config_dir, &id, source.as_deref())
+    })
+    .await;
+    match result {
+        Ok(Ok(exists)) => exists,
+        Ok(Err(error)) => {
+            tracing::warn!(%error, world = %info.id, "cannot update the world thumbnail");
+            false
+        }
+        Err(error) => {
+            tracing::warn!(%error, "thumbnail task failed");
+            false
+        }
+    }
 }
 
 /// Makes `world` the open world (closing the previous one) and records it in
@@ -95,6 +140,7 @@ pub async fn set_world_main_image(
 /// so a failed open never leaves the app without a world.
 pub async fn activate(state: &AppState, world: OpenWorld) -> WorldInfo {
     let info = world.info();
+    let thumbnail = sync_thumbnail(&state.config_dir, &info, false).await;
     let previous = state.world.lock().await.replace(world);
     if let Some(previous) = previous {
         previous.close().await;
@@ -104,6 +150,9 @@ pub async fn activate(state: &AppState, world: OpenWorld) -> WorldInfo {
     settings.record_recent_world(RecentWorld {
         path: info.path.clone(),
         name: info.name.clone(),
+        id: Some(info.id.clone()),
+        genre: Some(info.genre),
+        thumbnail,
         last_opened_at: OffsetDateTime::now_utc()
             .format(&Rfc3339)
             .unwrap_or_default(),

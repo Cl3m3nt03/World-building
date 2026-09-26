@@ -155,6 +155,11 @@ export type RecentWorld = {
 	/**  Absolute path of the world folder. */
 	path: string,
 	name: string,
+	/**  World id (unknown for entries saved by 0.1.0). */
+	id: string | null,
+	genre: Genre | null,
+	/**  Whether a thumbnail is cached (`bzthumb://<id>`). */
+	thumbnail: boolean,
 	/**  RFC 3339 date. */
 	lastOpenedAt: string,
 };

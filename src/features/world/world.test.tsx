@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
+import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { createAppRouter } from "@/app/router";
@@ -24,7 +24,14 @@ const ELDEFLEUR: WorldInfo = {
 const SETTINGS: AppSettings = {
   preferences: { language: "fr", theme: "system", transparencyEffects: true },
   recentWorlds: [
-    { path: ELDEFLEUR.path, name: ELDEFLEUR.name, lastOpenedAt: ELDEFLEUR.lastOpenedAt },
+    {
+      path: ELDEFLEUR.path,
+      name: ELDEFLEUR.name,
+      id: "5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11",
+      genre: "scienceFiction",
+      thumbnail: true,
+      lastOpenedAt: ELDEFLEUR.lastOpenedAt,
+    },
   ],
   defaultWorldsDir: null,
 };
@@ -34,6 +41,7 @@ let calls: Call[];
 let openWorld: WorldInfo | null;
 
 beforeEach(() => {
+  mockConvertFileSrc("windows");
   calls = [];
   openWorld = null;
   mockIPC((command, payload) => {
@@ -84,7 +92,10 @@ test("lists the recent worlds and reopens one on click", async () => {
   const router = await renderStartScreen();
 
   const recent = await screen.findByRole("button", { name: "Ouvrir Eldefleur" });
-  expect(recent.textContent).toContain(ELDEFLEUR.path);
+  expect(recent.textContent).toContain("Science-fiction");
+  expect(recent.querySelector("img")?.getAttribute("src")).toMatch(
+    /^http:\/\/bzthumb\.localhost\/5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11\?v=/,
+  );
 
   await act(async () => {
     fireEvent.click(recent);
