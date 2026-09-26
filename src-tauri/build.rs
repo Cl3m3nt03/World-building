@@ -13,6 +13,8 @@ const COMMANDS: &[&str] = &[
     "open_world",
     "close_world",
     "current_world",
+    "update_world",
+    "set_world_main_image",
 ];
 
 fn main() {

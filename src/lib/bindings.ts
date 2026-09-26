@@ -32,6 +32,10 @@ export const commands = {
 	currentWorld: () => typedError<{
 	id: string,
 	name: string,
+	genre: Genre,
+	description: string,
+	/**  Asset id of the main image, if any. */
+	mainImage: string | null,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
@@ -39,6 +43,10 @@ export const commands = {
 	createdAt: string,
 	lastOpenedAt: string,
 } | null, AppError>(__TAURI_INVOKE("current_world")),
+	/**  Changes the name, genre or description of the open world. */
+	updateWorld: (patch: WorldPatch) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("update_world", { patch })),
+	/**  Sets (asset id) or clears (`null`) the main image of the open world. */
+	setWorldMainImage: (assetId: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_main_image", { assetId })),
 };
 
 /* Types */
@@ -90,6 +98,9 @@ export type AssetInfo = {
 	created: boolean,
 };
 
+/**  Genre of a world. It decides the card types proposed by default (M2). */
+export type Genre = "fantasy" | "scienceFiction" | "romance" | "cyberpunk" | "contemporary" | "other";
+
 export type Language = "fr" | "en";
 
 /**  Preferences edited by the user in the settings. */
@@ -113,12 +124,23 @@ export type Theme = "light" | "dark" | "system";
 export type WorldInfo = {
 	id: string,
 	name: string,
+	genre: Genre,
+	description: string,
+	/**  Asset id of the main image, if any. */
+	mainImage: string | null,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
 	/**  RFC 3339 dates. */
 	createdAt: string,
 	lastOpenedAt: string,
+};
+
+/**  Changes to the metadata of the open world; absent fields are left as is. */
+export type WorldPatch = {
+	name?: string | null,
+	genre?: Genre | null,
+	description?: string | null,
 };
 
 /* Tauri Specta runtime */

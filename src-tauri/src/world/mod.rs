@@ -31,13 +31,41 @@ pub const ASSETS_DIR: &str = "assets";
 /// Marker written in `world.json`, to recognize a BuilderZ world folder.
 pub const FORMAT: &str = "builderz-world";
 
+/// Longest world name, in characters.
+pub const MAX_NAME_LEN: usize = 200;
+/// Longest world description, in characters.
+pub const MAX_DESCRIPTION_LEN: usize = 10_000;
+
+/// Genre of a world. It decides the card types proposed by default (M2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum Genre {
+    Fantasy,
+    ScienceFiction,
+    Romance,
+    Cyberpunk,
+    Contemporary,
+    #[default]
+    Other,
+}
+
 /// Content of `world.json`.
+///
+/// Fields added after 0.1.0 (`genre`, `description`, `mainImage`) are
+/// optional when reading, so older worlds still open.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldFile {
     pub format: String,
     pub id: Uuid,
     pub name: String,
+    #[serde(default)]
+    pub genre: Genre,
+    #[serde(default)]
+    pub description: String,
+    /// Asset id (`<sha256>.<ext>`) of the main image, in `assets/`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub main_image: Option<String>,
     pub schema_version: i64,
     #[serde(with = "time::serde::rfc3339")]
     pub created_at: OffsetDateTime,
@@ -53,6 +81,10 @@ pub struct WorldFile {
 pub struct WorldInfo {
     pub id: String,
     pub name: String,
+    pub genre: Genre,
+    pub description: String,
+    /// Asset id of the main image, if any.
+    pub main_image: Option<String>,
     /// Absolute path of the world folder.
     pub path: String,
     pub schema_version: u32,
@@ -74,6 +106,9 @@ impl OpenWorld {
         WorldInfo {
             id: self.file.id.to_string(),
             name: self.file.name.clone(),
+            genre: self.file.genre,
+            description: self.file.description.clone(),
+            main_image: self.file.main_image.clone(),
             path: self.root.display().to_string(),
             schema_version: u32::try_from(self.file.schema_version).unwrap_or(u32::MAX),
             created_at: format_date(self.file.created_at),
@@ -83,6 +118,47 @@ impl OpenWorld {
 
     pub fn assets_dir(&self) -> PathBuf {
         self.root.join(ASSETS_DIR)
+    }
+
+    /// Applies `patch` to the metadata and saves `world.json`. Nothing is
+    /// changed if validation or saving fails.
+    pub fn update(&mut self, patch: WorldPatch) -> AppResult<()> {
+        let mut file = self.file.clone();
+        if let Some(name) = patch.name {
+            file.name = validate_name(&name)?;
+        }
+        if let Some(genre) = patch.genre {
+            file.genre = genre;
+        }
+        if let Some(description) = patch.description {
+            if description.chars().count() > MAX_DESCRIPTION_LEN {
+                return Err(AppError::InvalidInput(format!(
+                    "description longer than {MAX_DESCRIPTION_LEN} characters"
+                )));
+            }
+            file.description = description;
+        }
+        self.save(file)
+    }
+
+    /// Sets or clears the main image. The asset must exist in `assets/`.
+    pub fn set_main_image(&mut self, asset_id: Option<String>) -> AppResult<()> {
+        if let Some(id) = &asset_id {
+            let path = assets::resolve(&self.assets_dir(), id)?;
+            if !path.is_file() {
+                return Err(AppError::InvalidInput(format!("asset not found: {id}")));
+            }
+        }
+        let mut file = self.file.clone();
+        file.main_image = asset_id;
+        self.save(file)
+    }
+
+    fn save(&mut self, mut file: WorldFile) -> AppResult<()> {
+        file.updated_at = now();
+        write_world_file(&self.root, &file)?;
+        self.file = file;
+        Ok(())
     }
 
     /// Closes the database pool; WAL is checkpointed when the last connection closes.
@@ -177,12 +253,33 @@ pub fn folder_name(name: &str) -> AppResult<String> {
     })
 }
 
-/// Creates a new world in `root`, which must not exist or be an empty folder.
-pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
+/// Changes to the metadata of the open world; absent fields are left as is.
+#[derive(Debug, Clone, Default, Deserialize, Type)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WorldPatch {
+    pub name: Option<String>,
+    pub genre: Option<Genre>,
+    pub description: Option<String>,
+}
+
+/// Trimmed, non-empty name of at most `MAX_NAME_LEN` characters.
+fn validate_name(name: &str) -> AppResult<String> {
     let name = name.trim();
     if name.is_empty() {
         return Err(AppError::InvalidInput("world name is empty".into()));
     }
+    if name.chars().count() > MAX_NAME_LEN {
+        return Err(AppError::InvalidInput(format!(
+            "world name longer than {MAX_NAME_LEN} characters"
+        )));
+    }
+    Ok(name.to_owned())
+}
+
+/// Creates a new world in `root`, which must not exist or be an empty folder.
+pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
+    let name = validate_name(name)?;
+    let name = name.as_str();
     if !root.is_absolute() {
         return Err(AppError::InvalidInput(format!(
             "path is not absolute: {}",
@@ -236,6 +333,9 @@ async fn create_in(root: &Path, name: &str, migrator: &Migrator) -> AppResult<Op
         format: FORMAT.into(),
         id: Uuid::new_v4(),
         name: name.into(),
+        genre: Genre::default(),
+        description: String::new(),
+        main_image: None,
         schema_version: db::latest_version(migrator),
         created_at: created,
         updated_at: created,

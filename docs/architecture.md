@@ -172,6 +172,9 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
   "format": "builderz-world",
   "id": "5f0c…",
   "name": "Eldefleur",
+  "genre": "fantasy",
+  "description": "Un royaume de brumes…",
+  "mainImage": "2cf24dba…9824.png",
   "schemaVersion": 1,
   "createdAt": "2026-09-26T12:00:00Z",
   "updatedAt": "2026-09-26T12:00:00Z",
@@ -180,6 +183,7 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
 ```
 
 - `schemaVersion` est le numéro de la dernière migration appliquée. `format` permet de reconnaître un dossier BuilderZ.
+- `genre` (`fantasy`, `scienceFiction`, `romance`, `cyberpunk`, `contemporary`, `other`), `description` et `mainImage` (identifiant d'asset) sont apparus après la 0.1.0 : ils sont optionnels à la lecture, un monde plus ancien s'ouvre avec `other`, une description vide et pas d'image. Ils se modifient avec `update_world(patch)` (nom, genre, description ; champs absents inchangés) et `set_world_main_image(assetId | null)` (l'asset doit exister dans `assets/`). Renommer un monde met aussi à jour son nom dans les mondes récents.
 - **Création** (`create_world(parentDir, name)`) : le monde est créé dans un **nouveau dossier à son nom** dans `parentDir`. Le nom de dossier est dérivé par Rust (`world::folder_name`) : caractères interdits sous Windows et caractères de contrôle retirés, espaces fusionnés, pas de point ni d'espace final, noms réservés (`CON`, `NUL`, `COM1`…) suffixés par `_`, 100 caractères au plus. Ce dossier ne doit pas exister ou doit être vide. En cas d'échec, ce qui a été créé est retiré.
 - **Ouverture** (`open_world`) :
   1. `world.json` doit être lisible et au bon format, sinon `world_invalid` ;

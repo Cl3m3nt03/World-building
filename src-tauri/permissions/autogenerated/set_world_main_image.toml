@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-world-main-image"
+description = "Enables the set_world_main_image command without any pre-configured scope."
+commands.allow = ["set_world_main_image"]
+
+[[permission]]
+identifier = "deny-set-world-main-image"
+description = "Denies the set_world_main_image command without any pre-configured scope."
+commands.deny = ["set_world_main_image"]
