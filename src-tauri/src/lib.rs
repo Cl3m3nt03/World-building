@@ -1,5 +1,6 @@
 mod commands;
 mod db;
+mod domain;
 mod error;
 mod logging;
 mod paths;
@@ -24,6 +25,9 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::app::app_info,
         commands::app::default_worlds_dir,
         commands::assets::import_asset,
+        commands::assets::list_assets,
+        commands::assets::rename_asset,
+        commands::assets::delete_asset,
         commands::settings::get_settings,
         commands::settings::update_preferences,
         commands::settings::set_default_worlds_dir,

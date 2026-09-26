@@ -5,6 +5,7 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
 use crate::db;
+use crate::domain::media;
 use crate::error::{AppError, AppResult};
 use crate::settings::{self, RecentWorld};
 use crate::state::AppState;
@@ -30,6 +31,10 @@ pub async fn create_world(
 #[specta::specta]
 pub async fn open_world(state: State<'_, AppState>, path: String) -> AppResult<WorldInfo> {
     let world = world::open(Path::new(&path), &db::MIGRATOR).await?;
+    // Files imported before the media library existed (0.1.0) get their row.
+    if let Err(error) = media::sync(&world.pool, &world.assets_dir()).await {
+        tracing::warn!(%error, "cannot sync the media library");
+    }
     Ok(activate(&state, world).await)
 }
 

@@ -1,5 +1,7 @@
 //! SQLite access for a world database (`world.db`).
 
+pub mod assets;
+
 use std::path::Path;
 use std::time::Duration;
 
