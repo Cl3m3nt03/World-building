@@ -42,6 +42,20 @@ beforeEach(() => {
       const { filter } = payload as { filter: { kind: string | null } };
       return assets.filter((asset) => !filter.kind || asset.kind === filter.kind);
     }
+    if (command === "asset_usages") {
+      const { id } = payload as { id: string };
+      return id === IMAGE.id ? [{ kind: "worldMainImage", worldName: "Aldoria" }] : [];
+    }
+    if (command === "rename_asset") {
+      const { id, name } = payload as { id: string; name: string };
+      assets = assets.map((asset) => (asset.id === id ? { ...asset, name } : asset));
+      return assets.find((asset) => asset.id === id);
+    }
+    if (command === "delete_asset") {
+      const { id } = payload as { id: string };
+      assets = assets.filter((asset) => asset.id !== id);
+      return null;
+    }
     if (command === "import_asset_data") {
       return { asset: IMAGE, created: true };
     }
@@ -117,4 +131,46 @@ test("explains how to add files when the library is empty", async () => {
   assets = [];
   renderScreen();
   expect(await screen.findByText(/La médiathèque est vide/)).toBeTruthy();
+});
+
+test("renames an asset with F2 on its actions button", async () => {
+  renderScreen();
+  const actions = await screen.findByRole("button", { name: "Actions pour Taverne.mp3" });
+
+  fireEvent.keyDown(actions, { key: "F2" });
+  const input = await screen.findByDisplayValue("Taverne.mp3");
+  fireEvent.change(input, { target: { value: "Auberge.mp3" } });
+  fireEvent.submit(input);
+
+  await screen.findByText("Auberge.mp3");
+  expect(calls).toContainEqual({
+    command: "rename_asset",
+    payload: { id: SOUND.id, name: "Auberge.mp3" },
+  });
+});
+
+test("warns before deleting an asset that is still used", async () => {
+  renderScreen();
+  const actions = await screen.findByRole("button", { name: "Actions pour Carte du monde.png" });
+
+  fireEvent.keyDown(actions, { key: "Delete" });
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("image principale du monde « Aldoria »");
+  fireEvent.click(screen.getByRole("button", { name: "Supprimer quand même" }));
+
+  await waitFor(() => expect(screen.queryByText("Carte du monde.png")).toBeNull());
+  expect(calls.some((call) => call.command === "delete_asset")).toBe(true);
+});
+
+test("deletes an unused asset without a usage warning", async () => {
+  renderScreen();
+  const actions = await screen.findByRole("button", { name: "Actions pour Taverne.mp3" });
+
+  fireEvent.keyDown(actions, { key: "Delete" });
+  const confirm = await screen.findByRole("button", { name: "Supprimer" });
+  await waitFor(() => expect((confirm as HTMLButtonElement).disabled).toBe(false));
+  expect(screen.queryByRole("alert")).toBeNull();
+  fireEvent.click(confirm);
+
+  await waitFor(() => expect(screen.queryByText("Taverne.mp3")).toBeNull());
 });

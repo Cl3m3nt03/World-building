@@ -26,6 +26,8 @@ export const commands = {
 	 *  world no longer has one.
 	 */
 	deleteAsset: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_asset", { id })),
+	/**  Where an asset is used, to warn before deleting it. */
+	assetUsages: (id: string) => typedError<AssetUsage[], AppError>(__TAURI_INVOKE("asset_usages", { id })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -150,6 +152,14 @@ export type AssetFilter = {
 };
 
 export type AssetKind = "image" | "audio" | "other";
+
+/**
+ *  A place where an asset is used. Grows with the modules (cards, maps,
+ *  canvases…); in M1 only the world's main image uses assets.
+ */
+export type AssetUsage = 
+/**  The main image of the open world. */
+{ kind: "worldMainImage"; worldName: string };
 
 /**  Genre of a world. It decides the card types proposed by default (M2). */
 export type Genre = "fantasy" | "scienceFiction" | "romance" | "cyberpunk" | "contemporary" | "other";

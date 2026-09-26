@@ -85,6 +85,18 @@ impl From<AssetRow> for Asset {
     }
 }
 
+/// A place where an asset is used. Grows with the modules (cards, maps,
+/// canvases…); in M1 only the world's main image uses assets.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum AssetUsage {
+    /// The main image of the open world.
+    WorldMainImage {
+        #[serde(rename = "worldName")]
+        world_name: String,
+    },
+}
+
 /// Result of an import: the asset, and whether it is new to the world.
 #[derive(Debug, Clone, PartialEq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]

@@ -30,6 +30,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::assets::list_assets,
         commands::assets::rename_asset,
         commands::assets::delete_asset,
+        commands::assets::asset_usages,
         commands::settings::get_settings,
         commands::settings::update_preferences,
         commands::settings::set_default_worlds_dir,

@@ -6,12 +6,13 @@ import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { TranslationKey } from "@/i18n";
-import type { AssetKind } from "@/lib/bindings";
+import type { Asset, AssetKind } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { useAssets } from "../hooks/useAssets";
 import { useFileDrop } from "../hooks/useFileDrop";
 import { useImportAsset, useImportAssetData } from "../hooks/useImportAsset";
 import { type PastedImage, usePastedImages } from "../hooks/usePastedImages";
+import { DeleteAssetDialog, RenameAssetDialog } from "./AssetDialogs";
 import { AssetTile } from "./AssetTile";
 
 const KINDS: { value: AssetKind | null; label: TranslationKey }[] = [
@@ -29,6 +30,8 @@ export function MediaLibraryScreen() {
   const { t } = useTranslation();
   const [kind, setKind] = useState<AssetKind | null>(null);
   const [search, setSearch] = useState("");
+  const [renaming, setRenaming] = useState<Asset | null>(null);
+  const [deleting, setDeleting] = useState<Asset | null>(null);
   const searchId = useId();
   const assets = useAssets({ kind, search: search.trim() || null });
   const importFile = useImportAsset();
@@ -129,12 +132,19 @@ export function MediaLibraryScreen() {
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3">
             {assets.data?.map((asset) => (
               <li key={asset.id}>
-                <AssetTile asset={asset} />
+                <AssetTile
+                  asset={asset}
+                  onRename={() => setRenaming(asset)}
+                  onDelete={() => setDeleting(asset)}
+                />
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      <RenameAssetDialog asset={renaming} onClose={() => setRenaming(null)} />
+      <DeleteAssetDialog asset={deleting} onClose={() => setDeleting(null)} />
     </main>
   );
 }
