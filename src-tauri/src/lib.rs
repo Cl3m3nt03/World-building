@@ -54,6 +54,12 @@ pub fn run() -> tauri::Result<()> {
                 log_dir = %log_dir.display(),
                 "BuilderZ started"
             );
+            // WebView2 settings injected through the environment (e.g. by
+            // msedgedriver in the end-to-end tests), useful when a webview
+            // does not start as expected.
+            for (key, value) in std::env::vars().filter(|(key, _)| key.starts_with("WEBVIEW2_")) {
+                tracing::debug!(%key, %value, "WebView2 environment");
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

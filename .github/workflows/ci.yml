@@ -146,6 +146,18 @@ jobs:
                 "$($_.FullName) ($($_.Length) bytes)"
               }
           }
+          foreach ($key in 'HKLM:\SOFTWARE\Policies\Microsoft\Edge', 'HKCU:\SOFTWARE\Policies\Microsoft\Edge', 'HKLM:\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge') {
+            if (Test-Path $key) {
+              "== Policies under $key"
+              Get-ChildItem -Path $key -Recurse -ErrorAction SilentlyContinue | ForEach-Object { "  [$($_.Name)]"; $_ | Get-ItemProperty | Format-List | Out-String -Width 300 }
+              Get-ItemProperty -Path $key | Format-List | Out-String -Width 300
+            } else { "== No policies under $key" }
+          }
+          "== Profiles created under TEMP"
+          Get-ChildItem -Path $env:TEMP -Directory -Filter 'scoped_dir*' -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.FullName; Get-ChildItem $_.FullName -Recurse -Depth 1 -ErrorAction SilentlyContinue | Select-Object -First 15 | ForEach-Object { "   $($_.FullName)" } }
+          "== App WebView2 data"
+          Get-ChildItem -Path (Join-Path $env:LOCALAPPDATA 'app.builderz.desktop') -Recurse -Depth 1 -ErrorAction SilentlyContinue | ForEach-Object { "   $($_.FullName)" }
           Get-Process | Where-Object { $_.ProcessName -match 'msedge|webview|builderz' } |
             Select-Object ProcessName, Id, SessionId | Format-Table | Out-String | Write-Host
           "Session: $([System.Diagnostics.Process]::GetCurrentProcess().SessionId), user: $env:USERNAME, interactive: $([Environment]::UserInteractive)"
