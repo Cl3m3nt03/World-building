@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
-import { useSettings } from "@/features/settings";
+import { SettingsButton, useSettings } from "@/features/settings";
 import { useOpenWorld } from "../hooks/useWorlds";
 import { CreateWorldDialog } from "./CreateWorldDialog";
 
@@ -38,7 +38,8 @@ export function WorldListScreen() {
     <main className="mx-auto flex h-full w-full max-w-3xl flex-col gap-8 px-8 pt-16">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-4xl font-bold">{t("worlds.title")}</h1>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <SettingsButton className="rounded-full" />
           <Button variant="secondary" onClick={pickAndOpen} disabled={openWorld.isPending}>
             <FolderOpen />
             {t("worlds.open")}

@@ -5,7 +5,10 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	appInfo: () => typedError<AppInfo, AppError>(__TAURI_INVOKE("app_info")),
-	/**  Suggested parent folder for new worlds (`Documents\BuilderZ` by default). */
+	/**
+	 *  Suggested parent folder for new worlds: the one chosen in the settings,
+	 *  else `Documents/BuilderZ`.
+	 */
 	defaultWorldsDir: () => typedError<string, AppError>(__TAURI_INVOKE("default_worlds_dir")),
 	/**
 	 *  Copies the file at `path` into the open world's `assets/`, named by its
@@ -16,6 +19,11 @@ export const commands = {
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
 	updatePreferences: (preferences: Preferences) => typedError<AppSettings, AppError>(__TAURI_INVOKE("update_preferences", { preferences })),
+	/**
+	 *  Sets (absolute path) or resets (`null`) the folder proposed for new
+	 *  worlds, and returns the updated settings.
+	 */
+	setDefaultWorldsDir: (path: string | null) => typedError<AppSettings, AppError>(__TAURI_INVOKE("set_default_worlds_dir", { path })),
 	/**
 	 *  Creates a world named `name` in a new folder inside `parent_dir` (the
 	 *  folder is named after the world), and opens it.
@@ -84,6 +92,11 @@ export type AppSettings = {
 	preferences: Preferences,
 	/**  Most recently opened first. */
 	recentWorlds: RecentWorld[],
+	/**
+	 *  Folder proposed for new worlds; `None` means the default one
+	 *  (`Documents/BuilderZ`, see `paths::default_worlds_dir`).
+	 */
+	defaultWorldsDir: string | null,
 };
 
 /**  An imported file. */

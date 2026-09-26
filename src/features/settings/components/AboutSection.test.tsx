@@ -5,7 +5,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
 import type { AppInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
-import { AboutDialog } from "./AboutDialog";
+import { AboutSection } from "./AboutSection";
 
 afterEach(() => {
   cleanup();
@@ -15,7 +15,7 @@ afterEach(() => {
 function renderDialog() {
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <AboutDialog open onOpenChange={() => {}} />
+      <AboutSection />
     </QueryClientProvider>,
   );
 }

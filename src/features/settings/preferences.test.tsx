@@ -10,6 +10,7 @@ import { loadPreferences, usePreferencesSync } from "./preferences";
 const saved: AppSettings = {
   preferences: { language: "en", theme: "dark", transparencyEffects: false },
   recentWorlds: [],
+  defaultWorldsDir: null,
 };
 
 beforeEach(async () => {

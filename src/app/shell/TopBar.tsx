@@ -1,35 +1,11 @@
-import {
-  BookOpen,
-  Feather,
-  Globe,
-  House,
-  Info,
-  LayoutGrid,
-  type LucideIcon,
-  Radio,
-  Settings,
-} from "lucide-react";
-import { useState } from "react";
+import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon, Radio } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useUiStore } from "@/app/stores/ui";
-import type { ThemePreference } from "@/app/theme";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AboutDialog } from "@/features/settings";
+import { SettingsButton } from "@/features/settings";
 import { useCloseWorld, useCurrentWorld } from "@/features/world";
-import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
+import type { TranslationKey } from "@/i18n";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
 
@@ -39,21 +15,6 @@ const TABS: { value: ShellTab; icon: LucideIcon; label: TranslationKey }[] = [
   { value: "wiki", icon: BookOpen, label: "shell.tabs.wiki" },
   { value: "quill", icon: Feather, label: "shell.tabs.quill" },
 ];
-
-const THEMES: { value: ThemePreference; label: TranslationKey }[] = [
-  { value: "light", label: "settings.theme.light" },
-  { value: "dark", label: "settings.theme.dark" },
-  { value: "system", label: "settings.theme.system" },
-];
-
-const LANGUAGE_LABELS: Record<Language, TranslationKey> = {
-  fr: "settings.language.fr",
-  en: "settings.language.en",
-};
-
-function isThemePreference(value: string): value is ThemePreference {
-  return THEMES.some((theme) => theme.value === value);
-}
 
 type TopBarProps = {
   activeTab: ShellTab;
@@ -74,12 +35,7 @@ function IconAction({ icon: Icon, label }: { icon: LucideIcon; label: Translatio
 }
 
 export function TopBar({ activeTab }: TopBarProps) {
-  const { t, i18n } = useTranslation();
-  const theme = useUiStore((state) => state.theme);
-  const setTheme = useUiStore((state) => state.setTheme);
-  const transparency = useUiStore((state) => state.transparency);
-  const setTransparency = useUiStore((state) => state.setTransparency);
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
   return (
@@ -132,65 +88,7 @@ export function TopBar({ activeTab }: TopBarProps) {
       >
         <IconAction icon={Radio} label="shell.actions.radio" />
 
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={t("shell.actions.settings")}
-                  className="rounded-full"
-                >
-                  <Settings />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>{t("shell.actions.settings")}</TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{t("settings.appearance")}</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={theme}
-              onValueChange={(value) => {
-                if (isThemePreference(value)) setTheme(value);
-              }}
-            >
-              {THEMES.map(({ value, label }) => (
-                <DropdownMenuRadioItem key={value} value={value}>
-                  {t(label)}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={transparency === "on"}
-              onCheckedChange={(checked) => setTransparency(checked ? "on" : "off")}
-            >
-              {t("settings.transparency")}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>{t("settings.language")}</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={i18n.resolvedLanguage ?? i18n.language}
-              onValueChange={(value) => {
-                if (isLanguage(value)) void i18n.changeLanguage(value);
-              }}
-            >
-              {LANGUAGES.map((language) => (
-                <DropdownMenuRadioItem key={language} value={language} lang={language}>
-                  {t(LANGUAGE_LABELS[language])}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => setAboutOpen(true)}>
-              <Info />
-              {t("shell.actions.about")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+        <SettingsButton />
 
         <Button
           variant="secondary"
