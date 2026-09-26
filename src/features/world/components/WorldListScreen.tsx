@@ -1,4 +1,3 @@
-import { open as pickFolder } from "@tauri-apps/plugin-dialog";
 import { FolderOpen, Plus } from "lucide-react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { SettingsButton, useSettings } from "@/features/settings";
 import type { RecentWorld } from "@/lib/bindings";
+import { openDialog as pickFolder } from "@/lib/dialogs";
 import {
   useMissingWorlds,
   useRelocateRecentWorld,

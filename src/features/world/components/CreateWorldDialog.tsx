@@ -1,4 +1,3 @@
-import { open as pickFolder } from "@tauri-apps/plugin-dialog";
 import { FolderOpen } from "lucide-react";
 import { type FormEvent, useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { commands, type Genre } from "@/lib/bindings";
+import { openDialog as pickFolder } from "@/lib/dialogs";
 import { unwrap } from "@/lib/ipc";
 import { DEFAULT_GENRE, GENRES, isGenre } from "../genres";
 import { useCreateWorld } from "../hooks/useWorlds";
