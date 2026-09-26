@@ -1,0 +1,3 @@
+# `unwrap()` and `expect()` are denied in Cargo.toml, except in tests (see CLAUDE.md).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

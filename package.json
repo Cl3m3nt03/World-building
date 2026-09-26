@@ -8,7 +8,17 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "prepare": "lefthook install",
+    "lint": "pnpm lint:ts && pnpm lint:rust",
+    "lint:ts": "biome check .",
+    "lint:rust": "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
+    "format": "biome check --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "format:check": "biome format . && cargo fmt --manifest-path src-tauri/Cargo.toml --check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:rust"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
@@ -16,12 +26,17 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
     "@tauri-apps/cli": "^2",
     "@types/node": "^24",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^6.0.2",
+    "lefthook": "2.1.14",
     "typescript": "~6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "5.0.2"
   }
 }
