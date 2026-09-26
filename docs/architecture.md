@@ -194,3 +194,22 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
 ## Tests
 
 À compléter (issues 0.3, 0.4, 0.12) : Vitest, `cargo test`, WebdriverIO + `tauri-driver`.
+
+## Releases
+
+Automatisées par **release-please** et **tauri-action** (`.github/workflows/release.yml`), versions SemVer (ADR 0002) :
+
+1. À chaque push sur `main`, release-please ouvre ou met à jour la **PR de release** : `CHANGELOG.md` (sections `feat`, `fix`, `perf` ; le reste est masqué) et la version dans `package.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock` et `src-tauri/tauri.conf.json`. Configuration : `release-please-config.json`, dernière version publiée : `.release-please-manifest.json`.
+2. **Fusionner la PR de release** crée le tag `vX.Y.Z` et la release GitHub.
+3. Dans le même workflow, le job « Windows installer » construit l'installeur NSIS (`BuilderZ_X.Y.Z_x64-setup.exe`) et l'attache à la release.
+
+En phase `0.x`, une `feat` monte la version mineure et un changement cassant aussi (`bump-minor-pre-major`) ; la `1.0.0` sera décidée à la fin de M8.
+
+Points d'attention :
+
+- **Pourquoi un seul workflow** : un tag ou une PR créés avec le `GITHUB_TOKEN` de GitHub Actions ne déclenchent aucun autre workflow. Le build de l'installeur suit donc release-please dans le même workflow. Un tag `v*` poussé à la main déclenche aussi le build.
+- **Checks obligatoires sur la PR de release** : pour la même raison, la CI ne tourne pas d'elle-même sur une PR ouverte avec `GITHUB_TOKEN`, et `main` exige des checks verts. Deux solutions :
+  - fermer puis rouvrir la PR de release à la main, ce qui déclenche la CI ;
+  - ou créer un jeton personnel à portée fine (dépôt `World-building`, droits *Contents* et *Pull requests* en écriture) et l'enregistrer comme secret `RELEASE_PLEASE_TOKEN` : le workflow l'utilise automatiquement et la CI tourne sur chaque mise à jour de la PR.
+- Le réglage du dépôt « Allow GitHub Actions to create and approve pull requests » doit rester activé.
+- L'installeur n'est **pas signé** : SmartScreen demande une confirmation au premier lancement (accepté dans l'ADR 0001).

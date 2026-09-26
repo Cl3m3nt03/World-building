@@ -51,6 +51,10 @@ Tauri 2 · Rust (SQLite via `sqlx`) · React 19 + TypeScript · Vite · Tailwind
 | `docs/architecture.md` | Vue d'ensemble du code |
 | `CLAUDE.md` | Règles de travail pour Claude Code |
 
+## Installer BuilderZ
+
+Les installeurs Windows (`BuilderZ_X.Y.Z_x64-setup.exe`) sont attachés aux [releases GitHub](https://github.com/Cl3m3nt03/World-building/releases). L'installeur n'est pas signé : au premier lancement, Windows SmartScreen demande de confirmer (« Informations complémentaires » puis « Exécuter quand même »).
+
 ## Contribuer
 
 GitHub Flow : une issue = une branche = une PR, Conventional Commits, squash merge. Voir `docs/adr/0002-workflow-et-conventions.md`.

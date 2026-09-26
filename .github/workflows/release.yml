@@ -1,0 +1,92 @@
+name: Release
+
+# 1. On every push to main, release-please opens or updates the release PR
+#    (CHANGELOG.md + version in package.json, Cargo.toml, Cargo.lock and
+#    tauri.conf.json), computed from the Conventional Commits since the last
+#    release.
+# 2. Merging that PR makes release-please tag vX.Y.Z and create the GitHub
+#    release; the `installer` job then builds the NSIS installer and attaches
+#    it to that release.
+#
+# The installer job lives in this workflow, not in one triggered by the tag:
+# a tag created with GITHUB_TOKEN does not trigger other workflows. A v* tag
+# pushed by hand still builds and publishes the installer.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release PR
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          # A personal token lets CI run on the release PR (PRs opened with
+          # GITHUB_TOKEN trigger no workflow, and main requires green checks).
+          # See docs/architecture.md, "Releases".
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  installer:
+    name: Windows installer
+    needs: release-please
+    # Runs after a release created by release-please, or on a v* tag pushed by hand.
+    if: >-
+      always() &&
+      (needs.release-please.outputs.release_created == 'true' ||
+       startsWith(github.ref, 'refs/tags/v'))
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      SQLX_OFFLINE: "true"
+      LEFTHOOK: "0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Builds the NSIS installer (bundle target in tauri.conf.json) and
+      # uploads it to the release of this tag, creating the release if needed.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ needs.release-please.outputs.tag_name || github.ref_name }}
+          releaseName: BuilderZ ${{ needs.release-please.outputs.tag_name || github.ref_name }}
+          releaseBody: See CHANGELOG.md. The installer is not signed, so Windows SmartScreen asks for confirmation on first launch.
+          releaseDraft: false
+          prerelease: false
