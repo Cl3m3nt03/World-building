@@ -1,0 +1,19 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) AS \"count!: i64\" FROM sqlite_master\n           WHERE type = 'table' AND name = '_sqlx_migrations'",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [false]
+  },
+  "hash": "8d679fba1258bd6b40e97e454bdecfc91a6fb2716c9efd6a30a6421f40e8437d"
+}

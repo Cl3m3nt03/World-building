@@ -1,6 +1,10 @@
 mod commands;
+mod db;
 mod error;
 mod logging;
+mod settings;
+mod state;
+mod world;
 
 use tauri::Manager;
 use tauri_specta::{Builder, collect_commands};
@@ -13,7 +17,15 @@ pub const BINDINGS_PATH: &str = "../src/lib/bindings.ts";
 /// Every command exposed to the front. The TypeScript bindings are generated
 /// from this list (see the `export_bindings` test).
 pub fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![commands::app::app_info])
+    Builder::<tauri::Wry>::new().commands(collect_commands![
+        commands::app::app_info,
+        commands::settings::get_settings,
+        commands::settings::update_preferences,
+        commands::world::create_world,
+        commands::world::open_world,
+        commands::world::close_world,
+        commands::world::current_world,
+    ])
 }
 
 /// Builds and runs the Tauri application.
@@ -27,6 +39,10 @@ pub fn run() -> tauri::Result<()> {
             let log_dir = app.path().app_log_dir()?;
             let guard = logging::init(&log_dir)?;
             app.manage(guard);
+
+            let config_dir = app.path().app_config_dir()?;
+            let settings = settings::load(&config_dir);
+            app.manage(state::AppState::new(config_dir, settings));
             tracing::info!(
                 version = %app.package_info().version,
                 log_dir = %log_dir.display(),

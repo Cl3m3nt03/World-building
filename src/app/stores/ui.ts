@@ -15,7 +15,7 @@ type UiState = {
 
 /**
  * UI-only state (never world data, see CLAUDE.md). Theme and transparency are
- * persisted in the app settings in 0.9; the sidebar width per world in M3.
+ * saved in the app settings (features/settings); the sidebar width per world in M3.
  */
 export const useUiStore = create<UiState>()((set) => ({
   theme: "system",

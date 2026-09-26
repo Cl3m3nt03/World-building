@@ -3,5 +3,14 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": ["core:default", "allow-app-info"]
+  "permissions": [
+    "core:default",
+    "allow-app-info",
+    "allow-get-settings",
+    "allow-update-preferences",
+    "allow-create-world",
+    "allow-open-world",
+    "allow-close-world",
+    "allow-current-world"
+  ]
 }

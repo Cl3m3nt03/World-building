@@ -50,5 +50,12 @@
   "errors.io": "A file operation failed.",
   "errors.path_unavailable": "A system folder could not be found.",
   "errors.internal": "An unexpected internal error occurred.",
-  "errors.unknown": "An unknown error occurred."
+  "errors.unknown": "An unknown error occurred.",
+  "errors.invalid_input": "The information entered is not valid.",
+  "errors.world_already_exists": "This folder is not empty: choose an empty folder or a new one.",
+  "errors.world_invalid": "This folder is not a valid BuilderZ world, or it is damaged.",
+  "errors.world_too_new": "This world was saved by a newer version of BuilderZ. Update the app to open it.",
+  "errors.no_world_open": "No world is open.",
+  "errors.database": "The world database returned an error.",
+  "errors.migration": "Updating the world failed. A backup was kept in its folder."
 }

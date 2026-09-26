@@ -22,16 +22,16 @@ function syncDocumentLanguage(language: string): void {
 /**
  * Initializes i18next with the bundled fr/en resources. Keys are flat
  * ("shell.tabs.home"), so key and namespace separators are disabled.
- * The chosen language is persisted in the app settings in 0.9.
+ * The chosen language is saved in the app settings (see features/settings).
  */
-export async function initI18n(): Promise<void> {
+export async function initI18n(language: Language = DEFAULT_LANGUAGE): Promise<void> {
   i18n.on("languageChanged", syncDocumentLanguage);
   await i18n.use(initReactI18next).init({
     resources: {
       fr: { translation: fr },
       en: { translation: en },
     },
-    lng: DEFAULT_LANGUAGE,
+    lng: language,
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: LANGUAGES,
     keySeparator: false,

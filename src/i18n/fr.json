@@ -50,5 +50,12 @@
   "errors.io": "Une opération sur les fichiers a échoué.",
   "errors.path_unavailable": "Un dossier système est introuvable.",
   "errors.internal": "Une erreur interne inattendue est survenue.",
-  "errors.unknown": "Une erreur inconnue est survenue."
+  "errors.unknown": "Une erreur inconnue est survenue.",
+  "errors.invalid_input": "Les informations saisies ne sont pas valides.",
+  "errors.world_already_exists": "Ce dossier n'est pas vide : choisissez un dossier vide ou un nouveau dossier.",
+  "errors.world_invalid": "Ce dossier n'est pas un monde BuilderZ valide, ou il est endommagé.",
+  "errors.world_too_new": "Ce monde a été enregistré par une version plus récente de BuilderZ. Mettez l'application à jour pour l'ouvrir.",
+  "errors.no_world_open": "Aucun monde n'est ouvert.",
+  "errors.database": "La base de données du monde a renvoyé une erreur.",
+  "errors.migration": "La mise à jour du monde a échoué. Une sauvegarde a été conservée dans son dossier."
 }

@@ -5,6 +5,30 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	appInfo: () => typedError<AppInfo, AppError>(__TAURI_INVOKE("app_info")),
+	/**  App settings: preferences and recent worlds. */
+	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
+	/**  Saves new preferences and returns the updated settings. */
+	updatePreferences: (preferences: Preferences) => typedError<AppSettings, AppError>(__TAURI_INVOKE("update_preferences", { preferences })),
+	/**  Creates a world in `path` (a new or empty folder) and opens it. */
+	createWorld: (path: string, name: string) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { path, name })),
+	/**
+	 *  Opens the world in `path`, migrating it if needed. Closes the world that
+	 *  was open, if any.
+	 */
+	openWorld: (path: string) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("open_world", { path })),
+	/**  Closes the open world. Does nothing if no world is open. */
+	closeWorld: () => typedError<null, AppError>(__TAURI_INVOKE("close_world")),
+	/**  The open world, if any. */
+	currentWorld: () => typedError<{
+	id: string,
+	name: string,
+	/**  Absolute path of the world folder. */
+	path: string,
+	schemaVersion: number,
+	/**  RFC 3339 dates. */
+	createdAt: string,
+	lastOpenedAt: string,
+} | null, AppError>(__TAURI_INVOKE("current_world")),
 };
 
 /* Types */
@@ -13,6 +37,20 @@ export type AppError =
 { code: "io"; message: string } | 
 /**  A system directory (config, logs, data) could not be resolved. */
 { code: "path_unavailable"; message: string } | 
+/**  The input sent by the front is not valid (empty name, bad path…). */
+{ code: "invalid_input"; message: string } | 
+/**  A world cannot be created there: the folder exists and is not empty. */
+{ code: "world_already_exists"; message: string } | 
+/**  The folder is not a valid BuilderZ world (missing or corrupted files). */
+{ code: "world_invalid"; message: string } | 
+/**  The world was saved by a newer BuilderZ; it is left untouched. */
+{ code: "world_too_new"; message: string } | 
+/**  The command needs an open world and none is open. */
+{ code: "no_world_open"; message: string } | 
+/**  A database query failed. */
+{ code: "database"; message: string } | 
+/**  Applying the database migrations failed; the backup is kept. */
+{ code: "migration"; message: string } | 
 /**  Anything that should not happen; always a bug. */
 { code: "internal"; message: string };
 
@@ -22,6 +60,43 @@ export type AppInfo = {
 	configDir: string,
 	dataDir: string,
 	logDir: string,
+};
+
+export type AppSettings = {
+	preferences: Preferences,
+	/**  Most recently opened first. */
+	recentWorlds: RecentWorld[],
+};
+
+export type Language = "fr" | "en";
+
+/**  Preferences edited by the user in the settings. */
+export type Preferences = {
+	language: Language,
+	theme: Theme,
+	transparencyEffects: boolean,
+};
+
+export type RecentWorld = {
+	/**  Absolute path of the world folder. */
+	path: string,
+	name: string,
+	/**  RFC 3339 date. */
+	lastOpenedAt: string,
+};
+
+export type Theme = "light" | "dark" | "system";
+
+/**  A world as seen by the front. */
+export type WorldInfo = {
+	id: string,
+	name: string,
+	/**  Absolute path of the world folder. */
+	path: string,
+	schemaVersion: number,
+	/**  RFC 3339 dates. */
+	createdAt: string,
+	lastOpenedAt: string,
 };
 
 /* Tauri Specta runtime */
