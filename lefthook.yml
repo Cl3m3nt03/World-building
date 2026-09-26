@@ -1,0 +1,23 @@
+# Git hooks, installed by `pnpm install` (see the `prepare` script).
+# Hooks only check, they never rewrite files: run `pnpm format` to fix formatting.
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+
+    - name: rustfmt
+      glob: "src-tauri/**/*.rs"
+      run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
+    - name: clippy
+      glob: "src-tauri/**/*.{rs,toml}"
+      run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}

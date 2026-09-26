@@ -21,12 +21,20 @@ Tauri 2 · Rust (SQLite via `sqlx`) · React 19 + TypeScript · Vite · Tailwind
 | Commande | Rôle |
 |---|---|
 | `pnpm tauri dev` | Lancer l'app en développement |
-| `pnpm check` | Tout vérifier (à lancer avant chaque PR) |
-| `pnpm test` / `cargo test` | Tests front / Rust |
-| `pnpm test:e2e` | Tests de bout en bout |
+| `pnpm check` | Tout vérifier : format, lint, typecheck, tests front et Rust (à lancer avant chaque PR) |
+| `pnpm format` | Formater le TS (Biome) et le Rust (rustfmt) |
+| `pnpm lint` | Biome + `cargo clippy -D warnings` |
+| `pnpm typecheck` | Vérifier les types TypeScript |
+| `pnpm test` / `pnpm test:rust` | Tests front (Vitest) / Rust (`cargo test`) |
+| `pnpm test:e2e` | Tests de bout en bout (arrive avec 0.12) |
 | `pnpm tauri build` | Construire l'installeur |
 
-Ces commandes arrivent avec les issues 0.2 et 0.3 de M0.
+## Hooks Git
+
+`pnpm install` installe les hooks **lefthook** :
+
+- **pre-commit** : Biome sur les fichiers indexés, `cargo fmt --check` et `cargo clippy -D warnings` si du Rust a changé. Les hooks vérifient sans rien réécrire : en cas de refus, lancer `pnpm format`.
+- **commit-msg** : commitlint, format Conventional Commits (voir ADR 0002).
 
 ## Documentation
 

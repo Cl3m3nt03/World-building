@@ -24,6 +24,14 @@ serde_json = "1"
 # MSVC prints an informational "creating library .dll.lib" line when linking the
 # cdylib; rustc surfaces it as a warning, which would fail `-D warnings` builds.
 linker_messages = "allow"
+unsafe_code = "forbid"
+
+[lints.clippy]
+# No `unwrap()` / `expect()` outside tests: errors go through `AppError` (CLAUDE.md).
+unwrap_used = "deny"
+expect_used = "deny"
+dbg_macro = "deny"
+todo = "warn"
 
 # See https://tauri.app/concept/size/#cargo-configuration
 [profile.release]
