@@ -14,8 +14,11 @@ export const commands = {
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
 	updatePreferences: (preferences: Preferences) => typedError<AppSettings, AppError>(__TAURI_INVOKE("update_preferences", { preferences })),
-	/**  Creates a world in `path` (a new or empty folder) and opens it. */
-	createWorld: (path: string, name: string) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { path, name })),
+	/**
+	 *  Creates a world named `name` in a new folder inside `parent_dir` (the
+	 *  folder is named after the world), and opens it.
+	 */
+	createWorld: (parentDir: string, name: string) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name })),
 	/**
 	 *  Opens the world in `path`, migrating it if needed. Closes the world that
 	 *  was open, if any.

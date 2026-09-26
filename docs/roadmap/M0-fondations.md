@@ -94,7 +94,7 @@
 **Branche** : `feat/world-storage` · **Dépend de** : 0.8
 
 - [ ] Intégrer `sqlx` avec SQLite (WAL activé, clés étrangères actives)
-- [ ] Écrire le module `world` : `create_world(path, name)`, `open_world(path)`, `close_world()`, avec un seul monde ouvert à la fois
+- [ ] Écrire le module `world` : `create_world(path, name)`, `open_world(path)`, `close_world()`, avec un seul monde ouvert à la fois (devenu `create_world(parentDir, name)` en 0.11 : le dossier du monde est créé à son nom)
 - [ ] Définir le format du dossier : `world.json` (id, nom, `schema_version`, dates), `world.db` et `assets/`
 - [ ] Embarquer les migrations et faire une sauvegarde automatique avant chaque migration
 - [ ] Refuser d'ouvrir un monde dont le `schema_version` est plus récent que celui de l'app

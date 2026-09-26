@@ -10,7 +10,7 @@ import { createQueryClient } from "@/lib/query";
 
 function Providers() {
   const [queryClient] = useState(createQueryClient);
-  const [router] = useState(() => createAppRouter());
+  const [router] = useState(() => createAppRouter(queryClient));
   useThemeSync();
   usePreferencesSync();
 

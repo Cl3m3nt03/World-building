@@ -169,7 +169,8 @@ pub fn load(config_dir: &Path) -> AppSettings {
         }
     };
 
-    match serde_json::from_str(&json) {
+    // Tolerate a UTF-8 BOM (files edited with Notepad or PowerShell 5).
+    match serde_json::from_str(json.trim_start_matches('\u{feff}')) {
         Ok(settings) => settings,
         Err(error) => {
             tracing::warn!(%error, "settings file is corrupted, using defaults");
@@ -249,6 +250,19 @@ mod tests {
         let settings = load(dir.path());
         assert_eq!(settings.preferences.theme, Theme::Dark);
         assert_eq!(settings.preferences.language, Language::Fr);
+    }
+
+    #[test]
+    fn a_utf8_bom_is_tolerated() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join(SETTINGS_FILE),
+            "\u{feff}{ \"preferences\": { \"language\": \"en\" } }",
+        )
+        .unwrap();
+
+        assert_eq!(load(dir.path()).preferences.language, Language::En);
+        assert!(!dir.path().join(CORRUPTED_FILE).exists());
     }
 
     #[test]
