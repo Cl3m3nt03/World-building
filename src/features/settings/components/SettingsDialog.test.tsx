@@ -15,7 +15,13 @@ const calls: { command: string; payload: unknown }[] = [];
 beforeEach(async () => {
   calls.length = 0;
   settings = {
-    preferences: { language: "fr", theme: "system", transparencyEffects: true },
+    preferences: {
+      language: "fr",
+      theme: "system",
+      transparencyEffects: true,
+      radioVolume: 70,
+      radioMode: "loop",
+    },
     recentWorlds: [],
     defaultWorldsDir: "D:/Mondes",
   };

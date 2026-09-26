@@ -34,6 +34,22 @@ pub enum Theme {
     System,
 }
 
+/// How the radio moves on at the end of a track.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum RadioMode {
+    /// Plays the tracks in order, then starts over.
+    #[default]
+    Loop,
+    /// Plays the same track again.
+    RepeatOne,
+    /// Picks a random track.
+    Shuffle,
+}
+
+/// Default radio volume, in percent.
+pub const DEFAULT_RADIO_VOLUME: u8 = 70;
+
 /// Preferences edited by the user in the settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -41,6 +57,9 @@ pub struct Preferences {
     pub language: Language,
     pub theme: Theme,
     pub transparency_effects: bool,
+    /// Radio volume, from 0 to 100.
+    pub radio_volume: u8,
+    pub radio_mode: RadioMode,
 }
 
 impl Default for Preferences {
@@ -49,6 +68,8 @@ impl Default for Preferences {
             language: Language::default(),
             theme: Theme::default(),
             transparency_effects: true,
+            radio_volume: DEFAULT_RADIO_VOLUME,
+            radio_mode: RadioMode::default(),
         }
     }
 }
@@ -122,6 +143,10 @@ struct RawPreferences {
     language: Language,
     theme: Theme,
     transparency_effects: bool,
+    // Read loosely: an out-of-range volume or an unknown mode must not make
+    // the whole settings file look corrupted.
+    radio_volume: serde_json::Value,
+    radio_mode: serde_json::Value,
 }
 
 impl Default for RawPreferences {
@@ -130,12 +155,25 @@ impl Default for RawPreferences {
             language,
             theme,
             transparency_effects,
+            ..
         } = Preferences::default();
         Self {
             language,
             theme,
             transparency_effects,
+            radio_volume: serde_json::Value::Null,
+            radio_mode: serde_json::Value::Null,
         }
+    }
+}
+
+/// A volume in percent, clamped to 0..=100; the default when not a number.
+fn radio_volume(value: &serde_json::Value) -> u8 {
+    match value.as_f64() {
+        // Clamped first, so the cast cannot truncate.
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        Some(volume) if volume.is_finite() => volume.clamp(0.0, 100.0).round() as u8,
+        _ => DEFAULT_RADIO_VOLUME,
     }
 }
 
@@ -145,11 +183,15 @@ impl<'de> Deserialize<'de> for Preferences {
             language,
             theme,
             transparency_effects,
+            radio_volume: volume,
+            radio_mode: mode,
         } = RawPreferences::deserialize(deserializer)?;
         Ok(Self {
             language,
             theme,
             transparency_effects,
+            radio_volume: radio_volume(&volume),
+            radio_mode: serde_json::from_value(mode).unwrap_or_default(),
         })
     }
 }
@@ -379,6 +421,32 @@ mod tests {
         let settings = load(dir.path());
         assert_eq!(settings.preferences.theme, Theme::Dark);
         assert_eq!(settings.preferences.language, Language::Fr);
+    }
+
+    #[test]
+    fn radio_preferences_are_read_loosely() {
+        let dir = tempfile::tempdir().unwrap();
+        let write = |json: &str| std::fs::write(dir.path().join(SETTINGS_FILE), json).unwrap();
+
+        write(r#"{ "preferences": { "radioVolume": 35, "radioMode": "shuffle" } }"#);
+        let preferences = load(dir.path()).preferences;
+        assert_eq!(preferences.radio_volume, 35);
+        assert_eq!(preferences.radio_mode, RadioMode::Shuffle);
+
+        write(
+            r#"{ "preferences": { "theme": "dark", "radioVolume": 300, "radioMode": "party" } }"#,
+        );
+        let preferences = load(dir.path()).preferences;
+        assert_eq!(preferences.theme, Theme::Dark);
+        assert_eq!(preferences.radio_volume, 100);
+        assert_eq!(preferences.radio_mode, RadioMode::Loop);
+
+        write(r#"{ "preferences": { "radioVolume": "loud" } }"#);
+        assert_eq!(
+            load(dir.path()).preferences.radio_volume,
+            DEFAULT_RADIO_VOLUME
+        );
+        assert!(!dir.path().join(CORRUPTED_FILE).exists());
     }
 
     #[test]

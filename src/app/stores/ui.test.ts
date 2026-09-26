@@ -28,3 +28,13 @@ test("sidebar width is clamped to its bounds", () => {
   useUiStore.getState().setSidebarWidth(9999);
   expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_WIDTH.max);
 });
+
+test("radio volume is rounded, clamped, and ignores non-numbers", () => {
+  useUiStore.setState({ radioVolume: 70 });
+  useUiStore.getState().setRadioVolume(42.6);
+  expect(useUiStore.getState().radioVolume).toBe(43);
+  useUiStore.getState().setRadioVolume(250);
+  expect(useUiStore.getState().radioVolume).toBe(100);
+  useUiStore.getState().setRadioVolume(Number.NaN);
+  expect(useUiStore.getState().radioVolume).toBe(100);
+});

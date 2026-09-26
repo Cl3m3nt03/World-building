@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ThemePreference, TransparencyPreference } from "@/app/theme";
+import type { RadioMode } from "@/lib/bindings";
 
 export const SIDEBAR_WIDTH = { default: 280, min: 200, max: 480 } as const;
 
@@ -11,6 +12,11 @@ type UiState = {
   setTheme: (theme: ThemePreference) => void;
   setTransparency: (transparency: TransparencyPreference) => void;
   setSidebarWidth: (width: number) => void;
+  /** Radio volume (0–100) and mode, saved in the app settings. */
+  radioVolume: number;
+  radioMode: RadioMode;
+  setRadioVolume: (volume: number) => void;
+  setRadioMode: (mode: RadioMode) => void;
   /** Panel of the open world (top bar, and "Settings" on the Home tab). */
   worldPanelOpen: boolean;
   setWorldPanelOpen: (open: boolean) => void;
@@ -28,6 +34,14 @@ export const useUiStore = create<UiState>()((set) => ({
   setTransparency: (transparency) => set({ transparency }),
   setSidebarWidth: (width) =>
     set({ sidebarWidth: Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, width)) }),
+  radioVolume: 70,
+  radioMode: "loop",
+  setRadioVolume: (volume) => {
+    if (Number.isFinite(volume)) {
+      set({ radioVolume: Math.round(Math.min(100, Math.max(0, volume))) });
+    }
+  },
+  setRadioMode: (radioMode) => set({ radioMode }),
   worldPanelOpen: false,
   setWorldPanelOpen: (worldPanelOpen) => set({ worldPanelOpen }),
 }));

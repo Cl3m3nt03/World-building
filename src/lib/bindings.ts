@@ -178,7 +178,19 @@ export type Preferences = {
 	language: Language,
 	theme: Theme,
 	transparencyEffects: boolean,
+	/**  Radio volume, from 0 to 100. */
+	radioVolume: number,
+	radioMode: RadioMode,
 };
+
+/**  How the radio moves on at the end of a track. */
+export type RadioMode = 
+/**  Plays the tracks in order, then starts over. */
+"loop" | 
+/**  Plays the same track again. */
+"repeatOne" | 
+/**  Picks a random track. */
+"shuffle";
 
 export type RecentWorld = {
 	/**  Absolute path of the world folder. */
