@@ -66,6 +66,10 @@ Ces réglages sont stockés dans le dossier de config de l'app, pas dans un mond
 
 C'est la galerie de tous les fichiers importés dans le monde (images, sons et autres fichiers), en grille de vignettes avec le nom, le type et la taille. On y accède depuis l'onglet Home (bloc « Gérer »). On importe avec le bouton « Importer » (plusieurs fichiers à la fois), en glissant des fichiers sur la fenêtre, ou en collant une image (`Ctrl+V`, hors champ de saisie ; elle est nommée « Image collée » suivi de la date). On filtre par type (Tout, Images, Sons, Autres) et on recherche par nom. Chaque vignette a un bouton « … » et un menu au clic droit avec **Renommer** et **Supprimer** ; quand le bouton « … » a le focus, `F2` renomme et `Suppr` supprime. Renommer ne change que le nom affiché : le fichier garde son nom sur le disque. La suppression est toujours confirmée, et si le fichier est encore utilisé (par exemple comme image principale du monde), la confirmation indique où avant de proposer « Supprimer quand même ». Tous les sélecteurs d'image de l'app (carte, map, canvas…) passent par la médiathèque.
 
+### Sélecteur d'image
+
+C'est une fenêtre commune à tous les endroits où l'on choisit une image (image principale du monde, puis cartes, maps et canvas). Elle affiche les images de la médiathèque en grille, avec une recherche par nom. On sélectionne d'un clic, puis on valide avec « Choisir » ; un double-clic valide directement. Au clavier, les flèches parcourent la grille, `Début` et `Fin` vont à la première et à la dernière image, et `Entrée` valide. Le bouton « Importer une image » ouvre l'explorateur de fichiers : l'image importée entre dans la médiathèque et est choisie aussitôt. L'image actuelle est présélectionnée à l'ouverture.
+
 ## Radio
 
 C'est un lecteur d'ambiance qui accompagne le travail. *Adaptation locale* : au lieu d'une bibliothèque en ligne, la radio lit les **pistes audio importées** par l'utilisateur, avec lecture/pause, piste suivante, volume et lecture en boucle ou aléatoire. La musique continue quand on change d'onglet.

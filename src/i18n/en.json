@@ -131,5 +131,13 @@
   "media.deleteUsed": "This file is still used:",
   "media.usage.worldMainImage": "main image of the world \"{{name}}\"",
   "media.deleteAnyway": "Delete anyway",
-  "media.renameKey": "F2"
+  "media.renameKey": "F2",
+  "imagePicker.title": "Choose an image",
+  "imagePicker.description": "Choose an image from the media library or import one from the PC. Arrow keys to browse, Enter to confirm.",
+  "imagePicker.import": "Import an image",
+  "imagePicker.importTitle": "Import an image into the media library",
+  "imagePicker.listLabel": "Media library images",
+  "imagePicker.empty": "No image in the media library yet. Import one.",
+  "imagePicker.choose": "Choose",
+  "imagePicker.notAnImage": "This file was imported into the media library, but it is not an image."
 }
