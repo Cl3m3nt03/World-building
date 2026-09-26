@@ -10,8 +10,9 @@ import {
 } from "@tanstack/react-router";
 import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
-import { ComingSoon, HomePlaceholder, WorldWorkspace } from "@/app/shell/Workspace";
+import { ComingSoon, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
+import { HomeScreen } from "@/features/home";
 import { MediaLibraryScreen } from "@/features/media";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
@@ -70,7 +71,7 @@ const worldIndexRoute = createRoute({
 const homeRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "home",
-  component: HomePlaceholder,
+  component: HomeScreen,
 });
 
 const worldTabRoute = createRoute({

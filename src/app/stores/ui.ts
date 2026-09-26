@@ -11,6 +11,9 @@ type UiState = {
   setTheme: (theme: ThemePreference) => void;
   setTransparency: (transparency: TransparencyPreference) => void;
   setSidebarWidth: (width: number) => void;
+  /** Panel of the open world (top bar, and "Settings" on the Home tab). */
+  worldPanelOpen: boolean;
+  setWorldPanelOpen: (open: boolean) => void;
 };
 
 /**
@@ -25,4 +28,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setTransparency: (transparency) => set({ transparency }),
   setSidebarWidth: (width) =>
     set({ sidebarWidth: Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, width)) }),
+  worldPanelOpen: false,
+  setWorldPanelOpen: (worldPanelOpen) => set({ worldPanelOpen }),
 }));

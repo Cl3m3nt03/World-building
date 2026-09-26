@@ -38,6 +38,8 @@ C'est la page d'accueil du monde, qu'on voit quand on revient dessus (texte du b
 
 Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles et un résumé du monde (nombre de cartes par type).
 
+**État en M1** : le titre est « Bienvenue dans <nom du monde> », avec l'image principale en miniature. Les documents récents et l'aperçu du graph affichent un état vide qui dit avec quel milestone ils arrivent (M2 et M5). Le bloc « Le monde » résume le genre, le nombre de fichiers de la médiathèque et la description ; sans description, un lien « Ajouter une description… » ouvre le panneau du monde. Dans le bloc Gérer, **Médiathèque** ouvre la médiathèque et **Réglages du monde** ouvre le panneau du monde (le même qu'en haut à gauche) ; **Types** (M2) et **Thème** (à cadrer) sont visibles mais signalés « Bientôt disponible ».
+
 ### Thème du monde
 
 Entrée **Thème** du bloc Gérer. Le thème du monde est une ambiance visuelle propre au monde (image de fond, teinte des panneaux), réutilisée par Quill (« garder le thème du monde » dans l'onglet Style, voir `08-quill.md`).

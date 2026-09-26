@@ -37,7 +37,7 @@ describe("BuilderZ smoke test", () => {
     await currentWorld.waitForDisplayed();
     await expect(currentWorld).toHaveText(expect.stringContaining(WORLD_NAME));
     await expect(browser).toHaveUrl(expect.stringContaining("/home"));
-    await expect($("h1=Bienvenue")).toBeDisplayed();
+    await expect($(`h1=Bienvenue dans ${WORLD_NAME}`)).toBeDisplayed();
   });
 
   it("wrote the world folder on disk", () => {
