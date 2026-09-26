@@ -28,5 +28,15 @@
   "settings.language": "Language",
   "settings.language.fr": "Français",
   "settings.language.en": "English",
-  "common.close": "Close"
+  "common.close": "Close",
+  "error.title": "Something went wrong",
+  "error.description": "BuilderZ ran into an unexpected display problem. Your worlds are untouched: reload the interface to continue.",
+  "error.details": "Technical details",
+  "error.reload": "Reload",
+  "error.backToWorlds": "Back to worlds",
+  "notFound.title": "Page not found",
+  "notFound.description": "This page does not exist.",
+  "worlds.title": "Worlds",
+  "worlds.empty": "No worlds yet. World creation comes with the start screen.",
+  "worlds.openDemo": "Open the demo shell"
 }

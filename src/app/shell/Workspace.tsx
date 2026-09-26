@@ -1,5 +1,6 @@
 import { LayoutGrid, type LucideIcon, Map as MapIcon, Share2, SquareUser } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,9 +40,16 @@ function StartWith() {
 /** World tab: resizable sidebar + central workspace. */
 export function WorldWorkspace() {
   const { t } = useTranslation();
+  const sidebarWidth = useUiStore((state) => state.sidebarWidth);
+  const setSidebarWidth = useUiStore((state) => state.setSidebarWidth);
   return (
     <ResizablePanelGroup orientation="horizontal" className="gap-1">
-      <ResizablePanel defaultSize={280} minSize={200} maxSize={480}>
+      <ResizablePanel
+        defaultSize={sidebarWidth}
+        minSize={SIDEBAR_WIDTH.min}
+        maxSize={SIDEBAR_WIDTH.max}
+        onResize={(size) => setSidebarWidth(size.inPixels)}
+      >
         <aside aria-label={t("sidebar.label")} className="glass flex h-full flex-col rounded-lg">
           <ScrollArea className="min-h-0 flex-1">
             <p className="p-4 text-center text-xs text-muted-foreground">{t("sidebar.empty")}</p>

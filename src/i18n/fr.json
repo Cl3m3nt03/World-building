@@ -28,5 +28,15 @@
   "settings.language": "Langue",
   "settings.language.fr": "Français",
   "settings.language.en": "English",
-  "common.close": "Fermer"
+  "common.close": "Fermer",
+  "error.title": "Une erreur est survenue",
+  "error.description": "BuilderZ a rencontré un problème d'affichage inattendu. Vos mondes ne sont pas touchés : rechargez l'interface pour reprendre.",
+  "error.details": "Détails techniques",
+  "error.reload": "Recharger",
+  "error.backToWorlds": "Retour aux mondes",
+  "notFound.title": "Page introuvable",
+  "notFound.description": "Cette page n'existe pas.",
+  "worlds.title": "Mondes",
+  "worlds.empty": "Aucun monde pour l'instant. La création de monde arrive avec l'écran de démarrage.",
+  "worlds.openDemo": "Ouvrir la coque de démonstration"
 }

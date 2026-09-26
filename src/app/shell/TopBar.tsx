@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   BookOpen,
   Feather,
@@ -9,7 +10,8 @@ import {
   Settings,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { ThemePreference, TransparencyPreference } from "@/app/theme";
+import { useUiStore } from "@/app/stores/ui";
+import type { ThemePreference } from "@/app/theme";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -51,10 +53,6 @@ function isThemePreference(value: string): value is ThemePreference {
 
 type TopBarProps = {
   activeTab: ShellTab;
-  theme: ThemePreference;
-  onThemeChange: (theme: ThemePreference) => void;
-  transparency: TransparencyPreference;
-  onTransparencyChange: (transparency: TransparencyPreference) => void;
 };
 
 function IconAction({ icon: Icon, label }: { icon: LucideIcon; label: TranslationKey }) {
@@ -71,14 +69,12 @@ function IconAction({ icon: Icon, label }: { icon: LucideIcon; label: Translatio
   );
 }
 
-export function TopBar({
-  activeTab,
-  theme,
-  onThemeChange,
-  transparency,
-  onTransparencyChange,
-}: TopBarProps) {
+export function TopBar({ activeTab }: TopBarProps) {
   const { t, i18n } = useTranslation();
+  const theme = useUiStore((state) => state.theme);
+  const setTheme = useUiStore((state) => state.setTheme);
+  const transparency = useUiStore((state) => state.transparency);
+  const setTransparency = useUiStore((state) => state.setTransparency);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
@@ -150,7 +146,7 @@ export function TopBar({
             <DropdownMenuRadioGroup
               value={theme}
               onValueChange={(value) => {
-                if (isThemePreference(value)) onThemeChange(value);
+                if (isThemePreference(value)) setTheme(value);
               }}
             >
               {THEMES.map(({ value, label }) => (
@@ -162,7 +158,7 @@ export function TopBar({
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
               checked={transparency === "on"}
-              onCheckedChange={(checked) => onTransparencyChange(checked ? "on" : "off")}
+              onCheckedChange={(checked) => setTransparency(checked ? "on" : "off")}
             >
               {t("settings.transparency")}
             </DropdownMenuCheckboxItem>
@@ -183,9 +179,11 @@ export function TopBar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="secondary" size="sm" className="ml-0.5 rounded-full">
-          <LayoutGrid />
-          {t("shell.actions.worlds")}
+        <Button asChild variant="secondary" size="sm" className="ml-0.5 rounded-full">
+          <Link to="/">
+            <LayoutGrid />
+            {t("shell.actions.worlds")}
+          </Link>
         </Button>
       </nav>
     </header>
