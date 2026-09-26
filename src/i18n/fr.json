@@ -77,5 +77,8 @@
   "createWorld.pickerTitle": "Choisir l'emplacement du monde",
   "createWorld.cancel": "Annuler",
   "createWorld.submit": "Créer",
-  "createWorld.creating": "Création…"
+  "createWorld.creating": "Création…",
+  "placeholder.comingIn": "Bientôt disponible : arrive avec {{milestone}}",
+  "placeholder.wiki": "Le wiki présentera votre monde en pages soignées, une par carte ou par map, et pourra être exporté en site web.",
+  "placeholder.quill": "Quill servira à écrire vos histoires à côté de votre monde, avec vos cartes toujours à portée de main."
 }

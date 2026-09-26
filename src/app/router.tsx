@@ -80,13 +80,17 @@ const worldTabRoute = createRoute({
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
-  component: () => <ComingSoon title="shell.tabs.wiki" />,
+  component: () => (
+    <ComingSoon title="shell.tabs.wiki" description="placeholder.wiki" milestone="M8" />
+  ),
 });
 
 const quillRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "quill",
-  component: () => <ComingSoon title="shell.tabs.quill" />,
+  component: () => (
+    <ComingSoon title="shell.tabs.quill" description="placeholder.quill" milestone="M9" />
+  ),
 });
 
 export const routeTree = rootRoute.addChildren([
