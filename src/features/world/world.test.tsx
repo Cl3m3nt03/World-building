@@ -47,10 +47,8 @@ beforeEach(() => {
         openWorld = { ...ELDEFLEUR, id: "w-new", name };
         return openWorld;
       }
-      case "plugin:path|resolve_directory":
-        return "C:/Users/me/Documents";
-      case "plugin:path|join":
-        return (payload as { paths: string[] }).paths.join("/");
+      case "default_worlds_dir":
+        return "C:/Users/me/Documents/BuilderZ";
       default:
         return undefined;
     }

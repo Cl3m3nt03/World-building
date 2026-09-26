@@ -15,6 +15,7 @@ Tauri 2 · Rust (SQLite via `sqlx`) · React 19 + TypeScript · Vite · Tailwind
 - WebView2 (déjà présent sur Windows 11)
 - Node.js LTS et pnpm
 - GitHub CLI (`gh`)
+- `tauri-driver` (pour `pnpm test:e2e`) : `cargo install tauri-driver@2.0.6 --locked`
 - `sqlx-cli` (pour `pnpm db:prepare`) : `cargo install sqlx-cli --no-default-features --features sqlite`
 
 ## Commandes
@@ -29,7 +30,7 @@ Tauri 2 · Rust (SQLite via `sqlx`) · React 19 + TypeScript · Vite · Tailwind
 | `pnpm test` / `pnpm test:rust` | Tests front (Vitest) / Rust (`cargo test`) |
 | `pnpm bindings` | Régénérer `src/lib/bindings.ts` à partir des commandes Rust |
 | `pnpm db:prepare` | Régénérer le cache sqlx `src-tauri/.sqlx/` (après une migration ou une requête ; nécessite `sqlx-cli`) |
-| `pnpm test:e2e` | Tests de bout en bout (arrive avec 0.12) |
+| `pnpm test:e2e` | Tests de bout en bout (WebdriverIO + tauri-driver, voir `docs/architecture.md`) |
 | `pnpm tauri build` | Construire l'installeur |
 
 ## Hooks Git

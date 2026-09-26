@@ -44,6 +44,21 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
 
 - Une erreur de rendu dans une route est captée par le router (`defaultErrorComponent`), une erreur hors du router par l'`ErrorBoundary` global. Les deux affichent `ErrorScreen` : message, détails techniques repliés, boutons « Recharger » et « Retour aux mondes ». Jamais d'écran blanc.
 
+### Dossiers de l'app et `BUILDERZ_HOME`
+
+`src-tauri/src/paths.rs` centralise les dossiers de l'app : réglages (`%APPDATA%pp.builderz.desktop`), logs (`%LOCALAPPDATA%pp.builderz.desktop\logs`) et emplacement proposé pour les nouveaux mondes (`Documents\BuilderZ`, via la commande `default_worlds_dir`). Si la variable d'environnement **`BUILDERZ_HOME`** est définie, les trois vont dans `$BUILDERZ_HOME\config`, `\logs` et `\worlds`. Les tests de bout en bout s'en servent pour ne jamais toucher aux vrais réglages ni au dossier Documents.
+
+### Tests de bout en bout
+
+- **WebdriverIO** pilote l'app réelle via **tauri-driver** (2.0.6), qui relaie vers **msedgedriver** (WebView2). Config : `e2e/wdio.conf.ts`, scénarios : `e2e/specs/*.e2e.ts`.
+- `pnpm test:e2e` :
+  1. installe dans `e2e/.bin/` le msedgedriver de la **même version** que le runtime WebView2 du poste (`scripts/install-msedgedriver.ps1`, version lue dans le registre) ;
+  2. construit l'app en debug avec le front embarqué (`tauri build --debug --no-bundle`) ; `E2E_SKIP_BUILD=1` saute cette étape ;
+  3. lance les scénarios avec un `BUILDERZ_HOME` temporaire, supprimé à la fin (`E2E_KEEP_HOME=1` pour le garder et l'inspecter).
+- Prérequis local : `cargo install tauri-driver@2.0.6 --locked`.
+- Sélecteurs : de préférence par rôle et libellé accessible (`aria/Nom`, `button=Créer`), ce qui vérifie aussi l'accessibilité.
+- CI : job dédié « End-to-end tests » sur `windows-latest`.
+
 ### Tests front
 
 Vitest, avec Testing Library et jsdom pour les tests de composants (directive `// @vitest-environment jsdom` en tête de fichier). `src/test/setup.ts` initialise i18n et fournit les API absentes de jsdom (`matchMedia`, `ResizeObserver`, `scrollTo`).

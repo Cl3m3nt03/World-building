@@ -5,6 +5,7 @@ use std::path::Path;
 /// (ADR 0001: one permission per command, nothing allowed by default).
 const COMMANDS: &[&str] = &[
     "app_info",
+    "default_worlds_dir",
     "import_asset",
     "get_settings",
     "update_preferences",
