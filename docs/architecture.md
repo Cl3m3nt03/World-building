@@ -72,7 +72,30 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 
 ## Back (`src-tauri/`)
 
-À compléter (issues 0.9, 0.10) : couches `domain` / `db` / `world`.
+| Module | Rôle |
+|---|---|
+| `commands/` | Commandes Tauri, couche fine (voir plus bas) |
+| `world/` | Format du dossier monde : création, ouverture, sauvegarde et migration, refus des versions plus récentes |
+| `db/` | Connexion SQLite (WAL, clés étrangères), migrations embarquées (`MIGRATOR`), sauvegarde `VACUUM INTO` |
+| `settings.rs` | Réglages de l'app (`settings.json` dans le dossier de config) |
+| `state.rs` | État partagé : réglages et monde ouvert (un seul à la fois) |
+| `domain/` | Logique métier, à venir avec M1 et M2 |
+
+À compléter (issue 0.10) : assets.
+
+### Base de données
+
+- **SQLite via sqlx**, requêtes écrites avec les macros `query!` / `query_scalar!`, vérifiées à la compilation contre le cache `src-tauri/.sqlx/` (versionné). La CI compile avec `SQLX_OFFLINE=true`, sans base.
+- Après avoir modifié une migration ou une requête : `pnpm db:prepare` (installe une base de dev dans `src-tauri/target/sqlx-dev.db`, applique les migrations, régénère `.sqlx/`), puis committer `.sqlx/`. Il faut `sqlx-cli` : `cargo install sqlx-cli --no-default-features --features sqlite`.
+- Migrations dans `src-tauri/migrations/`, nommées `NNNN_description.sql`. **On ne modifie jamais une migration fusionnée** : on en ajoute une.
+- Connexion : journal WAL, `synchronous = NORMAL`, clés étrangères actives, `busy_timeout` de 5 s, pool de 4 connexions. Sans l'extension `load-extension` de SQLite.
+- Tests : requêtes non vérifiées (`sqlx::query`) autorisées dans les tests qui utilisent les migrations de test (`src-tauri/tests/fixtures/`), dont les tables n'existent pas dans le vrai schéma.
+
+### Réglages de l'app
+
+`settings.json` dans `%APPDATA%pp.builderz.desktop\` : préférences (langue, thème, effets de transparence) et mondes récents (10 au plus, le plus récent d'abord). Écriture atomique. Un fichier absent donne les valeurs par défaut ; un fichier illisible est mis de côté (`settings.corrupted.json`) et remplacé par les valeurs par défaut, sans bloquer le démarrage. Les champs manquants ou inconnus sont tolérés.
+
+Côté front, `loadPreferences()` charge les préférences **avant** le premier rendu (pas de flash de thème), puis `usePreferencesSync()` les enregistre à chaque changement.
 
 ### Commandes et contrat front ↔ back
 
@@ -99,7 +122,41 @@ Tauri n'embarque le manifeste Windows (Common Controls v6) que dans l'exécutabl
 
 ## Format d'un monde
 
-Voir ADR 0001, section « Format des données ». À compléter avec le schéma réel lors de l'issue 0.9.
+Voir ADR 0001, section « Format des données ». Implémenté dans `src-tauri/src/world/`.
+
+```
+MonMonde/
+├── world.json            métadonnées (voir ci-dessous)
+├── world.db              SQLite (+ world.db-wal / -shm pendant l'utilisation)
+├── world.db.bak-v<N>     sauvegarde faite avant de migrer depuis la version N
+└── assets/
+```
+
+`world.json` :
+
+```json
+{
+  "format": "builderz-world",
+  "id": "5f0c…",
+  "name": "Eldefleur",
+  "schemaVersion": 1,
+  "createdAt": "2026-09-26T12:00:00Z",
+  "updatedAt": "2026-09-26T12:00:00Z",
+  "lastOpenedAt": "2026-09-26T12:00:00Z"
+}
+```
+
+- `schemaVersion` est le numéro de la dernière migration appliquée. `format` permet de reconnaître un dossier BuilderZ.
+- **Création** (`create_world`) : le dossier ne doit pas exister ou doit être vide. En cas d'échec, ce qui a été créé est retiré.
+- **Ouverture** (`open_world`) :
+  1. `world.json` doit être lisible et au bon format, sinon `world_invalid` ;
+  2. un `schemaVersion` plus récent que l'app donne `world_too_new`, **sans rien modifier** ;
+  3. `world.db` doit exister et être une base SQLite lisible, sinon `world_invalid` (jamais de base vide créée à la place) ;
+  4. la version réellement appliquée est lue dans la base (`_sqlx_migrations`) ; plus récente que l'app, elle donne aussi `world_too_new` ;
+  5. si des migrations sont en attente : copie cohérente dans `world.db.bak-v<N>` (`VACUUM INTO`), puis migration ;
+  6. `world.json` est mis à jour (version, dates) par écriture atomique, et `assets/` est recréé s'il manque.
+- **Un seul monde ouvert** : ouvrir un monde ferme le précédent, une fois le nouveau entièrement ouvert. Chaque ouverture met à jour les mondes récents.
+- Le schéma initial (`0001_init.sql`) ne contient qu'une table `meta` (clé/valeur). Les tables métier arrivent avec leurs milestones.
 
 ## Tests
 

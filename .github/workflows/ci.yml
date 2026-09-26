@@ -16,6 +16,8 @@ env:
   CARGO_TERM_COLOR: always
   # Git hooks are for local commits only.
   LEFTHOOK: "0"
+  # sqlx checks query! macros against the committed .sqlx/ cache, no database.
+  SQLX_OFFLINE: "true"
 
 jobs:
   check:

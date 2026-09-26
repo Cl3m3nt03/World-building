@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-current-world"
+description = "Enables the current_world command without any pre-configured scope."
+commands.allow = ["current_world"]
+
+[[permission]]
+identifier = "deny-current-world"
+description = "Denies the current_world command without any pre-configured scope."
+commands.deny = ["current_world"]

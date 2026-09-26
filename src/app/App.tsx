@@ -5,12 +5,14 @@ import { ErrorBoundary } from "@/app/ErrorScreen";
 import { createAppRouter } from "@/app/router";
 import { useThemeSync } from "@/app/theme";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { usePreferencesSync } from "@/features/settings";
 import { createQueryClient } from "@/lib/query";
 
 function Providers() {
   const [queryClient] = useState(createQueryClient);
   const [router] = useState(() => createAppRouter());
   useThemeSync();
+  usePreferencesSync();
 
   return (
     <QueryClientProvider client={queryClient}>

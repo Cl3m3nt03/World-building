@@ -15,6 +15,27 @@ pub enum AppError {
     /// A system directory (config, logs, data) could not be resolved.
     #[error("path unavailable: {0}")]
     PathUnavailable(String),
+    /// The input sent by the front is not valid (empty name, bad path…).
+    #[error("invalid input: {0}")]
+    InvalidInput(String),
+    /// A world cannot be created there: the folder exists and is not empty.
+    #[error("world folder already exists: {0}")]
+    WorldAlreadyExists(String),
+    /// The folder is not a valid BuilderZ world (missing or corrupted files).
+    #[error("invalid world: {0}")]
+    WorldInvalid(String),
+    /// The world was saved by a newer BuilderZ; it is left untouched.
+    #[error("world is newer than this app: {0}")]
+    WorldTooNew(String),
+    /// The command needs an open world and none is open.
+    #[error("no world is open")]
+    NoWorldOpen(String),
+    /// A database query failed.
+    #[error("database error: {0}")]
+    Database(String),
+    /// Applying the database migrations failed; the backup is kept.
+    #[error("migration failed: {0}")]
+    Migration(String),
     /// Anything that should not happen; always a bug.
     #[error("internal error: {0}")]
     Internal(String),
@@ -25,6 +46,18 @@ pub type AppResult<T> = Result<T, AppError>;
 impl From<std::io::Error> for AppError {
     fn from(error: std::io::Error) -> Self {
         Self::Io(error.to_string())
+    }
+}
+
+impl From<sqlx::Error> for AppError {
+    fn from(error: sqlx::Error) -> Self {
+        Self::Database(error.to_string())
+    }
+}
+
+impl From<sqlx::migrate::MigrateError> for AppError {
+    fn from(error: sqlx::migrate::MigrateError) -> Self {
+        Self::Migration(error.to_string())
     }
 }
 

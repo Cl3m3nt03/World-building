@@ -29,6 +29,13 @@ export async function unwrap<T>(result: Promise<CommandResult<T>>): Promise<T> {
 const ERROR_KEYS: Record<AppError["code"], TranslationKey> = {
   io: "errors.io",
   path_unavailable: "errors.path_unavailable",
+  invalid_input: "errors.invalid_input",
+  world_already_exists: "errors.world_already_exists",
+  world_invalid: "errors.world_invalid",
+  world_too_new: "errors.world_too_new",
+  no_world_open: "errors.no_world_open",
+  database: "errors.database",
+  migration: "errors.migration",
   internal: "errors.internal",
 };
 

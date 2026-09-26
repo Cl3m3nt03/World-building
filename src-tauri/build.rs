@@ -3,7 +3,15 @@ use std::path::Path;
 /// Commands callable from the front. Tauri generates one `allow-<command>`
 /// permission per entry; each must be granted in `capabilities/default.json`
 /// (ADR 0001: one permission per command, nothing allowed by default).
-const COMMANDS: &[&str] = &["app_info"];
+const COMMANDS: &[&str] = &[
+    "app_info",
+    "get_settings",
+    "update_preferences",
+    "create_world",
+    "open_world",
+    "close_world",
+    "current_world",
+];
 
 fn main() {
     embed_windows_manifest();
