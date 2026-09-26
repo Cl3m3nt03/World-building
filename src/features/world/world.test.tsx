@@ -224,6 +224,29 @@ test("a world whose folder moved is flagged and can be relocated", async () => {
   expect(await screen.findByRole("button", { name: "Ouvrir Eldefleur" })).toBeTruthy();
 });
 
+test("relocating onto another world's folder explains it and keeps the list", async () => {
+  missingPaths = [ELDEFLEUR.path];
+  mockIPC((command) => {
+    if (command === "get_settings") return SETTINGS;
+    if (command === "missing_recent_worlds") return missingPaths;
+    if (command === "plugin:dialog|open") return "E:/Mondes/Autre";
+    if (command === "relocate_recent_world") {
+      throw { code: "wrong_world", message: "E:/Mondes/Autre" };
+    }
+    return null;
+  });
+  await renderStartScreen();
+
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("button", { name: "Relocaliser Eldefleur" }));
+  });
+
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Ce dossier contient un autre monde");
+  expect(alert.textContent).toContain("E:/Mondes/Autre");
+  expect(screen.getByRole("button", { name: "Relocaliser Eldefleur" })).toBeTruthy();
+});
+
 test("removing a world from the list asks for confirmation first", async () => {
   await renderStartScreen();
 

@@ -32,6 +32,7 @@ const ERROR_KEYS: Record<AppError["code"], TranslationKey> = {
   invalid_input: "errors.invalid_input",
   world_already_exists: "errors.world_already_exists",
   world_invalid: "errors.world_invalid",
+  wrong_world: "errors.wrong_world",
   world_too_new: "errors.world_too_new",
   no_world_open: "errors.no_world_open",
   database: "errors.database",

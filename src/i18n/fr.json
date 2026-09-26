@@ -180,5 +180,6 @@
   "radio.mode.loop": "En boucle",
   "radio.mode.repeatOne": "Répéter la piste",
   "radio.mode.shuffle": "Aléatoire",
-  "radio.tracks": "Pistes"
+  "radio.tracks": "Pistes",
+  "errors.wrong_world": "Ce dossier contient un autre monde. Choisissez le dossier où se trouve maintenant ce monde : la liste n'a pas changé."
 }

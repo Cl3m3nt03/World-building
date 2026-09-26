@@ -24,6 +24,9 @@ pub enum AppError {
     /// The folder is not a valid BuilderZ world (missing or corrupted files).
     #[error("invalid world: {0}")]
     WorldInvalid(String),
+    /// The folder holds a valid world, but not the one expected (relocation).
+    #[error("another world is in this folder: {0}")]
+    WrongWorld(String),
     /// The world was saved by a newer BuilderZ; it is left untouched.
     #[error("world is newer than this app: {0}")]
     WorldTooNew(String),
