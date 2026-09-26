@@ -1,5 +1,5 @@
 {
-  "shell.world.label": "Monde courant",
+  "shell.world.label": "Monde courant : {{name}}. Modifier le monde",
   "shell.tabs.label": "Modes",
   "shell.tabs.home": "Home",
   "shell.tabs.world": "World",
@@ -139,5 +139,17 @@
   "imagePicker.listLabel": "Images de la médiathèque",
   "imagePicker.empty": "Aucune image dans la médiathèque. Importez-en une.",
   "imagePicker.choose": "Choisir",
-  "imagePicker.notAnImage": "Ce fichier a été importé dans la médiathèque, mais ce n'est pas une image."
+  "imagePicker.notAnImage": "Ce fichier a été importé dans la médiathèque, mais ce n'est pas une image.",
+  "worldPanel.title": "Le monde",
+  "worldPanel.description": "Les modifications sont enregistrées automatiquement.",
+  "worldPanel.mainImage": "Image principale du monde",
+  "worldPanel.chooseImage": "Choisir une image",
+  "worldPanel.changeImage": "Changer d'image",
+  "worldPanel.removeImage": "Retirer",
+  "worldPanel.pickerTitle": "Image principale du monde",
+  "worldPanel.name": "Nom",
+  "worldPanel.nameRequired": "Le nom ne peut pas être vide : l'ancien nom est conservé.",
+  "worldPanel.worldDescription": "Description",
+  "worldPanel.descriptionPlaceholder": "De quoi parle ce monde ?",
+  "worldPanel.saving": "Enregistrement…"
 }

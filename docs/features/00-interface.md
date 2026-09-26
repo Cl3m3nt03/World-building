@@ -19,7 +19,8 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 
 ## Coque d'un monde ouvert
 
-- **En haut à gauche** : le monde courant. Un clic ouvre un panneau pour modifier le nom, le genre, la description et l'image principale.
+- **En haut à gauche** : le monde courant, avec la miniature de son image principale. Un clic ouvre un panneau pour modifier l'image principale (via le sélecteur d'image, ou « Retirer »), le nom, le genre et la description. Tout est enregistré à la volée, sans bouton : le texte une demi-seconde après la dernière frappe, et à la fermeture du panneau. Un nom vide n'est jamais enregistré (l'ancien nom est conservé). Le nom se met à jour aussitôt dans la barre du haut et dans la liste des mondes.
+- **Fond** : l'image principale du monde ouvert, floutée et assombrie (ADR 0003) ; sans image, le dégradé par défaut. Sur la liste des mondes, le fond est la vignette du dernier monde ouvert. Changer l'image principale met aussi à jour la vignette du monde dans la liste.
 - **En haut au centre** : les onglets **Home**, **World**, **Wiki** et **Quill**.
 - **En haut à droite** : la radio, les réglages et le bouton « Mondes ».
 - **À gauche** : la sidebar (voir `02-organisation.md`), présente dans l'onglet World.
