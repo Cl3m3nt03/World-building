@@ -53,7 +53,14 @@ export const config: WebdriverIO.Config = {
   capabilities: [
     {
       // @ts-expect-error tauri-driver's own capability, unknown to WebdriverIO's types
-      "tauri:options": { application },
+      "tauri:options": {
+        application,
+        // WebView2 profile in a folder we own. Otherwise msedgedriver creates it
+        // in its temp dir, which is C:\Windows\SystemTemp on the CI runner:
+        // WebView2 cannot use it, starts with another profile, and msedgedriver
+        // waits forever for DevToolsActivePort ("session not created").
+        webviewOptions: { userDataFolder: path.join(home, "webview2") },
+      },
     },
   ],
   logLevel: "warn",
