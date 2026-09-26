@@ -34,10 +34,10 @@ export const commands = {
 	 */
 	setDefaultWorldsDir: (path: string | null) => typedError<AppSettings, AppError>(__TAURI_INVOKE("set_default_worlds_dir", { path })),
 	/**
-	 *  Creates a world named `name` in a new folder inside `parent_dir` (the
-	 *  folder is named after the world), and opens it.
+	 *  Creates a world named `name`, of the given genre, in a new folder inside
+	 *  `parent_dir` (the folder is named after the world), and opens it.
 	 */
-	createWorld: (parentDir: string, name: string) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name })),
+	createWorld: (parentDir: string, name: string, genre: Genre) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre })),
 	/**
 	 *  Opens the world in `path`, migrating it if needed. Closes the world that
 	 *  was open, if any.

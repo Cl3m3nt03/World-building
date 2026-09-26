@@ -51,6 +51,19 @@ async fn create_lays_out_the_world_folder() {
 }
 
 #[tokio::test]
+async fn create_records_the_genre() {
+    let (_dir, root) = temp_root();
+    let world = create_with(&root, "Nébuleuse", Genre::ScienceFiction, &V1)
+        .await
+        .unwrap();
+    world.close().await;
+
+    let reopened = open(&root, &V1).await.unwrap();
+    assert_eq!(reopened.info().genre, Genre::ScienceFiction);
+    reopened.close().await;
+}
+
+#[tokio::test]
 async fn create_enables_wal_and_foreign_keys() {
     let (_dir, root) = temp_root();
     let world = create(&root, "W", &db::MIGRATOR).await.unwrap();

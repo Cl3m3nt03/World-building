@@ -9,19 +9,20 @@ use crate::domain::media;
 use crate::error::{AppError, AppResult};
 use crate::settings::{self, RecentWorld};
 use crate::state::AppState;
-use crate::world::{self, OpenWorld, WorldInfo, WorldPatch};
+use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch};
 
-/// Creates a world named `name` in a new folder inside `parent_dir` (the
-/// folder is named after the world), and opens it.
+/// Creates a world named `name`, of the given genre, in a new folder inside
+/// `parent_dir` (the folder is named after the world), and opens it.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_world(
     state: State<'_, AppState>,
     parent_dir: String,
     name: String,
+    genre: Genre,
 ) -> AppResult<WorldInfo> {
     let root = Path::new(&parent_dir).join(world::folder_name(&name)?);
-    let world = world::create(&root, &name, &db::MIGRATOR).await?;
+    let world = world::create_with(&root, &name, genre, &db::MIGRATOR).await?;
     Ok(activate(&state, world).await)
 }
 

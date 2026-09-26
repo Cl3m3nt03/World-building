@@ -1,7 +1,7 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { appKeys } from "@/features/settings";
-import { commands, type WorldInfo } from "@/lib/bindings";
+import { commands, type Genre, type WorldInfo } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { worldKeys } from "./keys";
 
@@ -26,8 +26,8 @@ export function useCreateWorld() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   return useMutation({
-    mutationFn: ({ parentDir, name }: { parentDir: string; name: string }) =>
-      unwrap(commands.createWorld(parentDir, name)),
+    mutationFn: ({ parentDir, name, genre }: { parentDir: string; name: string; genre: Genre }) =>
+      unwrap(commands.createWorld(parentDir, name, genre)),
     onSuccess: async (world) => {
       onWorldOpened(queryClient, world);
       await navigate({ to: "/world/$worldId/home", params: { worldId: world.id } });

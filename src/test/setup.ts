@@ -17,6 +17,11 @@ if (typeof window !== "undefined") {
   // Called by the router on navigation; jsdom only logs "not implemented".
   window.scrollTo = () => {};
 
+  // Used by Radix Select.
+  Element.prototype.scrollIntoView ??= () => {};
+  Element.prototype.hasPointerCapture ??= () => false;
+  Element.prototype.releasePointerCapture ??= () => {};
+
   globalThis.ResizeObserver ??= class {
     observe() {}
     unobserve() {}

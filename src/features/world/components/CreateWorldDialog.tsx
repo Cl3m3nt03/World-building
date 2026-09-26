@@ -13,8 +13,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { commands } from "@/lib/bindings";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { commands, type Genre } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
+import { DEFAULT_GENRE, GENRES, isGenre } from "../genres";
 import { useCreateWorld } from "../hooks/useWorlds";
 
 /** Suggested location for new worlds, from Rust (Documents\BuilderZ by default). */
@@ -31,8 +39,10 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
   const { t } = useTranslation();
   const createWorld = useCreateWorld();
   const [name, setName] = useState("");
+  const [genre, setGenre] = useState<Genre>(DEFAULT_GENRE);
   const [parentDir, setParentDir] = useState<string>();
   const nameId = useId();
+  const genreId = useId();
   const locationId = useId();
 
   useEffect(() => {
@@ -57,12 +67,13 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
-    createWorld.mutate({ parentDir, name }, { onSuccess: () => onOpenChange(false) });
+    createWorld.mutate({ parentDir, name, genre }, { onSuccess: () => onOpenChange(false) });
   };
 
   const changeOpen = (next: boolean) => {
     if (!next) {
       setName("");
+      setGenre(DEFAULT_GENRE);
       createWorld.reset();
     }
     onOpenChange(next);
@@ -90,6 +101,30 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
               required
               maxLength={200}
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={genreId} className="text-sm font-medium">
+              {t("createWorld.genre")}
+            </label>
+            <Select
+              value={genre}
+              onValueChange={(value) => {
+                if (isGenre(value)) setGenre(value);
+              }}
+            >
+              <SelectTrigger id={genreId} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GENRES.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {t(label)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t("createWorld.genreHint")}</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
