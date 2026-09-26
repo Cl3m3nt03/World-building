@@ -8,7 +8,13 @@ import type { AppSettings, Preferences } from "@/lib/bindings";
 import { loadPreferences, usePreferencesSync } from "./preferences";
 
 const saved: AppSettings = {
-  preferences: { language: "en", theme: "dark", transparencyEffects: false },
+  preferences: {
+    language: "en",
+    theme: "dark",
+    transparencyEffects: false,
+    radioVolume: 70,
+    radioMode: "loop",
+  },
   recentWorlds: [],
   defaultWorldsDir: null,
 };
@@ -62,9 +68,27 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
   });
 
   expect(updates).toEqual([
-    { language: "fr", theme: "light", transparencyEffects: true },
-    { language: "fr", theme: "light", transparencyEffects: false },
-    { language: "en", theme: "light", transparencyEffects: false },
+    {
+      language: "fr",
+      theme: "light",
+      transparencyEffects: true,
+      radioVolume: 70,
+      radioMode: "loop",
+    },
+    {
+      language: "fr",
+      theme: "light",
+      transparencyEffects: false,
+      radioVolume: 70,
+      radioMode: "loop",
+    },
+    {
+      language: "en",
+      theme: "light",
+      transparencyEffects: false,
+      radioVolume: 70,
+      radioMode: "loop",
+    },
   ]);
   await i18n.changeLanguage("fr");
 });

@@ -1,10 +1,11 @@
-import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon, Radio } from "lucide-react";
+import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AssetImage } from "@/features/media";
+import { RadioButton } from "@/features/radio";
 import { SettingsButton } from "@/features/settings";
 import { useCloseWorld, useCurrentWorld, WorldPanel } from "@/features/world";
 import type { TranslationKey } from "@/i18n";
@@ -21,20 +22,6 @@ const TABS: { value: ShellTab; icon: LucideIcon; label: TranslationKey }[] = [
 type TopBarProps = {
   activeTab: ShellTab;
 };
-
-function IconAction({ icon: Icon, label }: { icon: LucideIcon; label: TranslationKey }) {
-  const { t } = useTranslation();
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={t(label)} className="rounded-full">
-          <Icon />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{t(label)}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 export function TopBar({ activeTab }: TopBarProps) {
   const { t } = useTranslation();
@@ -103,7 +90,7 @@ export function TopBar({ activeTab }: TopBarProps) {
         aria-label={t("shell.actions.label")}
         className="glass flex h-10 items-center gap-0.5 justify-self-end rounded-full px-1"
       >
-        <IconAction icon={Radio} label="shell.actions.radio" />
+        {world && <RadioButton worldId={world.id} />}
 
         <SettingsButton />
 

@@ -22,7 +22,13 @@ const ELDEFLEUR: WorldInfo = {
 };
 
 const SETTINGS: AppSettings = {
-  preferences: { language: "fr", theme: "system", transparencyEffects: true },
+  preferences: {
+    language: "fr",
+    theme: "system",
+    transparencyEffects: true,
+    radioVolume: 70,
+    radioMode: "loop",
+  },
   recentWorlds: [
     {
       path: ELDEFLEUR.path,

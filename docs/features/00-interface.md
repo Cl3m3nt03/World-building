@@ -77,6 +77,8 @@ C'est une fenêtre commune à tous les endroits où l'on choisit une image (imag
 
 C'est un lecteur d'ambiance qui accompagne le travail. *Adaptation locale* : au lieu d'une bibliothèque en ligne, la radio lit les **pistes audio importées** par l'utilisateur, avec lecture/pause, piste suivante, volume et lecture en boucle ou aléatoire. La musique continue quand on change d'onglet.
 
+Le bouton Radio, en haut à droite, ouvre un petit panneau : la piste en cours, les boutons piste précédente, lecture/pause et piste suivante, le volume, le mode de lecture et la liste des pistes (un clic lance une piste). « Précédente » revient au début de la piste si elle joue depuis plus de trois secondes. Les trois modes sont **En boucle** (les pistes dans l'ordre, puis on recommence), **Répéter la piste** et **Aléatoire** (jamais deux fois la même piste de suite). Le volume et le mode sont des réglages de l'application : ils sont retrouvés au prochain lancement. La musique continue quand on change d'onglet ou d'écran (médiathèque comprise) et s'arrête quand on ferme le monde. Une piste supprimée de la médiathèque pendant qu'elle joue est arrêtée. Sans aucun son dans la médiathèque, le panneau invite à en importer.
+
 ## Retiré (voir `docs/contexte.md`)
 
 Le plan, l'abonnement, les membres, le fil de nouveautés et le formulaire de suggestion ou de bug sont retirés.

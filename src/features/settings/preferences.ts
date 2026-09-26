@@ -15,6 +15,8 @@ export async function loadPreferences(): Promise<Language> {
     useUiStore.setState({
       theme: preferences.theme,
       transparency: preferences.transparencyEffects ? "on" : "off",
+      radioVolume: preferences.radioVolume,
+      radioMode: preferences.radioMode,
     });
     return preferences.language;
   } catch (error) {
@@ -26,11 +28,20 @@ export async function loadPreferences(): Promise<Language> {
 function currentPreferences(): Preferences | undefined {
   const language = i18n.resolvedLanguage ?? i18n.language;
   if (!isLanguage(language)) return undefined;
-  const { theme, transparency } = useUiStore.getState();
-  return { language, theme, transparencyEffects: transparency === "on" };
+  const { theme, transparency, radioVolume, radioMode } = useUiStore.getState();
+  return {
+    language,
+    theme,
+    transparencyEffects: transparency === "on",
+    radioVolume,
+    radioMode,
+  };
 }
 
-/** Saves the preferences whenever the theme, transparency or language changes. */
+/** Volume changes come in bursts while dragging the slider: saved once it settles. */
+const VOLUME_SAVE_DELAY_MS = 400;
+
+/** Saves the preferences whenever the theme, transparency, language or radio settings change. */
 export function usePreferencesSync(): void {
   useEffect(() => {
     const save = () => {
@@ -41,13 +52,22 @@ export function usePreferencesSync(): void {
       });
     };
 
+    let volumeTimer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = useUiStore.subscribe((state, previous) => {
-      if (state.theme !== previous.theme || state.transparency !== previous.transparency) {
+      if (
+        state.theme !== previous.theme ||
+        state.transparency !== previous.transparency ||
+        state.radioMode !== previous.radioMode
+      ) {
         save();
+      } else if (state.radioVolume !== previous.radioVolume) {
+        clearTimeout(volumeTimer);
+        volumeTimer = setTimeout(save, VOLUME_SAVE_DELAY_MS);
       }
     });
     i18n.on("languageChanged", save);
     return () => {
+      clearTimeout(volumeTimer);
       unsubscribe();
       i18n.off("languageChanged", save);
     };
