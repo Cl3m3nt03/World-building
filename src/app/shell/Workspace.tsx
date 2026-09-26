@@ -1,12 +1,4 @@
-import { Link, useParams } from "@tanstack/react-router";
-import {
-  Images,
-  LayoutGrid,
-  type LucideIcon,
-  Map as MapIcon,
-  Share2,
-  SquareUser,
-} from "lucide-react";
+import { LayoutGrid, type LucideIcon, Map as MapIcon, Share2, SquareUser } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
@@ -91,25 +83,6 @@ export function WorldWorkspace() {
         </main>
       </ResizablePanel>
     </ResizablePanelGroup>
-  );
-}
-
-export function HomePlaceholder() {
-  const { t } = useTranslation();
-  const { worldId } = useParams({ from: "/world/$worldId" });
-  return (
-    <main className="mx-auto flex h-full w-full max-w-5xl flex-col gap-2 px-8 pt-10">
-      <h1 className="text-4xl font-bold">{t("home.welcome")}</h1>
-      <p className="text-sm text-muted-foreground">{t("placeholder.comingSoon")}</p>
-      <div className="mt-6">
-        <Button asChild variant="secondary" className="rounded-full">
-          <Link to="/world/$worldId/media" params={{ worldId }}>
-            <Images />
-            {t("media.title")}
-          </Link>
-        </Button>
-      </div>
-    </main>
   );
 }
 

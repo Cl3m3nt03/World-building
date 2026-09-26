@@ -1,6 +1,6 @@
 import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon, Radio } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -40,7 +40,8 @@ export function TopBar({ activeTab }: TopBarProps) {
   const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
-  const [panelOpen, setPanelOpen] = useState(false);
+  const panelOpen = useUiStore((state) => state.worldPanelOpen);
+  const setPanelOpen = useUiStore((state) => state.setWorldPanelOpen);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}

@@ -78,7 +78,7 @@ describe("routing", () => {
   test("/world/$worldId redirects to the Home tab of the open world", async () => {
     const router = await renderAt("/world/demo");
     expect(router.state.location.pathname).toBe("/world/demo/home");
-    expect(screen.getByRole("heading", { name: "Bienvenue" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Bienvenue dans Eldefleur" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Monde courant/ }).textContent).toContain(
       "Eldefleur",
     );
