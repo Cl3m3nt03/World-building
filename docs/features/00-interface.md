@@ -26,7 +26,21 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 
 ### Onglet Home
 
-C'est la page d'accueil du monde, qu'on voit quand on revient dessus. Elle affiche les documents récents, les épingles et un résumé du monde (nombre de cartes par type). On y accède aussi à la **gestion des types** (voir `01-cartes-et-types.md`) et à la **médiathèque**.
+C'est la page d'accueil du monde, qu'on voit quand on revient dessus (texte du board : « the landing page where you revisit and open your world »). D'après les captures du board, elle contient, de haut en bas :
+
+- un titre de bienvenue ;
+- une ligne **« Reprendre là où vous en étiez »**, avec le dernier document ouvert, suivie de « ou essayer quelque chose de nouveau » et de raccourcis de création ;
+- les **documents récents**, en vignettes (image, nom, date relative : « il y a 38 min ») ;
+- un bloc **Gérer**, à droite, avec quatre entrées : **Types** (voir `01-cartes-et-types.md`), **Médiathèque**, **Thème** et **Réglages** du monde ;
+- un **aperçu du graph du monde** (voir `04-graph.md`), avec recherche et filtres. Tant qu'aucune carte n'est reliée, il affiche un état vide qui invite à créer des cartes et à les relier par des mentions `@`.
+
+Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles et un résumé du monde (nombre de cartes par type).
+
+### Thème du monde
+
+Entrée **Thème** du bloc Gérer. Le thème du monde est une ambiance visuelle propre au monde (image de fond, teinte des panneaux), réutilisée par Quill (« garder le thème du monde » dans l'onglet Style, voir `08-quill.md`).
+
+**Question ouverte** : le board ne détaille pas les réglages du thème. Proposition à valider avec Clément : image de fond (par défaut l'image principale du monde), teinte d'accent, et choix clair/sombre forcé ou non.
 
 ### Onglet World
 
