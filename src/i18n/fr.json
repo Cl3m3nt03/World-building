@@ -38,5 +38,17 @@
   "notFound.description": "Cette page n'existe pas.",
   "worlds.title": "Mondes",
   "worlds.empty": "Aucun monde pour l'instant. La création de monde arrive avec l'écran de démarrage.",
-  "worlds.openDemo": "Ouvrir la coque de démonstration"
+  "worlds.openDemo": "Ouvrir la coque de démonstration",
+  "shell.actions.about": "À propos",
+  "about.title": "À propos de BuilderZ",
+  "about.description": "Version de l'application et dossiers utilisés sur ce PC.",
+  "about.version": "Version",
+  "about.configDir": "Réglages",
+  "about.dataDir": "Données",
+  "about.logDir": "Journaux",
+  "about.loading": "Chargement…",
+  "errors.io": "Une opération sur les fichiers a échoué.",
+  "errors.path_unavailable": "Un dossier système est introuvable.",
+  "errors.internal": "Une erreur interne inattendue est survenue.",
+  "errors.unknown": "Une erreur inconnue est survenue."
 }

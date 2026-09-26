@@ -18,7 +18,7 @@ Avant de travailler sur un module, lis sa spec dans `docs/features/`. Pour le d�
 ## Architecture (règles)
 
 - **Le Rust possède les données.** Tout accès disque ou base passe par une commande Tauri. Le front n'utilise jamais `fs` directement.
-- Toutes les commandes sont exposées via `tauri-specta`. Après modification, régénérer `src/lib/bindings.ts` et le committer.
+- Toutes les commandes sont exposées via `tauri-specta`. Après modification, régénérer `src/lib/bindings.ts` (`pnpm bindings`) et le committer. Chaque nouvelle commande est aussi ajoutée à `COMMANDS` dans `src-tauri/build.rs` et accordée (`allow-<commande>`) dans `capabilities/default.json` (voir `docs/architecture.md`).
 - Les erreurs passent par le type `AppError`. Pas de `unwrap()` ni d'`expect()` hors des tests.
 - Les requêtes SQL passent par les macros `sqlx::query!` / `query_as!`, vérifiées à la compilation. Après une modification, lancer `cargo sqlx prepare` et committer `.sqlx/`.
 - **Toute modification du schéma se fait par une nouvelle migration.** On ne modifie jamais une migration déjà fusionnée.

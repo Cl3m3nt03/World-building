@@ -79,7 +79,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
-    // Forwarded to the Rust log file once `tracing` lands (0.8).
+    // Visible in the WebView devtools. Forwarding front errors to the Rust
+    // log file needs a dedicated command, not part of 0.8.
     console.error("Unhandled render error", error, info.componentStack);
   }
 

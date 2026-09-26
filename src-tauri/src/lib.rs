@@ -1,7 +1,54 @@
+mod commands;
+mod error;
+mod logging;
+
+use tauri::Manager;
+use tauri_specta::{Builder, collect_commands};
+
+pub use error::{AppError, AppResult};
+
+/// Path of the generated bindings, relative to `src-tauri/`.
+pub const BINDINGS_PATH: &str = "../src/lib/bindings.ts";
+
+/// Every command exposed to the front. The TypeScript bindings are generated
+/// from this list (see the `export_bindings` test).
+pub fn specta_builder() -> Builder<tauri::Wry> {
+    Builder::<tauri::Wry>::new().commands(collect_commands![commands::app::app_info])
+}
+
 /// Builds and runs the Tauri application.
-///
-/// Commands, state and plugins are registered here as the milestones land.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> tauri::Result<()> {
-    tauri::Builder::default().run(tauri::generate_context!())
+    let builder = specta_builder();
+
+    tauri::Builder::default()
+        .invoke_handler(builder.invoke_handler())
+        .setup(|app| {
+            let log_dir = app.path().app_log_dir()?;
+            let guard = logging::init(&log_dir)?;
+            app.manage(guard);
+            tracing::info!(
+                version = %app.package_info().version,
+                log_dir = %log_dir.display(),
+                "BuilderZ started"
+            );
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+}
+
+#[cfg(test)]
+mod tests {
+    use specta_typescript::Typescript;
+
+    use super::*;
+
+    /// Regenerates `src/lib/bindings.ts`. Runs with `cargo test`, so CI fails
+    /// when the committed file is out of date (`git diff --exit-code`).
+    #[test]
+    fn export_bindings() {
+        specta_builder()
+            .export(Typescript::default(), BINDINGS_PATH)
+            .expect("failed to export TypeScript bindings");
+    }
 }

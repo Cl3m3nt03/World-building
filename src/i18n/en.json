@@ -38,5 +38,17 @@
   "notFound.description": "This page does not exist.",
   "worlds.title": "Worlds",
   "worlds.empty": "No worlds yet. World creation comes with the start screen.",
-  "worlds.openDemo": "Open the demo shell"
+  "worlds.openDemo": "Open the demo shell",
+  "shell.actions.about": "About",
+  "about.title": "About BuilderZ",
+  "about.description": "App version and folders used on this PC.",
+  "about.version": "Version",
+  "about.configDir": "Settings",
+  "about.dataDir": "Data",
+  "about.logDir": "Logs",
+  "about.loading": "Loading…",
+  "errors.io": "A file operation failed.",
+  "errors.path_unavailable": "A system folder could not be found.",
+  "errors.internal": "An unexpected internal error occurred.",
+  "errors.unknown": "An unknown error occurred."
 }
