@@ -7,6 +7,7 @@ const COMMANDS: &[&str] = &[
     "app_info",
     "default_worlds_dir",
     "import_asset",
+    "import_asset_data",
     "list_assets",
     "rename_asset",
     "delete_asset",

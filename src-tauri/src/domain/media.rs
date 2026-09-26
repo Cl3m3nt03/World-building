@@ -153,6 +153,9 @@ fn validate_name(name: &str) -> AppResult<String> {
     Ok(name.to_owned())
 }
 
+/// Largest file accepted by `import_bytes` (pasted content), in bytes.
+pub const MAX_PASTE_BYTES: usize = 50 * 1024 * 1024;
+
 /// Copies `source` into `assets_dir` (named by hash) and records it. The same
 /// content imported again returns the existing asset, with its current name.
 pub async fn import(
@@ -160,12 +163,59 @@ pub async fn import(
     assets_dir: &Path,
     source: &Path,
 ) -> AppResult<ImportedAsset> {
+    import_named(pool, assets_dir, source, None).await
+}
+
+/// Imports raw content (e.g. an image pasted from the clipboard) under the
+/// display name `name`, whose extension decides the file type.
+pub async fn import_bytes(
+    pool: &SqlitePool,
+    assets_dir: &Path,
+    name: &str,
+    data: Vec<u8>,
+) -> AppResult<ImportedAsset> {
+    let name = validate_name(name)?;
+    if data.is_empty() {
+        return Err(AppError::InvalidInput("pasted content is empty".into()));
+    }
+    if data.len() > MAX_PASTE_BYTES {
+        return Err(AppError::InvalidInput(format!(
+            "pasted content larger than {MAX_PASTE_BYTES} bytes"
+        )));
+    }
+
+    std::fs::create_dir_all(assets_dir)?;
+    let extension = Path::new(&name)
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .filter(|extension| extension.bytes().all(|byte| byte.is_ascii_alphanumeric()))
+        .unwrap_or("bin");
+    // Not a valid asset id: ignored by `sync`, removed below in any case.
+    let tmp = assets_dir.join(format!(".paste-{}.{extension}", uuid::Uuid::new_v4()));
+    std::fs::write(&tmp, data)?;
+    let result = import_named(pool, assets_dir, &tmp, Some(name)).await;
+    if let Err(error) = std::fs::remove_file(&tmp) {
+        tracing::warn!(%error, "cannot remove the temporary pasted file");
+    }
+    result
+}
+
+async fn import_named(
+    pool: &SqlitePool,
+    assets_dir: &Path,
+    source: &Path,
+    name: Option<String>,
+) -> AppResult<ImportedAsset> {
     let (dir, path) = (assets_dir.to_path_buf(), source.to_path_buf());
     let file = tokio::task::spawn_blocking(move || files::import(&dir, &path))
         .await
         .map_err(|error| AppError::Internal(format!("import task failed: {error}")))??;
 
-    let row = describe(assets_dir, &file.id, file.original_name.clone())?;
+    let row = describe(
+        assets_dir,
+        &file.id,
+        name.unwrap_or_else(|| file.original_name.clone()),
+    )?;
     let created = queries::insert_if_absent(pool, &row).await?;
     let stored = queries::get(pool, &file.id)
         .await?

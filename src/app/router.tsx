@@ -12,6 +12,7 @@ import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
 import { ComingSoon, HomePlaceholder, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
+import { MediaLibraryScreen } from "@/features/media";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -23,6 +24,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *   /world/$worldId/world      World tab (sidebar + workspace)
  *   /world/$worldId/wiki       Wiki tab
  *   /world/$worldId/quill      Quill tab
+ *   /world/$worldId/media      Media library (reached from Home)
  */
 
 type RouterContext = { queryClient: QueryClient };
@@ -93,9 +95,22 @@ const quillRoute = createRoute({
   ),
 });
 
+const mediaRoute = createRoute({
+  getParentRoute: () => worldRoute,
+  path: "media",
+  component: MediaLibraryScreen,
+});
+
 export const routeTree = rootRoute.addChildren([
   worldListRoute,
-  worldRoute.addChildren([worldIndexRoute, homeRoute, worldTabRoute, wikiRoute, quillRoute]),
+  worldRoute.addChildren([
+    worldIndexRoute,
+    homeRoute,
+    worldTabRoute,
+    wikiRoute,
+    quillRoute,
+    mediaRoute,
+  ]),
 ]);
 
 /**

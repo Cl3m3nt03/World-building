@@ -27,6 +27,18 @@ pub async fn import_asset(state: State<'_, AppState>, path: String) -> AppResult
     media::import(&pool, &assets_dir, Path::new(&path)).await
 }
 
+/// Imports raw content (an image pasted from the clipboard) under `name`.
+#[tauri::command]
+#[specta::specta]
+pub async fn import_asset_data(
+    state: State<'_, AppState>,
+    name: String,
+    data: Vec<u8>,
+) -> AppResult<ImportedAsset> {
+    let (pool, assets_dir) = open_world(&state, "import_asset_data").await?;
+    media::import_bytes(&pool, &assets_dir, &name, data).await
+}
+
 /// Assets of the open world, newest first.
 #[tauri::command]
 #[specta::specta]
