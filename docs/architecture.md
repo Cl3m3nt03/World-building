@@ -25,12 +25,14 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
 
 | Route | Écran |
 |---|---|
-| `/` | Liste des mondes (`src/features/world`) |
-| `/world/$worldId` | Redirige vers `/world/$worldId/home` |
+| `/` | Écran de démarrage : créer, ouvrir, mondes récents (`src/features/world`) |
+| `/world/$worldId` | Accessible seulement si ce monde est le monde ouvert côté Rust (sinon retour à `/`) ; redirige vers `/world/$worldId/home` |
 | `/world/$worldId/home` · `/world` · `/wiki` · `/quill` | Onglets de la coque (`WorldLayout`) |
 
 - L'historique est en **hash** (`#/world/…`) : l'app desktop n'a pas de serveur pour réécrire les liens profonds, et un rechargement garde la route courante.
 - Les onglets de la barre du haut sont pilotés par l'URL (`WorldLayout`).
+- **Garde** : le `beforeLoad` de `/world/$worldId` lit le monde ouvert (`current_world`, via le cache TanStack Query passé en contexte du router). Une URL seule ne peut donc pas « ouvrir » un monde : on passe toujours par `create_world` ou `open_world`.
+- Le bouton « Mondes » ferme le monde (`close_world`) puis revient à `/`.
 - Une route inconnue affiche `NotFoundScreen`.
 
 ### État
@@ -141,6 +143,8 @@ MonMonde/
 └── assets/
 ```
 
+Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencent par un BOM UTF-8 (fichier retouché avec le Bloc-notes ou PowerShell).
+
 `world.json` :
 
 ```json
@@ -156,7 +160,7 @@ MonMonde/
 ```
 
 - `schemaVersion` est le numéro de la dernière migration appliquée. `format` permet de reconnaître un dossier BuilderZ.
-- **Création** (`create_world`) : le dossier ne doit pas exister ou doit être vide. En cas d'échec, ce qui a été créé est retiré.
+- **Création** (`create_world(parentDir, name)`) : le monde est créé dans un **nouveau dossier à son nom** dans `parentDir`. Le nom de dossier est dérivé par Rust (`world::folder_name`) : caractères interdits sous Windows et caractères de contrôle retirés, espaces fusionnés, pas de point ni d'espace final, noms réservés (`CON`, `NUL`, `COM1`…) suffixés par `_`, 100 caractères au plus. Ce dossier ne doit pas exister ou doit être vide. En cas d'échec, ce qui a été créé est retiré.
 - **Ouverture** (`open_world`) :
   1. `world.json` doit être lisible et au bon format, sinon `world_invalid` ;
   2. un `schemaVersion` plus récent que l'app donne `world_too_new`, **sans rien modifier** ;

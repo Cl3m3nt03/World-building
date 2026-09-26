@@ -109,6 +109,30 @@ async fn create_refuses_a_relative_path() {
     assert!(matches!(error, AppError::InvalidInput(_)), "{error:?}");
 }
 
+#[test]
+fn folder_name_is_safe_on_windows() {
+    assert_eq!(folder_name("  Eldefleur  ").unwrap(), "Eldefleur");
+    assert_eq!(folder_name("Terres: du *Nord*?").unwrap(), "Terres du Nord");
+    assert_eq!(folder_name("a/b\\c").unwrap(), "abc");
+    assert_eq!(
+        folder_name("Royaume   des  Brumes").unwrap(),
+        "Royaume des Brumes"
+    );
+    assert_eq!(folder_name("Fin...").unwrap(), "Fin");
+    assert_eq!(folder_name("Épopée d'Æther").unwrap(), "Épopée d'Æther");
+    assert_eq!(folder_name("con").unwrap(), "con_");
+    assert_eq!(folder_name("COM1").unwrap(), "COM1_");
+    assert_eq!(folder_name("Nul.txt").unwrap(), "Nul.txt_");
+    assert_eq!(folder_name("Console").unwrap(), "Console");
+    assert_eq!(folder_name(&"x".repeat(300)).unwrap().len(), 100);
+    for bad in ["", "   ", "???", "...", "<>|"] {
+        assert!(
+            matches!(folder_name(bad), Err(AppError::InvalidInput(_))),
+            "{bad:?}"
+        );
+    }
+}
+
 // --- Reopening --------------------------------------------------------------
 
 #[tokio::test]
@@ -135,6 +159,16 @@ async fn reopen_keeps_identity_and_data() {
         "no migration, so no backup"
     );
     reopened.close().await;
+}
+
+#[tokio::test]
+async fn reopen_tolerates_a_utf8_bom_in_world_json() {
+    let (_dir, root) = temp_root();
+    create(&root, "W", &V1).await.unwrap().close().await;
+    let json = std::fs::read_to_string(root.join(WORLD_FILE)).unwrap();
+    std::fs::write(root.join(WORLD_FILE), format!("\u{feff}{json}")).unwrap();
+
+    open(&root, &V1).await.unwrap().close().await;
 }
 
 #[tokio::test]

@@ -1,5 +1,4 @@
 {
-  "shell.world.placeholderName": "My world",
   "shell.world.label": "Current world",
   "shell.tabs.label": "Modes",
   "shell.tabs.home": "Home",
@@ -37,8 +36,7 @@
   "notFound.title": "Page not found",
   "notFound.description": "This page does not exist.",
   "worlds.title": "Worlds",
-  "worlds.empty": "No worlds yet. World creation comes with the start screen.",
-  "worlds.openDemo": "Open the demo shell",
+  "worlds.empty": "No recent worlds. Create a world or open an existing world folder.",
   "shell.actions.about": "About",
   "about.title": "About BuilderZ",
   "about.description": "App version and folders used on this PC.",
@@ -64,5 +62,20 @@
   "media.importing": "Importing…",
   "media.previewAlt": "Preview of {{name}}",
   "media.imported": "Imported: {{name}}",
-  "media.alreadyImported": "Already in the world: {{name}}"
+  "media.alreadyImported": "Already in the world: {{name}}",
+  "worlds.create": "Create a world",
+  "worlds.open": "Open a world",
+  "worlds.recent": "Recent worlds",
+  "worlds.openRecent": "Open {{name}}",
+  "worlds.openPickerTitle": "Open a world folder",
+  "createWorld.title": "New world",
+  "createWorld.description": "The world is saved in a new folder named after it, in the chosen location.",
+  "createWorld.name": "Name",
+  "createWorld.namePlaceholder": "Eldefleur",
+  "createWorld.location": "Location",
+  "createWorld.chooseLocation": "Choose…",
+  "createWorld.pickerTitle": "Choose the world location",
+  "createWorld.cancel": "Cancel",
+  "createWorld.submit": "Create",
+  "createWorld.creating": "Creating…"
 }

@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import {
   BookOpen,
   Feather,
@@ -29,6 +28,7 @@ import {
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AboutDialog } from "@/features/settings";
+import { useCloseWorld, useCurrentWorld } from "@/features/world";
 import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
@@ -80,6 +80,8 @@ export function TopBar({ activeTab }: TopBarProps) {
   const transparency = useUiStore((state) => state.transparency);
   const setTransparency = useUiStore((state) => state.setTransparency);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const { data: world } = useCurrentWorld();
+  const closeWorld = useCloseWorld();
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
@@ -90,7 +92,7 @@ export function TopBar({ activeTab }: TopBarProps) {
           className="glass h-10 rounded-lg px-2.5 font-heading text-sm"
         >
           <span aria-hidden className="size-5 rounded-sm bg-primary/80" />
-          {t("shell.world.placeholderName")}
+          {world?.name}
         </Button>
       </div>
 
@@ -190,11 +192,15 @@ export function TopBar({ activeTab }: TopBarProps) {
         </DropdownMenu>
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
-        <Button asChild variant="secondary" size="sm" className="ml-0.5 rounded-full">
-          <Link to="/">
-            <LayoutGrid />
-            {t("shell.actions.worlds")}
-          </Link>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="ml-0.5 rounded-full"
+          onClick={() => closeWorld.mutate()}
+          disabled={closeWorld.isPending}
+        >
+          <LayoutGrid />
+          {t("shell.actions.worlds")}
         </Button>
       </nav>
     </header>

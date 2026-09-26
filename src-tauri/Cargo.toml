@@ -31,6 +31,7 @@ uuid = { version = "1.26.1", features = ["v4", "serde"] }
 time = { version = "0.3.55", features = ["serde-well-known", "formatting", "parsing"] }
 tokio = { version = "1.53.1", features = ["fs", "sync"] }
 sha2 = "0.11.0"
+tauri-plugin-dialog = "2"
 
 [lints.rust]
 # MSVC prints an informational "creating library .dll.lib" line when linking the

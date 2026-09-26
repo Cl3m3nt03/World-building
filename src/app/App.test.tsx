@@ -1,21 +1,60 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
+import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ErrorBoundary } from "@/app/ErrorScreen";
 import { createAppRouter } from "@/app/router";
 import { tabFromPath } from "@/app/shell/WorldLayout";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { AppSettings, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
-afterEach(cleanup);
+const WORLD: WorldInfo = {
+  id: "demo",
+  name: "Eldefleur",
+  path: "C:/Worlds/Eldefleur",
+  schemaVersion: 1,
+  createdAt: "2026-09-26T10:00:00Z",
+  lastOpenedAt: "2026-09-26T10:00:00Z",
+};
+
+const SETTINGS: AppSettings = {
+  preferences: { language: "fr", theme: "system", transparencyEffects: true },
+  recentWorlds: [],
+};
+
+let openWorld: WorldInfo | null;
+
+beforeEach(() => {
+  openWorld = WORLD;
+  mockIPC((command) => {
+    switch (command) {
+      case "current_world":
+        return openWorld;
+      case "close_world":
+        openWorld = null;
+        return null;
+      case "get_settings":
+        return SETTINGS;
+      default:
+        return undefined;
+    }
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  clearMocks();
+});
 
 async function renderAt(path: string) {
-  const router = createAppRouter(createMemoryHistory({ initialEntries: [path] }));
+  const queryClient = createQueryClient();
+  const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }));
   await act(async () => {
     render(
-      <QueryClientProvider client={createQueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <RouterProvider router={router} />
         </TooltipProvider>
@@ -32,10 +71,24 @@ describe("routing", () => {
     expect(screen.getByRole("heading", { name: "Mondes" })).toBeTruthy();
   });
 
-  test("/world/$worldId redirects to the Home tab", async () => {
+  test("/world/$worldId redirects to the Home tab of the open world", async () => {
     const router = await renderAt("/world/demo");
     expect(router.state.location.pathname).toBe("/world/demo/home");
     expect(screen.getByRole("heading", { name: "Bienvenue" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Monde courant" }).textContent).toContain(
+      "Eldefleur",
+    );
+  });
+
+  test("a world that is not the open one sends back to the world list", async () => {
+    const router = await renderAt("/world/other/home");
+    expect(router.state.location.pathname).toBe("/");
+  });
+
+  test("without an open world, world routes send back to the world list", async () => {
+    openWorld = null;
+    const router = await renderAt("/world/demo/world");
+    expect(router.state.location.pathname).toBe("/");
   });
 
   test("clicking a tab navigates to its route", async () => {
@@ -47,11 +100,15 @@ describe("routing", () => {
     expect(screen.getByRole("tab", { name: "Wiki" }).getAttribute("data-state")).toBe("active");
   });
 
-  test("the Worlds button goes back to the world list", async () => {
+  test("the Worlds button closes the world and goes back to the world list", async () => {
     const router = await renderAt("/world/demo/world");
     await act(async () => {
-      fireEvent.click(screen.getByRole("link", { name: "Mondes" }));
+      fireEvent.click(screen.getByRole("button", { name: "Mondes" }));
     });
+    await act(async () => {
+      await router.load();
+    });
+    expect(openWorld).toBeNull();
     expect(router.state.location.pathname).toBe("/");
   });
 

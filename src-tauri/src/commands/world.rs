@@ -10,15 +10,17 @@ use crate::settings::{self, RecentWorld};
 use crate::state::AppState;
 use crate::world::{self, OpenWorld, WorldInfo};
 
-/// Creates a world in `path` (a new or empty folder) and opens it.
+/// Creates a world named `name` in a new folder inside `parent_dir` (the
+/// folder is named after the world), and opens it.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_world(
     state: State<'_, AppState>,
-    path: String,
+    parent_dir: String,
     name: String,
 ) -> AppResult<WorldInfo> {
-    let world = world::create(Path::new(&path), &name, &db::MIGRATOR).await?;
+    let root = Path::new(&parent_dir).join(world::folder_name(&name)?);
+    let world = world::create(&root, &name, &db::MIGRATOR).await?;
     Ok(activate(&state, world).await)
 }
 

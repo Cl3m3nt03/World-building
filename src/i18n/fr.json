@@ -1,5 +1,4 @@
 {
-  "shell.world.placeholderName": "Mon monde",
   "shell.world.label": "Monde courant",
   "shell.tabs.label": "Modes",
   "shell.tabs.home": "Home",
@@ -37,8 +36,7 @@
   "notFound.title": "Page introuvable",
   "notFound.description": "Cette page n'existe pas.",
   "worlds.title": "Mondes",
-  "worlds.empty": "Aucun monde pour l'instant. La création de monde arrive avec l'écran de démarrage.",
-  "worlds.openDemo": "Ouvrir la coque de démonstration",
+  "worlds.empty": "Aucun monde récent. Créez un monde ou ouvrez un dossier monde existant.",
   "shell.actions.about": "À propos",
   "about.title": "À propos de BuilderZ",
   "about.description": "Version de l'application et dossiers utilisés sur ce PC.",
@@ -64,5 +62,20 @@
   "media.importing": "Import en cours…",
   "media.previewAlt": "Aperçu de {{name}}",
   "media.imported": "Importé : {{name}}",
-  "media.alreadyImported": "Déjà présent dans le monde : {{name}}"
+  "media.alreadyImported": "Déjà présent dans le monde : {{name}}",
+  "worlds.create": "Créer un monde",
+  "worlds.open": "Ouvrir un monde",
+  "worlds.recent": "Mondes récents",
+  "worlds.openRecent": "Ouvrir {{name}}",
+  "worlds.openPickerTitle": "Ouvrir un dossier monde",
+  "createWorld.title": "Nouveau monde",
+  "createWorld.description": "Le monde est enregistré dans un nouveau dossier à son nom, à l'emplacement choisi.",
+  "createWorld.name": "Nom",
+  "createWorld.namePlaceholder": "Eldefleur",
+  "createWorld.location": "Emplacement",
+  "createWorld.chooseLocation": "Choisir…",
+  "createWorld.pickerTitle": "Choisir l'emplacement du monde",
+  "createWorld.cancel": "Annuler",
+  "createWorld.submit": "Créer",
+  "createWorld.creating": "Création…"
 }

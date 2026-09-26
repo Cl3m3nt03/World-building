@@ -125,7 +125,8 @@ fn read_world_file(root: &Path) -> AppResult<WorldFile> {
     let json = std::fs::read_to_string(&path).map_err(|error| {
         AppError::WorldInvalid(format!("cannot read {}: {error}", path.display()))
     })?;
-    let file: WorldFile = serde_json::from_str(&json)
+    // Tolerate a UTF-8 BOM (files edited with Notepad or PowerShell 5).
+    let file: WorldFile = serde_json::from_str(json.trim_start_matches('\u{feff}'))
         .map_err(|error| AppError::WorldInvalid(format!("{WORLD_FILE} is corrupted: {error}")))?;
     if file.format != FORMAT {
         return Err(AppError::WorldInvalid(format!(
@@ -134,6 +135,46 @@ fn read_world_file(root: &Path) -> AppResult<WorldFile> {
         )));
     }
     Ok(file)
+}
+
+/// Longest folder name derived from a world name.
+const MAX_FOLDER_NAME_LEN: usize = 100;
+
+/// Folder name for a world called `name`, safe on Windows: forbidden and
+/// control characters removed, spaces collapsed, no trailing dot or space,
+/// reserved device names (`CON`, `NUL`, `COM1`…) suffixed with `_`.
+pub fn folder_name(name: &str) -> AppResult<String> {
+    let cleaned: String = name
+        .chars()
+        .filter(|c| {
+            !c.is_control() && !matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*')
+        })
+        .collect();
+    let mut folder = cleaned.split_whitespace().collect::<Vec<_>>().join(" ");
+    if folder.chars().count() > MAX_FOLDER_NAME_LEN {
+        folder = folder.chars().take(MAX_FOLDER_NAME_LEN).collect();
+    }
+    let folder = folder.trim_end_matches(['.', ' ']).to_owned();
+    if folder.is_empty() {
+        return Err(AppError::InvalidInput(format!(
+            "no usable folder name in {name:?}"
+        )));
+    }
+
+    let stem = folder
+        .split('.')
+        .next()
+        .unwrap_or_default()
+        .to_ascii_uppercase();
+    let reserved = matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || ((stem.starts_with("COM") || stem.starts_with("LPT"))
+            && stem.len() == 4
+            && stem.as_bytes()[3].is_ascii_digit());
+    Ok(if reserved {
+        format!("{folder}_")
+    } else {
+        folder
+    })
 }
 
 /// Creates a new world in `root`, which must not exist or be an empty folder.

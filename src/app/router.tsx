@@ -1,6 +1,7 @@
+import type { QueryClient } from "@tanstack/react-query";
 import {
   createHashHistory,
-  createRootRoute,
+  createRootRouteWithContext,
   createRoute,
   createRouter,
   Outlet,
@@ -11,19 +12,22 @@ import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
 import { ComingSoon, HomePlaceholder, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
-import { WorldListScreen } from "@/features/world";
+import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
  * Routes (code-based, fully typed):
  *   /                          world list (start screen)
- *   /world/$worldId            → redirects to /world/$worldId/home
+ *   /world/$worldId            only if that world is open in Rust, else → /
+ *                              → redirects to /world/$worldId/home
  *   /world/$worldId/home       Home tab
  *   /world/$worldId/world      World tab (sidebar + workspace)
  *   /world/$worldId/wiki       Wiki tab
  *   /world/$worldId/quill      Quill tab
  */
 
-const rootRoute = createRootRoute({
+type RouterContext = { queryClient: QueryClient };
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <>
       <Backdrop />
@@ -43,6 +47,13 @@ const worldListRoute = createRoute({
 const worldRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/world/$worldId",
+  // The URL alone cannot open a world: back to the list unless it is the open one.
+  beforeLoad: async ({ context, params }) => {
+    const world = await context.queryClient.ensureQueryData(currentWorldQuery).catch(() => null);
+    if (world?.id !== params.worldId) {
+      throw redirect({ to: "/" });
+    }
+  },
   component: WorldLayout,
 });
 
@@ -87,10 +98,14 @@ export const routeTree = rootRoute.addChildren([
  * Hash history: the desktop app has no server to rewrite deep links, and a
  * reload keeps the current route.
  */
-export function createAppRouter(history: RouterHistory = createHashHistory()) {
+export function createAppRouter(
+  queryClient: QueryClient,
+  history: RouterHistory = createHashHistory(),
+) {
   return createRouter({
     routeTree,
     history,
+    context: { queryClient },
     defaultErrorComponent: ({ error }) => <ErrorScreen error={error} />,
     defaultNotFoundComponent: NotFoundScreen,
   });
