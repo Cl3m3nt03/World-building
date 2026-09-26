@@ -11,6 +11,22 @@ pub async fn get_settings(state: State<'_, AppState>) -> AppResult<AppSettings> 
     Ok(state.settings.lock().await.clone())
 }
 
+/// Sets (absolute path) or resets (`null`) the folder proposed for new
+/// worlds, and returns the updated settings.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_default_worlds_dir(
+    state: State<'_, AppState>,
+    path: Option<String>,
+) -> AppResult<AppSettings> {
+    let mut settings = state.settings.lock().await;
+    let mut updated = settings.clone();
+    updated.set_default_worlds_dir(path.as_deref())?;
+    settings::save(&state.config_dir, &updated)?;
+    *settings = updated.clone();
+    Ok(updated)
+}
+
 /// Saves new preferences and returns the updated settings.
 #[tauri::command]
 #[specta::specta]

@@ -68,6 +68,9 @@ pub struct AppSettings {
     pub preferences: Preferences,
     /// Most recently opened first.
     pub recent_worlds: Vec<RecentWorld>,
+    /// Folder proposed for new worlds; `None` means the default one
+    /// (`Documents/BuilderZ`, see `paths::default_worlds_dir`).
+    pub default_worlds_dir: Option<String>,
 }
 
 // Reading is tolerant: missing fields take their default and unknown fields
@@ -118,6 +121,7 @@ impl<'de> Deserialize<'de> for Preferences {
 struct RawAppSettings {
     preferences: Preferences,
     recent_worlds: Vec<RecentWorld>,
+    default_worlds_dir: Option<String>,
 }
 
 impl<'de> Deserialize<'de> for AppSettings {
@@ -125,10 +129,12 @@ impl<'de> Deserialize<'de> for AppSettings {
         let RawAppSettings {
             preferences,
             recent_worlds,
+            default_worlds_dir,
         } = RawAppSettings::deserialize(deserializer)?;
         Ok(Self {
             preferences,
             recent_worlds,
+            default_worlds_dir,
         })
     }
 }
@@ -141,6 +147,21 @@ impl AppSettings {
                 name.clone_into(&mut recent.name);
             }
         }
+    }
+
+    /// Sets the folder proposed for new worlds (`None` or blank resets it).
+    /// It must be an absolute path.
+    pub fn set_default_worlds_dir(&mut self, path: Option<&str>) -> AppResult<()> {
+        let path = path.map(str::trim).filter(|path| !path.is_empty());
+        if let Some(path) = path
+            && !Path::new(path).is_absolute()
+        {
+            return Err(AppError::InvalidInput(format!(
+                "path is not absolute: {path}"
+            )));
+        }
+        self.default_worlds_dir = path.map(str::to_owned);
+        Ok(())
     }
 
     /// Moves (or adds) a world to the top of the recent list.
@@ -285,6 +306,24 @@ mod tests {
         assert_eq!(settings.recent_worlds[1].path, "C:/A");
         assert_eq!(settings.recent_worlds[1].name, "Nouveau nom");
         assert_eq!(settings.recent_worlds[0].name, "C:/B");
+    }
+
+    #[test]
+    fn default_worlds_dir_must_be_absolute_and_can_be_reset() {
+        let mut settings = AppSettings::default();
+        assert!(matches!(
+            settings.set_default_worlds_dir(Some("relative/dir")),
+            Err(AppError::InvalidInput(_))
+        ));
+        let dir = tempfile::tempdir().unwrap();
+        let absolute = dir.path().display().to_string();
+
+        settings.set_default_worlds_dir(Some(&absolute)).unwrap();
+        save(dir.path(), &settings).unwrap();
+        assert_eq!(load(dir.path()).default_worlds_dir, Some(absolute));
+
+        settings.set_default_worlds_dir(Some("   ")).unwrap();
+        assert_eq!(settings.default_worlds_dir, None);
     }
 
     #[test]

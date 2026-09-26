@@ -59,7 +59,7 @@ Le genre d'un monde détermine les **types de cartes proposés par défaut** à 
 | Langue | Français, English |
 | Dossier par défaut des nouveaux mondes | Chemin |
 
-Ces réglages sont stockés dans le dossier de config de l'app, pas dans un monde.
+Ces réglages sont stockés dans le dossier de config de l'app, pas dans un monde. Ils s'ouvrent dans un dialogue **Réglages** (bouton engrenage), accessible depuis la barre du haut d'un monde ouvert et depuis la liste des mondes. Le dialogue contient aussi une section **À propos** (version et dossiers utilisés). Le dossier par défaut des nouveaux mondes est proposé par « Nouveau monde » ; « Par défaut » revient à `Documents\BuilderZ`.
 
 ## Médiathèque
 

@@ -37,7 +37,6 @@
   "notFound.description": "This page does not exist.",
   "worlds.title": "Worlds",
   "worlds.empty": "No recent worlds. Create a world or open an existing world folder.",
-  "shell.actions.about": "About",
   "about.title": "About BuilderZ",
   "about.description": "App version and folders used on this PC.",
   "about.version": "Version",
@@ -80,5 +79,15 @@
   "createWorld.creating": "Creating…",
   "placeholder.comingIn": "Coming soon: arrives with {{milestone}}",
   "placeholder.wiki": "The wiki will present your world as polished pages, one per card or map, and export it as a website.",
-  "placeholder.quill": "Quill will be where you write your stories next to your world, with your cards always at hand."
+  "placeholder.quill": "Quill will be where you write your stories next to your world, with your cards always at hand.",
+  "settings.title": "Settings",
+  "settings.description": "BuilderZ preferences on this PC. They are not saved in your worlds.",
+  "settings.transparencyHint": "Turn them off for opaque panels, with more contrast and lighter on the machine.",
+  "settings.worldsDir": "New worlds folder",
+  "settings.worldsDirHint": "Location proposed when you create a world. Each world gets its own folder in it.",
+  "settings.worldsDirDefault": "Documents\\BuilderZ (default)",
+  "settings.worldsDirChoose": "Choose…",
+  "settings.worldsDirReset": "Default",
+  "settings.worldsDirPickerTitle": "Choose the new worlds folder",
+  "settings.about": "About"
 }
