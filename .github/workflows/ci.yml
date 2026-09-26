@@ -108,78 +108,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: WebView2 and Edge versions
-        shell: pwsh
-        run: |
-          foreach ($dir in "${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application", "${env:ProgramFiles(x86)}\Microsoft\Edge\Application") {
-            if (Test-Path $dir) { Get-ChildItem $dir -Directory | Where-Object Name -match '^\d' | ForEach-Object { "$dir\$($_.Name)" } }
-          }
-
-      # Diagnostic: records the command lines of the app, WebView2 and driver
-      # processes while the tests run, to see which arguments WebView2 gets.
-      - name: Start process watcher
-        shell: pwsh
-        run: |
-          $log = Join-Path $env:RUNNER_TEMP 'processes.log'
-          Start-Process pwsh -WindowStyle Hidden -ArgumentList '-NoProfile', '-File', 'scripts/watch-processes.ps1', '-LogPath', "`"$log`""
-          "Watching processes into $log"
-
       # Installs the msedgedriver matching the runner's WebView2, builds the
       # app in debug mode, then runs e2e/specs with a temporary BUILDERZ_HOME.
       - name: End-to-end tests
         run: pnpm test:e2e
         env:
           # Kept for the artifact below (the runner context only exists at step level).
-          BUILDERZ_HOME: ${{ runner.temp }}\builderz-e2e
+          BUILDERZ_HOME: ${{ runner.temp }}/builderz-e2e
           E2E_KEEP_HOME: "1"
-          E2E_DRIVER_LOG: ${{ runner.temp }}\msedgedriver.log
-          # Tauri and wry (the WebView2 host) log through `log`, bridged into our tracing file.
-          RUST_LOG: info,builderz_lib=debug,tauri=debug,wry=trace,tao=debug
+          # Verbose msedgedriver log (see e2e/wdio.conf.ts).
+          E2E_DRIVER_LOG: ${{ runner.temp }}/msedgedriver.log
 
-      # WebView2 writes chrome_debug.log (msedgedriver passes --enable-logging)
-      # into the profile msedgedriver creates under %TEMP%\scoped_dir*.
-      - name: Collect WebView2 logs
-        if: failure()
-        shell: pwsh
-        run: |
-          $out = Join-Path $env:RUNNER_TEMP 'webview2-logs'
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-          $sources = @($env:TEMP, (Join-Path $env:LOCALAPPDATA 'app.builderz.desktop'))
-          foreach ($source in $sources) {
-            if (-not (Test-Path $source)) { continue }
-            Get-ChildItem -Path $source -Recurse -File -Include '*.log', 'DevToolsActivePort' -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -match 'scoped_dir|EBWebView|app\.builderz\.desktop' } |
-              ForEach-Object {
-                $name = ($_.FullName -replace '[:\\\/]', '_')
-                Copy-Item $_.FullName (Join-Path $out $name) -ErrorAction SilentlyContinue
-                "$($_.FullName) ($($_.Length) bytes)"
-              }
-          }
-          foreach ($key in 'HKLM:\SOFTWARE\Policies\Microsoft\Edge', 'HKCU:\SOFTWARE\Policies\Microsoft\Edge', 'HKLM:\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge') {
-            if (Test-Path $key) {
-              "== Policies under $key"
-              Get-ChildItem -Path $key -Recurse -ErrorAction SilentlyContinue | ForEach-Object { "  [$($_.Name)]"; $_ | Get-ItemProperty | Format-List | Out-String -Width 300 }
-              Get-ItemProperty -Path $key | Format-List | Out-String -Width 300
-            } else { "== No policies under $key" }
-          }
-          "== Profiles created under TEMP"
-          Get-ChildItem -Path $env:TEMP -Directory -Filter 'scoped_dir*' -ErrorAction SilentlyContinue |
-            ForEach-Object { $_.FullName; Get-ChildItem $_.FullName -Recurse -Depth 1 -ErrorAction SilentlyContinue | Select-Object -First 15 | ForEach-Object { "   $($_.FullName)" } }
-          "== App WebView2 data"
-          Get-ChildItem -Path (Join-Path $env:LOCALAPPDATA 'app.builderz.desktop') -Recurse -Depth 1 -ErrorAction SilentlyContinue | ForEach-Object { "   $($_.FullName)" }
-          Get-Process | Where-Object { $_.ProcessName -match 'msedge|webview|builderz' } |
-            Select-Object ProcessName, Id, SessionId | Format-Table | Out-String | Write-Host
-          "Session: $([System.Diagnostics.Process]::GetCurrentProcess().SessionId), user: $env:USERNAME, interactive: $([Environment]::UserInteractive)"
-
+      # On failure: msedgedriver, app and WebView2 logs, to diagnose a
+      # "session not created" or a failing scenario without guessing.
       - name: Upload e2e logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-logs
           path: |
-            ${{ runner.temp }}\msedgedriver.log
-            ${{ runner.temp }}\builderz-e2e\logs
-            ${{ runner.temp }}\builderz-e2e\webview2\**\*.log
-            ${{ runner.temp }}\processes.log
-            ${{ runner.temp }}\webview2-logs
+            ${{ runner.temp }}/msedgedriver.log
+            ${{ runner.temp }}/builderz-e2e/logs
+            ${{ runner.temp }}/builderz-e2e/webview2/**/*.log
           if-no-files-found: warn
