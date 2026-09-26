@@ -6,6 +6,7 @@ mod paths;
 mod protocol;
 mod settings;
 mod state;
+mod window;
 mod world;
 
 use tauri::Manager;
@@ -49,11 +50,18 @@ pub fn run() -> tauri::Result<()> {
             let config_dir = paths::config_dir(app.handle())?;
             let settings = settings::load(&config_dir);
             app.manage(state::AppState::new(config_dir, settings));
+            window::create_main_window(app)?;
             tracing::info!(
                 version = %app.package_info().version,
                 log_dir = %log_dir.display(),
                 "BuilderZ started"
             );
+            // WebView2 settings injected through the environment (e.g. by
+            // msedgedriver in the end-to-end tests), useful when a webview
+            // does not start as expected.
+            for (key, value) in std::env::vars().filter(|(key, _)| key.starts_with("WEBVIEW2_")) {
+                tracing::debug!(%key, %value, "WebView2 environment");
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

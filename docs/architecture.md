@@ -57,7 +57,12 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
   3. lance les scénarios avec un `BUILDERZ_HOME` temporaire, supprimé à la fin (`E2E_KEEP_HOME=1` pour le garder et l'inspecter).
 - Prérequis local : `cargo install tauri-driver@2.0.6 --locked`.
 - Sélecteurs : de préférence par rôle et libellé accessible (`aria/Nom`, `button=Créer`), ce qui vérifie aussi l'accessibilité.
-- CI : job dédié « End-to-end tests » sur `windows-latest`.
+- CI : job dédié « End-to-end tests » sur `windows-latest`. En cas d'échec, il publie l'artefact `e2e-logs` : log verbeux de msedgedriver (`E2E_DRIVER_LOG`), logs de l'app et de WebView2.
+
+**Deux pièges du runner Windows, corrigés** (à ne pas défaire) :
+
+1. **Profil WebView2** : msedgedriver crée le profil dans son dossier temporaire, qui est `C:\Windows\SystemTemp` sur le runner. WebView2 ne peut pas l'utiliser. `e2e/wdio.conf.ts` impose donc `webviewOptions.userDataFolder` dans le `BUILDERZ_HOME` du test (l'argument `--user-data-dir` est ignoré en mode WebView2).
+2. **Arguments de WebView2** : Tauri passe ses propres arguments à WebView2 par l'API (`--disable-features=msWebOOUI,…`). Sur le runner, ils **remplacent** la variable `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` par laquelle msedgedriver demande `--remote-debugging-port` : la session échouait avec « DevToolsActivePort file doesn't exist ». La fenêtre principale est donc déclarée avec `"create": false` dans `tauri.conf.json` et créée dans `setup` (`src-tauri/src/window.rs`) avec la **fusion** des arguments de Tauri et de la variable d'environnement. Hors tests, la variable est vide et rien ne change.
 
 ### Tests front
 

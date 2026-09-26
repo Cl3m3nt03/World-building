@@ -25,7 +25,10 @@ describe("BuilderZ smoke test", () => {
     // The default location comes from Rust: $BUILDERZ_HOME/worlds here.
     const location = await $("aria/Emplacement");
     await browser.waitUntil(async () => (await location.getValue()) !== "");
-    expect(await location.getValue()).toContain(path.join(builderzHome(), "worlds"));
+    // Normalized: BUILDERZ_HOME may mix separators when set from a POSIX shell.
+    expect(path.normalize(await location.getValue())).toContain(
+      path.normalize(path.join(builderzHome(), "worlds")),
+    );
 
     await $("button=Créer").click();
 
