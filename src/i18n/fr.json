@@ -57,5 +57,12 @@
   "errors.world_too_new": "Ce monde a été enregistré par une version plus récente de BuilderZ. Mettez l'application à jour pour l'ouvrir.",
   "errors.no_world_open": "Aucun monde n'est ouvert.",
   "errors.database": "La base de données du monde a renvoyé une erreur.",
-  "errors.migration": "La mise à jour du monde a échoué. Une sauvegarde a été conservée dans son dossier."
+  "errors.migration": "La mise à jour du monde a échoué. Une sauvegarde a été conservée dans son dossier.",
+  "media.dropZone": "Import de fichiers",
+  "media.dropHint": "Glissez une image sur la fenêtre pour l'importer dans le monde ouvert.",
+  "media.dropActive": "Relâchez pour importer",
+  "media.importing": "Import en cours…",
+  "media.previewAlt": "Aperçu de {{name}}",
+  "media.imported": "Importé : {{name}}",
+  "media.alreadyImported": "Déjà présent dans le monde : {{name}}"
 }
