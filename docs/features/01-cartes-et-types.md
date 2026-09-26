@@ -51,12 +51,30 @@ Appliquer le template ajoute ces sections comme blocs texte pré-titrés, en pla
 - Chaque type peut contenir des **sous-types**, affichés en menu déroulant sous le type. Un sous-type hérite des propriétés de son type et peut en ajouter.
 - Des types par défaut sont créés selon le genre du monde. Ils se modifient et se suppriment comme les autres.
 
-**Types par défaut proposés** (à valider par Clément) :
+### Écran de gestion des types
+
+D'après les captures du board (dialogue « Card Types ») :
+
+- **à gauche**, la liste des types avec une recherche, un bouton « + » pour créer un type, et un chevron par type pour déplier ses sous-types (par exemple *Lieu* › Royaume, Ville, Hameau, Donjon, Point de repère) ;
+- **à droite**, le type sélectionné : icône et nom, actions (dupliquer, supprimer), ses **propriétés par défaut** et ses **réglages de carte par défaut**.
+- Modifier une propriété du type affiche un bandeau **« Appliquer les changements à toutes les cartes de ce type ? »** avec « Ignorer » et « Oui » (texte du board : « I will apply changes to all cards of this type »).
+- Une propriété s'édite dans une petite fenêtre : nom, nature (Texte, Nombre, Lien…) et suppression.
+
+### Réglages de carte par défaut
+
+Chaque type définit des réglages appliqués à la création de chaque nouvelle carte de ce type (texte du board : « default settings that act like a template for each card you create ») :
+
+| Réglage | Valeurs |
+|---|---|
+| Orientation par défaut | Portrait, Paysage (forme de l'image de la carte) |
+| Format sur le canvas | Quatre formats de vignette pour le canvas (voir `06-canvas.md`) |
+
+**Types par défaut proposés** (à valider par Clément). Les captures du board montrent, pour un monde de fantasy : Personnage, Lieu (avec les sous-types Royaume, Ville, Hameau, Donjon, Point de repère), Faction, Objet, Événement, Lore, Écologie. La liste ci-dessous en tient compte :
 
 | Genre | Types |
 |---|---|
-| Tous | Personnage, Lieu, Objet, Événement, Organisation, Créature, Note |
-| Fantasy | + Système de magie, Religion, Race |
+| Tous | Personnage, Lieu (Royaume, Ville, Hameau, Donjon, Point de repère), Objet, Événement, Faction, Lore, Note |
+| Fantasy | + Système de magie, Religion, Race, Créature, Écologie |
 | Science-fiction | + Technologie, Vaisseau, Espèce, Planète |
 | Cyberpunk | + Technologie, Corporation, Implant |
 | Romance | + Relation, Lieu de rencontre |

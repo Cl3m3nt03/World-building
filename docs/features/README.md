@@ -2,6 +2,8 @@
 
 Un fichier par module. Chacun décrit le comportement attendu, les règles, les cas limites et les adaptations au contexte local. Ces fichiers sont **la référence**. Quand le code change le comportement d'un module, son fichier est mis à jour dans la même PR.
 
+Ils sont rédigés à partir du board FigJam (voir `docs/contexte.md`). Pour chaque module, le **pavé de texte en anglais** du board décrit le fonctionnement attendu : c'est la source principale. Les captures placées dessous l'illustrent et précisent l'interface. Avant de travailler sur un module, relire ce texte et vérifier que la spec le couvre.
+
 Les modèles de données proposés dans ces fichiers sont **indicatifs**. Le schéma définitif est fixé dans la PR qui introduit les migrations, et il doit rester cohérent avec les concepts ci-dessous.
 
 ## Sommaire
