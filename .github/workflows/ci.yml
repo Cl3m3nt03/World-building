@@ -80,12 +80,6 @@ jobs:
     name: End-to-end tests
     runs-on: windows-latest
     timeout-minutes: 40
-    env:
-      # The default %TEMP% on the runner is an 8.3 short path (C:\Users\RUNNER~1\...).
-      # msedgedriver puts the WebView2 profile there and then never finds its
-      # DevToolsActivePort file; the runner temp dir has a regular long path.
-      TEMP: ${{ runner.temp }}
-      TMP: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
 
@@ -125,3 +119,10 @@ jobs:
       # app in debug mode, then runs e2e/specs with a temporary BUILDERZ_HOME.
       - name: End-to-end tests
         run: pnpm test:e2e
+        env:
+          # The default %TEMP% on the runner is an 8.3 short path (C:\Users\RUNNER~1\...).
+          # msedgedriver puts the WebView2 profile there and then never finds its
+          # DevToolsActivePort file; the runner temp dir has a regular long path.
+          # (The runner context is only available at step level.)
+          TEMP: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
