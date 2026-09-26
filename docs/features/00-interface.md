@@ -44,7 +44,7 @@ Entrée **Thème** du bloc Gérer. Le thème du monde est une ambiance visuelle 
 
 ### Onglet World
 
-C'est l'espace de travail principal. On y trouve la sidebar et l'éditeur du document ouvert (carte, map, graph, canvas ou arbre). Quand aucun document n'est ouvert, un clic au centre propose de créer un document.
+C'est l'espace de travail principal. On y trouve la sidebar et l'éditeur du document ouvert (carte, map, graph, canvas ou arbre). Quand aucun document n'est ouvert, un clic au centre propose de créer un document. Tant qu'un type de document n'est pas encore disponible, sa tuile reste visible mais est signalée « Bientôt disponible » avec le milestone qui l'apporte ; de même, les onglets Wiki et Quill expliquent ce qu'ils feront. Aucun élément cliquable ne reste sans effet sans l'indiquer.
 
 ## Genres
 

@@ -4,33 +4,50 @@ import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImportDropZone } from "@/features/media";
 import type { TranslationKey } from "@/i18n";
 
-const CREATE_TILES: { icon: LucideIcon; label: TranslationKey }[] = [
-  { icon: SquareUser, label: "workspace.create.card" },
-  { icon: MapIcon, label: "workspace.create.map" },
-  { icon: LayoutGrid, label: "workspace.create.canvas" },
-  { icon: Share2, label: "workspace.create.graph" },
+/** Document kinds and the milestone that brings each one (docs/roadmap). */
+const CREATE_TILES: { icon: LucideIcon; label: TranslationKey; milestone: string }[] = [
+  { icon: SquareUser, label: "workspace.create.card", milestone: "M2" },
+  { icon: MapIcon, label: "workspace.create.map", milestone: "M4" },
+  { icon: LayoutGrid, label: "workspace.create.canvas", milestone: "M7" },
+  { icon: Share2, label: "workspace.create.graph", milestone: "M5" },
 ];
 
-/** Empty-workspace prompt: "Start with…" and one tile per document kind. */
+/**
+ * Empty-workspace prompt: "Start with…" and one tile per document kind.
+ * Tiles stay visible but are marked unavailable until their module exists,
+ * so nothing clickable silently does nothing.
+ */
 function StartWith() {
   const { t } = useTranslation();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
       <div className="flex gap-3">
-        {CREATE_TILES.map(({ icon: Icon, label }) => (
+        {CREATE_TILES.map(({ icon: Icon, label, milestone }) => (
           <div key={label} className="flex flex-col items-center gap-1.5">
-            <Button
-              variant="secondary"
-              aria-label={t(label)}
-              className="glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5"
-            >
-              <Icon />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  aria-label={t(label)}
+                  aria-disabled
+                  aria-describedby={`${label}-soon`}
+                  onClick={(event) => event.preventDefault()}
+                  className="glass size-12 cursor-not-allowed rounded-lg opacity-60 [&_svg:not([class*='size-'])]:size-5"
+                >
+                  <Icon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("placeholder.comingIn", { milestone })}</TooltipContent>
+            </Tooltip>
             <span className="text-xs text-muted-foreground">{t(label)}</span>
+            <span id={`${label}-soon`} className="sr-only">
+              {t("placeholder.comingIn", { milestone })}
+            </span>
           </div>
         ))}
       </div>
@@ -83,12 +100,22 @@ export function HomePlaceholder() {
   );
 }
 
-export function ComingSoon({ title }: { title: TranslationKey }) {
+type ComingSoonProps = {
+  title: TranslationKey;
+  /** What the module will do, so the empty tab explains itself. */
+  description: TranslationKey;
+  milestone: string;
+};
+
+export function ComingSoon({ title, description, milestone }: ComingSoonProps) {
   const { t } = useTranslation();
   return (
-    <main className="flex h-full flex-col items-center justify-center gap-2">
+    <main className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
       <h1 className="text-2xl font-bold">{t(title)}</h1>
-      <p className="text-sm text-muted-foreground">{t("placeholder.comingSoon")}</p>
+      <p className="max-w-md text-sm text-muted-foreground">{t(description)}</p>
+      <p className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
+        {t("placeholder.comingIn", { milestone })}
+      </p>
     </main>
   );
 }

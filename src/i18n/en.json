@@ -77,5 +77,8 @@
   "createWorld.pickerTitle": "Choose the world location",
   "createWorld.cancel": "Cancel",
   "createWorld.submit": "Create",
-  "createWorld.creating": "Creating…"
+  "createWorld.creating": "Creating…",
+  "placeholder.comingIn": "Coming soon: arrives with {{milestone}}",
+  "placeholder.wiki": "The wiki will present your world as polished pages, one per card or map, and export it as a website.",
+  "placeholder.quill": "Quill will be where you write your stories next to your world, with your cards always at hand."
 }
