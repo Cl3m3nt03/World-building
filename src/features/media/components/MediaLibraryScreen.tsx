@@ -1,4 +1,3 @@
-import { open as pickFiles } from "@tauri-apps/plugin-dialog";
 import { ImageUp, Search, Upload } from "lucide-react";
 import { useCallback, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { TranslationKey } from "@/i18n";
 import type { Asset, AssetKind } from "@/lib/bindings";
+import { openDialog as pickFiles } from "@/lib/dialogs";
 import { cn } from "@/lib/utils";
 import { useAssets } from "../hooks/useAssets";
 import { useFileDrop } from "../hooks/useFileDrop";

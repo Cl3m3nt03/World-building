@@ -1,4 +1,3 @@
-import { open as pickFiles } from "@tauri-apps/plugin-dialog";
 import { ImageUp, Search, Upload } from "lucide-react";
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { openDialog as pickFiles } from "@/lib/dialogs";
 import { cn } from "@/lib/utils";
 import { useAssets } from "../hooks/useAssets";
 import { useImportAsset } from "../hooks/useImportAsset";

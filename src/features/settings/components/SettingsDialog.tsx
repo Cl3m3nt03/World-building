@@ -1,4 +1,3 @@
-import { open as pickFolder } from "@tauri-apps/plugin-dialog";
 import { FolderOpen, RotateCcw } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
+import { openDialog as pickFolder } from "@/lib/dialogs";
 import { useSetDefaultWorldsDir } from "../hooks/useSetDefaultWorldsDir";
 import { useSettings } from "../hooks/useSettings";
 import { AboutSection } from "./AboutSection";

@@ -79,6 +79,9 @@ export const config: WebdriverIO.Config = {
       path.join("scripts", "install-msedgedriver.ps1"),
     ]);
     if (process.env.E2E_SKIP_BUILD !== "1") {
+      // Front built with the e2e hooks (src/lib/dialogs.ts): WebDriver cannot
+      // drive native file dialogs, the tests queue their answers instead.
+      process.env.VITE_E2E = "1";
       // Debug build with the front bundled (no dev server).
       // Through node + pnpm's own entry point: no shell needed for pnpm.cmd.
       const pnpm = process.env.npm_execpath;

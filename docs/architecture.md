@@ -57,6 +57,8 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
   3. lance les scénarios avec un `BUILDERZ_HOME` temporaire, supprimé à la fin (`E2E_KEEP_HOME=1` pour le garder et l'inspecter).
 - Prérequis local : `cargo install tauri-driver@2.0.6 --locked`.
 - Sélecteurs : de préférence par rôle et libellé accessible (`aria/Nom`, `button=Créer`), ce qui vérifie aussi l'accessibilité.
+- **Dialogues natifs** : WebDriver ne sait pas piloter les boîtes de dialogue de fichiers de Windows, et Tauri verrouille `window.__TAURI_INTERNALS__` (impossible de remplacer `invoke` depuis la page). Tous les sélecteurs de fichier ou de dossier du front passent donc par `openDialog` (`src/lib/dialogs.ts`). Dans une build faite pour les tests (`VITE_E2E=1`, posé par `e2e/wdio.conf.ts` avant la construction), `openDialog` prend d'abord ses réponses dans `window.__bzE2eDialogAnswers`, que les scénarios remplissent (`pickNext`). Vite remplace le drapeau à la construction : les builds normales ne contiennent pas ce code. Tout le reste (import, relocalisation…) passe réellement par Rust.
+- Relancer l'app dans un scénario : `browser.reloadSession()` (tauri-driver relance l'exécutable, avec le même `BUILDERZ_HOME`).
 - CI : job dédié « End-to-end tests » sur `windows-latest`. En cas d'échec, il publie l'artefact `e2e-logs` : log verbeux de msedgedriver (`E2E_DRIVER_LOG`), logs de l'app et de WebView2.
 
 **Deux pièges du runner Windows, corrigés** (à ne pas défaire) :
