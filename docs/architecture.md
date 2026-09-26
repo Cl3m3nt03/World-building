@@ -15,7 +15,18 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
 
 ## Front (`src/`)
 
-À compléter (issues 0.6, 0.7) : routing, état, i18n.
+À compléter (issue 0.7) : routing, état.
+
+### Internationalisation
+
+- **react-i18next**, initialisé dans `src/i18n/index.ts` avant le premier rendu. Français par défaut, anglais disponible. La langue choisie sera enregistrée dans les réglages de l'app (0.9).
+- **Fichiers** : `src/i18n/fr.json` et `src/i18n/en.json`, avec des **clés plates** (`"shell.tabs.home"`), séparateurs de clés et de namespaces désactivés.
+- **Typage** : `src/i18n/i18next.d.ts` branche les clés de `fr.json` sur les types d'i18next. Un `t("clé.inexistante")` ne compile pas.
+- **Garde-fous** :
+  - la règle Biome `style/noJsxLiterals` est en erreur : un texte écrit en dur dans du JSX fait échouer le lint (y compris dans `src/components/ui/`) ;
+  - le test `src/i18n/i18n.test.ts`, lancé en CI, vérifie que `fr.json` et `en.json` ont exactement les mêmes clés et qu'aucune traduction n'est vide.
+- Dans un composant : `const { t } = useTranslation();`. Les listes de libellés stockent des `TranslationKey`, traduites au rendu.
+- `<html lang>` suit la langue active.
 
 ### Design system (ADR 0003)
 

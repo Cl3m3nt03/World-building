@@ -8,6 +8,7 @@ import {
   Radio,
   Settings,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ThemePreference, TransparencyPreference } from "@/app/theme";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { type TranslationKey, t } from "@/i18n";
+import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
 
@@ -39,6 +40,11 @@ const THEMES: { value: ThemePreference; label: TranslationKey }[] = [
   { value: "system", label: "settings.theme.system" },
 ];
 
+const LANGUAGE_LABELS: Record<Language, TranslationKey> = {
+  fr: "settings.language.fr",
+  en: "settings.language.en",
+};
+
 function isThemePreference(value: string): value is ThemePreference {
   return THEMES.some((theme) => theme.value === value);
 }
@@ -52,6 +58,7 @@ type TopBarProps = {
 };
 
 function IconAction({ icon: Icon, label }: { icon: LucideIcon; label: TranslationKey }) {
+  const { t } = useTranslation();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -71,6 +78,7 @@ export function TopBar({
   transparency,
   onTransparencyChange,
 }: TopBarProps) {
+  const { t, i18n } = useTranslation();
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
@@ -158,6 +166,20 @@ export function TopBar({
             >
               {t("settings.transparency")}
             </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>{t("settings.language")}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={i18n.resolvedLanguage ?? i18n.language}
+              onValueChange={(value) => {
+                if (isLanguage(value)) void i18n.changeLanguage(value);
+              }}
+            >
+              {LANGUAGES.map((language) => (
+                <DropdownMenuRadioItem key={language} value={language} lang={language}>
+                  {t(LANGUAGE_LABELS[language])}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
 
