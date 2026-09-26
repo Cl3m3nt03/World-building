@@ -15,7 +15,7 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 - Un nouveau monde est créé dans un **nouveau dossier à son nom**, à l'emplacement choisi (par défaut `Documents\BuilderZ`). L'emplacement doit donc être le dossier parent, pas le dossier du monde lui-même.
 - Revenir à la liste des mondes (bouton « Mondes ») ferme le monde ouvert.
 - Chaque carte a un menu : Ouvrir, Afficher dans l'Explorateur, Retirer de la liste. Retirer demande une confirmation et ne touche jamais au dossier.
-- Un monde introuvable, parce que son dossier a été déplacé ou supprimé, est signalé (« Introuvable ») au lieu d'échouer à l'ouverture. « Relocaliser » demande son nouveau dossier, qui doit contenir **le même monde** (même identifiant) ; il garde alors sa place dans la liste.
+- Un monde introuvable, parce que son dossier a été déplacé ou supprimé, est signalé (« Introuvable ») au lieu d'échouer à l'ouverture. « Relocaliser » demande son nouveau dossier, qui doit contenir **le même monde** (même identifiant) ; il garde alors sa place dans la liste. Si le dossier choisi contient un autre monde, un message le dit (« Ce dossier contient un autre monde… ») et la liste ne change pas.
 
 ## Coque d'un monde ouvert
 

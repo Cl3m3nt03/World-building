@@ -99,6 +99,8 @@ export type AppError =
 { code: "world_already_exists"; message: string } | 
 /**  The folder is not a valid BuilderZ world (missing or corrupted files). */
 { code: "world_invalid"; message: string } | 
+/**  The folder holds a valid world, but not the one expected (relocation). */
+{ code: "wrong_world"; message: string } | 
 /**  The world was saved by a newer BuilderZ; it is left untouched. */
 { code: "world_too_new"; message: string } | 
 /**  The command needs an open world and none is open. */

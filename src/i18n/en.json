@@ -180,5 +180,6 @@
   "radio.mode.loop": "Loop",
   "radio.mode.repeatOne": "Repeat track",
   "radio.mode.shuffle": "Shuffle",
-  "radio.tracks": "Tracks"
+  "radio.tracks": "Tracks",
+  "errors.wrong_world": "This folder holds another world. Choose the folder where this world now lives: the list is unchanged."
 }

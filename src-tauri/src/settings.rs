@@ -255,9 +255,8 @@ impl AppSettings {
         if let Some(known) = &self.recent_worlds[index].id
             && known != id
         {
-            return Err(AppError::WorldInvalid(format!(
-                "{new_path} holds another world (id {id}, expected {known})"
-            )));
+            // The path alone: the front explains the problem in the user's language.
+            return Err(AppError::WrongWorld(new_path.to_owned()));
         }
         // The new folder may already be in the list: keep a single entry.
         let duplicate = self
@@ -520,7 +519,7 @@ mod tests {
 
         let other_world =
             settings.relocate_recent_world("C:/Old", "D:/New", "id-2", "X", Genre::Other);
-        assert!(matches!(other_world, Err(AppError::WorldInvalid(_))));
+        assert!(matches!(other_world, Err(AppError::WrongWorld(ref path)) if path == "D:/New"));
 
         settings
             .relocate_recent_world("C:/Old", "D:/New", "id-1", "Eldefleur", Genre::Fantasy)
