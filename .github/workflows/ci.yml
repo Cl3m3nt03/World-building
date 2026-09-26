@@ -108,6 +108,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: WebView2 and Edge versions
+        shell: pwsh
+        run: |
+          foreach ($dir in "${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application", "${env:ProgramFiles(x86)}\Microsoft\Edge\Application") {
+            if (Test-Path $dir) { Get-ChildItem $dir -Directory | Where-Object Name -match '^\d' | ForEach-Object { "$dir\$($_.Name)" } }
+          }
+
       # Installs the msedgedriver matching the runner's WebView2, builds the
       # app in debug mode, then runs e2e/specs with a temporary BUILDERZ_HOME.
       - name: End-to-end tests
