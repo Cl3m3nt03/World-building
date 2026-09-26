@@ -5,7 +5,7 @@ L'ordre suit les dépendances : le Graph a besoin des liens entre cartes, le Can
 | Milestone | Contenu | Spec |
 |---|---|---|
 | **M0 Fondations** | Repo, CI, squelette Tauri, design system, i18n, couche données, premier `.exe` | `M0-fondations.md` |
-| **M1 Mondes & interface** | Liste des mondes, création, réglages du monde et de l'app, onglet Home, médiathèque | `features/00-interface.md` |
+| **M1 Mondes & interface** | Liste des mondes, création, réglages du monde et de l'app, onglet Home, médiathèque | `M1-mondes-et-interface.md` |
 | **M2 Cartes & types** | Types et sous-types, propriétés, blocs, templates guidés, alias | `features/01-cartes-et-types.md` |
 | **M3 Organisation** | Sidebar, dossiers, parent/enfant, épingles, tri, filtres, recherche | `features/02-organisation.md` |
 | **M4 Map** | Pins, zones, calques, texte, fond | `features/03-map.md` |
