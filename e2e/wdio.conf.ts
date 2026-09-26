@@ -9,13 +9,13 @@
  * real settings, logs or Documents folder (see src-tauri/src/paths.rs).
  */
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
 const application = path.join(root, "src-tauri", "target", "debug", "builderz.exe");
-const nativeDriver = path.join(root, "e2e", ".bin", "msedgedriver.exe");
+const msedgedriver = path.join(root, "e2e", ".bin", "msedgedriver.exe");
 const tauriDriverBin = process.env.TAURI_DRIVER ?? "tauri-driver";
 
 // Created once by the launcher; the workers inherit it through the environment.
@@ -23,6 +23,19 @@ process.env.BUILDERZ_HOME ??= mkdtempSync(path.join(os.tmpdir(), "builderz-e2e-"
 const home = process.env.BUILDERZ_HOME;
 
 let tauriDriver: ChildProcess | undefined;
+
+/**
+ * Native driver given to tauri-driver. With E2E_DRIVER_LOG=<file>, a small
+ * wrapper runs msedgedriver with --verbose logging to that file (tauri-driver
+ * has no option for it); used by CI to diagnose session failures.
+ */
+function nativeDriver(): string {
+  const log = process.env.E2E_DRIVER_LOG;
+  if (!log) return msedgedriver;
+  const wrapper = path.join(root, "e2e", ".bin", "msedgedriver-verbose.cmd");
+  writeFileSync(wrapper, `@"${msedgedriver}" %* --verbose "--log-path=${log}"\r\n`);
+  return wrapper;
+}
 
 function run(command: string, args: string[]) {
   const result = spawnSync(command, args, { cwd: root, stdio: "inherit" });
@@ -45,7 +58,7 @@ export const config: WebdriverIO.Config = {
   ],
   logLevel: "warn",
   waitforTimeout: 15_000,
-  connectionRetryCount: 5,
+  connectionRetryCount: 2,
   framework: "mocha",
   reporters: ["spec"],
   mochaOpts: { ui: "bdd", timeout: 120_000 },
@@ -69,7 +82,7 @@ export const config: WebdriverIO.Config = {
   },
 
   beforeSession() {
-    tauriDriver = spawn(tauriDriverBin, ["--native-driver", nativeDriver], {
+    tauriDriver = spawn(tauriDriverBin, ["--native-driver", nativeDriver()], {
       stdio: ["ignore", "inherit", "inherit"],
       env: process.env,
     });

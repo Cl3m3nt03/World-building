@@ -120,9 +120,17 @@ jobs:
       - name: End-to-end tests
         run: pnpm test:e2e
         env:
-          # The default %TEMP% on the runner is an 8.3 short path (C:\Users\RUNNER~1\...).
-          # msedgedriver puts the WebView2 profile there and then never finds its
-          # DevToolsActivePort file; the runner temp dir has a regular long path.
-          # (The runner context is only available at step level.)
-          TEMP: ${{ runner.temp }}
-          TMP: ${{ runner.temp }}
+          # Kept for the artifact below (the runner context only exists at step level).
+          BUILDERZ_HOME: ${{ runner.temp }}\builderz-e2e
+          E2E_KEEP_HOME: "1"
+          E2E_DRIVER_LOG: ${{ runner.temp }}\msedgedriver.log
+
+      - name: Upload e2e logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            ${{ runner.temp }}\msedgedriver.log
+            ${{ runner.temp }}\builderz-e2e\logs
+          if-no-files-found: warn
