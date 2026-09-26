@@ -115,6 +115,24 @@ describe("routing", () => {
     expect(router.state.location.pathname).toBe("/");
   });
 
+  test("creation tiles say they are not available yet instead of doing nothing", async () => {
+    const router = await renderAt("/world/demo/world");
+    const card = screen.getByRole("button", { name: "Carte" });
+    expect(card.getAttribute("aria-disabled")).toBe("true");
+    expect(card.getAttribute("aria-describedby")).toBeTruthy();
+    expect(document.getElementById(card.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
+      "Bientôt disponible : arrive avec M2",
+    );
+    fireEvent.click(card);
+    expect(router.state.location.pathname).toBe("/world/demo/world");
+  });
+
+  test("the Wiki and Quill tabs explain what is coming", async () => {
+    await renderAt("/world/demo/wiki");
+    expect(screen.getByText(/Le wiki présentera votre monde/)).toBeTruthy();
+    expect(screen.getByText("Bientôt disponible : arrive avec M8")).toBeTruthy();
+  });
+
   test("an unknown route shows the not-found screen", async () => {
     await renderAt("/nowhere");
     expect(screen.getByRole("heading", { name: "Page introuvable" })).toBeTruthy();
