@@ -6,6 +6,7 @@ mod paths;
 mod protocol;
 mod settings;
 mod state;
+mod window;
 mod world;
 
 use tauri::Manager;
@@ -49,6 +50,7 @@ pub fn run() -> tauri::Result<()> {
             let config_dir = paths::config_dir(app.handle())?;
             let settings = settings::load(&config_dir);
             app.manage(state::AppState::new(config_dir, settings));
+            window::create_main_window(app)?;
             tracing::info!(
                 version = %app.package_info().version,
                 log_dir = %log_dir.display(),
