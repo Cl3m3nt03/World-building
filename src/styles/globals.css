@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource/space-mono/700.css";
+@import "./tokens.css";
+
+/* The resolved theme is set on <html data-theme="light|dark"> (see src/app/theme.ts). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * shadcn/ui semantic variables, mapped onto the BuilderZ tokens (ADR 0003).
+ * Components only use these semantic names, never the raw --bz-* tokens.
+ */
+:root {
+  --background: var(--bz-bg);
+  --foreground: var(--bz-text);
+  --card: var(--bz-surface);
+  --card-foreground: var(--bz-text);
+  --popover: var(--bz-surface-strong);
+  --popover-foreground: var(--bz-text);
+  --primary: var(--bz-accent);
+  --primary-foreground: var(--bz-accent-foreground);
+  --secondary: var(--bz-pill);
+  --secondary-foreground: var(--bz-text);
+  --muted: var(--bz-hover);
+  --muted-foreground: var(--bz-text-muted);
+  --accent: var(--bz-hover);
+  --accent-foreground: var(--bz-text);
+  --destructive: var(--bz-danger);
+  --border: var(--bz-border);
+  --input: var(--bz-border-strong);
+  --ring: var(--bz-accent);
+  --radius: var(--bz-radius-md);
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Space Mono", ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface: var(--bz-surface);
+  --color-surface-strong: var(--bz-surface-strong);
+  --color-border-strong: var(--bz-border-strong);
+
+  --radius-sm: var(--bz-radius-sm);
+  --radius-md: var(--bz-radius-md);
+  --radius-lg: var(--bz-radius-lg);
+  --radius-xl: calc(var(--bz-radius-lg) * 1.3);
+  --radius-2xl: calc(var(--bz-radius-lg) * 1.6);
+}
+
+/* Frosted glass panel (ADR 0003). Falls back to opaque when transparency is off. */
+@utility glass {
+  background-color: var(--bz-surface);
+  border: 1px solid var(--bz-border);
+  backdrop-filter: blur(var(--bz-blur-panel));
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans antialiased;
+    color-scheme: light;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+  }
+}

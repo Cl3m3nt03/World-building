@@ -51,5 +51,10 @@
         "noNonNullAssertion": "error"
       }
     }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }

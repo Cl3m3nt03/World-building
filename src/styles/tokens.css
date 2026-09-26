@@ -1,0 +1,68 @@
+/*
+ * BuilderZ design tokens (ADR 0003 — direction artistique).
+ * Raw palette, prefixed --bz-* to avoid clashing with shadcn/ui semantic names
+ * (ADR "--accent" is --bz-accent here; shadcn's --accent is the hover surface).
+ * Light is the base, dark overrides it. The dark theme is the reference.
+ */
+
+:root {
+  --bz-bg: #f5efe3;
+  --bz-backdrop-overlay: rgb(245 239 227 / 0.6);
+  --bz-backdrop-gradient:
+    radial-gradient(70% 60% at 15% 10%, rgb(232 208 160 / 0.55), transparent 70%),
+    radial-gradient(60% 55% at 90% 95%, rgb(214 186 150 / 0.45), transparent 70%),
+    linear-gradient(160deg, #f7f1e6, #ede3d1);
+  --bz-surface: rgb(255 251 243 / 0.78);
+  --bz-surface-strong: rgb(255 252 246 / 0.95);
+  --bz-pill: rgb(255 255 255 / 0.7);
+  --bz-hover: rgb(60 40 10 / 0.06);
+  --bz-border: rgb(60 40 10 / 0.12);
+  --bz-border-strong: rgb(60 40 10 / 0.22);
+  --bz-text: #1f1a14;
+  --bz-text-muted: #6b6155;
+  --bz-accent: #a8741a;
+  --bz-accent-foreground: #fffaf0;
+  --bz-danger: #c93a3f;
+
+  --bz-radius-sm: 6px;
+  --bz-radius-md: 10px;
+  --bz-radius-lg: 14px;
+  --bz-radius-pill: 9999px;
+  --bz-blur-panel: 16px;
+  --bz-blur-backdrop: 24px;
+}
+
+[data-theme="dark"] {
+  --bz-bg: #0b0e17;
+  --bz-backdrop-overlay: rgb(8 10 20 / 0.55);
+  --bz-backdrop-gradient:
+    radial-gradient(70% 60% at 15% 10%, rgb(38 52 96 / 0.75), transparent 70%),
+    radial-gradient(60% 55% at 90% 95%, rgb(58 40 88 / 0.6), transparent 70%),
+    linear-gradient(160deg, #10152a, #0b0e17);
+  --bz-surface: rgb(14 17 28 / 0.72);
+  --bz-surface-strong: rgb(10 12 20 / 0.92);
+  --bz-pill: rgb(0 0 0 / 0.55);
+  --bz-hover: rgb(255 255 255 / 0.07);
+  --bz-border: rgb(255 255 255 / 0.08);
+  --bz-border-strong: rgb(255 255 255 / 0.16);
+  --bz-text: #e8e9ee;
+  --bz-text-muted: #9095a6;
+  --bz-accent: #c8912e;
+  --bz-accent-foreground: #1a1206;
+  --bz-danger: #e5484d;
+}
+
+/* Transparency off (app setting) or requested by the OS: opaque surfaces, no blur. */
+[data-transparency="off"] {
+  --bz-surface: var(--bz-surface-strong);
+  --bz-blur-panel: 0px;
+  --bz-blur-backdrop: 0px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --bz-surface: var(--bz-surface-strong);
+    --bz-blur-panel: 0px;
+    --bz-blur-backdrop: 0px;
+  }
+}
