@@ -199,11 +199,13 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
 
 Automatisées par **release-please** et **tauri-action** (`.github/workflows/release.yml`), versions SemVer (ADR 0002) :
 
-1. À chaque push sur `main`, release-please ouvre ou met à jour la **PR de release** : `CHANGELOG.md` (sections `feat`, `fix`, `perf` ; le reste est masqué) et la version dans `package.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock` et `src-tauri/tauri.conf.json`. Configuration : `release-please-config.json`, dernière version publiée : `.release-please-manifest.json`.
+1. À chaque push sur `main`, release-please ouvre ou met à jour la **PR de release** : `CHANGELOG.md` (sections `feat`, `fix`, `perf` ; le reste est masqué) et la version dans `package.json`, `src-tauri/Cargo.toml` et `src-tauri/Cargo.lock`. `tauri.conf.json` n'a volontairement pas de champ `version` : Tauri reprend celle de `Cargo.toml` (et l'updater JSON de release-please reformaterait tout le fichier). Configuration : `release-please-config.json`, dernière version publiée : `.release-please-manifest.json`.
 2. **Fusionner la PR de release** crée le tag `vX.Y.Z` et la release GitHub.
 3. Dans le même workflow, le job « Windows installer » construit l'installeur NSIS (`BuilderZ_X.Y.Z_x64-setup.exe`) et l'attache à la release.
 
-En phase `0.x`, une `feat` monte la version mineure et un changement cassant aussi (`bump-minor-pre-major`) ; la `1.0.0` sera décidée à la fin de M8.
+En phase `0.x`, une `feat` monte la version mineure et un changement cassant aussi (`bump-minor-pre-major`). La première release est fixée à `0.1.0` (`initial-version`, sans quoi release-please propose `1.0.0`) ; la `1.0.0` sera décidée à la fin de M8.
+
+Dans `Cargo.lock`, seule l'entrée `builderz` est ciblée (`$.package[?(@.name.value==='builderz')].version` : le parseur TOML de release-please expose chaque valeur sous la forme `{ start, end, value }`).
 
 Points d'attention :
 
