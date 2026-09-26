@@ -29,9 +29,10 @@ tracing-appender = "0.2.5"
 sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite-bundled", "macros", "migrate"] }
 uuid = { version = "1.26.1", features = ["v4", "serde"] }
 time = { version = "0.3.55", features = ["serde-well-known", "formatting", "parsing"] }
-tokio = { version = "1.53.1", features = ["fs", "sync"] }
+tokio = { version = "1.53.1", features = ["fs", "rt", "sync"] }
 sha2 = "0.11.0"
 tauri-plugin-dialog = "2"
+imagesize = "0.15.0"
 
 [lints.rust]
 # MSVC prints an informational "creating library .dll.lib" line when linking the

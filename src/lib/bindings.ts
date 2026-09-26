@@ -8,10 +8,19 @@ export const commands = {
 	/**  Suggested parent folder for new worlds (`Documents\BuilderZ` by default). */
 	defaultWorldsDir: () => typedError<string, AppError>(__TAURI_INVOKE("default_worlds_dir")),
 	/**
-	 *  Copies the file at `path` into the open world's `assets/`, named by its
-	 *  content hash. Importing the same content again returns the existing asset.
+	 *  Copies the file at `path` into the open world's media library, named by
+	 *  its content hash. Importing the same content again returns the existing asset.
 	 */
-	importAsset: (path: string) => typedError<AssetInfo, AppError>(__TAURI_INVOKE("import_asset", { path })),
+	importAsset: (path: string) => typedError<ImportedAsset, AppError>(__TAURI_INVOKE("import_asset", { path })),
+	/**  Assets of the open world, newest first. */
+	listAssets: (filter: AssetFilter) => typedError<Asset[], AppError>(__TAURI_INVOKE("list_assets", { filter })),
+	/**  Changes the name shown for an asset (its file keeps its hash name). */
+	renameAsset: (id: string, name: string) => typedError<Asset, AppError>(__TAURI_INVOKE("rename_asset", { id, name })),
+	/**
+	 *  Deletes an asset and its file. If it was the world's main image, the
+	 *  world no longer has one.
+	 */
+	deleteAsset: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_asset", { id })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -86,20 +95,39 @@ export type AppSettings = {
 	recentWorlds: RecentWorld[],
 };
 
-/**  An imported file. */
-export type AssetInfo = {
+/**  A file of the media library, as seen by the front. */
+export type Asset = {
 	/**  `<sha256>.<ext>`: file name in `assets/`, used by `useAssetUrl`. */
 	id: string,
-	/**  Name of the imported file, for display. */
-	originalName: string,
-	/**  Size in bytes (u32 is not enough, and u64 has no safe JS type). */
+	name: string,
+	kind: AssetKind,
+	mime: string,
+	/**  Size in bytes (u64 has no safe JS type). */
 	size: number | null,
-	/**  False when the same content was already in the world. */
-	created: boolean,
+	width: number | null,
+	height: number | null,
+	/**  RFC 3339 import date. */
+	createdAt: string,
 };
+
+/**  Filter of the media library; absent fields do not filter. */
+export type AssetFilter = {
+	kind?: AssetKind | null,
+	/**  Fragment of the name. */
+	search?: string | null,
+};
+
+export type AssetKind = "image" | "audio" | "other";
 
 /**  Genre of a world. It decides the card types proposed by default (M2). */
 export type Genre = "fantasy" | "scienceFiction" | "romance" | "cyberpunk" | "contemporary" | "other";
+
+/**  Result of an import: the asset, and whether it is new to the world. */
+export type ImportedAsset = {
+	asset: Asset,
+	/**  False when the same content was already in the world. */
+	created: boolean,
+};
 
 export type Language = "fr" | "en";
 

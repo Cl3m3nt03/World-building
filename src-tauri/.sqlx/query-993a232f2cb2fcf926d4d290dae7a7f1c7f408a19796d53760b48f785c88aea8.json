@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO assets (id, name, kind, mime, size, width, height, created_at)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "993a232f2cb2fcf926d4d290dae7a7f1c7f408a19796d53760b48f785c88aea8"
+}
