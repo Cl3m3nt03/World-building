@@ -116,6 +116,39 @@ test("creates a world in the default location and opens it", async () => {
   expect(calls.find((call) => call.command === "create_world")?.payload).toMatchObject({
     parentDir: "C:/Users/me/Documents/BuilderZ",
     name: "Terres du Nord",
+    genre: "fantasy",
+  });
+});
+
+test("creates a world of the chosen genre", async () => {
+  const router = await renderStartScreen();
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer un monde" }));
+  });
+  await waitFor(() =>
+    expect((screen.getByLabelText("Emplacement") as HTMLInputElement).value).not.toBe(""),
+  );
+  fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Nébuleuse" } });
+
+  const genre = screen.getByRole("combobox", { name: "Genre" });
+  expect(genre.textContent).toContain("Fantasy");
+  await act(async () => {
+    fireEvent.pointerDown(genre, { button: 0, pointerType: "mouse" });
+  });
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("option", { name: "Science-fiction" }));
+  });
+  expect(genre.textContent).toContain("Science-fiction");
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+  });
+
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/w-new/home"));
+  expect(calls.find((call) => call.command === "create_world")?.payload).toMatchObject({
+    name: "Nébuleuse",
+    genre: "scienceFiction",
   });
 });
 

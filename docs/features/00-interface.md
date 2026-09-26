@@ -48,7 +48,7 @@ C'est l'espace de travail principal. On y trouve la sidebar et l'éditeur du doc
 
 ## Genres
 
-Le genre d'un monde détermine les **types de cartes proposés par défaut** à sa création (voir `01-cartes-et-types.md`). Les genres de départ sont : Fantasy, Science-fiction, Romance, Cyberpunk, Contemporain et Autre. On peut changer de genre plus tard sans rien perdre : les types déjà créés restent.
+Le genre d'un monde détermine les **types de cartes proposés par défaut** à sa création (voir `01-cartes-et-types.md`). Les genres de départ sont : Fantasy, Science-fiction, Romance, Cyberpunk, Contemporain et Autre. Le genre se choisit dans le dialogue « Nouveau monde » (Fantasy par défaut). On peut changer de genre plus tard sans rien perdre : les types déjà créés restent.
 
 ## Réglages de l'application
 

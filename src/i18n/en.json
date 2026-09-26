@@ -89,5 +89,13 @@
   "settings.worldsDirChoose": "Choose…",
   "settings.worldsDirReset": "Default",
   "settings.worldsDirPickerTitle": "Choose the new worlds folder",
-  "settings.about": "About"
+  "settings.about": "About",
+  "createWorld.genre": "Genre",
+  "createWorld.genreHint": "It shapes the card types offered. You can change it later.",
+  "genre.fantasy": "Fantasy",
+  "genre.scienceFiction": "Science fiction",
+  "genre.romance": "Romance",
+  "genre.cyberpunk": "Cyberpunk",
+  "genre.contemporary": "Contemporary",
+  "genre.other": "Other"
 }

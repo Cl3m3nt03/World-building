@@ -276,8 +276,20 @@ fn validate_name(name: &str) -> AppResult<String> {
     Ok(name.to_owned())
 }
 
-/// Creates a new world in `root`, which must not exist or be an empty folder.
+/// Creates a new world of the default genre (used by the tests).
+#[cfg(test)]
 pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
+    create_with(root, name, Genre::default(), migrator).await
+}
+
+/// Creates a new world of the given genre in `root`, which must not exist or
+/// be an empty folder.
+pub async fn create_with(
+    root: &Path,
+    name: &str,
+    genre: Genre,
+    migrator: &Migrator,
+) -> AppResult<OpenWorld> {
     let name = validate_name(name)?;
     let name = name.as_str();
     if !root.is_absolute() {
@@ -292,7 +304,7 @@ pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<O
         return Err(AppError::WorldAlreadyExists(root.display().to_string()));
     }
 
-    let result = create_in(root, name, migrator).await;
+    let result = create_in(root, name, genre, migrator).await;
     if result.is_err() {
         // Leave the disk as it was: remove what this call created.
         let cleanup = if existed {
@@ -319,7 +331,12 @@ fn clear_dir(root: &Path) -> AppResult<()> {
     Ok(())
 }
 
-async fn create_in(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
+async fn create_in(
+    root: &Path,
+    name: &str,
+    genre: Genre,
+    migrator: &Migrator,
+) -> AppResult<OpenWorld> {
     std::fs::create_dir_all(root.join(ASSETS_DIR))?;
 
     let pool = db::connect(&root.join(DB_FILE), true).await?;
@@ -333,7 +350,7 @@ async fn create_in(root: &Path, name: &str, migrator: &Migrator) -> AppResult<Op
         format: FORMAT.into(),
         id: Uuid::new_v4(),
         name: name.into(),
-        genre: Genre::default(),
+        genre,
         description: String::new(),
         main_image: None,
         schema_version: db::latest_version(migrator),
