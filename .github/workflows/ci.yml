@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Git hooks are for local commits only.
+  LEFTHOOK: "0"
+
+jobs:
+  check:
+    name: Lint, typecheck and tests
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format (Biome)
+        run: pnpm exec biome format .
+
+      - name: Lint (Biome)
+        run: pnpm lint:ts
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Tests (Vitest)
+        run: pnpm test
+
+      - name: Format (rustfmt)
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
+      - name: Lint (clippy)
+        run: pnpm lint:rust
+
+      - name: Tests (cargo)
+        run: pnpm test:rust
