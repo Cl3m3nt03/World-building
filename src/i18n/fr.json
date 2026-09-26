@@ -131,5 +131,13 @@
   "media.deleteUsed": "Ce fichier est encore utilisé :",
   "media.usage.worldMainImage": "image principale du monde « {{name}} »",
   "media.deleteAnyway": "Supprimer quand même",
-  "media.renameKey": "F2"
+  "media.renameKey": "F2",
+  "imagePicker.title": "Choisir une image",
+  "imagePicker.description": "Choisissez une image de la médiathèque ou importez-en une depuis le PC. Flèches pour parcourir, Entrée pour valider.",
+  "imagePicker.import": "Importer une image",
+  "imagePicker.importTitle": "Importer une image dans la médiathèque",
+  "imagePicker.listLabel": "Images de la médiathèque",
+  "imagePicker.empty": "Aucune image dans la médiathèque. Importez-en une.",
+  "imagePicker.choose": "Choisir",
+  "imagePicker.notAnImage": "Ce fichier a été importé dans la médiathèque, mais ce n'est pas une image."
 }
