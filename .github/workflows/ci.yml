@@ -124,6 +124,31 @@ jobs:
           BUILDERZ_HOME: ${{ runner.temp }}\builderz-e2e
           E2E_KEEP_HOME: "1"
           E2E_DRIVER_LOG: ${{ runner.temp }}\msedgedriver.log
+          # Tauri and wry (the WebView2 host) log through `log`, bridged into our tracing file.
+          RUST_LOG: info,builderz_lib=debug,tauri=debug,wry=trace,tao=debug
+
+      # WebView2 writes chrome_debug.log (msedgedriver passes --enable-logging)
+      # into the profile msedgedriver creates under %TEMP%\scoped_dir*.
+      - name: Collect WebView2 logs
+        if: failure()
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'webview2-logs'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $sources = @($env:TEMP, (Join-Path $env:LOCALAPPDATA 'app.builderz.desktop'))
+          foreach ($source in $sources) {
+            if (-not (Test-Path $source)) { continue }
+            Get-ChildItem -Path $source -Recurse -File -Include '*.log', 'DevToolsActivePort' -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -match 'scoped_dir|EBWebView|app\.builderz\.desktop' } |
+              ForEach-Object {
+                $name = ($_.FullName -replace '[:\\\/]', '_')
+                Copy-Item $_.FullName (Join-Path $out $name) -ErrorAction SilentlyContinue
+                "$($_.FullName) ($($_.Length) bytes)"
+              }
+          }
+          Get-Process | Where-Object { $_.ProcessName -match 'msedge|webview|builderz' } |
+            Select-Object ProcessName, Id, SessionId | Format-Table | Out-String | Write-Host
+          "Session: $([System.Diagnostics.Process]::GetCurrentProcess().SessionId), user: $env:USERNAME, interactive: $([Environment]::UserInteractive)"
 
       - name: Upload e2e logs
         if: failure()
@@ -133,4 +158,5 @@ jobs:
           path: |
             ${{ runner.temp }}\msedgedriver.log
             ${{ runner.temp }}\builderz-e2e\logs
+            ${{ runner.temp }}\webview2-logs
           if-no-files-found: warn
