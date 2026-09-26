@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-asset-usages"
+description = "Enables the asset_usages command without any pre-configured scope."
+commands.allow = ["asset_usages"]
+
+[[permission]]
+identifier = "deny-asset-usages"
+description = "Denies the asset_usages command without any pre-configured scope."
+commands.deny = ["asset_usages"]

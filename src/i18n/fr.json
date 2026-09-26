@@ -118,5 +118,18 @@
   "worlds.reveal": "Afficher dans l'Explorateur",
   "worlds.remove": "Retirer de la liste",
   "worlds.removeTitle": "Retirer « {{name}} » de la liste ?",
-  "worlds.removeDescription": "Le monde disparaît seulement de cette liste : son dossier et tout son contenu restent sur le disque. Vous pourrez le rouvrir avec « Ouvrir un monde »."
+  "worlds.removeDescription": "Le monde disparaît seulement de cette liste : son dossier et tout son contenu restent sur le disque. Vous pourrez le rouvrir avec « Ouvrir un monde ».",
+  "media.actions": "Actions pour {{name}}",
+  "media.rename": "Renommer",
+  "media.renameTitle": "Renommer le fichier",
+  "media.renameDescription": "Seul le nom affiché change : le fichier garde son nom sur le disque.",
+  "media.nameLabel": "Nom",
+  "media.delete": "Supprimer",
+  "media.deleteKey": "Suppr",
+  "media.deleteTitle": "Supprimer « {{name}} » ?",
+  "media.deleteDescription": "Le fichier est supprimé de la médiathèque et du dossier du monde. Cette action est définitive.",
+  "media.deleteUsed": "Ce fichier est encore utilisé :",
+  "media.usage.worldMainImage": "image principale du monde « {{name}} »",
+  "media.deleteAnyway": "Supprimer quand même",
+  "media.renameKey": "F2"
 }

@@ -11,6 +11,7 @@ const COMMANDS: &[&str] = &[
     "list_assets",
     "rename_asset",
     "delete_asset",
+    "asset_usages",
     "get_settings",
     "update_preferences",
     "set_default_worlds_dir",

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use sqlx::SqlitePool;
 use tauri::State;
 
-use crate::domain::media::{self, Asset, AssetFilter, ImportedAsset};
+use crate::domain::media::{self, Asset, AssetFilter, AssetUsage, ImportedAsset};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -57,6 +57,23 @@ pub async fn rename_asset(
 ) -> AppResult<Asset> {
     let (pool, _) = open_world(&state, "rename_asset").await?;
     media::rename(&pool, &id, &name).await
+}
+
+/// Where an asset is used, to warn before deleting it.
+#[tauri::command]
+#[specta::specta]
+pub async fn asset_usages(state: State<'_, AppState>, id: String) -> AppResult<Vec<AssetUsage>> {
+    let guard = state.world.lock().await;
+    let world = guard
+        .as_ref()
+        .ok_or_else(|| AppError::NoWorldOpen("asset_usages".into()))?;
+    let mut usages = Vec::new();
+    if world.file.main_image.as_deref() == Some(id.as_str()) {
+        usages.push(AssetUsage::WorldMainImage {
+            world_name: world.file.name.clone(),
+        });
+    }
+    Ok(usages)
 }
 
 /// Deletes an asset and its file. If it was the world's main image, the

@@ -118,5 +118,18 @@
   "worlds.reveal": "Show in Explorer",
   "worlds.remove": "Remove from list",
   "worlds.removeTitle": "Remove \"{{name}}\" from the list?",
-  "worlds.removeDescription": "The world only disappears from this list: its folder and all its content stay on the disk. You can open it again with \"Open a world\"."
+  "worlds.removeDescription": "The world only disappears from this list: its folder and all its content stay on the disk. You can open it again with \"Open a world\".",
+  "media.actions": "Actions for {{name}}",
+  "media.rename": "Rename",
+  "media.renameTitle": "Rename the file",
+  "media.renameDescription": "Only the displayed name changes: the file keeps its name on the disk.",
+  "media.nameLabel": "Name",
+  "media.delete": "Delete",
+  "media.deleteKey": "Del",
+  "media.deleteTitle": "Delete \"{{name}}\"?",
+  "media.deleteDescription": "The file is removed from the media library and from the world folder. This cannot be undone.",
+  "media.deleteUsed": "This file is still used:",
+  "media.usage.worldMainImage": "main image of the world \"{{name}}\"",
+  "media.deleteAnyway": "Delete anyway",
+  "media.renameKey": "F2"
 }
