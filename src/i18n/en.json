@@ -304,5 +304,17 @@
   "backlinks.none": "No card cites this one yet.",
   "backlinks.via.mention": "mention",
   "backlinks.via.property": "property",
-  "backlinks.via.mapPin": "map pin"
+  "backlinks.via.mapPin": "map pin",
+  "blocks.title": "Content",
+  "blocks.empty": "Start writing… (or add a block with \"+\")",
+  "blocks.add": "Add a block",
+  "blocks.insert": "Insert a block",
+  "blocks.types.text": "Text",
+  "blocks.textLabel": "Text block {{index}}",
+  "blocks.textPlaceholder": "Write, or type \"/\" to insert a block",
+  "blocks.drag": "Move block {{index}} (Space, then arrows)",
+  "blocks.actions": "Actions of block {{index}}",
+  "blocks.moveUp": "Move up",
+  "blocks.moveDown": "Move down",
+  "blocks.delete": "Delete the block"
 }

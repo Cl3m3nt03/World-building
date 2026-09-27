@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-card-content"
+description = "Enables the set_card_content command without any pre-configured scope."
+commands.allow = ["set_card_content"]
+
+[[permission]]
+identifier = "deny-set-card-content"
+description = "Denies the set_card_content command without any pre-configured scope."
+commands.deny = ["set_card_content"]

@@ -42,6 +42,8 @@ On ajoute des blocs avec un bouton « + » ou la commande `/` dans l'éditeur.
 
 Les blocs peuvent être réordonnés par glisser-déposer et supprimés.
 
+**Réalisé en M2 (2.9)** : sous l'en-tête de la carte, le contenu est une suite de blocs. Une carte vide propose « Commencez à écrire… ». Le bloc Texte gère les titres (« # », « ## », « ### »), le gras (`Ctrl+B`), l'italique (`Ctrl+I`), les listes (« - », « 1. »), la citation (« > ») et son propre historique (`Ctrl+Z`, `Ctrl+Y`). On ajoute un bloc avec « Ajouter un bloc » ou en tapant « / » sur une ligne vide (la ligne vide disparaît si un bloc est inséré). Chaque bloc a une poignée pour le glisser (au clavier : Espace, flèches, Espace) et un menu « Monter », « Descendre », « Supprimer le bloc ». Tout s'enregistre sans bouton, peu après la dernière frappe et en quittant la carte.
+
 ## Templates guidés
 
 Chaque type peut avoir un template guidé : une liste de sections avec un titre et une question d'aide. Par exemple, pour un personnage : *Background*, *Personnalité*, *Apparence*.

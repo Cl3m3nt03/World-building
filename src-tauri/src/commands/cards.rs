@@ -67,6 +67,24 @@ pub async fn set_card_image(
     .await
 }
 
+/// The card's content blocks, as JSON.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_card_content(state: State<'_, AppState>, id: String) -> AppResult<String> {
+    cards::content(&pool(&state, "get_card_content").await?, &id).await
+}
+
+/// Replaces the card's content blocks (JSON: a list of blocks).
+#[tauri::command]
+#[specta::specta]
+pub async fn set_card_content(
+    state: State<'_, AppState>,
+    id: String,
+    content: String,
+) -> AppResult<()> {
+    cards::set_content(&pool(&state, "set_card_content").await?, &id, &content).await
+}
+
 /// Replaces the card's aliases (trimmed, without duplicates).
 #[tauri::command]
 #[specta::specta]

@@ -7,8 +7,8 @@ use sqlx::SqlitePool;
 
 use crate::db::cards::{self as queries, CardRow};
 use crate::db::documents as document_queries;
-use crate::domain::card_types;
 use crate::domain::documents::{self, DocumentKind, now};
+use crate::domain::{card_types, content};
 use crate::error::{AppError, AppResult};
 
 #[cfg(test)]
@@ -162,6 +162,25 @@ pub async fn count_by_type(pool: &SqlitePool) -> AppResult<Vec<TypeCount>> {
             count: u32::try_from(count).unwrap_or(u32::MAX),
         })
         .collect())
+}
+
+/// The card's content blocks, as JSON (see `content`).
+pub async fn content(pool: &SqlitePool, id: &str) -> AppResult<String> {
+    queries::content(pool, id)
+        .await?
+        .ok_or_else(|| AppError::InvalidInput(format!("card not found: {id}")))
+}
+
+/// Replaces the card's content blocks and their plain text.
+pub async fn set_content(pool: &SqlitePool, id: &str, json: &str) -> AppResult<()> {
+    get(pool, id).await?;
+    let blocks = content::parse(json)?;
+    let text = content::plain_text(&blocks);
+    let mut tx = pool.begin().await?;
+    queries::set_content(&mut tx, id, json, &text).await?;
+    document_queries::touch(&mut tx, id, &now()).await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 /// Number of cards of a type and its subtypes (to ask where they go before

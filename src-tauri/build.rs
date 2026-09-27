@@ -32,6 +32,8 @@ const COMMANDS: &[&str] = &[
     "set_card_type",
     "set_card_image",
     "set_card_aliases",
+    "get_card_content",
+    "set_card_content",
     "count_type_cards",
     "count_cards_by_type",
     "list_type_properties",

@@ -173,6 +173,27 @@ async fn recent_documents_and_counts_by_type() {
 }
 
 #[tokio::test]
+async fn content_is_saved_with_its_plain_text() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let card = create(fx.pool(), &character, "Frodon").await.unwrap();
+    assert_eq!(content(fx.pool(), &card.id).await.unwrap(), "[]");
+
+    let json = r#"[{"id":"a","type":"text","doc":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Porteur de l'Anneau"}]}]}}]"#;
+    set_content(fx.pool(), &card.id, json).await.unwrap();
+    assert_eq!(content(fx.pool(), &card.id).await.unwrap(), json);
+    let text: String = sqlx::query_scalar("SELECT content_text FROM cards WHERE document_id = ?")
+        .bind(&card.id)
+        .fetch_one(fx.pool())
+        .await
+        .unwrap();
+    assert_eq!(text, "Porteur de l'Anneau");
+
+    assert!(set_content(fx.pool(), &card.id, "[{}]").await.is_err());
+    assert!(set_content(fx.pool(), "missing", "[]").await.is_err());
+}
+
+#[tokio::test]
 async fn a_card_needs_an_existing_type() {
     let fx = Fixture::new().await;
     assert!(create(fx.pool(), "no-such-type", "Gandalf").await.is_err());

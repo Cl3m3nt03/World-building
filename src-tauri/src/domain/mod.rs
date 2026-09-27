@@ -2,6 +2,7 @@
 
 pub mod card_types;
 pub mod cards;
+pub mod content;
 pub mod documents;
 pub mod links;
 pub mod media;
