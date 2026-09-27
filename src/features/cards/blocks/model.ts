@@ -5,7 +5,13 @@ import type { JSONContent } from "@tiptap/react";
  * side (src-tauri/src/domain/content.rs checks the outline and derives the
  * plain text used by search).
  */
-export type TextBlock = { id: string; type: "text"; doc: JSONContent };
+export type TextBlock = {
+  id: string;
+  type: "text";
+  doc: JSONContent;
+  /** Help question of a guided template section, shown until the section is written. */
+  prompt?: string;
+};
 /** An image of the media library, with a caption. `assetId` is null until one is chosen. */
 export type ImageBlock = { id: string; type: "image"; assetId: string | null; caption: string };
 export type Block = TextBlock | ImageBlock;
@@ -40,7 +46,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function readBlock(value: unknown): Block | null {
   if (!isRecord(value) || typeof value.id !== "string") return null;
   if (value.type === "text" && isRecord(value.doc)) {
-    return { id: value.id, type: "text", doc: value.doc as JSONContent };
+    const block: TextBlock = { id: value.id, type: "text", doc: value.doc as JSONContent };
+    if (typeof value.prompt === "string" && value.prompt !== "") block.prompt = value.prompt;
+    return block;
   }
   if (value.type === "image") {
     return {

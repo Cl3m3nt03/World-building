@@ -142,7 +142,7 @@
   padding: 0.1em 0.3em;
   font-size: 0.9em;
 }
-.prose-bz p.is-editor-empty:first-child::before {
+.prose-bz p.is-empty:not([data-placeholder=""])::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;

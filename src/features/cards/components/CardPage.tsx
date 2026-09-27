@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ChevronDown, ImagePlus, MoreHorizontal, Trash2, X } from "lucide-react";
+import { ChevronDown, ImagePlus, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
@@ -18,8 +18,9 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
-import { BlockEditor } from "../blocks/BlockEditor";
+import { BlockEditor, type BlockEditorHandle } from "../blocks/BlockEditor";
 import { MentionContext } from "../blocks/mentions/MentionContext";
+import { effectiveTemplate } from "../blocks/template";
 import {
   useCard,
   useCardList,
@@ -263,6 +264,7 @@ export function CardPage() {
   const allCards = useCardList(false);
   const trashedCards = useCardList(true);
   const all = types.data ?? [];
+  const blocksRef = useRef<BlockEditorHandle>(null);
 
   if (card.isError) {
     return (
@@ -273,6 +275,12 @@ export function CardPage() {
   }
   if (!card.data) return null;
   const type = all.find((candidate) => candidate.id === card.data.typeId);
+  const template = effectiveTemplate(type, all);
+  // The type the template comes from (a subtype may use its parent's).
+  const templateSource =
+    type && type.guidedTemplate.length === 0 && type.parentId
+      ? all.find((candidate) => candidate.id === type.parentId)
+      : type;
 
   return (
     <article
@@ -293,6 +301,15 @@ export function CardPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={template.length === 0}
+                  onSelect={() => blocksRef.current?.applyTemplate()}
+                >
+                  <ListChecks />
+                  {template.length > 0
+                    ? t("templates.apply", { type: templateSource?.name ?? "" })
+                    : t("templates.none")}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
                   onSelect={() =>
@@ -328,7 +345,13 @@ export function CardPage() {
             }),
         }}
       >
-        <BlockEditor key={card.data.id} cardId={card.data.id} />
+        <BlockEditor
+          key={card.data.id}
+          ref={blocksRef}
+          cardId={card.data.id}
+          template={template}
+          templateName={templateSource?.name ?? ""}
+        />
       </MentionContext.Provider>
       <Backlinks cardId={card.data.id} />
     </article>
