@@ -214,6 +214,26 @@ pub fn read_world_file(root: &Path) -> AppResult<WorldFile> {
     Ok(file)
 }
 
+/// Removes the folder of the world `id` with `remove` (the Windows recycle
+/// bin in the app, a plain deletion in the tests), after checking that `root`
+/// still holds that world: a deletion never touches another folder. The
+/// world must be closed first.
+pub fn remove_folder(
+    root: &Path,
+    id: Uuid,
+    remove: impl FnOnce(&Path) -> AppResult<()>,
+) -> AppResult<()> {
+    let file = read_world_file(root)?;
+    if file.id != id {
+        return Err(AppError::WrongWorld(format!(
+            "{} holds the world {}, not {id}",
+            root.display(),
+            file.id
+        )));
+    }
+    remove(root)
+}
+
 /// Longest folder name derived from a world name.
 const MAX_FOLDER_NAME_LEN: usize = 100;
 

@@ -62,7 +62,7 @@ let counts: TypeCount[];
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mockConvertFileSrc("windows");
-  useUiStore.setState({ worldPanelOpen: false, cardTypesOpen: false });
+  useUiStore.setState({ worldSettings: null, cardTypesOpen: false });
   world = WORLD;
   recent = [];
   counts = [];
@@ -179,17 +179,18 @@ test("the media library entry leads to the media library", async () => {
   await vi.waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/media"));
 });
 
-test("world settings and the description prompt open the world panel", async () => {
+test("world settings and the description prompt open the world settings", async () => {
   await renderHome();
 
   fireEvent.click(await screen.findByRole("button", { name: "Réglages du monde" }));
-  expect(useUiStore.getState().worldPanelOpen).toBe(true);
+  expect(useUiStore.getState().worldSettings).toBe("general");
+  expect(await screen.findByRole("dialog", { name: "Réglages du monde" })).toBeTruthy();
 
-  // The real panel opened: close it before the next click.
-  act(() => useUiStore.setState({ worldPanelOpen: false }));
+  // Close the real screen before the next click.
+  act(() => useUiStore.setState({ worldSettings: null }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Ajouter une description…" }));
-  expect(useUiStore.getState().worldPanelOpen).toBe(true);
+  expect(useUiStore.getState().worldSettings).toBe("general");
 });
 
 test("types opens the card types screen; theme is marked unavailable", async () => {

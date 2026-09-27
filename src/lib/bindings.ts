@@ -152,6 +152,13 @@ export const commands = {
 } | null, AppError>(__TAURI_INVOKE("current_world")),
 	/**  Changes the name, genre or description of the open world. */
 	updateWorld: (patch: WorldPatch) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("update_world", { patch })),
+	/**
+	 *  Deletes the open world: it is closed, its folder goes to the Windows
+	 *  recycle bin (it can be restored from there), and it leaves the recent
+	 *  worlds. If the folder cannot be moved, the world is opened again and
+	 *  nothing is lost. Returns the updated settings.
+	 */
+	deleteWorld: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("delete_world")),
 	/**  Sets (asset id) or clears (`null`) the main image of the open world. */
 	setWorldMainImage: (assetId: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_main_image", { assetId })),
 };

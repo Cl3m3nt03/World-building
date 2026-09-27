@@ -59,6 +59,7 @@ const COMMANDS: &[&str] = &[
     "close_world",
     "current_world",
     "update_world",
+    "delete_world",
     "set_world_main_image",
 ];
 

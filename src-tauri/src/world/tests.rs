@@ -492,3 +492,45 @@ async fn activating_a_world_closes_the_previous_one_and_records_it() {
     assert!(b_pool.is_closed());
     assert!(state.world.lock().await.is_none());
 }
+
+// --- Deletion ---------------------------------------------------------------
+
+fn remove_dir(root: &Path) -> AppResult<()> {
+    std::fs::remove_dir_all(root).map_err(AppError::from)
+}
+
+#[tokio::test]
+async fn remove_folder_deletes_the_world_folder() {
+    let (_dir, root) = temp_root();
+    let world = create(&root, "Eldefleur", &V1).await.unwrap();
+    let id = world.file.id;
+    world.close().await;
+
+    remove_folder(&root, id, remove_dir).unwrap();
+
+    assert!(!root.exists());
+}
+
+#[tokio::test]
+async fn remove_folder_refuses_another_world() {
+    let (_dir, root) = temp_root();
+    let world = create(&root, "Eldefleur", &V1).await.unwrap();
+    world.close().await;
+
+    let error = remove_folder(&root, Uuid::new_v4(), remove_dir).unwrap_err();
+
+    assert!(matches!(error, AppError::WrongWorld(_)), "{error:?}");
+    assert!(root.join(WORLD_FILE).is_file());
+}
+
+#[test]
+fn remove_folder_refuses_a_folder_without_a_world() {
+    let (_dir, root) = temp_root();
+    std::fs::create_dir_all(&root).unwrap();
+    std::fs::write(root.join("notes.txt"), "keep me").unwrap();
+
+    let error = remove_folder(&root, Uuid::new_v4(), remove_dir).unwrap_err();
+
+    assert!(matches!(error, AppError::WorldInvalid(_)), "{error:?}");
+    assert!(root.join("notes.txt").is_file());
+}

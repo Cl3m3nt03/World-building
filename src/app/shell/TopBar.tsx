@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { AssetImage } from "@/features/media";
 import { RadioButton } from "@/features/radio";
 import { SettingsButton } from "@/features/settings";
-import { useCloseWorld, useCurrentWorld, WorldPanel } from "@/features/world";
+import { useCloseWorld, useCurrentWorld } from "@/features/world";
 import type { TranslationKey } from "@/i18n";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
@@ -27,8 +27,8 @@ export function TopBar({ activeTab }: TopBarProps) {
   const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
-  const panelOpen = useUiStore((state) => state.worldPanelOpen);
-  const setPanelOpen = useUiStore((state) => state.setWorldPanelOpen);
+  const settingsOpen = useUiStore((state) => state.worldSettings !== null);
+  const openWorldSettings = useUiStore((state) => state.openWorldSettings);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
@@ -37,8 +37,8 @@ export function TopBar({ activeTab }: TopBarProps) {
           variant="ghost"
           aria-label={t("shell.world.label", { name: world?.name ?? "" })}
           aria-haspopup="dialog"
-          aria-expanded={panelOpen}
-          onClick={() => setPanelOpen(true)}
+          aria-expanded={settingsOpen}
+          onClick={() => openWorldSettings("general")}
           disabled={!world}
           className="glass h-10 max-w-64 rounded-lg px-2.5 font-heading text-sm"
         >
@@ -53,7 +53,6 @@ export function TopBar({ activeTab }: TopBarProps) {
           )}
           <span className="truncate">{world?.name}</span>
         </Button>
-        {world && <WorldPanel world={world} open={panelOpen} onOpenChange={setPanelOpen} />}
       </div>
 
       {/* Center island: modes */}

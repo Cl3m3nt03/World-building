@@ -7,7 +7,7 @@ use time::format_description::well_known::Rfc3339;
 use crate::db;
 use crate::domain::{card_types, media};
 use crate::error::{AppError, AppResult};
-use crate::settings::{self, RecentWorld};
+use crate::settings::{self, AppSettings, RecentWorld};
 use crate::state::AppState;
 use crate::thumbnails;
 use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch};
@@ -175,6 +175,59 @@ pub async fn activate(state: &AppState, world: OpenWorld) -> WorldInfo {
         tracing::warn!(%error, "cannot save the recent worlds");
     }
     info
+}
+
+/// Deletes the open world: it is closed, its folder goes to the Windows
+/// recycle bin (it can be restored from there), and it leaves the recent
+/// worlds. If the folder cannot be moved, the world is opened again and
+/// nothing is lost. Returns the updated settings.
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_world(state: State<'_, AppState>) -> AppResult<AppSettings> {
+    let world = state
+        .world
+        .lock()
+        .await
+        .take()
+        .ok_or_else(|| AppError::NoWorldOpen("delete_world".into()))?;
+    let info = world.info();
+    let (root, id) = (world.root.clone(), world.file.id);
+    // Closing releases the database files, which Windows would keep locked.
+    world.close().await;
+
+    let removal = {
+        let root = root.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            world::remove_folder(&root, id, |path| {
+                trash::delete(path).map_err(|error| AppError::Io(format!("recycle bin: {error}")))
+            })
+        })
+        .await
+        .map_err(|error| AppError::Internal(format!("delete task failed: {error}")))
+        .and_then(|result| result)
+    };
+    if let Err(error) = removal {
+        tracing::warn!(%error, path = %root.display(), "cannot delete the world");
+        match world::open(&root, &db::MIGRATOR).await {
+            Ok(reopened) => *state.world.lock().await = Some(reopened),
+            Err(reopen) => tracing::warn!(error = %reopen, "cannot reopen the world"),
+        }
+        return Err(error);
+    }
+    tracing::info!(path = %root.display(), id = %id, "world moved to the recycle bin");
+
+    if let Err(error) = thumbnails::refresh(&state.config_dir, &info.id, None) {
+        tracing::warn!(%error, "cannot remove the world thumbnail");
+    }
+    let mut settings = state.settings.lock().await;
+    let mut updated = settings.clone();
+    updated.remove_recent_world(&info.path);
+    if let Err(error) = settings::save(&state.config_dir, &updated) {
+        // Not fatal: the list flags the missing folder on its own.
+        tracing::warn!(%error, "cannot save the recent worlds");
+    }
+    *settings = updated.clone();
+    Ok(updated)
 }
 
 pub async fn close(state: &AppState) {
