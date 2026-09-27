@@ -1,4 +1,5 @@
 import type { JSONContent } from "@tiptap/react";
+import { ABILITIES, type Ability, MAX_SCORE, MIN_SCORE, SKILLS, type Skill } from "./stats/rules";
 
 /**
  * A card's content: an ordered list of blocks, saved as JSON by the Rust
@@ -14,7 +15,25 @@ export type TextBlock = {
 };
 /** An image of the media library, with a caption. `assetId` is null until one is chosen. */
 export type ImageBlock = { id: string; type: "image"; assetId: string | null; caption: string };
-export type Block = TextBlock | ImageBlock;
+/** An action of a 5e stat block ("Épée longue", "Attaque au corps à corps…"). */
+export type StatAction = { id: string; name: string; description: string };
+/** A D&D 5e character or creature sheet. */
+export type Stats5eBlock = {
+  id: string;
+  type: "stats5e";
+  abilities: Record<Ability, number>;
+  armorClass: number | null;
+  hitPoints: number | null;
+  /** Free text, e.g. "5d8 + 10". */
+  hitDice: string;
+  /** Free text, e.g. "9 m". */
+  speed: string;
+  proficiencyBonus: number;
+  /** Skills the character is proficient in. */
+  skills: Skill[];
+  actions: StatAction[];
+};
+export type Block = TextBlock | ImageBlock | Stats5eBlock;
 export type BlockType = Block["type"];
 
 export function newId(): string {
@@ -29,17 +48,82 @@ export function emptyImageBlock(): ImageBlock {
   return { id: newId(), type: "image", assetId: null, caption: "" };
 }
 
+export function emptyStats5eBlock(): Stats5eBlock {
+  return {
+    id: newId(),
+    type: "stats5e",
+    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+    armorClass: null,
+    hitPoints: null,
+    hitDice: "",
+    speed: "",
+    proficiencyBonus: 2,
+    skills: [],
+    actions: [],
+  };
+}
+
 export function newBlock(type: BlockType): Block {
   switch (type) {
     case "text":
       return emptyTextBlock();
     case "image":
       return emptyImageBlock();
+    case "stats5e":
+      return emptyStats5eBlock();
   }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function wholeNumber(value: unknown, fallback: number, min: number, max: number): number {
+  return typeof value === "number" && Number.isInteger(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+function optionalNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+/** A saved 5e stat block, with defaults for anything missing or out of range. */
+function readStats5e(id: string, value: Record<string, unknown>): Stats5eBlock {
+  const block = emptyStats5eBlock();
+  const abilities = isRecord(value.abilities) ? value.abilities : {};
+  const knownSkills: readonly string[] = SKILLS.map((skill) => skill.key);
+  return {
+    ...block,
+    id,
+    abilities: Object.fromEntries(
+      ABILITIES.map((ability) => [
+        ability,
+        wholeNumber(abilities[ability], 10, MIN_SCORE, MAX_SCORE),
+      ]),
+    ) as Record<Ability, number>,
+    armorClass: optionalNumber(value.armorClass),
+    hitPoints: optionalNumber(value.hitPoints),
+    hitDice: text(value.hitDice),
+    speed: text(value.speed),
+    proficiencyBonus: wholeNumber(value.proficiencyBonus, 2, 0, 20),
+    skills: Array.isArray(value.skills)
+      ? (value.skills.filter(
+          (skill) => typeof skill === "string" && knownSkills.includes(skill),
+        ) as Skill[])
+      : [],
+    actions: Array.isArray(value.actions)
+      ? value.actions.filter(isRecord).map((action) => ({
+          id: typeof action.id === "string" ? action.id : newId(),
+          name: text(action.name),
+          description: text(action.description),
+        }))
+      : [],
+  };
 }
 
 /** A saved block, or `null` if it is unknown or malformed. */
@@ -50,6 +134,7 @@ function readBlock(value: unknown): Block | null {
     if (typeof value.prompt === "string" && value.prompt !== "") block.prompt = value.prompt;
     return block;
   }
+  if (value.type === "stats5e") return readStats5e(value.id, value);
   if (value.type === "image") {
     return {
       id: value.id,

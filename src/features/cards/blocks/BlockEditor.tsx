@@ -19,8 +19,10 @@ import {
   ArrowUp,
   GripVertical,
   ImageIcon,
+  Map as MapIcon,
   MoreHorizontal,
   Plus,
+  Swords,
   Trash2,
   Type,
 } from "lucide-react";
@@ -46,6 +48,7 @@ import {
 import type { TemplateSection } from "@/lib/bindings";
 import { ImageBlockView } from "./ImageBlockView";
 import { type Block, type BlockType, move, newBlock } from "./model";
+import { Stats5eBlockView } from "./stats/Stats5eBlockView";
 import { TextBlockEditor } from "./TextBlockEditor";
 import { templateBlocks } from "./template";
 import { useCardContent, useSaveCardContent } from "./useCardContent";
@@ -57,15 +60,17 @@ const SAVE_DELAY_MS = 600;
 const BLOCK_CHOICES: {
   type: BlockType;
   icon: typeof Type;
-  label: "blocks.types.text" | "blocks.types.image";
+  label: "blocks.types.text" | "blocks.types.image" | "blocks.types.stats5e";
 }[] = [
   { type: "text", icon: Type, label: "blocks.types.text" },
   { type: "image", icon: ImageIcon, label: "blocks.types.image" },
+  { type: "stats5e", icon: Swords, label: "blocks.types.stats5e" },
 ];
 
 const BLOCK_LABELS = {
   text: "blocks.textLabel",
   image: "blocks.imageLabel",
+  stats5e: "blocks.stats5eLabel",
 } as const satisfies Record<BlockType, string>;
 
 /** Menu of block types; `children` is the trigger, or the menu is controlled. */
@@ -95,6 +100,12 @@ function BlockTypeMenu({
             {t(label)}
           </DropdownMenuItem>
         ))}
+        {/* Maps come with M4: shown, but not available yet. */}
+        <DropdownMenuItem disabled>
+          <MapIcon />
+          {t("blocks.types.map")}
+          <span className="ml-auto text-xs">{t("placeholder.comingIn", { milestone: "M4" })}</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -193,8 +204,10 @@ function SortableBlock({
             }}
             prompt={block.prompt}
           />
-        ) : (
+        ) : block.type === "image" ? (
           <ImageBlockView block={block} label={label} pickOnMount={focus} onChange={onChange} />
+        ) : (
+          <Stats5eBlockView block={block} label={label} onChange={onChange} />
         )}
         <BlockTypeMenu
           open={slashOpen}
