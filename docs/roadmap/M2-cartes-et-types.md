@@ -4,9 +4,11 @@
 
 **Spec** : `docs/features/01-cartes-et-types.md` (board : node `4:70`, pavé « Cards and Cards type »). Socle commun : `docs/features/README.md` (documents, liens, éditeur, corbeille).
 
-**Hors M2** : la sidebar complète (dossiers, parent/enfant, épingles, tri, filtres, recherche) est M3 ; M2 n'a qu'une **liste simple** des cartes pour les ouvrir et les créer. Le bloc Map attend les maps (M4) : il est visible mais signalé « Bientôt disponible ». La recherche plein texte (FTS5) et la détection de noms dans Quill utilisent les données posées ici, mais arrivent avec M3 et M9. Le thème du monde reste à cadrer.
+**Hors M2** : la sidebar complète (dossiers, parent/enfant, épingles, tri, filtres, recherche) est M3 ; M2 n'a qu'une **liste simple** des cartes pour les ouvrir et les créer. Le bloc Map attend les maps (M4) : il est visible mais signalé « Bientôt disponible ». La recherche plein texte (FTS5) et la détection de noms dans Quill utilisent les données posées ici, mais arrivent avec M3 et M9. Dans l'écran des réglages du monde, les sections Importer et Exporter arrivent avec leurs modules ; Collaboration et Site & domaine de vvd sont retirées (voir `docs/contexte.md`).
 
-**Ordre d'exécution** : 2.1 → 2.2 → 2.3, puis 2.4 → 2.5 → 2.6, puis 2.7 → 2.8, puis 2.9 → 2.10 → 2.11 → 2.12 → 2.13, puis 2.14 → 2.15.
+**Ordre d'exécution** : 2.1 → 2.2 → 2.3, puis 2.4 → 2.5 → 2.6, puis 2.7 → 2.8, puis 2.9 → 2.10 → 2.11 → 2.12 → 2.13, puis 2.14, puis 2.16 → 2.17 → 2.18 → 2.19, et la recette 2.15 en dernier.
+
+Les étapes 2.16 à 2.19 ont été ajoutées le 27/09/2026, d'après les captures de vvd envoyées par Clément (réglages du monde et thème).
 
 ---
 
@@ -149,11 +151,53 @@
 **Critères d'acceptation** : les critères d'acceptation de `01-cartes-et-types.md` sont couverts par les tests de bout en bout, qui passent en CI.
 
 ## 2.15 — Recette manuelle M2
-**Branche** : — · **Dépend de** : 2.14
+**Branche** : — · **Dépend de** : 2.14, 2.19
 
 - [ ] Issue « Recette manuelle M2 » tenue à jour après chaque feature fusionnée, à valider par Clément
 
 **Critères d'acceptation** : la recette est validée avant la release.
+
+## 2.16 — Écran des réglages du monde et suppression du monde
+**Branche** : `feat/world-settings` · **Dépend de** : 2.3
+
+- [ ] Le panneau du monde devient un écran de réglages en sections, ouvert par le bouton du monde (barre du haut) et par Home › Gérer › Réglages
+- [ ] Sections : **Général** (image principale, nom, genre, description, dossier du monde avec « Ouvrir le dossier »), **Types** (ouvre l'écran des types), **Médias** (ouvre la médiathèque), **Thème** et **Préférences** (remplies par 2.17 et 2.18)
+- [ ] **Zone dangereuse** : « Supprimer le monde », confirmé en tapant le nom du monde. Le dossier part dans la corbeille de Windows (récupérable), le monde quitte la liste des mondes récents, et l'app revient à la liste des mondes
+- [ ] Le Rust vérifie que le dossier supprimé est bien celui du monde ouvert (`world.json` du même id) avant d'y toucher
+- [ ] Clavier complet (sections au clavier), FR et EN, deux thèmes
+
+**Critères d'acceptation** : chaque section mène au bon réglage ; un monde supprimé n'apparaît plus dans la liste et son dossier est dans la corbeille de Windows.
+
+## 2.17 — Thème du monde
+**Branche** : `feat/world-theme` · **Dépend de** : 2.16
+
+- [ ] Onglet **Explorer** : galerie de thèmes fournis par BuilderZ (nom, illustration de fond, couleur d'accent), plus « Par défaut » (image principale et ocre). Illustrations dessinées pour BuilderZ, jamais celles de vvd (ADR 0003)
+- [ ] Onglet **Modifier** : thème personnalisé, avec l'image de fond choisie dans la médiathèque (par défaut l'image principale) et la couleur d'accent (palette ou couleur libre)
+- [ ] Le thème s'applique au fond et à l'accent de l'app pour ce monde, lisible dans les deux modes clair et sombre
+- [ ] Enregistré dans `world.json`, lu avec tolérance (un thème inconnu ou abîmé revient au thème par défaut) ; une image de fond est listée dans les usages de la médiathèque
+- [ ] Home › Gérer › Thème ouvre directement cette section
+
+**Critères d'acceptation** : choisir un thème change aussitôt le fond et l'accent ; il est retrouvé après relance.
+
+## 2.18 — Préférences d'écriture du monde
+**Branche** : `feat/world-preferences` · **Dépend de** : 2.16, 2.10
+
+- [ ] Préférences enregistrées dans `world.json`, toutes activées par défaut, lues avec tolérance
+- [ ] **Détection d'entités** : dans les blocs texte, un nom ou un alias de carte écrit en toutes lettres est souligné ; « Lier » (clic ou Alt+Entrée) le transforme en mention
+- [ ] **Liens automatiques des mentions** : un nom ou un alias de carte tapé devient une mention dès le caractère suivant (espace, ponctuation, retour à la ligne) ; Retour arrière juste après annule le lien et garde le texte
+- [ ] **Animer les nouveaux liens** : une mention créée automatiquement apparaît avec une courte animation (jamais si le système demande de réduire les animations)
+- [ ] La carte ouverte, les cartes à la corbeille et le texte déjà mentionné ne sont jamais proposés
+
+**Critères d'acceptation** : avec les liens automatiques, taper « Gondor » puis une espace crée une mention ; une préférence désactivée est respectée après relance.
+
+## 2.19 — Tests de bout en bout de la fin de M2
+**Branche** : `test/e2e-m2-settings` · **Dépend de** : 2.16, 2.17, 2.18
+
+- [ ] Scénario : choisir un thème, fermer et rouvrir le monde, le thème est conservé
+- [ ] Scénario : un nom de carte tapé devient une mention ; désactiver la préférence, rouvrir le monde, le même texte reste du texte
+- [ ] Scénario : supprimer un monde, il disparaît de la liste des mondes
+
+**Critères d'acceptation** : les scénarios passent en CI.
 
 ---
 
