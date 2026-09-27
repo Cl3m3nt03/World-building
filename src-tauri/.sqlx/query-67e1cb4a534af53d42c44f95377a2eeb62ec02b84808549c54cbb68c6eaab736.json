@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT l.source_id, d.kind AS source_kind, d.title AS source_title,\n                  c.type_id AS source_type_id, l.kind AS link_kind,\n                  p.label AS \"property_label?\"\n           FROM links l\n           JOIN documents d ON d.id = l.source_id AND d.trashed_at IS NULL\n           LEFT JOIN cards c ON c.document_id = d.id\n           LEFT JOIN property_definitions p ON l.kind = 'property' AND p.id = l.detail\n           WHERE l.target_id = ?\n           ORDER BY d.title COLLATE NOCASE, l.kind, p.label",
+  "describe": {
+    "columns": [
+      {
+        "name": "source_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "name": "source_kind",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "source_title",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "source_type_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "type_id"
+          }
+        }
+      },
+      {
+        "name": "link_kind",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "property_label?",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "property_definitions",
+            "name": "label"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "67e1cb4a534af53d42c44f95377a2eeb62ec02b84808549c54cbb68c6eaab736"
+}

@@ -232,6 +232,84 @@ async fn renaming_reordering_and_deleting() {
 }
 
 #[tokio::test]
+async fn backlinks_list_each_citing_card_once_with_its_properties() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let place = fx.new_type("Lieu", None).await;
+    let born = create(
+        fx.pool(),
+        on_type(&character),
+        "Lieu de naissance",
+        PropertyKind::Card,
+    )
+    .await
+    .unwrap();
+    let lives = create(
+        fx.pool(),
+        on_type(&character),
+        "Demeures",
+        PropertyKind::Cards,
+    )
+    .await
+    .unwrap();
+    tick().await;
+    let gondor = fx.card(&place, "Gondor").await;
+    let aragorn = fx.card(&character, "Aragorn").await;
+    let boromir = fx.card(&character, "Boromir").await;
+
+    set_value(
+        fx.pool(),
+        &aragorn,
+        &born.id,
+        Some(PropertyValue::Card(gondor.clone())),
+    )
+    .await
+    .unwrap();
+    set_value(
+        fx.pool(),
+        &aragorn,
+        &lives.id,
+        Some(PropertyValue::Cards(vec![gondor.clone()])),
+    )
+    .await
+    .unwrap();
+    set_value(
+        fx.pool(),
+        &boromir,
+        &born.id,
+        Some(PropertyValue::Card(gondor.clone())),
+    )
+    .await
+    .unwrap();
+
+    let backlinks = links::backlinks(fx.pool(), &gondor).await.unwrap();
+    let titles: Vec<&str> = backlinks.iter().map(|b| b.source_title.as_str()).collect();
+    assert_eq!(titles, ["Aragorn", "Boromir"]);
+    let aragorn_via: Vec<Option<&str>> = backlinks[0]
+        .via
+        .iter()
+        .map(|via| via.property_label.as_deref())
+        .collect();
+    assert_eq!(aragorn_via, [Some("Demeures"), Some("Lieu de naissance")]);
+    assert_eq!(
+        backlinks[0].source_type_id.as_deref(),
+        Some(character.as_str())
+    );
+
+    // A citing card in the trash is left out; back from the trash, it returns.
+    documents::trash(fx.pool(), &boromir).await.unwrap();
+    assert_eq!(links::backlinks(fx.pool(), &gondor).await.unwrap().len(), 1);
+    documents::restore(fx.pool(), &boromir).await.unwrap();
+    assert_eq!(links::backlinks(fx.pool(), &gondor).await.unwrap().len(), 2);
+
+    // Clearing the value removes the backlink.
+    set_value(fx.pool(), &boromir, &born.id, None)
+        .await
+        .unwrap();
+    assert_eq!(links::backlinks(fx.pool(), &gondor).await.unwrap().len(), 1);
+}
+
+#[tokio::test]
 async fn link_values_are_links_to_allowed_live_cards() {
     let fx = Fixture::new().await;
     let character = fx.new_type("Personnage", None).await;

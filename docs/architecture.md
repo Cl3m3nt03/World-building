@@ -155,6 +155,10 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 - **Valeurs** (`set_property_value`) : la nature doit correspondre ; texte de 10 000 caractères au plus, nombre fini, 200 cartes au plus par lien multiple ; une valeur vide est retirée. Une valeur lien doit viser une carte hors corbeille d'un type autorisé (un sous-type est autorisé si son type l'est), et remplace les liens `property` de la carte pour cette propriété.
 - **Commandes** : `list_type_properties`, `card_properties`, `create_property(owner, label, kind)`, `rename_property`, `set_property_kind` (efface les valeurs et leurs liens si la nature change), `apply_property_to_existing`, `reorder_properties`, `count_property_values`, `delete_property` (avec ses valeurs et ses liens), `set_property_value`.
 
+### Rétroliens
+
+`card_backlinks(cardId)` (`src-tauri/src/domain/links.rs`) : les liens vers la carte dont la source est un document vivant (ni à la corbeille, ni supprimé), avec le titre et le type de la source et, pour un lien de propriété, le libellé de la propriété. Chaque source apparaît une fois, avec toutes ses façons de citer la carte. Côté front, la requête est rangée sous les clés des documents : toute modification de carte ou de valeur lien la rafraîchit.
+
 ### Vignettes des mondes
 
 La liste des mondes affiche l'image principale de chaque monde **sans l'ouvrir** : une vignette (640 px au plus sur le grand côté, jamais agrandie, PNG) est mise en cache dans `<dossier de config>	humbnails\<id du monde>.png` (`src-tauri/src/thumbnails.rs`, crate `image`). Elle est regénérée quand l'image principale change (`set_world_main_image`), créée à l'ouverture d'un monde si elle manque, et supprimée si le monde n'a plus d'image. Les mondes récents mémorisent l'identifiant, le genre et la présence d'une vignette. Le protocole `bzthumb://<id>` la sert en lecture seule ; il n'accepte qu'un UUID, donc aucun autre fichier du dossier de config n'est atteignable. La CSP l'autorise pour `img-src` seulement.

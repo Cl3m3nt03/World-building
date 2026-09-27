@@ -91,6 +91,8 @@ export const commands = {
 { kind: "card"; value: string } | 
 /**  Card ids. */
 { kind: "cards"; value: string[] } | null) => typedError<CardProperty[], AppError>(__TAURI_INVOKE("set_property_value", { cardId, propertyId, value })),
+	/**  Documents citing a card ("cited in"), with how they cite it. */
+	cardBacklinks: (cardId: string) => typedError<Backlink[], AppError>(__TAURI_INVOKE("card_backlinks", { cardId })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -226,6 +228,23 @@ export type AssetUsage =
 /**  The main image of the open world. */
 { kind: "worldMainImage"; worldName: string };
 
+/**  A document that cites a card, and how ("cited in" at the bottom of a card). */
+export type Backlink = {
+	sourceId: string,
+	sourceKind: DocumentKind,
+	sourceTitle: string,
+	/**  For a card: its type. */
+	sourceTypeId: string | null,
+	/**  How the source cites the card: mentions, link properties (by label)… */
+	via: BacklinkVia[],
+};
+
+export type BacklinkVia = {
+	kind: LinkKind,
+	/**  The property's label, for a link property. */
+	propertyLabel: string | null,
+};
+
 /**  How a card of this type shows on a canvas (M7). */
 export type CanvasFormat = 
 /**  Name only. */
@@ -317,6 +336,14 @@ export type ImportedAsset = {
 };
 
 export type Language = "fr" | "en";
+
+export type LinkKind = 
+/**  The card is cited in a text. */
+"mention" | 
+/**  The card is the value of a link property. */
+"property" | 
+/**  The card is pinned on a map. */
+"mapPin";
 
 export type NewCardType = {
 	/**  The type to create a subtype of, or `null` for a type. */

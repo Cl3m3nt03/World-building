@@ -4,9 +4,9 @@ import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CardProperties } from "@/features/cards/components/CardProperties";
 import type { CardProperty, PropertyDefinition, PropertyValue } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
-import { CardProperties } from "./components/CardProperties";
 import { TypeProperties } from "./components/TypeProperties";
 
 function definition(
@@ -101,7 +101,7 @@ function renderWith(node: React.ReactNode) {
 const callsOf = (command: string) => calls.filter((call) => call.command === command);
 
 test("adding a type property asks whether to apply it to the existing cards", async () => {
-  renderWith(<TypeProperties typeId="character" />);
+  renderWith(<TypeProperties typeId="character" types={[]} />);
   await screen.findByRole("button", { name: "Modifier la propriété Titre" });
 
   fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
@@ -128,7 +128,7 @@ test("adding a type property asks whether to apply it to the existing cards", as
 });
 
 test("skipping leaves the existing cards as they are", async () => {
-  renderWith(<TypeProperties typeId="character" />);
+  renderWith(<TypeProperties typeId="character" types={[]} />);
   await screen.findByRole("button", { name: "Modifier la propriété Titre" });
 
   fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
@@ -139,7 +139,7 @@ test("skipping leaves the existing cards as they are", async () => {
 });
 
 test("deleting a property says how many values would be lost", async () => {
-  renderWith(<TypeProperties typeId="character" />);
+  renderWith(<TypeProperties typeId="character" types={[]} />);
   fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Titre" }));
 
   fireEvent.click(await screen.findByRole("button", { name: "Supprimer" }));

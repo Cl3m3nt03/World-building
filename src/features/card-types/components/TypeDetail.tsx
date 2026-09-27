@@ -278,7 +278,7 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
             {t("properties.inherits", { name: parent.name })}
           </p>
         )}
-        <TypeProperties typeId={type.id} />
+        <TypeProperties typeId={type.id} types={allTypes} />
       </Section>
 
       <Section title={t("cardTypes.defaults")}>

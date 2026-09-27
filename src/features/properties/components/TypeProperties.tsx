@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
+import type { CardType } from "@/lib/bindings";
 import {
   useApplyPropertyToExisting,
   useCreateProperty,
@@ -15,7 +16,7 @@ import { kindIcon, PropertyEditor } from "./PropertyEditor";
  * on the new cards of the type; the banner offers to apply it to the
  * existing ones too.
  */
-export function TypeProperties({ typeId }: { typeId: string }) {
+export function TypeProperties({ typeId, types }: { typeId: string; types: CardType[] }) {
   const { t } = useTranslation();
   const properties = useTypeProperties(typeId);
   const create = useCreateProperty();
@@ -68,7 +69,11 @@ export function TypeProperties({ typeId }: { typeId: string }) {
           const Icon = kindIcon(property.kind);
           return (
             <li key={property.id}>
-              <PropertyEditor property={property} defaultOpen={property.id === justCreated}>
+              <PropertyEditor
+                property={property}
+                types={types}
+                defaultOpen={property.id === justCreated}
+              >
                 <button
                   type="button"
                   aria-label={t("properties.edit", { name: property.label })}

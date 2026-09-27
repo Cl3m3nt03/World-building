@@ -40,7 +40,7 @@ impl DocumentKind {
         }
     }
 
-    fn parse(value: &str) -> AppResult<Self> {
+    pub(crate) fn parse(value: &str) -> AppResult<Self> {
         Ok(match value {
             "card" => Self::Card,
             "map" => Self::Map,

@@ -290,5 +290,19 @@
   "properties.applySkip": "Ignorer",
   "properties.applyYes": "Oui",
   "properties.inherits": "Les cartes de ce sous-type affichent aussi les propriétés de « {{name}} ».",
-  "properties.notANumber": "Ce n'est pas un nombre : la valeur n'est pas enregistrée."
+  "properties.notANumber": "Ce n'est pas un nombre : la valeur n'est pas enregistrée.",
+  "properties.targets": "Types de cartes acceptés",
+  "properties.targetsHint": "Aucune case cochée : toutes les cartes. Un type accepte aussi ses sous-types.",
+  "properties.missingCard": "Carte introuvable",
+  "properties.removeLink": "Retirer le lien vers {{name}}",
+  "properties.pickFor": "Choisir une carte pour {{name}}",
+  "properties.addLink": "Ajouter",
+  "properties.chooseCard": "Choisir une carte",
+  "cards.pickerSearch": "Rechercher une carte (nom ou alias)…",
+  "cards.pickerNone": "Aucune carte ne correspond.",
+  "backlinks.title": "Cité dans",
+  "backlinks.none": "Aucune carte ne cite celle-ci pour l'instant.",
+  "backlinks.via.mention": "mention",
+  "backlinks.via.property": "propriété",
+  "backlinks.via.mapPin": "épingle de map"
 }

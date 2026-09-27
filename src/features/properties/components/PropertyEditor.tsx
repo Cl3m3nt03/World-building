@@ -1,4 +1,4 @@
-import { Hash, Trash2, Type } from "lucide-react";
+import { Hash, Link2, Trash2, Type } from "lucide-react";
 import { type ReactNode, useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { PropertyDefinition, PropertyKind } from "@/lib/bindings";
+import type { CardType, PropertyDefinition, PropertyKind } from "@/lib/bindings";
 import {
   useDeleteProperty,
   usePropertyValueCount,
@@ -20,11 +20,17 @@ import {
   useSetPropertyKind,
 } from "../hooks/useProperties";
 
-/** Kinds offered when editing a property (links come with M2 step 2.8). */
-export const EDITABLE_KINDS: PropertyKind[] = ["text", "number"];
+/** Kinds a property can have. */
+export const PROPERTY_KINDS: PropertyKind[] = ["text", "number", "card", "cards"];
 
 export function kindIcon(kind: PropertyKind) {
-  return kind === "number" ? Hash : Type;
+  if (kind === "number") return Hash;
+  if (kind === "card" || kind === "cards") return Link2;
+  return Type;
+}
+
+function isLink(kind: PropertyKind) {
+  return kind === "card" || kind === "cards";
 }
 
 /**
@@ -33,10 +39,13 @@ export function kindIcon(kind: PropertyKind) {
  */
 export function PropertyEditor({
   property,
+  types,
   children,
   defaultOpen = false,
 }: {
   property: PropertyDefinition;
+  /** Card types, for the targets of a link property. */
+  types: CardType[];
   children: ReactNode;
   defaultOpen?: boolean;
 }) {
@@ -105,7 +114,7 @@ export function PropertyEditor({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {EDITABLE_KINDS.map((kind) => (
+              {PROPERTY_KINDS.map((kind) => (
                 <SelectItem key={kind} value={kind}>
                   {t(`properties.kinds.${kind}`)}
                 </SelectItem>
@@ -114,6 +123,43 @@ export function PropertyEditor({
           </Select>
           <p className="text-xs text-muted-foreground">{t("properties.kindHint")}</p>
         </div>
+        {isLink(property.kind) && (
+          <fieldset className="flex flex-col gap-1 border-0">
+            <legend className="mb-1 text-xs font-bold text-muted-foreground">
+              {t("properties.targets")}
+            </legend>
+            <p className="text-xs text-muted-foreground">{t("properties.targetsHint")}</p>
+            <div className="flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+              {types
+                .filter((type) => type.parentId === null)
+                .map((type) => {
+                  const checked = property.targetTypeIds.includes(type.id);
+                  return (
+                    <label
+                      key={type.id}
+                      className="flex items-center gap-2 rounded-sm px-1 py-0.5 text-sm hover:bg-accent"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        className="accent-primary"
+                        onChange={() =>
+                          setKind.mutate({
+                            id: property.id,
+                            kind: property.kind,
+                            targets: checked
+                              ? property.targetTypeIds.filter((id) => id !== type.id)
+                              : [...property.targetTypeIds, type.id],
+                          })
+                        }
+                      />
+                      {type.name}
+                    </label>
+                  );
+                })}
+            </div>
+          </fieldset>
+        )}
         {error && <AppErrorMessage error={error} />}
         {confirmDelete ? (
           <div role="alert" className="flex flex-col gap-2 text-sm">

@@ -100,6 +100,10 @@ export function useSetPropertyValue(cardId: string) {
   return useMutation({
     mutationFn: ({ propertyId, value }: { propertyId: string; value: PropertyValue | null }) =>
       unwrap(commands.setPropertyValue(cardId, propertyId, value)),
-    onSuccess: (properties) => queryClient.setQueryData(propertyKeys.ofCard(cardId), properties),
+    onSuccess: (properties) => {
+      queryClient.setQueryData(propertyKeys.ofCard(cardId), properties);
+      // Backlinks live under the documents' keys (features/cards).
+      void queryClient.invalidateQueries({ queryKey: ["documents", "backlinks"] });
+    },
   });
 }

@@ -1,3 +1,8 @@
-export { CardProperties } from "./components/CardProperties";
+export { kindIcon, PropertyEditor } from "./components/PropertyEditor";
 export { TypeProperties } from "./components/TypeProperties";
-export { propertyKeys } from "./hooks/useProperties";
+export {
+  propertyKeys,
+  useCardProperties,
+  useCreateProperty,
+  useSetPropertyValue,
+} from "./hooks/useProperties";
