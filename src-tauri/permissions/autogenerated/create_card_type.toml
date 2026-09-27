@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-card-type"
+description = "Enables the create_card_type command without any pre-configured scope."
+commands.allow = ["create_card_type"]
+
+[[permission]]
+identifier = "deny-create-card-type"
+description = "Denies the create_card_type command without any pre-configured scope."
+commands.deny = ["create_card_type"]

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO card_types (id, parent_id, name, icon, color, guided_template,\n                                 orientation, canvas_format, sort_order, created_at)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "8efbbf473b18b80441700a2aec910e3cf55633b87f5b40c71bd724648549ebf3"
+}

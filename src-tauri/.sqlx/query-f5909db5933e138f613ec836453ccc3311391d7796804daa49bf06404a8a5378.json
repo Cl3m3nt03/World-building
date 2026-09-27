@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE card_types\n         SET name = ?, icon = ?, color = ?, guided_template = ?, orientation = ?,\n             canvas_format = ?\n         WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "f5909db5933e138f613ec836453ccc3311391d7796804daa49bf06404a8a5378"
+}

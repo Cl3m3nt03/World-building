@@ -38,6 +38,17 @@ export const commands = {
 	deleteDocument: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_document", { id })),
 	/**  Deletes everything in the trash for good. Returns how many documents. */
 	emptyTrash: () => typedError<number, AppError>(__TAURI_INVOKE("empty_trash")),
+	/**  Card types of the open world: each type followed by its subtypes, in order. */
+	listCardTypes: () => typedError<CardType[], AppError>(__TAURI_INVOKE("list_card_types")),
+	/**  Creates a type, or a subtype when `parentId` is set. */
+	createCardType: (cardType: NewCardType) => typedError<CardType, AppError>(__TAURI_INVOKE("create_card_type", { cardType })),
+	updateCardType: (id: string, patch: CardTypePatch) => typedError<CardType, AppError>(__TAURI_INVOKE("update_card_type", { id, patch })),
+	/**  Copies a type and its subtypes under a new name. */
+	duplicateCardType: (id: string, name: string) => typedError<CardType, AppError>(__TAURI_INVOKE("duplicate_card_type", { id, name })),
+	/**  Orders the types (or the subtypes of one type) as `ids`. */
+	reorderCardTypes: (ids: string[]) => typedError<null, AppError>(__TAURI_INVOKE("reorder_card_types", { ids })),
+	/**  Deletes a type and its subtypes; their cards move to `moveCardsTo`. */
+	deleteCardType: (id: string, moveCardsTo: string | null) => typedError<null, AppError>(__TAURI_INVOKE("delete_card_type", { id, moveCardsTo })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -173,6 +184,42 @@ export type AssetUsage =
 /**  The main image of the open world. */
 { kind: "worldMainImage"; worldName: string };
 
+/**  How a card of this type shows on a canvas (M7). */
+export type CanvasFormat = 
+/**  Name only. */
+"compact" | 
+/**  Image, name and type. */
+"standard" | 
+/**  Tall image. */
+"tall" | 
+/**  Wide image. */
+"wide";
+
+export type CardType = {
+	id: string,
+	/**  Set for a subtype. */
+	parentId: string | null,
+	name: string,
+	/**  lucide icon name. */
+	icon: string,
+	/**  One of `COLORS`. */
+	color: string,
+	guidedTemplate: TemplateSection[],
+	orientation: Orientation,
+	canvasFormat: CanvasFormat,
+	sortOrder: number,
+};
+
+/**  Changes to a type; absent fields are left as is. */
+export type CardTypePatch = {
+	name?: string | null,
+	icon?: string | null,
+	color?: string | null,
+	guidedTemplate?: TemplateSection[] | null,
+	orientation?: Orientation | null,
+	canvasFormat?: CanvasFormat | null,
+};
+
 export type Document = {
 	id: string,
 	kind: DocumentKind,
@@ -206,6 +253,17 @@ export type ImportedAsset = {
 
 export type Language = "fr" | "en";
 
+export type NewCardType = {
+	/**  The type to create a subtype of, or `null` for a type. */
+	parentId: string | null,
+	name: string,
+	icon: string,
+	color: string,
+};
+
+/**  Shape of the card's image. */
+export type Orientation = "portrait" | "landscape";
+
 /**  Preferences edited by the user in the settings. */
 export type Preferences = {
 	language: Language,
@@ -236,6 +294,12 @@ export type RecentWorld = {
 	thumbnail: boolean,
 	/**  RFC 3339 date. */
 	lastOpenedAt: string,
+};
+
+/**  A section of a guided template: a title and a question to help write it. */
+export type TemplateSection = {
+	title: string,
+	prompt: string,
 };
 
 export type Theme = "light" | "dark" | "system";
