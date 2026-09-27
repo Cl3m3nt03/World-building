@@ -95,6 +95,43 @@ pub enum AssetUsage {
         #[serde(rename = "worldName")]
         world_name: String,
     },
+    /// The image of a card.
+    #[serde(rename_all = "camelCase")]
+    CardImage {
+        card_id: String,
+        card_title: String,
+        in_trash: bool,
+    },
+    /// In an image block of a card.
+    #[serde(rename_all = "camelCase")]
+    CardBlock {
+        card_id: String,
+        card_title: String,
+        in_trash: bool,
+    },
+}
+
+/// Where cards use an asset: as their image, in image blocks (a card using
+/// it both ways is listed twice).
+pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsage>> {
+    let mut usages = Vec::new();
+    for row in crate::db::cards::using_asset(pool, id).await? {
+        if row.as_image {
+            usages.push(AssetUsage::CardImage {
+                card_id: row.id.clone(),
+                card_title: row.title.clone(),
+                in_trash: row.in_trash,
+            });
+        }
+        if row.in_block {
+            usages.push(AssetUsage::CardBlock {
+                card_id: row.id,
+                card_title: row.title,
+                in_trash: row.in_trash,
+            });
+        }
+    }
+    Ok(usages)
 }
 
 /// Result of an import: the asset, and whether it is new to the world.

@@ -324,5 +324,16 @@
   "mentions.count_other": "{{count}} cards",
   "mentions.open": "Open the card {{name}}",
   "mentions.dead": "This card is in the trash or was deleted.",
-  "mentions.deadNamed": "{{name}} (card in the trash or deleted)"
+  "mentions.deadNamed": "{{name}} (card in the trash or deleted)",
+  "blocks.types.image": "Image",
+  "blocks.imageLabel": "Image block {{index}}",
+  "blocks.image.choose": "Choose an image",
+  "blocks.image.change": "Change",
+  "blocks.image.empty": "No image in this block.",
+  "blocks.image.missing": "This image is no longer in the media library.",
+  "blocks.image.caption": "Caption",
+  "blocks.image.captionPlaceholder": "Add a caption…",
+  "media.usage.cardImage": "image of the card \"{{name}}\"",
+  "media.usage.cardBlock": "image block of the card \"{{name}}\"",
+  "media.usage.inTrash": "{{where}} (in the trash)"
 }

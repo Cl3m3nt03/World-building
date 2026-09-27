@@ -249,6 +249,57 @@ async fn mentions_in_the_content_are_links_and_backlinks() {
 }
 
 #[tokio::test]
+async fn asset_usages_list_card_images_and_image_blocks() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let image = fx.image().await;
+    let arwen = create(fx.pool(), &character, "Arwen").await.unwrap();
+    let elrond = create(fx.pool(), &character, "Elrond").await.unwrap();
+    let other = create(fx.pool(), &character, "Glorfindel").await.unwrap();
+    set_image(fx.pool(), &arwen.id, Some(&image)).await.unwrap();
+    let block =
+        format!(r#"[{{"id":"b","type":"image","assetId":"{image}","caption":"Fondcombe"}}]"#);
+    set_content(fx.pool(), &arwen.id, &block).await.unwrap();
+    set_content(fx.pool(), &elrond.id, &block).await.unwrap();
+    set_content(
+        fx.pool(),
+        &other.id,
+        r#"[{"id":"t","type":"text","doc":{"type":"doc"}}]"#,
+    )
+    .await
+    .unwrap();
+    documents::trash(fx.pool(), &elrond.id).await.unwrap();
+
+    let usages = media::card_usages(fx.pool(), &image).await.unwrap();
+    assert_eq!(
+        usages,
+        vec![
+            media::AssetUsage::CardImage {
+                card_id: arwen.id.clone(),
+                card_title: "Arwen".into(),
+                in_trash: false,
+            },
+            media::AssetUsage::CardBlock {
+                card_id: arwen.id.clone(),
+                card_title: "Arwen".into(),
+                in_trash: false,
+            },
+            media::AssetUsage::CardBlock {
+                card_id: elrond.id.clone(),
+                card_title: "Elrond".into(),
+                in_trash: true,
+            },
+        ]
+    );
+    assert!(
+        media::card_usages(fx.pool(), "unused.png")
+            .await
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[tokio::test]
 async fn a_card_needs_an_existing_type() {
     let fx = Fixture::new().await;
     assert!(create(fx.pool(), "no-such-type", "Gandalf").await.is_err());

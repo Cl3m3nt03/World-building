@@ -168,6 +168,44 @@ pub async fn move_type(tx: &mut Transaction<'_, Sqlite>, from: &str, to: &str) -
     Ok(())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AssetUserRow {
+    pub id: String,
+    pub title: String,
+    pub in_trash: bool,
+    /// The asset is the card's image.
+    pub as_image: bool,
+    /// The asset is in one of the card's image blocks.
+    pub in_block: bool,
+}
+
+/// Cards (in the trash too) using an asset as their image or in an image
+/// block, by title. Blocks are read with SQLite's JSON functions.
+pub async fn using_asset(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<AssetUserRow>> {
+    Ok(sqlx::query_as!(
+        AssetUserRow,
+        r#"SELECT d.id AS "id!", d.title,
+                  d.trashed_at IS NOT NULL AS "in_trash!: bool",
+                  COALESCE(c.image_asset_id = ?1, 0) AS "as_image!: bool",
+                  EXISTS (
+                      SELECT 1 FROM json_each(c.content) AS block
+                      WHERE json_extract(block.value, '$.type') = 'image'
+                        AND json_extract(block.value, '$.assetId') = ?1
+                  ) AS "in_block!: bool"
+           FROM cards c JOIN documents d ON d.id = c.document_id
+           WHERE c.image_asset_id = ?1
+              OR EXISTS (
+                  SELECT 1 FROM json_each(c.content) AS block
+                  WHERE json_extract(block.value, '$.type') = 'image'
+                    AND json_extract(block.value, '$.assetId') = ?1
+              )
+           ORDER BY d.title COLLATE NOCASE"#,
+        asset_id
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// Removes an asset from the cards that use it as their image.
 pub async fn clear_image(pool: &SqlitePool, asset_id: &str) -> AppResult<()> {
     sqlx::query!(

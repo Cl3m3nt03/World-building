@@ -324,5 +324,16 @@
   "mentions.count_other": "{{count}} cartes",
   "mentions.open": "Ouvrir la carte {{name}}",
   "mentions.dead": "Cette carte est à la corbeille ou a été supprimée.",
-  "mentions.deadNamed": "{{name}} (carte à la corbeille ou supprimée)"
+  "mentions.deadNamed": "{{name}} (carte à la corbeille ou supprimée)",
+  "blocks.types.image": "Image",
+  "blocks.imageLabel": "Bloc image {{index}}",
+  "blocks.image.choose": "Choisir une image",
+  "blocks.image.change": "Changer",
+  "blocks.image.empty": "Aucune image dans ce bloc.",
+  "blocks.image.missing": "Cette image n'est plus dans la médiathèque.",
+  "blocks.image.caption": "Légende",
+  "blocks.image.captionPlaceholder": "Ajouter une légende…",
+  "media.usage.cardImage": "image de la carte « {{name}} »",
+  "media.usage.cardBlock": "bloc image de la carte « {{name}} »",
+  "media.usage.inTrash": "{{where}} (à la corbeille)"
 }
