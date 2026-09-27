@@ -213,7 +213,7 @@ impl<'de> Deserialize<'de> for AppSettings {
         } = RawAppSettings::deserialize(deserializer)?;
         Ok(Self {
             preferences,
-            recent_worlds,
+            recent_worlds: unique_recent_worlds(recent_worlds),
             default_worlds_dir,
         })
     }
@@ -267,7 +267,7 @@ impl AppSettings {
             .map(|(other, _)| other);
 
         let recent = &mut self.recent_worlds[index];
-        new_path.clone_into(&mut recent.path);
+        recent.path = normalize_path(new_path);
         name.clone_into(&mut recent.name);
         recent.id = Some(id.to_owned());
         recent.genre = Some(genre);
@@ -302,7 +302,8 @@ impl AppSettings {
     }
 
     /// Moves (or adds) a world to the top of the recent list.
-    pub fn record_recent_world(&mut self, world: RecentWorld) {
+    pub fn record_recent_world(&mut self, mut world: RecentWorld) {
+        world.path = normalize_path(&world.path);
         self.recent_worlds
             .retain(|recent| !same_path(&recent.path, &world.path));
         self.recent_worlds.insert(0, world);
@@ -310,10 +311,50 @@ impl AppSettings {
     }
 }
 
-/// Windows paths are case-insensitive.
+/// Normalizes the paths of recent worlds read from disk and keeps only the
+/// first (most recent) entry of each folder.
+fn unique_recent_worlds(recent_worlds: Vec<RecentWorld>) -> Vec<RecentWorld> {
+    let mut unique: Vec<RecentWorld> = Vec::with_capacity(recent_worlds.len());
+    for mut recent in recent_worlds {
+        recent.path = normalize_path(&recent.path);
+        if !unique
+            .iter()
+            .any(|kept| same_path(&kept.path, &recent.path))
+        {
+            unique.push(recent);
+        }
+    }
+    unique
+}
+
+/// Writes `path` with the OS separator (on Windows, `/` and `\` are both
+/// separators) and without a trailing one, so a folder has a single
+/// spelling. Roots such as `C:\` or `/` keep their separator.
+fn normalize_path(path: &str) -> String {
+    let unified: String = path
+        .chars()
+        .map(|c| {
+            if std::path::is_separator(c) {
+                std::path::MAIN_SEPARATOR
+            } else {
+                c
+            }
+        })
+        .collect();
+    let trimmed = unified.trim_end_matches(std::path::MAIN_SEPARATOR);
+    if trimmed.len() != unified.len() && (trimmed.is_empty() || trimmed.ends_with(':')) {
+        format!("{trimmed}{}", std::path::MAIN_SEPARATOR)
+    } else {
+        trimmed.to_owned()
+    }
+}
+
+/// Whether two paths name the same folder, whatever their separators or
+/// trailing separator. Windows paths are case-insensitive.
 fn same_path(a: &str, b: &str) -> bool {
+    let (a, b) = (normalize_path(a), normalize_path(b));
     if cfg!(windows) {
-        a.eq_ignore_ascii_case(b)
+        a.eq_ignore_ascii_case(&b)
     } else {
         a == b
     }
@@ -469,7 +510,7 @@ mod tests {
 
         settings.update_recent_world("c:/a", |recent| recent.name = "Nouveau nom".into());
 
-        assert_eq!(settings.recent_worlds[1].path, "C:/A");
+        assert_eq!(settings.recent_worlds[1].path, normalize_path("C:/A"));
         assert_eq!(settings.recent_worlds[1].name, "Nouveau nom");
         assert_eq!(settings.recent_worlds[0].name, "C:/B");
     }
@@ -524,7 +565,7 @@ mod tests {
         settings
             .relocate_recent_world("C:/Old", "D:/New", "id-1", "Eldefleur", Genre::Fantasy)
             .unwrap();
-        assert_eq!(settings.recent_worlds[1].path, "D:/New");
+        assert_eq!(settings.recent_worlds[1].path, normalize_path("D:/New"));
         assert_eq!(settings.recent_worlds[1].name, "Eldefleur");
         assert_eq!(settings.recent_worlds[1].genre, Some(Genre::Fantasy));
     }
@@ -540,7 +581,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(settings.recent_worlds.len(), 1);
-        assert_eq!(settings.recent_worlds[0].path, "D:/New");
+        assert_eq!(settings.recent_worlds[0].path, normalize_path("D:/New"));
     }
 
     #[test]
@@ -562,5 +603,94 @@ mod tests {
                 .count(),
             1
         );
+    }
+
+    #[test]
+    fn a_trailing_separator_does_not_make_another_world() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent("/worlds/Sonore/"));
+        settings.record_recent_world(recent("/worlds/Sonore"));
+
+        assert_eq!(settings.recent_worlds.len(), 1);
+        assert_eq!(
+            settings.recent_worlds[0].path,
+            normalize_path("/worlds/Sonore")
+        );
+        assert!(settings.is_recent_world("/worlds/Sonore/"));
+    }
+
+    #[test]
+    fn roots_keep_their_separator() {
+        let root = std::path::MAIN_SEPARATOR.to_string();
+        assert_eq!(normalize_path("/"), root);
+        assert_eq!(normalize_path("//"), root);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn mixed_separators_name_the_same_world() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent(r"C:/x/worlds\Sonore"));
+        settings.record_recent_world(recent("C:/x/worlds/Other"));
+        settings.record_recent_world(recent(r"c:\X\worlds\Sonore\"));
+
+        assert_eq!(settings.recent_worlds.len(), 2);
+        assert_eq!(settings.recent_worlds[0].path, r"c:\X\worlds\Sonore");
+        assert_eq!(settings.recent_worlds[1].path, r"C:\x\worlds\Other");
+        assert!(settings.is_recent_world("C:/x/worlds/Sonore/"));
+
+        settings.update_recent_world("C:/X/Worlds/Sonore", |recent| recent.name = "S".into());
+        assert_eq!(settings.recent_worlds[0].name, "S");
+
+        assert!(settings.remove_recent_world("C:/x/worlds/Other/"));
+        assert_eq!(settings.recent_worlds.len(), 1);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn drive_roots_keep_their_separator() {
+        assert_eq!(normalize_path("D:/"), r"D:\");
+        assert_eq!(normalize_path("D:"), "D:");
+        assert_eq!(normalize_path(r"\\server\share\"), r"\\server\share");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn relocating_normalizes_the_new_path() {
+        let mut settings = AppSettings::default();
+        settings.record_recent_world(recent_with_id(r"D:\New", "id-1"));
+        settings.record_recent_world(recent_with_id("C:/Old", "id-1"));
+
+        settings
+            .relocate_recent_world(r"C:\Old\", "D:/New/", "id-1", "W", Genre::Other)
+            .unwrap();
+
+        assert_eq!(settings.recent_worlds.len(), 1);
+        assert_eq!(settings.recent_worlds[0].path, r"D:\New");
+    }
+
+    #[test]
+    fn duplicated_recent_worlds_are_merged_when_loading() {
+        let dir = tempfile::tempdir().unwrap();
+        let spelled = |path: &str| path.replace('|', std::path::MAIN_SEPARATOR_STR);
+        let json = serde_json::json!({
+            "recentWorlds": [
+                { "path": spelled("|x|worlds|Sonore"), "name": "Recent", "id": "id-1" },
+                { "path": spelled("|x|worlds|Other|"), "name": "Other" },
+                { "path": spelled("|x|worlds|Sonore|"), "name": "Old", "id": "id-1" },
+                { "path": "/x/worlds/Other", "name": "Other again" },
+            ]
+        });
+        std::fs::write(dir.path().join(SETTINGS_FILE), json.to_string()).unwrap();
+
+        let settings = load(dir.path());
+
+        let names: Vec<_> = settings
+            .recent_worlds
+            .iter()
+            .map(|w| w.name.as_str())
+            .collect();
+        assert_eq!(names, ["Recent", "Other"]);
+        assert_eq!(settings.recent_worlds[1].path, spelled("|x|worlds|Other"));
     }
 }
