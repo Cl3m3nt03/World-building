@@ -15,7 +15,7 @@ pub struct DocumentRow {
     pub trashed_at: Option<String>,
 }
 
-pub async fn insert(pool: &SqlitePool, row: &DocumentRow) -> AppResult<()> {
+pub async fn insert(tx: &mut Transaction<'_, Sqlite>, row: &DocumentRow) -> AppResult<()> {
     sqlx::query!(
         "INSERT INTO documents (id, kind, title, created_at, updated_at, opened_at, trashed_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -27,8 +27,16 @@ pub async fn insert(pool: &SqlitePool, row: &DocumentRow) -> AppResult<()> {
         row.opened_at,
         row.trashed_at,
     )
-    .execute(pool)
+    .execute(&mut **tx)
     .await?;
+    Ok(())
+}
+
+/// Sets the update date (the document's own data changed).
+pub async fn touch(tx: &mut Transaction<'_, Sqlite>, id: &str, now: &str) -> AppResult<()> {
+    sqlx::query!("UPDATE documents SET updated_at = ? WHERE id = ?", now, id)
+        .execute(&mut **tx)
+        .await?;
     Ok(())
 }
 

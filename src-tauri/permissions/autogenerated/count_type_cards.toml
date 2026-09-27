@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-count-type-cards"
+description = "Enables the count_type_cards command without any pre-configured scope."
+commands.allow = ["count_type_cards"]
+
+[[permission]]
+identifier = "deny-count-type-cards"
+description = "Denies the count_type_cards command without any pre-configured scope."
+commands.deny = ["count_type_cards"]

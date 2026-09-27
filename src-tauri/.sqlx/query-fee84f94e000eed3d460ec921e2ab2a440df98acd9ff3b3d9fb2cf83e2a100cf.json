@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE cards SET image_asset_id = NULL WHERE image_asset_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "fee84f94e000eed3d460ec921e2ab2a440df98acd9ff3b3d9fb2cf83e2a100cf"
+}

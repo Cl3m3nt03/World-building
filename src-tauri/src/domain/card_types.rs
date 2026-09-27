@@ -11,6 +11,7 @@ use sqlx::SqlitePool;
 use uuid::Uuid;
 
 use crate::db::card_types::{self as queries, CardTypeRow};
+use crate::db::cards as card_queries;
 use crate::domain::documents::now;
 use crate::error::{AppError, AppResult};
 use crate::settings::Language;
@@ -202,8 +203,6 @@ async fn row(pool: &SqlitePool, id: &str) -> AppResult<CardTypeRow> {
         .ok_or_else(|| AppError::InvalidInput(format!("card type not found: {id}")))
 }
 
-// Used by the cards (M2 step 2.4).
-#[cfg_attr(not(test), allow(dead_code))]
 pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<CardType> {
     Ok(row(pool, id).await?.into())
 }
@@ -346,10 +345,16 @@ pub async fn reorder(pool: &SqlitePool, ids: &[String]) -> AppResult<()> {
     Ok(())
 }
 
-/// Deletes a type and its subtypes. Their cards (M2 step 2.4) move to
+/// Deletes a type and its subtypes. If they have cards, the cards move to
 /// `move_cards_to`, which must be another type, not one being deleted.
 pub async fn delete(pool: &SqlitePool, id: &str, move_cards_to: Option<&str>) -> AppResult<()> {
     row(pool, id).await?;
+    let has_cards = card_queries::count_of_type(pool, id).await? > 0;
+    if has_cards && move_cards_to.is_none() {
+        return Err(AppError::InvalidInput(
+            "the type has cards: choose the type they move to".into(),
+        ));
+    }
     if let Some(target) = move_cards_to {
         let target_row = row(pool, target).await?;
         if target == id || target_row.parent_id.as_deref() == Some(id) {
@@ -359,6 +364,9 @@ pub async fn delete(pool: &SqlitePool, id: &str, move_cards_to: Option<&str>) ->
         }
     }
     let mut tx = pool.begin().await?;
+    if let (true, Some(target)) = (has_cards, move_cards_to) {
+        card_queries::move_type(&mut tx, id, target).await?;
+    }
     queries::delete(&mut tx, id).await?;
     tx.commit().await?;
     Ok(())

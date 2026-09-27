@@ -16,12 +16,16 @@ On peut créer une carte de trois façons :
 
 Dans les trois cas, on choisit d'abord un type (ou un sous-type). La carte s'ouvre alors directement en édition, avec un nom par défaut sélectionné pour être renommé.
 
+**Réalisé en M2 (2.4)** : la tuile « Carte » de l'espace vide ouvre le menu de création : les types, leurs sous-types en retrait dessous, puis « Nouveau type » (qui ouvre l'écran des types). La carte créée s'appelle « <Type> sans nom » (« Untitled <Type> » en anglais) et s'ouvre avec ce nom sélectionné. Les boutons de la sidebar et le clic droit arrivent avec 2.5.
+
 ## Anatomie d'une carte
 
 - **Nom**, modifiable directement.
 - **Image**, choisie dans la médiathèque ou importée. Elle sert aussi de vignette dans la sidebar, le graph et le canvas.
 - **Type et sous-type**, modifiables après coup.
-- **Alias** : autres noms de la carte. Ils sont pris en compte par la recherche, les mentions et la détection de noms dans Quill.
+- **Alias** : autres noms de la carte. Ils sont pris en compte par la recherche, les mentions et la détection de noms dans Quill. Une carte a 20 alias au plus ; les doublons (sans tenir compte de la casse) et les alias vides sont ignorés.
+- L'image s'affiche en portrait (3:4) ou en paysage (16:9) selon l'orientation par défaut du type. Supprimer l'image de la médiathèque la retire des cartes qui l'utilisaient.
+- « … › Mettre à la corbeille » range la carte dans la corbeille du monde (restaurable, voir 2.5).
 - **Propriétés** : des champs structurés (voir plus bas).
 - **Contenu** : une suite de **blocs**.
 
@@ -85,7 +89,7 @@ Chaque type définit des réglages appliqués à la création de chaque nouvelle
 
 Chaque type par défaut a une icône, une couleur et un template guidé (par exemple Personnage : Background, Personnalité, Apparence). Changer le genre d'un monde plus tard n'ajoute ni ne supprime aucun type. Un monde créé avant M2 reçoit les types de son genre à sa première ouverture.
 
-Supprimer un type qui contient des cartes demande vers quel type déplacer ces cartes.
+Supprimer un type qui contient des cartes (les siennes et celles de ses sous-types, corbeille comprise) demande vers quel type déplacer ces cartes : la suppression n'est possible qu'une fois ce type choisi.
 
 ## Propriétés
 

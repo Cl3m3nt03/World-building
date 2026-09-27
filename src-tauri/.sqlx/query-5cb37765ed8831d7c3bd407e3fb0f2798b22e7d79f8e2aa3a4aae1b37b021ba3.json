@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE cards SET type_id = ? WHERE document_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "5cb37765ed8831d7c3bd407e3fb0f2798b22e7d79f8e2aa3a4aae1b37b021ba3"
+}

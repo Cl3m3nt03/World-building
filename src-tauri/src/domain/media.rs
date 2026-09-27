@@ -290,12 +290,14 @@ pub async fn rename(pool: &SqlitePool, id: &str, name: &str) -> AppResult<Asset>
     Ok(row.into())
 }
 
-/// Deletes the asset's row and file. The caller clears references to it.
+/// Deletes the asset's row and file, and removes it from the cards that
+/// used it as their image. The caller clears the world's main image.
 pub async fn delete(pool: &SqlitePool, assets_dir: &Path, id: &str) -> AppResult<()> {
     let path: PathBuf = files::resolve(assets_dir, id)?;
     if !queries::delete(pool, id).await? {
         return Err(AppError::InvalidInput(format!("asset not found: {id}")));
     }
+    crate::db::cards::clear_image(pool, id).await?;
     match std::fs::remove_file(&path) {
         Ok(()) => {}
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}

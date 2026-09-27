@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use sqlx::SqlitePool;
+use sqlx::{Sqlite, SqlitePool, Transaction};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 use uuid::Uuid;
@@ -115,10 +115,13 @@ pub fn validate_title(title: &str) -> AppResult<String> {
     Ok(title.to_owned())
 }
 
-/// Creates a document of `kind`. The caller then adds the kind's own data.
-// Used by the card commands (M2 step 2.4) and the other modules after them.
-#[cfg_attr(not(test), allow(dead_code))]
-pub async fn create(pool: &SqlitePool, kind: DocumentKind, title: &str) -> AppResult<Document> {
+/// Creates a document of `kind` in `tx`. The caller adds the kind's own
+/// data in the same transaction.
+pub async fn create_in(
+    tx: &mut Transaction<'_, Sqlite>,
+    kind: DocumentKind,
+    title: &str,
+) -> AppResult<Document> {
     let now = now();
     let row = DocumentRow {
         id: Uuid::new_v4().to_string(),
@@ -129,8 +132,17 @@ pub async fn create(pool: &SqlitePool, kind: DocumentKind, title: &str) -> AppRe
         opened_at: None,
         trashed_at: None,
     };
-    queries::insert(pool, &row).await?;
+    queries::insert(tx, &row).await?;
     row.try_into()
+}
+
+/// Creates a document of `kind` with no data of its own (tests).
+#[cfg(test)]
+pub async fn create(pool: &SqlitePool, kind: DocumentKind, title: &str) -> AppResult<Document> {
+    let mut tx = pool.begin().await?;
+    let document = create_in(&mut tx, kind, title).await?;
+    tx.commit().await?;
+    Ok(document)
 }
 
 pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Document> {
