@@ -74,14 +74,19 @@ pub async fn asset_usages(state: State<'_, AppState>, id: String) -> AppResult<V
                 world_name: world.file.name.clone(),
             });
         }
+        if world.file.theme.background() == Some(id.as_str()) {
+            usages.push(AssetUsage::WorldTheme {
+                world_name: world.file.name.clone(),
+            });
+        }
         (usages, world.pool.clone())
     };
     usages.extend(media::card_usages(&pool, &id).await?);
     Ok(usages)
 }
 
-/// Deletes an asset and its file. If it was the world's main image, the
-/// world no longer has one.
+/// Deletes an asset and its file. If it was the world's main image or theme
+/// background, the world no longer uses it.
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_asset(state: State<'_, AppState>, id: String) -> AppResult<()> {
@@ -91,11 +96,8 @@ pub async fn delete_asset(state: State<'_, AppState>, id: String) -> AppResult<(
     let cleared = {
         let mut guard = state.world.lock().await;
         match guard.as_mut() {
-            Some(world) if world.file.main_image.as_deref() == Some(id.as_str()) => {
-                world.set_main_image(None)?;
-                Some(world.info())
-            }
-            _ => None,
+            Some(world) => world.forget_asset(&id)?.then(|| world.info()),
+            None => None,
         }
     };
 

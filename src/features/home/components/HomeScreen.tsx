@@ -4,53 +4,15 @@ import type { ReactNode } from "react";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useCardCounts } from "@/features/cards";
 import { AssetImage, useAssets } from "@/features/media";
 import { genreLabel, useCurrentWorld } from "@/features/world";
-import type { TranslationKey } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { RecentDocuments } from "./RecentDocuments";
 
 const ENTRY_CLASS =
   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50";
-
-/** An entry of the "Manage" block that is not available yet. */
-function SoonEntry({
-  icon: Icon,
-  label,
-  soon,
-}: {
-  icon: LucideIcon;
-  label: TranslationKey;
-  soon: string;
-}) {
-  const { t } = useTranslation();
-  const soonId = useId();
-  return (
-    <>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-disabled
-            aria-describedby={soonId}
-            onClick={(event) => event.preventDefault()}
-            className={cn(ENTRY_CLASS, "cursor-not-allowed text-muted-foreground opacity-60")}
-          >
-            <Icon aria-hidden className="size-4" />
-            {t(label)}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>{soon}</TooltipContent>
-      </Tooltip>
-      <span id={soonId} className="sr-only">
-        {soon}
-      </span>
-    </>
-  );
-}
 
 function Section({
   title,
@@ -205,7 +167,14 @@ export function HomeScreen() {
               <Images aria-hidden className="size-4" />
               {t("media.title")}
             </Link>
-            <SoonEntry icon={Palette} label="home.theme" soon={t("placeholder.comingSoon")} />
+            <button
+              type="button"
+              onClick={() => openWorldSettings("theme")}
+              className={cn(ENTRY_CLASS, "text-left hover:bg-secondary")}
+            >
+              <Palette aria-hidden className="size-4" />
+              {t("home.theme")}
+            </button>
             <button
               type="button"
               onClick={() => openWorldSettings("general")}

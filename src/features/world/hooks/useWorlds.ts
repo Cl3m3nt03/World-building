@@ -2,7 +2,13 @@ import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tansta
 import { useNavigate } from "@tanstack/react-router";
 import { useUiStore } from "@/app/stores/ui";
 import { appKeys } from "@/features/settings";
-import { commands, type Genre, type WorldInfo, type WorldPatch } from "@/lib/bindings";
+import {
+  commands,
+  type Genre,
+  type WorldInfo,
+  type WorldPatch,
+  type WorldTheme,
+} from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { thumbnailsChanged } from "../thumbnails";
 import { worldKeys } from "./keys";
@@ -112,5 +118,35 @@ export function useSetWorldMainImage() {
       thumbnailsChanged();
       onWorldUpdated(queryClient, world);
     },
+  });
+}
+
+/**
+ * Shows `theme` at once, before it is saved: the current world is updated
+ * in the cache only (a color being dragged in the picker).
+ */
+export function usePreviewWorldTheme() {
+  const queryClient = useQueryClient();
+  return (theme: WorldTheme) =>
+    queryClient.setQueryData<WorldInfo | null>(worldKeys.current(), (world) =>
+      world ? { ...world, theme } : world,
+    );
+}
+
+/**
+ * Sets the theme of the open world. It shows at once; if saving fails, the
+ * saved theme comes back.
+ */
+export function useSetWorldTheme() {
+  const queryClient = useQueryClient();
+  const preview = usePreviewWorldTheme();
+  return useMutation({
+    mutationFn: (theme: WorldTheme) => unwrap(commands.setWorldTheme(theme)),
+    onMutate: async (theme) => {
+      await queryClient.cancelQueries({ queryKey: worldKeys.current() });
+      preview(theme);
+    },
+    onSuccess: (world) => queryClient.setQueryData(worldKeys.current(), world),
+    onError: () => queryClient.invalidateQueries({ queryKey: worldKeys.current() }),
   });
 }

@@ -16,6 +16,7 @@ const ELDEFLEUR: WorldInfo = {
   genre: "fantasy",
   description: "",
   mainImage: null,
+  theme: { kind: "default" },
   schemaVersion: 1,
   createdAt: "2026-09-20T10:00:00Z",
   lastOpenedAt: "2026-09-25T18:30:00Z",

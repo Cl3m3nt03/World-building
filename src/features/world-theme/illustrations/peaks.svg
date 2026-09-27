@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<title>Frozen peaks</title>
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#27425f"/><stop offset="0.6" stop-color="#8fb3cf"/><stop offset="1" stop-color="#dbe8f2"/></linearGradient>
+<linearGradient id="snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fb8cc"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#sky)"/>
+<circle cx="1010" cy="210" r="56" fill="#f6fbff" opacity="0.85"/>
+<polygon points="-50,760 67,655 300,460 560,640 575,599 800,300 1093,576 1068,627 1300,380 1565,608 1650,760 1650,1000 -50,1000" fill="url(#snow)"/>
+<polygon points="-50,860 -118,783 120,640 284,772 342,762 560,580 759,748 785,776 1020,620 1213,764 1246,755 1480,560 1653,740 1650,860 1650,1000 -50,1000" fill="#5f7f9c"/>
+<polygon points="0,931 40,944 80,941 120,937 160,949 200,944 240,944 280,941 320,959 360,954 400,931 440,934 480,942 520,926 560,935 600,926 640,920 680,920 720,918 760,905 800,898 840,902 880,891 920,881 960,902 1000,896 1040,900 1080,886 1120,894 1160,895 1200,902 1240,892 1280,896 1320,908 1360,903 1400,922 1440,923 1480,913 1520,935 1560,942 1600,948 1640,937 1640,1000 0,1000" fill="#2c4258"/>
+</svg>

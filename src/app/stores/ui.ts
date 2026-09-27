@@ -5,7 +5,13 @@ import type { RadioMode } from "@/lib/bindings";
 export const SIDEBAR_WIDTH = { default: 280, min: 200, max: 480 } as const;
 
 /** Sections of the world settings screen. */
-export const WORLD_SETTINGS_SECTIONS = ["general", "types", "media", "preferences"] as const;
+export const WORLD_SETTINGS_SECTIONS = [
+  "general",
+  "types",
+  "media",
+  "theme",
+  "preferences",
+] as const;
 export type WorldSettingsSection = (typeof WORLD_SETTINGS_SECTIONS)[number];
 
 type UiState = {

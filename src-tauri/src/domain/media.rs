@@ -95,6 +95,11 @@ pub enum AssetUsage {
         #[serde(rename = "worldName")]
         world_name: String,
     },
+    /// The background of the open world's custom theme.
+    WorldTheme {
+        #[serde(rename = "worldName")]
+        world_name: String,
+    },
     /// The image of a card.
     #[serde(rename_all = "camelCase")]
     CardImage {

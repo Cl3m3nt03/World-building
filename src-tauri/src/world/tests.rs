@@ -534,3 +534,100 @@ fn remove_folder_refuses_a_folder_without_a_world() {
     assert!(matches!(error, AppError::WorldInvalid(_)), "{error:?}");
     assert!(root.join("notes.txt").is_file());
 }
+
+// --- Theme ------------------------------------------------------------------
+
+fn custom_theme(background: Option<String>) -> WorldTheme {
+    WorldTheme::Custom {
+        background,
+        accent: "#5FCDC0".into(),
+    }
+}
+
+#[tokio::test]
+async fn a_theme_survives_a_reopening() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "W", &V1).await.unwrap();
+    let id = format!("{}.png", "d".repeat(64));
+    std::fs::write(world.assets_dir().join(&id), "png").unwrap();
+
+    world.set_theme(custom_theme(Some(id.clone()))).unwrap();
+    world.close().await;
+
+    let reopened = open(&root, &V1).await.unwrap();
+    assert_eq!(
+        reopened.info().theme,
+        WorldTheme::Custom {
+            background: Some(id),
+            accent: "#5fcdc0".into(),
+        }
+    );
+    reopened.close().await;
+}
+
+#[tokio::test]
+async fn a_theme_with_a_missing_background_is_refused() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "W", &V1).await.unwrap();
+    let before = std::fs::read(root.join(WORLD_FILE)).unwrap();
+
+    let missing = world.set_theme(custom_theme(Some(format!("{}.png", "e".repeat(64)))));
+    let outside = world.set_theme(custom_theme(Some("../world.db".into())));
+
+    for result in [missing, outside] {
+        assert!(
+            matches!(result, Err(AppError::InvalidInput(_))),
+            "{result:?}"
+        );
+    }
+    assert_eq!(std::fs::read(root.join(WORLD_FILE)).unwrap(), before);
+    world.close().await;
+}
+
+#[tokio::test]
+async fn the_default_theme_is_not_written() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "W", &V1).await.unwrap();
+
+    world
+        .set_theme(WorldTheme::Preset { id: "dawn".into() })
+        .unwrap();
+    world.set_theme(WorldTheme::Default).unwrap();
+
+    let json = std::fs::read_to_string(root.join(WORLD_FILE)).unwrap();
+    assert!(!json.contains("theme"), "{json}");
+    world.close().await;
+}
+
+#[tokio::test]
+async fn an_unreadable_theme_opens_as_the_default_one() {
+    let (_dir, root) = temp_root();
+    let world = create(&root, "W", &V1).await.unwrap();
+    world.close().await;
+    let json = std::fs::read_to_string(root.join(WORLD_FILE)).unwrap();
+    let json = json.replacen('{', r#"{ "theme": { "kind": "hologram" },"#, 1);
+    std::fs::write(root.join(WORLD_FILE), json).unwrap();
+
+    let reopened = open(&root, &V1).await.unwrap();
+
+    assert_eq!(reopened.info().theme, WorldTheme::Default);
+    reopened.close().await;
+}
+
+#[tokio::test]
+async fn a_deleted_asset_is_forgotten_as_main_image_and_background() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "W", &V1).await.unwrap();
+    let id = format!("{}.png", "f".repeat(64));
+    std::fs::write(world.assets_dir().join(&id), "png").unwrap();
+    world.set_main_image(Some(id.clone())).unwrap();
+    world.set_theme(custom_theme(Some(id.clone()))).unwrap();
+
+    assert!(world.forget_asset(&id).unwrap());
+
+    let info = world.info();
+    assert_eq!(info.main_image, None);
+    assert_eq!(info.theme, custom_theme(None).validated().unwrap());
+    assert!(!world.forget_asset(&id).unwrap());
+    world.close().await;
+}

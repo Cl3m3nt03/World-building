@@ -20,7 +20,7 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 ## Coque d'un monde ouvert
 
 - **En haut à gauche** : le monde courant, avec la miniature de son image principale. Un clic ouvre les **réglages du monde** (voir plus bas), sur la section Général.
-- **Fond** : l'image principale du monde ouvert, floutée et assombrie (ADR 0003) ; sans image, le dégradé par défaut. Sur la liste des mondes, le fond est la vignette du dernier monde ouvert. Changer l'image principale met aussi à jour la vignette du monde dans la liste.
+- **Fond** : celui du thème du monde (voir « Thème du monde »), flouté et assombri (ADR 0003). Par défaut, c'est l'image principale du monde ouvert ; sans image, le dégradé par défaut. Une image introuvable donne aussi le dégradé. Sur la liste des mondes, le fond est la vignette du dernier monde ouvert. Changer l'image principale met aussi à jour la vignette du monde dans la liste.
 - **En haut au centre** : les onglets **Home**, **World**, **Wiki** et **Quill**.
 - **En haut à droite** : la radio, les réglages et le bouton « Mondes ».
 - **À gauche** : la sidebar (voir `02-organisation.md`), présente dans l'onglet World.
@@ -40,7 +40,7 @@ Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles e
 
 **État en M2** : sous le titre, « Reprendre là où vous en étiez » propose la dernière carte ouverte, puis « ou essayer quelque chose de nouveau » avec un bouton « Nouvelle carte » (sans carte ouverte : « Commencez par créer votre première carte »). Les documents récents (8 au plus, hors corbeille) s'affichent en vignettes : image de la carte ou icône de son type, nom et date relative (« il y a 38 min »). Le résumé du monde indique le nombre de cartes et leur répartition par type (les sous-types comptent pour leur type ; les types sans carte sont omis).
 
-**État en M1** : le titre est « Bienvenue dans <nom du monde> », avec l'image principale en miniature. Les documents récents et l'aperçu du graph affichent un état vide qui dit avec quel milestone ils arrivent (M2 et M5). Le bloc « Le monde » résume le genre, le nombre de fichiers de la médiathèque et la description ; sans description, un lien « Ajouter une description… » ouvre les réglages du monde. Dans le bloc Gérer, **Médiathèque** ouvre la médiathèque et **Réglages du monde** ouvre les réglages du monde (comme le bouton en haut à gauche) ; **Types** (M2) et **Thème** (à cadrer) sont visibles mais signalés « Bientôt disponible ».
+**État en M1** : le titre est « Bienvenue dans <nom du monde> », avec l'image principale en miniature. Les documents récents et l'aperçu du graph affichent un état vide qui dit avec quel milestone ils arrivent (M2 et M5). Le bloc « Le monde » résume le genre, le nombre de fichiers de la médiathèque et la description ; sans description, un lien « Ajouter une description… » ouvre les réglages du monde. Dans le bloc Gérer, **Médiathèque** ouvre la médiathèque et **Réglages du monde** ouvre les réglages du monde (comme le bouton en haut à gauche). **Types** (M2) et **Thème** (2.17) étaient alors signalés « Bientôt disponible » ; **Thème** ouvre maintenant les réglages du monde sur la section Thème.
 
 ### Réglages du monde
 
@@ -49,15 +49,21 @@ Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles e
 - **Général** : image principale (via le sélecteur d'image, ou « Retirer »), nom, genre, description, et le dossier du monde avec « Ouvrir le dossier » (Explorateur Windows). Tout est enregistré à la volée, sans bouton : le texte une demi-seconde après la dernière frappe, et aussitôt quand on change de section ou qu'on ferme l'écran. Un nom vide n'est jamais enregistré (l'ancien nom est conservé). Le nom se met à jour aussitôt dans la barre du haut et dans la liste des mondes.
 - **Types** : nombre de types et « Gérer les types », qui ouvre l'écran des types (voir `01-cartes-et-types.md`).
 - **Médias** : nombre de fichiers et « Ouvrir la médiathèque ».
+- **Thème** : voir « Thème du monde ».
 - **Préférences** : se termine par la **zone dangereuse**. « Supprimer le monde » demande de taper le nom du monde (les espaces autour sont ignorés, pas la casse). Le monde est fermé, son dossier part dans la **corbeille de Windows** (on peut l'y restaurer, puis l'ouvrir avec « Ouvrir un monde »), il quitte la liste des mondes et l'app revient à cette liste. Si le dossier ne peut pas être déplacé (fichier ouvert ailleurs…), un message le dit et le monde reste ouvert, intact.
 
 Collaboration et Site & domaine, présents chez vvd, sont retirés (voir `docs/contexte.md`). Importer et Exporter arriveront avec leurs modules.
 
 ### Thème du monde
 
-Entrée **Thème** du bloc Gérer. Le thème du monde est une ambiance visuelle propre au monde (image de fond, teinte des panneaux), réutilisée par Quill (« garder le thème du monde » dans l'onglet Style, voir `08-quill.md`).
+Entrée **Thème** du bloc Gérer, et section Thème des réglages du monde. Le thème du monde est une ambiance visuelle propre au monde : l'image de fond et la couleur d'accent de toute l'app tant que le monde est ouvert. Il sera réutilisé par Quill (« garder le thème du monde » dans l'onglet Style, voir `08-quill.md`). Décidé avec Clément le 27/09/2026 d'après les captures de vvd.
 
-**Question ouverte** : le board ne détaille pas les réglages du thème. Proposition à valider avec Clément : image de fond (par défaut l'image principale du monde), teinte d'accent, et choix clair/sombre forcé ou non.
+- **Explorer** : une galerie de thèmes en cartes (illustration, nom, pastille de la couleur d'accent). « Par défaut » garde l'image principale et l'ocre ; les huit autres (Aube dorée, Forêt ancienne, Haute mer, Braises, Nuit étoilée, Cimes glacées, Dunes, Cerisiers) ont chacun une illustration dessinée pour BuilderZ, jamais reprise de vvd (ADR 0003). Au clavier, les flèches passent d'un thème à l'autre.
+- **Modifier** : le thème propre au monde. L'image de fond est choisie dans la médiathèque (par défaut, l'image principale ; « Reprendre l'image principale » revient à ce défaut) ; la couleur d'accent est prise parmi dix couleurs proposées ou choisie librement. Le thème personnalisé part de l'accent affiché, et remplace le thème choisi dans Explorer.
+- Tout choix s'applique **aussitôt** et est enregistré (une couleur libre, pendant qu'on la fait glisser, s'affiche aussitôt et s'enregistre quand elle se stabilise). Le thème est retrouvé après relance.
+- L'accent reste lisible dans les deux modes : chaque mode en reçoit une variante, assombrie en mode clair ou éclaircie en mode sombre juste assez pour un contraste de 3:1 avec le fond, et le texte posé sur l'accent est clair ou foncé selon ce qui se lit le mieux.
+- Une image utilisée comme fond du thème apparaît dans les usages de la médiathèque (« fond du thème du monde ») ; si elle est supprimée, le thème reprend l'image principale.
+- Le mode clair ou sombre reste un réglage de l'app, pas du thème.
 
 ### Onglet World
 

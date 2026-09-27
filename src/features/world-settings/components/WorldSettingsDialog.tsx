@@ -1,13 +1,21 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Images, type LucideIcon, Settings2, Shapes, SlidersHorizontal } from "lucide-react";
+import {
+  Images,
+  type LucideIcon,
+  Palette,
+  Settings2,
+  Shapes,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Tabs } from "radix-ui";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore, type WorldSettingsSection } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCardTypes } from "@/features/card-types";
 import { useAssets } from "@/features/media";
+import { ThemeSection } from "@/features/world-theme";
 import type { TranslationKey } from "@/i18n";
 import type { WorldInfo } from "@/lib/bindings";
 import { GeneralSection } from "./GeneralSection";
@@ -17,6 +25,7 @@ const SECTIONS: { value: WorldSettingsSection; icon: LucideIcon; label: Translat
   { value: "general", icon: Settings2, label: "worldSettings.sections.general" },
   { value: "types", icon: Shapes, label: "worldSettings.sections.types" },
   { value: "media", icon: Images, label: "worldSettings.sections.media" },
+  { value: "theme", icon: Palette, label: "worldSettings.sections.theme" },
   { value: "preferences", icon: SlidersHorizontal, label: "worldSettings.sections.preferences" },
 ];
 
@@ -29,10 +38,13 @@ function Panel({ value, children }: { value: WorldSettingsSection; children: Rea
   const { t } = useTranslation();
   const label = SECTIONS.find((section) => section.value === value)?.label;
   return (
-    <TabsContent value={value} className="flex min-h-0 flex-col gap-4 overflow-y-auto p-5">
+    <Tabs.Content
+      value={value}
+      className="flex min-h-0 flex-col gap-4 overflow-y-auto p-5 text-sm outline-none"
+    >
       {label && <h2 className="font-heading text-lg font-bold">{t(label)}</h2>}
       {children}
-    </TabsContent>
+    </Tabs.Content>
   );
 }
 
@@ -78,14 +90,18 @@ export function WorldSettingsDialog({ world }: { world: WorldInfo }) {
 
   return (
     <Dialog open={section !== null} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="glass flex h-[80vh] max-h-[44rem] flex-col gap-0 p-0 sm:max-w-3xl">
+      <DialogContent className="glass flex h-[85vh] max-h-[48rem] flex-col gap-0 p-0 sm:max-w-4xl">
         <div className="border-b border-border px-5 py-3">
           <DialogTitle>{t("worldSettings.title")}</DialogTitle>
           <DialogDescription className="sr-only">
             {t("worldSettings.description", { name: world.name })}
           </DialogDescription>
         </div>
-        <Tabs
+        {/*
+          Radix primitives, not the shadcn wrappers: their vertical styles
+          would also apply to the horizontal tabs of the sections (Theme).
+        */}
+        <Tabs.Root
           orientation="vertical"
           value={section ?? "general"}
           onValueChange={(value) => {
@@ -93,21 +109,21 @@ export function WorldSettingsDialog({ world }: { world: WorldInfo }) {
           }}
           className="grid min-h-0 flex-1 grid-cols-[12rem_minmax(0,1fr)] gap-0"
         >
-          <TabsList
+          <Tabs.List
             aria-label={t("worldSettings.sectionsLabel")}
-            className="w-full items-stretch justify-start gap-0.5 rounded-none border-r border-border bg-transparent p-2"
+            className="flex flex-col gap-0.5 border-r border-border p-2"
           >
             {SECTIONS.map(({ value, icon: Icon, label }) => (
-              <TabsTrigger
+              <Tabs.Trigger
                 key={value}
                 value={value}
-                className="h-9 flex-none justify-start gap-2 px-2.5 data-[state=active]:bg-accent data-[state=active]:shadow-none dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-accent"
+                className="flex h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium text-muted-foreground outline-none transition hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=active]:bg-accent data-[state=active]:text-foreground [&_svg]:size-4 [&_svg]:shrink-0"
               >
-                <Icon />
+                <Icon aria-hidden />
                 {t(label)}
-              </TabsTrigger>
+              </Tabs.Trigger>
             ))}
-          </TabsList>
+          </Tabs.List>
 
           <Panel value="general">
             <GeneralSection world={world} />
@@ -146,10 +162,13 @@ export function WorldSettingsDialog({ world }: { world: WorldInfo }) {
               }}
             />
           </Panel>
+          <Panel value="theme">
+            <ThemeSection world={world} />
+          </Panel>
           <Panel value="preferences">
             <PreferencesSection world={world} />
           </Panel>
-        </Tabs>
+        </Tabs.Root>
       </DialogContent>
     </Dialog>
   );

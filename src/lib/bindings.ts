@@ -22,8 +22,8 @@ export const commands = {
 	/**  Changes the name shown for an asset (its file keeps its hash name). */
 	renameAsset: (id: string, name: string) => typedError<Asset, AppError>(__TAURI_INVOKE("rename_asset", { id, name })),
 	/**
-	 *  Deletes an asset and its file. If it was the world's main image, the
-	 *  world no longer has one.
+	 *  Deletes an asset and its file. If it was the world's main image or theme
+	 *  background, the world no longer uses it.
 	 */
 	deleteAsset: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_asset", { id })),
 	/**  Where an asset is used, to warn before deleting it. */
@@ -143,6 +143,7 @@ export const commands = {
 	description: string,
 	/**  Asset id of the main image, if any. */
 	mainImage: string | null,
+	theme: WorldTheme,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
@@ -159,6 +160,11 @@ export const commands = {
 	 *  nothing is lost. Returns the updated settings.
 	 */
 	deleteWorld: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("delete_world")),
+	/**
+	 *  Sets the theme of the open world (a custom background must be in the
+	 *  media library).
+	 */
+	setWorldTheme: (theme: WorldTheme) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_theme", { theme })),
 	/**  Sets (asset id) or clears (`null`) the main image of the open world. */
 	setWorldMainImage: (assetId: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_main_image", { assetId })),
 };
@@ -238,6 +244,8 @@ export type AssetKind = "image" | "audio" | "other";
 export type AssetUsage = 
 /**  The main image of the open world. */
 { kind: "worldMainImage"; worldName: string } | 
+/**  The background of the open world's custom theme. */
+{ kind: "worldTheme"; worldName: string } | 
 /**  The image of a card. */
 { kind: "cardImage"; cardId: string; cardTitle: string; inTrash: boolean } | 
 /**  In an image block of a card. */
@@ -471,6 +479,7 @@ export type WorldInfo = {
 	description: string,
 	/**  Asset id of the main image, if any. */
 	mainImage: string | null,
+	theme: WorldTheme,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
@@ -485,6 +494,21 @@ export type WorldPatch = {
 	genre?: Genre | null,
 	description?: string | null,
 };
+
+export type WorldTheme = 
+/**  The app's look: the main image as background, the ochre accent. */
+{ kind: "default" } | 
+/**
+ *  A theme shipped with the app, by id (`dawn`, `forest`…). The front
+ *  shows an id it does not know as the default theme.
+ */
+{ kind: "preset"; id: string } | 
+/**  The user's own theme. */
+{ kind: "custom"; 
+/**  Asset id of the background image; `None`: the main image. */
+background: string | null; 
+/**  Accent color, `#rrggbb` in lower case. */
+accent: string };
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {

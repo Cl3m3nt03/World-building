@@ -16,6 +16,7 @@ const WORLD: WorldInfo = {
   genre: "scienceFiction",
   description: "",
   mainImage: null,
+  theme: { kind: "default" },
   path: "C:\\Mondes\\Eldefleur",
   schemaVersion: 5,
   createdAt: "2026-09-26T10:00:00Z",
@@ -193,13 +194,15 @@ test("world settings and the description prompt open the world settings", async 
   expect(useUiStore.getState().worldSettings).toBe("general");
 });
 
-test("types opens the card types screen; theme is marked unavailable", async () => {
+test("types opens the card types screen; theme opens the theme settings", async () => {
   world = { ...WORLD, description: "Un monde de canaux." };
   await renderHome();
 
-  expect((await screen.findByRole("button", { name: "Thème" })).getAttribute("aria-disabled")).toBe(
-    "true",
-  );
+  fireEvent.click(await screen.findByRole("button", { name: "Thème" }));
+  expect(useUiStore.getState().worldSettings).toBe("theme");
+  act(() => useUiStore.setState({ worldSettings: null }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
   expect(screen.getByText("Un monde de canaux.")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Types" }));
   expect(useUiStore.getState().cardTypesOpen).toBe(true);
