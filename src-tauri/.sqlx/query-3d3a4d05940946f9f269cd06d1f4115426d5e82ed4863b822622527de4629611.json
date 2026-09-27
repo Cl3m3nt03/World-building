@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE cards SET type_id = ?2\n         WHERE type_id = ?1 OR type_id IN (SELECT id FROM card_types WHERE parent_id = ?1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "3d3a4d05940946f9f269cd06d1f4115426d5e82ed4863b822622527de4629611"
+}

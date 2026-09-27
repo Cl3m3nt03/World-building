@@ -1,3 +1,4 @@
+import { Outlet } from "@tanstack/react-router";
 import { LayoutGrid, type LucideIcon, Map as MapIcon, Share2, SquareUser } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
@@ -5,28 +6,43 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CreateCardMenu } from "@/features/cards";
 import type { TranslationKey } from "@/i18n";
 
-/** Document kinds and the milestone that brings each one (docs/roadmap). */
-const CREATE_TILES: { icon: LucideIcon; label: TranslationKey; milestone: string }[] = [
-  { icon: SquareUser, label: "workspace.create.card", milestone: "M2" },
+/** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
+const SOON_TILES: { icon: LucideIcon; label: TranslationKey; milestone: string }[] = [
   { icon: MapIcon, label: "workspace.create.map", milestone: "M4" },
   { icon: LayoutGrid, label: "workspace.create.canvas", milestone: "M7" },
   { icon: Share2, label: "workspace.create.graph", milestone: "M5" },
 ];
 
+const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
+
 /**
  * Empty-workspace prompt: "Start with…" and one tile per document kind.
- * Tiles stay visible but are marked unavailable until their module exists,
- * so nothing clickable silently does nothing.
+ * A card is created from its type menu; kinds whose module does not exist
+ * yet stay visible but are marked unavailable, so nothing clickable
+ * silently does nothing.
  */
-function StartWith() {
+export function StartWith() {
   const { t } = useTranslation();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
       <div className="flex gap-3">
-        {CREATE_TILES.map(({ icon: Icon, label, milestone }) => (
+        <div className="flex flex-col items-center gap-1.5">
+          <CreateCardMenu>
+            <Button
+              variant="secondary"
+              aria-label={t("workspace.create.card")}
+              className={TILE_CLASS}
+            >
+              <SquareUser />
+            </Button>
+          </CreateCardMenu>
+          <span className="text-xs text-muted-foreground">{t("workspace.create.card")}</span>
+        </div>
+        {SOON_TILES.map(({ icon: Icon, label, milestone }) => (
           <div key={label} className="flex flex-col items-center gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -36,7 +52,7 @@ function StartWith() {
                   aria-disabled
                   aria-describedby={`${label}-soon`}
                   onClick={(event) => event.preventDefault()}
-                  className="glass size-12 cursor-not-allowed rounded-lg opacity-60 [&_svg:not([class*='size-'])]:size-5"
+                  className={`${TILE_CLASS} cursor-not-allowed opacity-60`}
                 >
                   <Icon />
                 </Button>
@@ -79,7 +95,7 @@ export function WorldWorkspace() {
       />
       <ResizablePanel>
         <main className="h-full">
-          <StartWith />
+          <Outlet />
         </main>
       </ResizablePanel>
     </ResizablePanelGroup>

@@ -41,6 +41,8 @@ beforeEach(() => {
     switch (command) {
       case "list_card_types":
         return types;
+      case "count_type_cards":
+        return 0;
       case "create_card_type": {
         const { cardType: next } = payload as { cardType: NewCardType };
         const created = cardType(`new-${types.length}`, next.name, next);
@@ -196,10 +198,33 @@ test("deleting a type asks first and mentions its subtypes", async () => {
     await screen.findByText("Le type et ses 2 sous-types sont supprimés de ce monde."),
   ).toBeTruthy();
   const buttons = screen.getAllByRole("button", { name: "Supprimer" });
-  fireEvent.click(buttons[buttons.length - 1] as HTMLElement);
+  const confirm = buttons[buttons.length - 1] as HTMLButtonElement;
+  // Enabled once the number of cards of the type is known (none here).
+  await waitFor(() => expect(confirm.disabled).toBe(false));
+  fireEvent.click(confirm);
 
   await waitFor(() =>
     expect(callsOf("delete_card_type")[0]?.payload).toEqual({ id: "place", moveCardsTo: null }),
   );
   await waitFor(() => expect(screen.queryByRole("button", { name: "Lieu" })).toBeNull());
+});
+
+test("a type with cards asks where they go before deleting", async () => {
+  mockIPC((command, payload) => {
+    calls.push({ command, payload });
+    if (command === "list_card_types") return types;
+    if (command === "count_type_cards") return 3;
+    return null;
+  });
+  renderDialog();
+  fireEvent.click(await screen.findByRole("button", { name: "Lieu" }));
+  await waitFor(() =>
+    expect((screen.getByLabelText("Nom du type") as HTMLInputElement).value).toBe("Lieu"),
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
+  expect(await screen.findByText("Ce type a 3 cartes. Où les déplacer ?")).toBeTruthy();
+  const buttons = screen.getAllByRole("button", { name: "Supprimer" });
+  // No destination chosen yet: nothing can be deleted.
+  expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(true);
 });

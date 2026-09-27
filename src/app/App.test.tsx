@@ -122,16 +122,17 @@ describe("routing", () => {
     expect(router.state.location.pathname).toBe("/");
   });
 
-  test("creation tiles say they are not available yet instead of doing nothing", async () => {
+  test("creation tiles not available yet say so instead of doing nothing", async () => {
     const router = await renderAt("/world/demo/world");
-    const card = screen.getByRole("button", { name: "Carte" });
-    expect(card.getAttribute("aria-disabled")).toBe("true");
-    expect(card.getAttribute("aria-describedby")).toBeTruthy();
-    expect(document.getElementById(card.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
-      "Bientôt disponible : arrive avec M2",
+    const map = screen.getByRole("button", { name: "Map" });
+    expect(map.getAttribute("aria-disabled")).toBe("true");
+    expect(document.getElementById(map.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
+      "Bientôt disponible : arrive avec M4",
     );
-    fireEvent.click(card);
+    fireEvent.click(map);
     expect(router.state.location.pathname).toBe("/world/demo/world");
+    // Cards exist since M2: their tile is a real button.
+    expect(screen.getByRole("button", { name: "Carte" }).getAttribute("aria-disabled")).toBeNull();
   });
 
   test("the Wiki and Quill tabs explain what is coming", async () => {

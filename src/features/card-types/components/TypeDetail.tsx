@@ -22,12 +22,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { CanvasFormat, CardType, Orientation } from "@/lib/bindings";
 import { colorLabel, TYPE_COLORS, typeColor } from "../colors";
 import {
   useCreateCardType,
   useDeleteCardType,
   useDuplicateCardType,
+  useTypeCardCount,
   useUpdateCardType,
 } from "../hooks/useCardTypes";
 import { TYPE_ICON_NAMES, typeIcon } from "../icons";
@@ -42,6 +50,8 @@ type TypeDetailProps = {
   subtypes: CardType[];
   /** The type `type` is a subtype of, if any. */
   parent: CardType | undefined;
+  /** Every type and subtype, to choose where cards go when deleting. */
+  allTypes: CardType[];
   onSelect: (id: string | null) => void;
 };
 
@@ -58,7 +68,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** Right side of the types screen: everything about one type or subtype. */
-export function TypeDetail({ type, subtypes, parent, onSelect }: TypeDetailProps) {
+export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeDetailProps) {
   const { t } = useTranslation();
   const update = useUpdateCardType();
   const duplicate = useDuplicateCardType();
@@ -309,6 +319,7 @@ export function TypeDetail({ type, subtypes, parent, onSelect }: TypeDetailProps
       <DeleteTypeDialog
         type={deleting ? type : null}
         subtypeCount={subtypes.length}
+        allTypes={allTypes}
         onClose={() => setDeleting(false)}
         onDeleted={() => onSelect(parent?.id ?? null)}
       />
@@ -319,16 +330,35 @@ export function TypeDetail({ type, subtypes, parent, onSelect }: TypeDetailProps
 function DeleteTypeDialog({
   type,
   subtypeCount,
+  allTypes,
   onClose,
   onDeleted,
 }: {
   type: CardType | null;
   subtypeCount: number;
+  allTypes: CardType[];
   onClose: () => void;
   onDeleted: () => void;
 }) {
   const { t } = useTranslation();
   const remove = useDeleteCardType();
+  const cardCount = useTypeCardCount(type?.id ?? null);
+  const [destination, setDestination] = useState<string | null>(null);
+  const destinationId = useId();
+  const count = cardCount.data ?? 0;
+  // Every other type or subtype, but not the ones being deleted.
+  const candidates = allTypes.filter(
+    (candidate) => type && candidate.id !== type.id && candidate.parentId !== type.id,
+  );
+  const label = (candidate: CardType) => {
+    const owner = allTypes.find((other) => other.id === candidate.parentId);
+    return owner ? `${owner.name} › ${candidate.name}` : candidate.name;
+  };
+
+  useEffect(() => {
+    if (type) setDestination(null);
+  }, [type]);
+
   return (
     <Dialog
       open={type !== null}
@@ -348,6 +378,29 @@ function DeleteTypeDialog({
               : t("cardTypes.deleteDescription")}
           </DialogDescription>
         </DialogHeader>
+        {count > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={destinationId} className="text-sm">
+              {t("cardTypes.deleteCards", { count })}
+            </label>
+            <Select value={destination ?? ""} onValueChange={setDestination}>
+              <SelectTrigger
+                id={destinationId}
+                className="w-full"
+                aria-label={t("cardTypes.moveTo")}
+              >
+                <SelectValue placeholder={t("cardTypes.moveTo")} />
+              </SelectTrigger>
+              <SelectContent>
+                {candidates.map((candidate) => (
+                  <SelectItem key={candidate.id} value={candidate.id}>
+                    {label(candidate)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         {remove.isError && <AppErrorMessage error={remove.error} />}
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -355,11 +408,11 @@ function DeleteTypeDialog({
           </Button>
           <Button
             variant="destructive"
-            disabled={remove.isPending}
+            disabled={remove.isPending || cardCount.isPending || (count > 0 && !destination)}
             onClick={() => {
               if (!type) return;
               remove.mutate(
-                { id: type.id, moveCardsTo: null },
+                { id: type.id, moveCardsTo: count > 0 ? destination : null },
                 {
                   onSuccess: () => {
                     onClose();

@@ -10,8 +10,9 @@ import {
 } from "@tanstack/react-router";
 import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
-import { ComingSoon, WorldWorkspace } from "@/app/shell/Workspace";
+import { ComingSoon, StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
+import { CardPage } from "@/features/cards";
 import { HomeScreen } from "@/features/home";
 import { MediaLibraryScreen } from "@/features/media";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
@@ -23,6 +24,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *                              → redirects to /world/$worldId/home
  *   /world/$worldId/home       Home tab
  *   /world/$worldId/world      World tab (sidebar + workspace)
+ *     /card/$cardId            a card, in the workspace
  *   /world/$worldId/wiki       Wiki tab
  *   /world/$worldId/quill      Quill tab
  *   /world/$worldId/media      Media library (reached from Home)
@@ -80,6 +82,19 @@ const worldTabRoute = createRoute({
   component: WorldWorkspace,
 });
 
+/** World tab with no document open: "Start with…". */
+const worldTabIndexRoute = createRoute({
+  getParentRoute: () => worldTabRoute,
+  path: "/",
+  component: StartWith,
+});
+
+const cardRoute = createRoute({
+  getParentRoute: () => worldTabRoute,
+  path: "card/$cardId",
+  component: CardPage,
+});
+
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
@@ -107,7 +122,7 @@ export const routeTree = rootRoute.addChildren([
   worldRoute.addChildren([
     worldIndexRoute,
     homeRoute,
-    worldTabRoute,
+    worldTabRoute.addChildren([worldTabIndexRoute, cardRoute]),
     wikiRoute,
     quillRoute,
     mediaRoute,

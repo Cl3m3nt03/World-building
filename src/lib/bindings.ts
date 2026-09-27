@@ -49,6 +49,19 @@ export const commands = {
 	reorderCardTypes: (ids: string[]) => typedError<null, AppError>(__TAURI_INVOKE("reorder_card_types", { ids })),
 	/**  Deletes a type and its subtypes; their cards move to `moveCardsTo`. */
 	deleteCardType: (id: string, moveCardsTo: string | null) => typedError<null, AppError>(__TAURI_INVOKE("delete_card_type", { id, moveCardsTo })),
+	/**
+	 *  Creates a card of a type (or subtype). Rename it with `rename_document`,
+	 *  put it in the trash with `trash_document`.
+	 */
+	createCard: (typeId: string, title: string) => typedError<Card, AppError>(__TAURI_INVOKE("create_card", { typeId, title })),
+	getCard: (id: string) => typedError<Card, AppError>(__TAURI_INVOKE("get_card", { id })),
+	setCardType: (id: string, typeId: string) => typedError<Card, AppError>(__TAURI_INVOKE("set_card_type", { id, typeId })),
+	/**  Sets (asset id) or removes (`null`) the card's image. */
+	setCardImage: (id: string, assetId: string | null) => typedError<Card, AppError>(__TAURI_INVOKE("set_card_image", { id, assetId })),
+	/**  Replaces the card's aliases (trimmed, without duplicates). */
+	setCardAliases: (id: string, aliases: string[]) => typedError<Card, AppError>(__TAURI_INVOKE("set_card_aliases", { id, aliases })),
+	/**  Number of cards of a type and its subtypes. */
+	countTypeCards: (typeId: string) => typedError<number, AppError>(__TAURI_INVOKE("count_type_cards", { typeId })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -194,6 +207,23 @@ export type CanvasFormat =
 "tall" | 
 /**  Wide image. */
 "wide";
+
+export type Card = {
+	/**  The card's document id. */
+	id: string,
+	title: string,
+	/**  Type or subtype; `null` only if its type vanished. */
+	typeId: string | null,
+	/**  Asset id of the card's image. */
+	imageAssetId: string | null,
+	/**  Other names, used by search and mentions. */
+	aliases: string[],
+	/**  RFC 3339 dates. */
+	createdAt: string,
+	updatedAt: string,
+	/**  Set while the card is in the trash. */
+	trashedAt: string | null,
+};
 
 export type CardType = {
 	id: string,

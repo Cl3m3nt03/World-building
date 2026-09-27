@@ -23,6 +23,9 @@ type UiState = {
   /** Card types screen (Home › Types, and "New type" when creating a card). */
   cardTypesOpen: boolean;
   setCardTypesOpen: (open: boolean) => void;
+  /** A card just created: its page opens with the title selected. */
+  focusCardTitle: string | null;
+  setFocusCardTitle: (cardId: string | null) => void;
 };
 
 /**
@@ -49,4 +52,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setWorldPanelOpen: (worldPanelOpen) => set({ worldPanelOpen }),
   cardTypesOpen: false,
   setCardTypesOpen: (cardTypesOpen) => set({ cardTypesOpen }),
+  focusCardTitle: null,
+  setFocusCardTitle: (focusCardTitle) => set({ focusCardTitle }),
 }));

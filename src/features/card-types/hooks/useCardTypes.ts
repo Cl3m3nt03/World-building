@@ -50,3 +50,12 @@ export function useDeleteCardType() {
     onSuccess: invalidate,
   });
 }
+
+/** Number of cards of a type and its subtypes (`null`: no request). */
+export function useTypeCardCount(typeId: string | null) {
+  return useQuery({
+    queryKey: [...cardTypeKeys.all(), "cardCount", typeId],
+    queryFn: () => unwrap(commands.countTypeCards(typeId ?? "")),
+    enabled: typeId !== null,
+  });
+}

@@ -210,6 +210,7 @@ export function CardTypesDialog({ open, onOpenChange }: CardTypesDialogProps) {
                 type={selected}
                 subtypes={subtypesOf(selected.id)}
                 parent={parent}
+                allTypes={all}
                 onSelect={setSelectedId}
               />
             ) : (
