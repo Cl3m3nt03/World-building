@@ -105,11 +105,12 @@ test("world settings and the description prompt open the world panel", async () 
   expect(useUiStore.getState().worldPanelOpen).toBe(true);
 });
 
-test("types and theme are shown but marked unavailable", async () => {
+test("types opens the card types screen; theme is marked unavailable", async () => {
+  useUiStore.setState({ cardTypesOpen: false });
   await renderHome({ ...WORLD, description: "Un monde de canaux." });
 
-  const types = await screen.findByRole("button", { name: "Types" });
-  expect(types.getAttribute("aria-disabled")).toBe("true");
+  fireEvent.click(await screen.findByRole("button", { name: "Types" }));
+  expect(useUiStore.getState().cardTypesOpen).toBe(true);
   expect(screen.getByRole("button", { name: "Thème" }).getAttribute("aria-disabled")).toBe("true");
   expect(screen.getByText("Un monde de canaux.")).toBeTruthy();
 });

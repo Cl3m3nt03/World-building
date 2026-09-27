@@ -90,6 +90,7 @@ export function HomeScreen() {
   const { data: world } = useCurrentWorld();
   const assets = useAssets({ kind: null, search: null });
   const openWorldPanel = useUiStore((state) => state.setWorldPanelOpen);
+  const openCardTypes = useUiStore((state) => state.setCardTypesOpen);
 
   if (!world) return null;
   const fileCount = assets.data?.length;
@@ -149,11 +150,14 @@ export function HomeScreen() {
 
         <Section title={t("home.manage")} className="self-start">
           <nav aria-label={t("home.manage")} className="-mx-2 flex flex-col">
-            <SoonEntry
-              icon={Shapes}
-              label="home.types"
-              soon={t("placeholder.comingIn", { milestone: "M2" })}
-            />
+            <button
+              type="button"
+              onClick={() => openCardTypes(true)}
+              className={cn(ENTRY_CLASS, "text-left hover:bg-secondary")}
+            >
+              <Shapes aria-hidden className="size-4" />
+              {t("home.types")}
+            </button>
             <Link
               to="/world/$worldId/media"
               params={{ worldId: world.id }}

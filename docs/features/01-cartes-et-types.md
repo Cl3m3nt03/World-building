@@ -60,6 +60,8 @@ D'après les captures du board (dialogue « Card Types ») :
 - Modifier une propriété du type affiche un bandeau **« Appliquer les changements à toutes les cartes de ce type ? »** avec « Ignorer » et « Oui » (texte du board : « I will apply changes to all cards of this type »).
 - Une propriété s'édite dans une petite fenêtre : nom, nature (Texte, Nombre, Lien…) et suppression.
 
+**Réalisé en M2 (2.3)** : l'écran s'ouvre depuis Home › Gérer › Types. La liste se filtre par nom (un sous-type trouvé s'affiche sous son type) ; « + » crée un type « Nouveau type » aussitôt sélectionné. Le détail permet de changer l'icône (grille d'icônes), le nom (enregistré sans bouton ; un nom vide n'est jamais enregistré), la couleur (neuf couleurs, lisibles dans les deux thèmes), de dupliquer le type avec ses sous-types (« Nom (copie) ») et de le supprimer après confirmation. Les sous-types s'ajoutent par leur nom et reprennent l'icône et la couleur du type. L'orientation (portrait, paysage) et le format canvas (compact, standard, haut, large) sont des groupes de tuiles, au clavier avec les flèches. Les propriétés arrivent avec 2.7, et le choix du type de destination des cartes lors d'une suppression avec 2.4.
+
 ### Réglages de carte par défaut
 
 Chaque type définit des réglages appliqués à la création de chaque nouvelle carte de ce type (texte du board : « default settings that act like a template for each card you create ») :
