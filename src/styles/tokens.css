@@ -24,6 +24,17 @@
   --bz-accent-foreground: #fffaf0;
   --bz-danger: #c93a3f;
 
+  /* Card type colors (icons, markers). Readable on the surfaces of each theme. */
+  --bz-type-red: #b8323a;
+  --bz-type-orange: #b75a14;
+  --bz-type-amber: #946400;
+  --bz-type-green: #3a7d2c;
+  --bz-type-teal: #16786f;
+  --bz-type-blue: #2b62b8;
+  --bz-type-violet: #6d4bc0;
+  --bz-type-pink: #b33a7a;
+  --bz-type-slate: #5b6475;
+
   --bz-radius-sm: 6px;
   --bz-radius-md: 10px;
   --bz-radius-lg: 14px;
@@ -50,6 +61,16 @@
   --bz-accent: #c8912e;
   --bz-accent-foreground: #1a1206;
   --bz-danger: #e5484d;
+
+  --bz-type-red: #f07178;
+  --bz-type-orange: #f29a5c;
+  --bz-type-amber: #e6b450;
+  --bz-type-green: #8bc97a;
+  --bz-type-teal: #5fcdc0;
+  --bz-type-blue: #7aa7f5;
+  --bz-type-violet: #b39af5;
+  --bz-type-pink: #ef8fc4;
+  --bz-type-slate: #a3abbd;
 }
 
 /* Transparency off (app setting) or requested by the OS: opaque surfaces, no blur. */

@@ -20,6 +20,9 @@ type UiState = {
   /** Panel of the open world (top bar, and "Settings" on the Home tab). */
   worldPanelOpen: boolean;
   setWorldPanelOpen: (open: boolean) => void;
+  /** Card types screen (Home › Types, and "New type" when creating a card). */
+  cardTypesOpen: boolean;
+  setCardTypesOpen: (open: boolean) => void;
 };
 
 /**
@@ -44,4 +47,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setRadioMode: (radioMode) => set({ radioMode }),
   worldPanelOpen: false,
   setWorldPanelOpen: (worldPanelOpen) => set({ worldPanelOpen }),
+  cardTypesOpen: false,
+  setCardTypesOpen: (cardTypesOpen) => set({ cardTypesOpen }),
 }));
