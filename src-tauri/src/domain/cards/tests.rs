@@ -129,6 +129,50 @@ async fn list_separates_live_cards_from_the_trash() {
 }
 
 #[tokio::test]
+async fn recent_documents_and_counts_by_type() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let place = fx.new_type("Lieu", None).await;
+    let frodo = create(fx.pool(), &character, "Frodon").await.unwrap();
+    let sam = create(fx.pool(), &character, "Sam").await.unwrap();
+    let shire = create(fx.pool(), &place, "La Comté").await.unwrap();
+    let image = fx.image().await;
+    set_image(fx.pool(), &shire.id, Some(&image)).await.unwrap();
+
+    // Never opened: not recent.
+    assert!(documents::recent(fx.pool(), 10).await.unwrap().is_empty());
+
+    for card in [&frodo, &shire, &sam] {
+        documents::mark_opened(fx.pool(), &card.id).await.unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    }
+    documents::trash(fx.pool(), &sam.id).await.unwrap();
+
+    let recent = documents::recent(fx.pool(), 10).await.unwrap();
+    let titles: Vec<&str> = recent.iter().map(|d| d.title.as_str()).collect();
+    assert_eq!(titles, ["La Comté", "Frodon"]);
+    assert_eq!(recent[0].image_asset_id.as_deref(), Some(image.as_str()));
+    assert_eq!(recent[0].type_id.as_deref(), Some(place.as_str()));
+    assert_eq!(documents::recent(fx.pool(), 1).await.unwrap().len(), 1);
+    assert!(documents::mark_opened(fx.pool(), "missing").await.is_err());
+
+    let mut counts = count_by_type(fx.pool()).await.unwrap();
+    counts.sort_by(|a, b| a.type_id.cmp(&b.type_id));
+    let mut expected = vec![
+        TypeCount {
+            type_id: character.clone(),
+            count: 1,
+        },
+        TypeCount {
+            type_id: place.clone(),
+            count: 1,
+        },
+    ];
+    expected.sort_by(|a, b| a.type_id.cmp(&b.type_id));
+    assert_eq!(counts, expected);
+}
+
+#[tokio::test]
 async fn a_card_needs_an_existing_type() {
     let fx = Fixture::new().await;
     assert!(create(fx.pool(), "no-such-type", "Gandalf").await.is_err());

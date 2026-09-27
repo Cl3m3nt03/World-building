@@ -30,6 +30,10 @@ export const commands = {
 	assetUsages: (id: string) => typedError<AssetUsage[], AppError>(__TAURI_INVOKE("asset_usages", { id })),
 	/**  Documents of the open world, live or in the trash, by title. */
 	listDocuments: (filter: DocumentFilter) => typedError<Document[], AppError>(__TAURI_INVOKE("list_documents", { filter })),
+	/**  Records that a document was opened (recent documents on Home). */
+	markDocumentOpened: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("mark_document_opened", { id })),
+	/**  Documents opened most recently, not in the trash (at most `limit`). */
+	recentDocuments: (limit: number) => typedError<RecentDocument[], AppError>(__TAURI_INVOKE("recent_documents", { limit })),
 	renameDocument: (id: string, title: string) => typedError<Document, AppError>(__TAURI_INVOKE("rename_document", { id, title })),
 	/**  Puts a document in the world's trash, from where it can be restored. */
 	trashDocument: (id: string) => typedError<Document, AppError>(__TAURI_INVOKE("trash_document", { id })),
@@ -64,6 +68,8 @@ export const commands = {
 	setCardAliases: (id: string, aliases: string[]) => typedError<Card, AppError>(__TAURI_INVOKE("set_card_aliases", { id, aliases })),
 	/**  Number of cards of a type and its subtypes. */
 	countTypeCards: (typeId: string) => typedError<number, AppError>(__TAURI_INVOKE("count_type_cards", { typeId })),
+	/**  Number of live cards per type or subtype. */
+	countCardsByType: () => typedError<TypeCount[], AppError>(__TAURI_INVOKE("count_cards_by_type")),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -315,6 +321,18 @@ export type RadioMode =
 /**  Picks a random track. */
 "shuffle";
 
+/**  A document opened recently, for the Home tab. */
+export type RecentDocument = {
+	id: string,
+	kind: DocumentKind,
+	title: string,
+	/**  RFC 3339. */
+	openedAt: string,
+	/**  For a card: its image and type. */
+	imageAssetId: string | null,
+	typeId: string | null,
+};
+
 export type RecentWorld = {
 	/**  Absolute path of the world folder. */
 	path: string,
@@ -335,6 +353,12 @@ export type TemplateSection = {
 };
 
 export type Theme = "light" | "dark" | "system";
+
+/**  How many live cards a type (or subtype) has. */
+export type TypeCount = {
+	typeId: string,
+	count: number,
+};
 
 /**  A world as seen by the front. */
 export type WorldInfo = {

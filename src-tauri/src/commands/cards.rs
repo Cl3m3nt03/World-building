@@ -1,7 +1,7 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
-use crate::domain::cards::{self, Card};
+use crate::domain::cards::{self, Card, TypeCount};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -76,6 +76,13 @@ pub async fn set_card_aliases(
     aliases: Vec<String>,
 ) -> AppResult<Card> {
     cards::set_aliases(&pool(&state, "set_card_aliases").await?, &id, &aliases).await
+}
+
+/// Number of live cards per type or subtype.
+#[tauri::command]
+#[specta::specta]
+pub async fn count_cards_by_type(state: State<'_, AppState>) -> AppResult<Vec<TypeCount>> {
+    cards::count_by_type(&pool(&state, "count_cards_by_type").await?).await
 }
 
 /// Number of cards of a type and its subtypes.

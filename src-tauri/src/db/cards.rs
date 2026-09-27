@@ -113,6 +113,22 @@ pub async fn count_of_type(pool: &SqlitePool, type_id: &str) -> AppResult<i64> {
     .await?)
 }
 
+/// Number of live cards per type (or subtype) id.
+pub async fn count_by_type(pool: &SqlitePool) -> AppResult<Vec<(String, i64)>> {
+    let rows = sqlx::query!(
+        r#"SELECT c.type_id AS "type_id!", COUNT(*) AS "count!: i64"
+           FROM cards c JOIN documents d ON d.id = c.document_id
+           WHERE d.trashed_at IS NULL AND c.type_id IS NOT NULL
+           GROUP BY c.type_id"#
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.type_id, row.count))
+        .collect())
+}
+
 /// Moves the cards of the type `from` and of its subtypes to the type `to`.
 pub async fn move_type(tx: &mut Transaction<'_, Sqlite>, from: &str, to: &str) -> AppResult<()> {
     sqlx::query!(

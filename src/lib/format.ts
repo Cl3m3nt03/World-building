@@ -14,3 +14,30 @@ export function formatBytes(bytes: number, language: string): string {
     maximumFractionDigits: unit === 0 ? 0 : 1,
   }).format(value);
 }
+
+const RELATIVE_STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["second", 60],
+  ["minute", 60],
+  ["hour", 24],
+  ["day", 7],
+  ["week", 4.35],
+  ["month", 12],
+  ["year", Number.POSITIVE_INFINITY],
+];
+
+/** "il y a 38 min" / "38 min. ago": how long ago `iso` was, in the given language. */
+export function formatRelative(iso: string, language: string, now: Date = new Date()): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  let value = (date.getTime() - now.getTime()) / 1000;
+  for (const [unit, size] of RELATIVE_STEPS) {
+    if (Math.abs(value) < size) {
+      return new Intl.RelativeTimeFormat(language, { numeric: "auto", style: "short" }).format(
+        Math.round(value),
+        unit,
+      );
+    }
+    value /= size;
+  }
+  return "";
+}

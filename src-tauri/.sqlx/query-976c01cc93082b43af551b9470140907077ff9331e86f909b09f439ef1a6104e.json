@@ -1,0 +1,33 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.type_id AS \"type_id!\", COUNT(*) AS \"count!: i64\"\n           FROM cards c JOIN documents d ON d.id = c.document_id\n           WHERE d.trashed_at IS NULL AND c.type_id IS NOT NULL\n           GROUP BY c.type_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "type_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "type_id"
+          }
+        }
+      },
+      {
+        "name": "count!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "976c01cc93082b43af551b9470140907077ff9331e86f909b09f439ef1a6104e"
+}
