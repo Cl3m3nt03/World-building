@@ -41,6 +41,7 @@ import {
 } from "../hooks/useCardTypes";
 import { TYPE_ICON_NAMES, typeIcon } from "../icons";
 import { ChoiceTiles } from "./ChoiceTiles";
+import { TemplateEditor } from "./TemplateEditor";
 
 /** Delay before a typed name is saved. */
 const SAVE_DELAY_MS = 500;
@@ -279,6 +280,11 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
           </p>
         )}
         <TypeProperties typeId={type.id} types={allTypes} />
+      </Section>
+
+      <Section title={t("templates.title")}>
+        <p className="-mt-1 text-sm text-muted-foreground">{t("templates.hint")}</p>
+        <TemplateEditor type={type} parent={parent} />
       </Section>
 
       <Section title={t("cardTypes.defaults")}>

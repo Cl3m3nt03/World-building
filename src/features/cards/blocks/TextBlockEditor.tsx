@@ -22,6 +22,8 @@ type TextBlockEditorProps = {
    */
   onSlash: (removeLine: () => void) => void;
   autoFocus?: boolean;
+  /** Help question of a guided template section (shown under its title while empty). */
+  prompt?: string | undefined;
 };
 
 /**
@@ -36,6 +38,7 @@ export function TextBlockEditor({
   onChange,
   onSlash,
   autoFocus,
+  prompt,
 }: TextBlockEditorProps) {
   const { t } = useTranslation();
   // Latest callbacks, read by the editor's handlers created once.
@@ -50,7 +53,19 @@ export function TextBlockEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-      Placeholder.configure({ placeholder: t("blocks.textPlaceholder") }),
+      Placeholder.configure({
+        // Every empty line is checked, not only the current one: a template's
+        // help question shows under its title before the line is focused.
+        showOnlyCurrent: false,
+        placeholder: ({ editor: current, node, pos }) => {
+          if (prompt && node.type.name === "paragraph") {
+            const $pos = current.state.doc.resolve(pos);
+            const before = $pos.parent.maybeChild($pos.index() - 1);
+            if (before?.type.name === "heading") return prompt;
+          }
+          return current.isEmpty ? t("blocks.textPlaceholder") : "";
+        },
+      }),
       cardMention((query) => searchMentions(worldRef.current.cards, query, cardId), suggestions),
     ],
     content: doc,

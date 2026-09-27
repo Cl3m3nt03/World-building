@@ -54,6 +54,8 @@ Chaque type peut avoir un template guidé : une liste de sections avec un titre 
 
 Appliquer le template ajoute ces sections comme blocs texte pré-titrés, en place de texte indicatif. Cela ne remplace jamais du contenu déjà écrit. L'application est proposée sur une carte vide et reste disponible à tout moment.
 
+**Réalisé en M2 (2.12)** : le template se modifie dans l'écran des types (section « Template guidé ») : ajouter une section, saisir son titre et sa question d'aide, la monter, la descendre ou la supprimer, sans bouton Enregistrer ; une section sans titre n'est pas gardée. Un sous-type sans template propre utilise celui de son type. Une carte vide propose « Utiliser le template « Personnage » » avec la liste des sections ; ensuite, « … › Appliquer le template » reste disponible. Chaque section devient un bloc texte à la fin de la carte : son titre en intertitre, et la question d'aide en texte indicatif sous le titre, qui disparaît dès qu'on écrit. Une section dont le titre existe déjà comme intertitre dans la carte n'est pas ajoutée à nouveau ; si tout est déjà là, un message le dit.
+
 ## Types et sous-types
 
 - Les types se gèrent depuis Home › Types, ou depuis le menu de création d'une carte (« Nouveau type »).

@@ -24,7 +24,15 @@ import {
   Trash2,
   Type,
 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -35,9 +43,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { TemplateSection } from "@/lib/bindings";
 import { ImageBlockView } from "./ImageBlockView";
 import { type Block, type BlockType, move, newBlock } from "./model";
 import { TextBlockEditor } from "./TextBlockEditor";
+import { templateBlocks } from "./template";
 import { useCardContent, useSaveCardContent } from "./useCardContent";
 
 /** Delay before changes are saved. */
@@ -181,6 +191,7 @@ function SortableBlock({
               removeSlashLine.current = removeLine;
               setSlashOpen(true);
             }}
+            prompt={block.prompt}
           />
         ) : (
           <ImageBlockView block={block} label={label} pickOnMount={focus} onChange={onChange} />
@@ -206,8 +217,27 @@ function SortableBlock({
  * dragging the handle (or with the keyboard: Space on the handle, arrows,
  * Space; or the block menu), delete them. Saved as you type.
  */
-export function BlockEditor({ cardId }: { cardId: string }) {
+export type BlockEditorHandle = {
+  /** Appends the guided template's missing sections (nothing is removed). */
+  applyTemplate: () => void;
+};
+
+export function BlockEditor({
+  cardId,
+  template = [],
+  templateName = "",
+  ref,
+}: {
+  cardId: string;
+  /** The guided template of the card's type (see `effectiveTemplate`). */
+  template?: TemplateSection[];
+  /** Name of the type the template comes from. */
+  templateName?: string;
+  ref?: Ref<BlockEditorHandle>;
+}) {
   const { t } = useTranslation();
+  // Said after applying a template (a polite live region reads it).
+  const [notice, setNotice] = useState("");
   const content = useCardContent(cardId);
   const save = useSaveCardContent(cardId);
   const [blocks, setBlocks] = useState<Block[] | null>(null);
@@ -252,6 +282,21 @@ export function BlockEditor({ cardId }: { cardId: string }) {
     else timer.current = setTimeout(flush, SAVE_DELAY_MS);
   };
 
+  const applyTemplate = () => {
+    const added = templateBlocks(current.current, template);
+    if (added.length === 0) {
+      setNotice(t("templates.nothingToAdd"));
+      return;
+    }
+    setNotice(t("templates.added", { count: added.length }));
+    const first = added[0];
+    if (first) setFocusId(first.id);
+    update((previous) => [...previous, ...added], true);
+  };
+  const applyRef = useRef(applyTemplate);
+  applyRef.current = applyTemplate;
+  useImperativeHandle(ref, () => ({ applyTemplate: () => applyRef.current() }), []);
+
   if (content.isError) return <AppErrorMessage error={content.error} />;
   if (!blocks) return null;
 
@@ -273,13 +318,27 @@ export function BlockEditor({ cardId }: { cardId: string }) {
   return (
     <section aria-label={t("blocks.title")} className="flex flex-col gap-2">
       {blocks.length === 0 ? (
-        <button
-          type="button"
-          onClick={() => insert(0, "text")}
-          className="rounded-lg border border-dashed border-border px-3 py-4 text-left text-sm text-muted-foreground outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          {t("blocks.empty")}
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => insert(0, "text")}
+            className="rounded-lg border border-dashed border-border px-3 py-4 text-left text-sm text-muted-foreground outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {t("blocks.empty")}
+          </button>
+          {template.length > 0 && (
+            <button
+              type="button"
+              onClick={applyTemplate}
+              className="flex flex-col gap-0.5 rounded-lg border border-dashed border-primary/50 px-3 py-3 text-left text-sm outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <span>{t("templates.use", { type: templateName })}</span>
+              <span className="text-xs text-muted-foreground">
+                {template.map((section) => section.title).join(" · ")}
+              </span>
+            </button>
+          )}
+        </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
@@ -316,6 +375,9 @@ export function BlockEditor({ cardId }: { cardId: string }) {
           </SortableContext>
         </DndContext>
       )}
+      <p aria-live="polite" className="text-xs text-muted-foreground empty:hidden">
+        {notice}
+      </p>
       {save.isError && <AppErrorMessage error={save.error} />}
       <BlockTypeMenu onPick={(type) => insert(blocks.length, type)}>
         <Button variant="ghost" size="sm" className="self-start">
