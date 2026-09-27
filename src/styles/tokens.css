@@ -20,8 +20,9 @@
   --bz-border-strong: rgb(60 40 10 / 0.22);
   --bz-text: #1f1a14;
   --bz-text-muted: #6b6155;
-  --bz-accent: #a8741a;
-  --bz-accent-foreground: #fffaf0;
+  /* The open world's theme may set its own accent (features/world-theme). */
+  --bz-accent: var(--bz-world-accent-light, #a8741a);
+  --bz-accent-foreground: var(--bz-world-accent-foreground-light, #fffaf0);
   --bz-danger: #c93a3f;
 
   /* Card type colors (icons, markers). Readable on the surfaces of each theme. */
@@ -58,8 +59,8 @@
   --bz-border-strong: rgb(255 255 255 / 0.16);
   --bz-text: #e8e9ee;
   --bz-text-muted: #9095a6;
-  --bz-accent: #c8912e;
-  --bz-accent-foreground: #1a1206;
+  --bz-accent: var(--bz-world-accent-dark, #c8912e);
+  --bz-accent-foreground: var(--bz-world-accent-foreground-dark, #1a1206);
   --bz-danger: #e5484d;
 
   --bz-type-red: #f07178;

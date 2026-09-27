@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-world-theme"
+description = "Enables the set_world_theme command without any pre-configured scope."
+commands.allow = ["set_world_theme"]
+
+[[permission]]
+identifier = "deny-set-world-theme"
+description = "Denies the set_world_theme command without any pre-configured scope."
+commands.deny = ["set_world_theme"]

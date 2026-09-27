@@ -24,6 +24,9 @@ use crate::db;
 use crate::error::{AppError, AppResult};
 
 pub mod assets;
+pub mod theme;
+
+pub use theme::WorldTheme;
 
 pub const WORLD_FILE: &str = "world.json";
 pub const DB_FILE: &str = "world.db";
@@ -51,8 +54,8 @@ pub enum Genre {
 
 /// Content of `world.json`.
 ///
-/// Fields added after 0.1.0 (`genre`, `description`, `mainImage`) are
-/// optional when reading, so older worlds still open.
+/// Fields added after 0.1.0 (`genre`, `description`, `mainImage`, `theme`)
+/// are optional when reading, so older worlds still open.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldFile {
@@ -66,6 +69,13 @@ pub struct WorldFile {
     /// Asset id (`<sha256>.<ext>`) of the main image, in `assets/`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub main_image: Option<String>,
+    /// Absent: the default theme. Read tolerantly (see `theme`).
+    #[serde(
+        default,
+        deserialize_with = "theme::deserialize_lenient",
+        skip_serializing_if = "WorldTheme::is_default"
+    )]
+    pub theme: WorldTheme,
     pub schema_version: i64,
     #[serde(with = "time::serde::rfc3339")]
     pub created_at: OffsetDateTime,
@@ -85,6 +95,7 @@ pub struct WorldInfo {
     pub description: String,
     /// Asset id of the main image, if any.
     pub main_image: Option<String>,
+    pub theme: WorldTheme,
     /// Absolute path of the world folder.
     pub path: String,
     pub schema_version: u32,
@@ -109,6 +120,7 @@ impl OpenWorld {
             genre: self.file.genre,
             description: self.file.description.clone(),
             main_image: self.file.main_image.clone(),
+            theme: self.file.theme.clone(),
             path: self.root.display().to_string(),
             schema_version: u32::try_from(self.file.schema_version).unwrap_or(u32::MAX),
             created_at: format_date(self.file.created_at),
@@ -152,6 +164,39 @@ impl OpenWorld {
         let mut file = self.file.clone();
         file.main_image = asset_id;
         self.save(file)
+    }
+
+    /// Sets the theme. A custom background must exist in `assets/`.
+    pub fn set_theme(&mut self, theme: WorldTheme) -> AppResult<()> {
+        let theme = theme.validated()?;
+        if let Some(id) = theme.background() {
+            let path = assets::resolve(&self.assets_dir(), id)?;
+            if !path.is_file() {
+                return Err(AppError::InvalidInput(format!("asset not found: {id}")));
+            }
+        }
+        let mut file = self.file.clone();
+        file.theme = theme;
+        self.save(file)
+    }
+
+    /// The asset `id` was deleted: the world stops using it as its main
+    /// image or theme background (a custom theme then shows the main image).
+    /// Returns whether the main image was cleared.
+    pub fn forget_asset(&mut self, id: &str) -> AppResult<bool> {
+        let mut file = self.file.clone();
+        let main_image = file.main_image.as_deref() == Some(id);
+        if main_image {
+            file.main_image = None;
+        }
+        let background = file.theme.background() == Some(id);
+        if background && let WorldTheme::Custom { background, .. } = &mut file.theme {
+            *background = None;
+        }
+        if main_image || background {
+            self.save(file)?;
+        }
+        Ok(main_image)
     }
 
     fn save(&mut self, mut file: WorldFile) -> AppResult<()> {
@@ -374,6 +419,7 @@ async fn create_in(
         genre,
         description: String::new(),
         main_image: None,
+        theme: WorldTheme::Default,
         schema_version: db::latest_version(migrator),
         created_at: created,
         updated_at: created,

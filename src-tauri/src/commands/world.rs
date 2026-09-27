@@ -10,7 +10,7 @@ use crate::error::{AppError, AppResult};
 use crate::settings::{self, AppSettings, RecentWorld};
 use crate::state::AppState;
 use crate::thumbnails;
-use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch};
+use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch, WorldTheme};
 
 /// Creates a world named `name`, of the given genre, in a new folder inside
 /// `parent_dir` (the folder is named after the world), and opens it.
@@ -115,6 +115,22 @@ pub async fn set_world_main_image(
         tracing::warn!(%error, "cannot save the recent worlds");
     }
     Ok(info)
+}
+
+/// Sets the theme of the open world (a custom background must be in the
+/// media library).
+#[tauri::command]
+#[specta::specta]
+pub async fn set_world_theme(
+    state: State<'_, AppState>,
+    theme: WorldTheme,
+) -> AppResult<WorldInfo> {
+    let mut guard = state.world.lock().await;
+    let world = guard
+        .as_mut()
+        .ok_or_else(|| AppError::NoWorldOpen("set_world_theme".into()))?;
+    world.set_theme(theme)?;
+    Ok(world.info())
 }
 
 /// Makes the cached thumbnail match the world's main image (regenerated when

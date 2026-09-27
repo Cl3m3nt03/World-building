@@ -18,6 +18,7 @@ const WORLD: WorldInfo = {
   genre: "fantasy",
   description: "",
   mainImage: null,
+  theme: { kind: "default" },
   schemaVersion: 1,
   createdAt: "2026-09-26T10:00:00Z",
   lastOpenedAt: "2026-09-26T10:00:00Z",

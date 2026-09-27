@@ -62,6 +62,7 @@
     "allow-current-world",
     "allow-update-world",
     "allow-delete-world",
+    "allow-set-world-theme",
     "allow-set-world-main-image"
   ]
 }

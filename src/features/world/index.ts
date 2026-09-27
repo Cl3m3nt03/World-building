@@ -9,7 +9,9 @@ export {
   useCurrentWorld,
   useDeleteWorld,
   useOpenWorld,
+  usePreviewWorldTheme,
   useSetWorldMainImage,
+  useSetWorldTheme,
   useUpdateWorld,
 } from "./hooks/useWorlds";
 export { thumbnailUrl } from "./thumbnails";
