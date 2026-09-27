@@ -14,7 +14,7 @@
   "settings.theme.system": "System",
   "settings.transparency": "Transparency effects",
   "sidebar.label": "Sidebar",
-  "sidebar.empty": "No documents yet",
+  "sidebar.empty": "No card yet. Right-click here or use \"New card\" to create one.",
   "sidebar.resize": "Resize sidebar",
   "workspace.startWith": "Start with…",
   "workspace.create.card": "Card",
@@ -246,5 +246,18 @@
   "cards.trash": "Move to trash",
   "cardTypes.deleteCards_one": "This type has one card. Where should it go?",
   "cardTypes.deleteCards_other": "This type has {{count}} cards. Where should they go?",
-  "cardTypes.moveTo": "Destination type"
+  "cardTypes.moveTo": "Destination type",
+  "sidebar.cards": "Cards",
+  "sidebar.newCard": "New card",
+  "trash.title": "Trash",
+  "trash.description": "Deleted cards stay here until the trash is emptied.",
+  "trash.empty": "The trash is empty.",
+  "trash.restore": "Restore",
+  "trash.restoreNamed": "Restore {{name}}",
+  "trash.delete": "Delete for good",
+  "trash.deleteNamed": "Delete {{name}} for good",
+  "trash.emptyAction": "Empty the trash",
+  "trash.emptyConfirm_one": "Delete the card in the trash for good?",
+  "trash.emptyConfirm_other": "Delete the {{count}} cards in the trash for good?",
+  "trash.emptyForGood": "Empty for good"
 }

@@ -58,6 +58,15 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Card> {
         .into())
 }
 
+/// Cards of the world, or of its trash, by title.
+pub async fn list(pool: &SqlitePool, trashed: bool) -> AppResult<Vec<Card>> {
+    Ok(queries::list(pool, trashed)
+        .await?
+        .into_iter()
+        .map(Card::from)
+        .collect())
+}
+
 /// Creates a card of the type (or subtype) `type_id`, titled `title`.
 pub async fn create(pool: &SqlitePool, type_id: &str, title: &str) -> AppResult<Card> {
     card_types::get(pool, type_id).await?;

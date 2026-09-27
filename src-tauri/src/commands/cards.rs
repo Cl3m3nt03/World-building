@@ -28,6 +28,13 @@ pub async fn create_card(
     cards::create(&pool(&state, "create_card").await?, &type_id, &title).await
 }
 
+/// Cards of the open world (or of its trash), by title.
+#[tauri::command]
+#[specta::specta]
+pub async fn list_cards(state: State<'_, AppState>, trashed: bool) -> AppResult<Vec<Card>> {
+    cards::list(&pool(&state, "list_cards").await?, trashed).await
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn get_card(state: State<'_, AppState>, id: String) -> AppResult<Card> {

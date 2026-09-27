@@ -75,3 +75,44 @@ export function useTrashCard(id: string) {
       ]),
   });
 }
+
+/** Cards of the world (or of its trash), by title. */
+export function useCardList(trashed: boolean) {
+  return useQuery({
+    queryKey: [...documentKeys.all(), "cards", trashed],
+    queryFn: () => unwrap(commands.listCards(trashed)),
+  });
+}
+
+function useDocumentsChanged() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
+      queryClient.invalidateQueries({ queryKey: cardKeys.all() }),
+    ]);
+}
+
+export function useRestoreDocument() {
+  const changed = useDocumentsChanged();
+  return useMutation({
+    mutationFn: (id: string) => unwrap(commands.restoreDocument(id)),
+    onSuccess: changed,
+  });
+}
+
+export function useDeleteDocumentForever() {
+  const changed = useDocumentsChanged();
+  return useMutation({
+    mutationFn: (id: string) => unwrap(commands.deleteDocument(id)),
+    onSuccess: changed,
+  });
+}
+
+export function useEmptyTrash() {
+  const changed = useDocumentsChanged();
+  return useMutation({
+    mutationFn: () => unwrap(commands.emptyTrash()),
+    onSuccess: changed,
+  });
+}

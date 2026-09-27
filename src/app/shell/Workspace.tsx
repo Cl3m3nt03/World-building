@@ -4,9 +4,8 @@ import { useTranslation } from "react-i18next";
 import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CreateCardMenu } from "@/features/cards";
+import { CardsSidebar, CreateCardMenu } from "@/features/cards";
 import type { TranslationKey } from "@/i18n";
 
 /** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
@@ -83,11 +82,7 @@ export function WorldWorkspace() {
         maxSize={SIDEBAR_WIDTH.max}
         onResize={(size) => setSidebarWidth(size.inPixels)}
       >
-        <aside aria-label={t("sidebar.label")} className="glass flex h-full flex-col rounded-lg">
-          <ScrollArea className="min-h-0 flex-1">
-            <p className="p-4 text-center text-xs text-muted-foreground">{t("sidebar.empty")}</p>
-          </ScrollArea>
-        </aside>
+        <CardsSidebar />
       </ResizablePanel>
       <ResizableHandle
         aria-label={t("sidebar.resize")}

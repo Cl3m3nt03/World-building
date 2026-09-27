@@ -17,6 +17,9 @@ De haut en bas :
 
 La sidebar peut être redimensionnée et repliée. Sa largeur et l'état ouvert/fermé des dossiers sont mémorisés pour chaque monde.
 
+
+**État en M2** : en attendant M3, la sidebar de l'onglet World est une liste simple des cartes du monde, par nom (icône et couleur de leur type). Un clic ouvre la carte, qui est mise en évidence. Un clic droit n'importe où ouvre le menu de création ; en bas, « Nouvelle carte » ouvre le même menu et l'icône **Corbeille** ouvre la corbeille du monde : chaque carte s'y restaure ou s'y supprime définitivement, et « Vider la corbeille » demande une confirmation qui indique le nombre de cartes.
+
 ## Recherche
 
 - La recherche porte sur les noms, les alias et le texte des documents (FTS5).

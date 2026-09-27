@@ -43,13 +43,16 @@ function TitleField({ card }: { card: Card }) {
 
   useEffect(() => setTitle(card.title), [card.title]);
 
-  // A card that was just created opens with its title selected.
+  // A card that was just created opens with its title selected. One frame
+  // later: the creation menu is still closing and would move the caret.
   useEffect(() => {
-    if (focusTitleOf === card.id) {
+    if (focusTitleOf !== card.id) return;
+    const frame = requestAnimationFrame(() => {
       inputRef.current?.focus();
       inputRef.current?.select();
       setFocusTitle(null);
-    }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [focusTitleOf, card.id, setFocusTitle]);
 
   const save = (value: string) => {

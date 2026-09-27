@@ -96,6 +96,8 @@ beforeEach(() => {
         return TYPES;
       case "get_card":
         return cards.get(args.id as string);
+      case "list_cards":
+        return [...cards.values()].filter((card) => (card.trashedAt !== null) === args.trashed);
       case "create_card": {
         const card = newCard("new", args.title as string, args.typeId as string);
         cards.set(card.id, card);
@@ -110,6 +112,16 @@ beforeEach(() => {
         return update(args.id as string, { aliases: args.aliases as string[] });
       case "trash_document":
         return update(args.id as string, { trashedAt: "2026-09-27T11:00:00Z" });
+      case "restore_document":
+        return update(args.id as string, { trashedAt: null });
+      case "delete_document":
+        cards.delete(args.id as string);
+        return null;
+      case "empty_trash": {
+        const trashed = [...cards.values()].filter((card) => card.trashedAt !== null);
+        for (const card of trashed) cards.delete(card.id);
+        return trashed.length;
+      }
       default:
         return undefined;
     }
@@ -220,4 +232,63 @@ test("moving a card to the trash goes back to the empty workspace", async () => 
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
   expect(callsOf("trash_document")[0]?.payload).toEqual({ id: "aragorn" });
+});
+
+test("the sidebar lists the cards and highlights the open one", async () => {
+  cards.set("bree", newCard("bree", "Bree", "city"));
+  await renderAt("/world/demo/world/card/aragorn");
+
+  const list = await screen.findByRole("list", { name: "Cartes" });
+  const links = await waitFor(() => {
+    const found = Array.from(list.querySelectorAll("a"));
+    expect(found).toHaveLength(2);
+    return found;
+  });
+  expect(links.map((link) => link.textContent)).toEqual(["Aragorn", "Bree"]);
+  expect(links[0]?.getAttribute("aria-current")).toBe("page");
+  expect(links[1]?.getAttribute("aria-current")).toBeNull();
+});
+
+test("a right click in the sidebar and the New card button open the creation menu", async () => {
+  await renderAt("/world/demo/world");
+  const sidebar = await screen.findByRole("complementary", { name: "Barre latérale" });
+
+  await act(async () => {
+    fireEvent.contextMenu(sidebar.querySelector("ul, p") as HTMLElement);
+  });
+  expect(await screen.findByRole("menuitem", { name: "Personnage" })).toBeTruthy();
+  await act(async () => {
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+  });
+
+  await openMenu(screen.getByRole("button", { name: "Nouvelle carte" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Lieu" }));
+  });
+  await waitFor(() =>
+    expect(callsOf("create_card")[0]?.payload).toEqual({ typeId: "place", title: "Lieu sans nom" }),
+  );
+});
+
+test("the trash restores, deletes for good and empties after confirmation", async () => {
+  cards.set("gollum", { ...newCard("gollum", "Gollum", "character"), trashedAt: "x" });
+  cards.set("saruman", { ...newCard("saruman", "Saroumane", "character"), trashedAt: "x" });
+  cards.set("smaug", { ...newCard("smaug", "Smaug", "character"), trashedAt: "x" });
+  await renderAt("/world/demo/world");
+
+  fireEvent.click(await screen.findByRole("button", { name: "Corbeille" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Restaurer Gollum" }));
+  await waitFor(() => expect(callsOf("restore_document")[0]?.payload).toEqual({ id: "gollum" }));
+
+  fireEvent.click(screen.getByRole("button", { name: "Supprimer définitivement Saroumane" }));
+  await waitFor(() => expect(callsOf("delete_document")[0]?.payload).toEqual({ id: "saruman" }));
+
+  await screen.findByRole("button", { name: "Restaurer Smaug" });
+  await waitFor(() => expect(screen.queryByText("Saroumane")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "Vider la corbeille" }));
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Supprimer définitivement la carte de la corbeille ?",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Vider définitivement" }));
+  await waitFor(() => expect(callsOf("empty_trash")).toHaveLength(1));
 });

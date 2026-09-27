@@ -85,6 +85,22 @@ pub async fn set_aliases(
     Ok(())
 }
 
+/// Cards in the trash (`trashed = true`) or out of it, by title
+/// (case-insensitive for ASCII).
+pub async fn list(pool: &SqlitePool, trashed: bool) -> AppResult<Vec<CardRow>> {
+    Ok(sqlx::query_as!(
+        CardRow,
+        r#"SELECT d.id AS "id!", d.title, c.type_id, c.image_asset_id, c.aliases,
+                  d.created_at, d.updated_at, d.trashed_at
+           FROM cards c JOIN documents d ON d.id = c.document_id
+           WHERE (d.trashed_at IS NOT NULL) = ?
+           ORDER BY d.title COLLATE NOCASE, d.created_at"#,
+        trashed
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// Number of cards (in the trash or not) of the type `type_id` or of its subtypes.
 pub async fn count_of_type(pool: &SqlitePool, type_id: &str) -> AppResult<i64> {
     Ok(sqlx::query_scalar!(

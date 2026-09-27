@@ -16,7 +16,7 @@ On peut créer une carte de trois façons :
 
 Dans les trois cas, on choisit d'abord un type (ou un sous-type). La carte s'ouvre alors directement en édition, avec un nom par défaut sélectionné pour être renommé.
 
-**Réalisé en M2 (2.4)** : la tuile « Carte » de l'espace vide ouvre le menu de création : les types, leurs sous-types en retrait dessous, puis « Nouveau type » (qui ouvre l'écran des types). La carte créée s'appelle « <Type> sans nom » (« Untitled <Type> » en anglais) et s'ouvre avec ce nom sélectionné. Les boutons de la sidebar et le clic droit arrivent avec 2.5.
+**Réalisé en M2 (2.4)** : la tuile « Carte » de l'espace vide ouvre le menu de création : les types, leurs sous-types en retrait dessous, puis « Nouveau type » (qui ouvre l'écran des types). La carte créée s'appelle « <Type> sans nom » (« Untitled <Type> » en anglais) et s'ouvre avec ce nom sélectionné. Le même menu s'ouvre par le bouton « Nouvelle carte » en bas de la sidebar et par un clic droit n'importe où dans la sidebar (2.5). Après Échap, le focus revient là où il était ; après une création, il reste sur le nom de la nouvelle carte.
 
 ## Anatomie d'une carte
 
