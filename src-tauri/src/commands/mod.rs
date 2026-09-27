@@ -4,5 +4,6 @@
 
 pub mod app;
 pub mod assets;
+pub mod documents;
 pub mod settings;
 pub mod world;
