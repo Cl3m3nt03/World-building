@@ -19,7 +19,7 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 
 ## Coque d'un monde ouvert
 
-- **En haut à gauche** : le monde courant, avec la miniature de son image principale. Un clic ouvre un panneau pour modifier l'image principale (via le sélecteur d'image, ou « Retirer »), le nom, le genre et la description. Tout est enregistré à la volée, sans bouton : le texte une demi-seconde après la dernière frappe, et à la fermeture du panneau. Un nom vide n'est jamais enregistré (l'ancien nom est conservé). Le nom se met à jour aussitôt dans la barre du haut et dans la liste des mondes.
+- **En haut à gauche** : le monde courant, avec la miniature de son image principale. Un clic ouvre les **réglages du monde** (voir plus bas), sur la section Général.
 - **Fond** : l'image principale du monde ouvert, floutée et assombrie (ADR 0003) ; sans image, le dégradé par défaut. Sur la liste des mondes, le fond est la vignette du dernier monde ouvert. Changer l'image principale met aussi à jour la vignette du monde dans la liste.
 - **En haut au centre** : les onglets **Home**, **World**, **Wiki** et **Quill**.
 - **En haut à droite** : la radio, les réglages et le bouton « Mondes ».
@@ -40,7 +40,18 @@ Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles e
 
 **État en M2** : sous le titre, « Reprendre là où vous en étiez » propose la dernière carte ouverte, puis « ou essayer quelque chose de nouveau » avec un bouton « Nouvelle carte » (sans carte ouverte : « Commencez par créer votre première carte »). Les documents récents (8 au plus, hors corbeille) s'affichent en vignettes : image de la carte ou icône de son type, nom et date relative (« il y a 38 min »). Le résumé du monde indique le nombre de cartes et leur répartition par type (les sous-types comptent pour leur type ; les types sans carte sont omis).
 
-**État en M1** : le titre est « Bienvenue dans <nom du monde> », avec l'image principale en miniature. Les documents récents et l'aperçu du graph affichent un état vide qui dit avec quel milestone ils arrivent (M2 et M5). Le bloc « Le monde » résume le genre, le nombre de fichiers de la médiathèque et la description ; sans description, un lien « Ajouter une description… » ouvre le panneau du monde. Dans le bloc Gérer, **Médiathèque** ouvre la médiathèque et **Réglages du monde** ouvre le panneau du monde (le même qu'en haut à gauche) ; **Types** (M2) et **Thème** (à cadrer) sont visibles mais signalés « Bientôt disponible ».
+**État en M1** : le titre est « Bienvenue dans <nom du monde> », avec l'image principale en miniature. Les documents récents et l'aperçu du graph affichent un état vide qui dit avec quel milestone ils arrivent (M2 et M5). Le bloc « Le monde » résume le genre, le nombre de fichiers de la médiathèque et la description ; sans description, un lien « Ajouter une description… » ouvre les réglages du monde. Dans le bloc Gérer, **Médiathèque** ouvre la médiathèque et **Réglages du monde** ouvre les réglages du monde (comme le bouton en haut à gauche) ; **Types** (M2) et **Thème** (à cadrer) sont visibles mais signalés « Bientôt disponible ».
+
+### Réglages du monde
+
+Écran en sections, d'après les captures de vvd (27/09/2026), ouvert par le bouton du monde en haut à gauche et par Home › Gérer › Réglages du monde. Une barre de sections à gauche (flèches haut et bas au clavier), le contenu de la section à droite.
+
+- **Général** : image principale (via le sélecteur d'image, ou « Retirer »), nom, genre, description, et le dossier du monde avec « Ouvrir le dossier » (Explorateur Windows). Tout est enregistré à la volée, sans bouton : le texte une demi-seconde après la dernière frappe, et aussitôt quand on change de section ou qu'on ferme l'écran. Un nom vide n'est jamais enregistré (l'ancien nom est conservé). Le nom se met à jour aussitôt dans la barre du haut et dans la liste des mondes.
+- **Types** : nombre de types et « Gérer les types », qui ouvre l'écran des types (voir `01-cartes-et-types.md`).
+- **Médias** : nombre de fichiers et « Ouvrir la médiathèque ».
+- **Préférences** : se termine par la **zone dangereuse**. « Supprimer le monde » demande de taper le nom du monde (les espaces autour sont ignorés, pas la casse). Le monde est fermé, son dossier part dans la **corbeille de Windows** (on peut l'y restaurer, puis l'ouvrir avec « Ouvrir un monde »), il quitte la liste des mondes et l'app revient à cette liste. Si le dossier ne peut pas être déplacé (fichier ouvert ailleurs…), un message le dit et le monde reste ouvert, intact.
+
+Collaboration et Site & domaine, présents chez vvd, sont retirés (voir `docs/contexte.md`). Importer et Exporter arriveront avec leurs modules.
 
 ### Thème du monde
 

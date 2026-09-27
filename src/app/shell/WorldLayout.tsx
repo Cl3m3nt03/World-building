@@ -2,6 +2,8 @@ import { Outlet, useLocation, useNavigate, useParams } from "@tanstack/react-rou
 import { useUiStore } from "@/app/stores/ui";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CardTypesDialog } from "@/features/card-types";
+import { useCurrentWorld } from "@/features/world";
+import { WorldSettingsDialog } from "@/features/world-settings";
 import { type ShellTab, TopBar } from "./TopBar";
 
 export const SHELL_TABS = ["home", "world", "wiki", "quill"] as const satisfies readonly ShellTab[];
@@ -33,6 +35,7 @@ export function WorldLayout() {
   const navigate = useNavigate();
   const cardTypesOpen = useUiStore((state) => state.cardTypesOpen);
   const setCardTypesOpen = useUiStore((state) => state.setCardTypesOpen);
+  const { data: world } = useCurrentWorld();
 
   return (
     <Tabs
@@ -47,6 +50,7 @@ export function WorldLayout() {
         <Outlet />
       </TabsContent>
       <CardTypesDialog open={cardTypesOpen} onOpenChange={setCardTypesOpen} />
+      {world && <WorldSettingsDialog world={world} />}
     </Tabs>
   );
 }

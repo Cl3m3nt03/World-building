@@ -94,7 +94,7 @@ export function HomeScreen() {
   const assets = useAssets({ kind: null, search: null });
   const cardCounts = useCardCounts();
   const types = useCardTypes();
-  const openWorldPanel = useUiStore((state) => state.setWorldPanelOpen);
+  const openWorldSettings = useUiStore((state) => state.openWorldSettings);
   const openCardTypes = useUiStore((state) => state.setCardTypesOpen);
 
   if (!world) return null;
@@ -174,7 +174,7 @@ export function HomeScreen() {
             ) : (
               <button
                 type="button"
-                onClick={() => openWorldPanel(true)}
+                onClick={() => openWorldSettings("general")}
                 className="self-start text-sm text-muted-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 {t("home.addDescription")}
@@ -208,7 +208,7 @@ export function HomeScreen() {
             <SoonEntry icon={Palette} label="home.theme" soon={t("placeholder.comingSoon")} />
             <button
               type="button"
-              onClick={() => openWorldPanel(true)}
+              onClick={() => openWorldSettings("general")}
               className={cn(ENTRY_CLASS, "text-left hover:bg-secondary")}
             >
               <Settings2 aria-hidden className="size-4" />

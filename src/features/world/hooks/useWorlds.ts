@@ -1,5 +1,6 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useUiStore } from "@/app/stores/ui";
 import { appKeys } from "@/features/settings";
 import { commands, type Genre, type WorldInfo, type WorldPatch } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
@@ -58,6 +59,31 @@ export function useCloseWorld() {
     onSuccess: async () => {
       queryClient.setQueryData(worldKeys.current(), null);
       await navigate({ to: "/" });
+    },
+  });
+}
+
+/**
+ * Deletes the open world (its folder goes to the Windows recycle bin) and
+ * goes back to the world list. If it fails, the Rust opens the world again;
+ * should that fail too, the app goes back to the world list.
+ */
+export function useDeleteWorld() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: () => unwrap(commands.deleteWorld()),
+    onSuccess: async (settings) => {
+      // The settings screen it was deleted from must not reopen with the next world.
+      useUiStore.getState().closeWorldSettings();
+      queryClient.setQueryData(appKeys.settings(), settings);
+      queryClient.setQueryData(worldKeys.current(), null);
+      void queryClient.invalidateQueries({ queryKey: worldKeys.missing() });
+      await navigate({ to: "/" });
+    },
+    onError: async () => {
+      const world = await queryClient.fetchQuery({ ...currentWorldQuery, staleTime: 0 });
+      if (!world) await navigate({ to: "/" });
     },
   });
 }

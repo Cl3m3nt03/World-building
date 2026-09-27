@@ -94,7 +94,9 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 
 ### Coque
 
-`src/app/shell/` : `Backdrop` (image du monde floutée, ou dégradé des tokens), `TopBar` (trois îlots : monde courant, onglets Home / World / Wiki / Quill, actions) et `Workspace` (sidebar redimensionnable et zone centrale de l'onglet World, placeholders des autres onglets).
+`src/app/shell/` : `Backdrop` (image du monde floutée, ou dégradé des tokens), `TopBar` (trois îlots : monde courant, onglets Home / World / Wiki / Quill, actions) et `Workspace` (sidebar redimensionnable et zone centrale de l'onglet World, placeholders des autres onglets). `WorldLayout` monte aussi les écrans ouverts depuis plusieurs endroits : types de cartes et réglages du monde.
+
+Les réglages du monde (`src/features/world-settings`) assemblent plusieurs features (monde, médiathèque, types) : ils vivent à part pour que `features/world` ne dépende d'aucune d'elles. La section ouverte est dans le store UI (`worldSettings`, `null` quand l'écran est fermé), ce qui permet d'ouvrir l'écran sur une section précise.
 
 ## Back (`src-tauri/`)
 
@@ -248,6 +250,7 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
   5. si des migrations sont en attente : copie cohérente dans `world.db.bak-v<N>` (`VACUUM INTO`), puis migration ;
   6. `world.json` est mis à jour (version, dates) par écriture atomique, et `assets/` est recréé s'il manque.
 - **Un seul monde ouvert** : ouvrir un monde ferme le précédent, une fois le nouveau entièrement ouvert. Chaque ouverture met à jour les mondes récents.
+- **Suppression** (`delete_world`) : le monde ouvert est fermé (ce qui libère la base, verrouillée par Windows tant qu'elle est ouverte), puis `world::remove_folder` relit le `world.json` du dossier et refuse d'y toucher s'il ne contient pas le même monde (même id). Le dossier part dans la corbeille de Windows (crate `trash`). En cas d'échec, le monde est rouvert et l'erreur remontée ; sinon il quitte les mondes récents et sa vignette est effacée.
 - Le schéma initial (`0001_init.sql`) ne contient qu'une table `meta` (clé/valeur). Les tables métier arrivent avec leurs milestones.
 
 ## Tests

@@ -4,6 +4,10 @@ import type { RadioMode } from "@/lib/bindings";
 
 export const SIDEBAR_WIDTH = { default: 280, min: 200, max: 480 } as const;
 
+/** Sections of the world settings screen. */
+export const WORLD_SETTINGS_SECTIONS = ["general", "types", "media", "preferences"] as const;
+export type WorldSettingsSection = (typeof WORLD_SETTINGS_SECTIONS)[number];
+
 type UiState = {
   theme: ThemePreference;
   transparency: TransparencyPreference;
@@ -17,9 +21,13 @@ type UiState = {
   radioMode: RadioMode;
   setRadioVolume: (volume: number) => void;
   setRadioMode: (mode: RadioMode) => void;
-  /** Panel of the open world (top bar, and "Settings" on the Home tab). */
-  worldPanelOpen: boolean;
-  setWorldPanelOpen: (open: boolean) => void;
+  /**
+   * World settings screen (top bar, and "Settings" on the Home tab): the
+   * section shown, or `null` when closed.
+   */
+  worldSettings: WorldSettingsSection | null;
+  openWorldSettings: (section?: WorldSettingsSection) => void;
+  closeWorldSettings: () => void;
   /** Card types screen (Home › Types, and "New type" when creating a card). */
   cardTypesOpen: boolean;
   setCardTypesOpen: (open: boolean) => void;
@@ -48,8 +56,9 @@ export const useUiStore = create<UiState>()((set) => ({
     }
   },
   setRadioMode: (radioMode) => set({ radioMode }),
-  worldPanelOpen: false,
-  setWorldPanelOpen: (worldPanelOpen) => set({ worldPanelOpen }),
+  worldSettings: null,
+  openWorldSettings: (section = "general") => set({ worldSettings: section }),
+  closeWorldSettings: () => set({ worldSettings: null }),
   cardTypesOpen: false,
   setCardTypesOpen: (cardTypesOpen) => set({ cardTypesOpen }),
   focusCardTitle: null,
