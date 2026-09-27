@@ -63,16 +63,20 @@ pub async fn rename_asset(
 #[tauri::command]
 #[specta::specta]
 pub async fn asset_usages(state: State<'_, AppState>, id: String) -> AppResult<Vec<AssetUsage>> {
-    let guard = state.world.lock().await;
-    let world = guard
-        .as_ref()
-        .ok_or_else(|| AppError::NoWorldOpen("asset_usages".into()))?;
-    let mut usages = Vec::new();
-    if world.file.main_image.as_deref() == Some(id.as_str()) {
-        usages.push(AssetUsage::WorldMainImage {
-            world_name: world.file.name.clone(),
-        });
-    }
+    let (mut usages, pool) = {
+        let guard = state.world.lock().await;
+        let world = guard
+            .as_ref()
+            .ok_or_else(|| AppError::NoWorldOpen("asset_usages".into()))?;
+        let mut usages = Vec::new();
+        if world.file.main_image.as_deref() == Some(id.as_str()) {
+            usages.push(AssetUsage::WorldMainImage {
+                world_name: world.file.name.clone(),
+            });
+        }
+        (usages, world.pool.clone())
+    };
+    usages.extend(media::card_usages(&pool, &id).await?);
     Ok(usages)
 }
 

@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import type { Asset } from "@/lib/bindings";
+import type { Asset, AssetUsage } from "@/lib/bindings";
 import { useAssetUsages, useDeleteAsset, useRenameAsset } from "../hooks/useManageAsset";
 
 type DialogProps = { asset: Asset | null; onClose: () => void };
@@ -80,6 +80,16 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
   const remove = useDeleteAsset();
   const usages = useAssetUsages(asset?.id ?? null);
   const used = (usages.data ?? []).length > 0;
+  const describeUsage = (usage: AssetUsage) => {
+    if (usage.kind === "worldMainImage") {
+      return t("media.usage.worldMainImage", { name: usage.worldName });
+    }
+    const where =
+      usage.kind === "cardImage"
+        ? t("media.usage.cardImage", { name: usage.cardTitle })
+        : t("media.usage.cardBlock", { name: usage.cardTitle });
+    return usage.inTrash ? t("media.usage.inTrash", { where }) : where;
+  };
 
   return (
     <Dialog
@@ -104,8 +114,12 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
             <p className="font-medium">{t("media.deleteUsed")}</p>
             <ul className="list-disc pl-5">
               {usages.data?.map((usage) => (
-                <li key={usage.kind}>
-                  {t("media.usage.worldMainImage", { name: usage.worldName })}
+                <li
+                  key={
+                    usage.kind === "worldMainImage" ? usage.kind : `${usage.kind}-${usage.cardId}`
+                  }
+                >
+                  {describeUsage(usage)}
                 </li>
               ))}
             </ul>

@@ -44,7 +44,13 @@ beforeEach(() => {
     }
     if (command === "asset_usages") {
       const { id } = payload as { id: string };
-      return id === IMAGE.id ? [{ kind: "worldMainImage", worldName: "Aldoria" }] : [];
+      return id === IMAGE.id
+        ? [
+            { kind: "worldMainImage", worldName: "Aldoria" },
+            { kind: "cardImage", cardId: "c1", cardTitle: "Aelin", inTrash: false },
+            { kind: "cardBlock", cardId: "c2", cardTitle: "Rowan", inTrash: true },
+          ]
+        : [];
     }
     if (command === "rename_asset") {
       const { id, name } = payload as { id: string; name: string };
@@ -156,6 +162,8 @@ test("warns before deleting an asset that is still used", async () => {
   fireEvent.keyDown(actions, { key: "Delete" });
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("image principale du monde « Aldoria »");
+  expect(alert.textContent).toContain("image de la carte « Aelin »");
+  expect(alert.textContent).toContain("bloc image de la carte « Rowan » (à la corbeille)");
   fireEvent.click(screen.getByRole("button", { name: "Supprimer quand même" }));
 
   await waitFor(() => expect(screen.queryByText("Carte du monde.png")).toBeNull());

@@ -230,7 +230,11 @@ export type AssetKind = "image" | "audio" | "other";
  */
 export type AssetUsage = 
 /**  The main image of the open world. */
-{ kind: "worldMainImage"; worldName: string };
+{ kind: "worldMainImage"; worldName: string } | 
+/**  The image of a card. */
+{ kind: "cardImage"; cardId: string; cardTitle: string; inTrash: boolean } | 
+/**  In an image block of a card. */
+{ kind: "cardBlock"; cardId: string; cardTitle: string; inTrash: boolean };
 
 /**  A document that cites a card, and how ("cited in" at the bottom of a card). */
 export type Backlink = {

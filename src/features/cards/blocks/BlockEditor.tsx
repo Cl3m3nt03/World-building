@@ -14,7 +14,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowDown, ArrowUp, GripVertical, MoreHorizontal, Plus, Trash2, Type } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  GripVertical,
+  ImageIcon,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  Type,
+} from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -26,7 +35,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { type Block, type BlockType, emptyTextBlock, move } from "./model";
+import { ImageBlockView } from "./ImageBlockView";
+import { type Block, type BlockType, move, newBlock } from "./model";
 import { TextBlockEditor } from "./TextBlockEditor";
 import { useCardContent, useSaveCardContent } from "./useCardContent";
 
@@ -34,16 +44,19 @@ import { useCardContent, useSaveCardContent } from "./useCardContent";
 const SAVE_DELAY_MS = 600;
 
 /** Block types offered by "+" and "/". */
-const BLOCK_CHOICES: { type: BlockType; icon: typeof Type; label: string }[] = [
+const BLOCK_CHOICES: {
+  type: BlockType;
+  icon: typeof Type;
+  label: "blocks.types.text" | "blocks.types.image";
+}[] = [
   { type: "text", icon: Type, label: "blocks.types.text" },
+  { type: "image", icon: ImageIcon, label: "blocks.types.image" },
 ];
 
-function newBlock(type: BlockType): Block {
-  switch (type) {
-    case "text":
-      return emptyTextBlock();
-  }
-}
+const BLOCK_LABELS = {
+  text: "blocks.textLabel",
+  image: "blocks.imageLabel",
+} as const satisfies Record<BlockType, string>;
 
 /** Menu of block types; `children` is the trigger, or the menu is controlled. */
 function BlockTypeMenu({
@@ -69,7 +82,7 @@ function BlockTypeMenu({
         {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
           <DropdownMenuItem key={type} onSelect={() => onPick(type)}>
             <Icon />
-            {t(label as "blocks.types.text")}
+            {t(label)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -110,7 +123,7 @@ function SortableBlock({
     transition,
     isDragging,
   } = useSortable({ id: block.id });
-  const label = t("blocks.textLabel", { index: index + 1 });
+  const label = t(BLOCK_LABELS[block.type], { index: index + 1 });
 
   return (
     <li
@@ -157,17 +170,21 @@ function SortableBlock({
         </DropdownMenu>
       </div>
       <div className="relative min-w-0 flex-1">
-        <TextBlockEditor
-          cardId={cardId}
-          doc={block.doc}
-          label={label}
-          autoFocus={focus}
-          onChange={(doc) => onChange({ ...block, doc })}
-          onSlash={(removeLine) => {
-            removeSlashLine.current = removeLine;
-            setSlashOpen(true);
-          }}
-        />
+        {block.type === "text" ? (
+          <TextBlockEditor
+            cardId={cardId}
+            doc={block.doc}
+            label={label}
+            autoFocus={focus}
+            onChange={(doc) => onChange({ ...block, doc })}
+            onSlash={(removeLine) => {
+              removeSlashLine.current = removeLine;
+              setSlashOpen(true);
+            }}
+          />
+        ) : (
+          <ImageBlockView block={block} label={label} pickOnMount={focus} onChange={onChange} />
+        )}
         <BlockTypeMenu
           open={slashOpen}
           onOpenChange={setSlashOpen}
