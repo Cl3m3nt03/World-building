@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.id AS \"id!\", d.kind, d.title, d.opened_at AS \"opened_at!\",\n                  c.image_asset_id, c.type_id\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.opened_at IS NOT NULL AND d.trashed_at IS NULL\n           ORDER BY d.opened_at DESC\n           LIMIT ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "opened_at!",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "opened_at"
+          }
+        }
+      },
+      {
+        "name": "image_asset_id",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "image_asset_id"
+          }
+        }
+      },
+      {
+        "name": "type_id",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "type_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "996c6b1fa16fc5f1db9939b774abd4d681d12f112bd7fc687c17782a5ae5402c"
+}

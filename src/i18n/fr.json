@@ -151,9 +151,7 @@
   "worldPanel.descriptionPlaceholder": "De quoi parle ce monde ?",
   "worldPanel.saving": "Enregistrement…",
   "home.welcomeTo": "Bienvenue dans {{name}}",
-  "home.subtitle": "Reprenez là où vous en étiez, ou essayez quelque chose de nouveau.",
   "home.recent": "Documents récents",
-  "home.recentEmpty": "Vos cartes, maps et canvas récents apparaîtront ici. La création de cartes arrive avec {{milestone}}.",
   "home.summary": "Le monde",
   "home.files": "Médiathèque",
   "home.fileCount_one": "{{count}} fichier",
@@ -259,5 +257,15 @@
   "trash.emptyAction": "Vider la corbeille",
   "trash.emptyConfirm_one": "Supprimer définitivement la carte de la corbeille ?",
   "trash.emptyConfirm_other": "Supprimer définitivement les {{count}} cartes de la corbeille ?",
-  "trash.emptyForGood": "Vider définitivement"
+  "trash.emptyForGood": "Vider définitivement",
+  "home.resume": "Reprendre là où vous en étiez :",
+  "home.resumeCard": "Reprendre {{name}}",
+  "home.orNew": "ou essayer quelque chose de nouveau",
+  "home.firstCard": "Commencez par créer votre première carte :",
+  "home.newCard": "Nouvelle carte",
+  "home.recentLabel": "Documents récents",
+  "home.recentNone": "Les cartes que vous ouvrez apparaîtront ici.",
+  "home.cardCount_one": "{{count}} carte",
+  "home.cardCount_other": "{{count}} cartes",
+  "home.cardsByType": "Cartes par type"
 }

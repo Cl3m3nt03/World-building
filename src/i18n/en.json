@@ -151,9 +151,7 @@
   "worldPanel.descriptionPlaceholder": "What is this world about?",
   "worldPanel.saving": "Saving…",
   "home.welcomeTo": "Welcome to {{name}}",
-  "home.subtitle": "Pick up where you left off, or try something new.",
   "home.recent": "Recent documents",
-  "home.recentEmpty": "Your recent cards, maps and canvases will show up here. Cards arrive with {{milestone}}.",
   "home.summary": "The world",
   "home.files": "Media library",
   "home.fileCount_one": "{{count}} file",
@@ -259,5 +257,15 @@
   "trash.emptyAction": "Empty the trash",
   "trash.emptyConfirm_one": "Delete the card in the trash for good?",
   "trash.emptyConfirm_other": "Delete the {{count}} cards in the trash for good?",
-  "trash.emptyForGood": "Empty for good"
+  "trash.emptyForGood": "Empty for good",
+  "home.resume": "Pick up where you left off:",
+  "home.resumeCard": "Resume {{name}}",
+  "home.orNew": "or try something new",
+  "home.firstCard": "Start by creating your first card:",
+  "home.newCard": "New card",
+  "home.recentLabel": "Recent documents",
+  "home.recentNone": "The cards you open will show up here.",
+  "home.cardCount_one": "{{count}} card",
+  "home.cardCount_other": "{{count}} cards",
+  "home.cardsByType": "Cards by type"
 }

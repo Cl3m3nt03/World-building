@@ -1,14 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, Images, type LucideIcon, Palette, Settings2, Shapes, Share2 } from "lucide-react";
+import { Images, type LucideIcon, Palette, Settings2, Shapes, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
+import { useCardCounts } from "@/features/cards";
 import { AssetImage, useAssets } from "@/features/media";
 import { genreLabel, useCurrentWorld } from "@/features/world";
 import type { TranslationKey } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { RecentDocuments } from "./RecentDocuments";
 
 const ENTRY_CLASS =
   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50";
@@ -89,11 +92,29 @@ export function HomeScreen() {
   const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const assets = useAssets({ kind: null, search: null });
+  const cardCounts = useCardCounts();
+  const types = useCardTypes();
   const openWorldPanel = useUiStore((state) => state.setWorldPanelOpen);
   const openCardTypes = useUiStore((state) => state.setCardTypesOpen);
 
   if (!world) return null;
   const fileCount = assets.data?.length;
+  const counts = cardCounts.data;
+  const cardTotal = counts?.reduce((sum, { count }) => sum + count, 0);
+  // Subtypes count for their type; types in their order, empty ones left out.
+  const allTypes = types.data ?? [];
+  const byType = allTypes
+    .filter((type) => type.parentId === null)
+    .map((type) => ({
+      type,
+      count: (counts ?? [])
+        .filter(({ typeId }) => {
+          const counted = allTypes.find((candidate) => candidate.id === typeId);
+          return typeId === type.id || counted?.parentId === type.id;
+        })
+        .reduce((sum, { count }) => sum + count, 0),
+    }))
+    .filter(({ count }) => count > 0);
 
   return (
     <main className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 overflow-y-auto px-8 pt-10 pb-8">
@@ -109,14 +130,13 @@ export function HomeScreen() {
           <h1 className="truncate text-4xl font-bold">
             {t("home.welcomeTo", { name: world.name })}
           </h1>
-          <p className="text-sm text-muted-foreground">{t("home.subtitle")}</p>
         </div>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_16rem]">
         <div className="flex min-w-0 flex-col gap-4">
           <Section title={t("home.recent")}>
-            <EmptyState icon={Clock} text={t("home.recentEmpty", { milestone: "M2" })} />
+            <RecentDocuments worldId={world.id} />
           </Section>
 
           <Section title={t("home.summary")}>
@@ -126,10 +146,29 @@ export function HomeScreen() {
               <dt className="text-muted-foreground">{t("home.files")}</dt>
               <dd>{fileCount === undefined ? "" : t("home.fileCount", { count: fileCount })}</dd>
               <dt className="text-muted-foreground">{t("home.cards")}</dt>
-              <dd className="text-muted-foreground">
-                {t("placeholder.comingIn", { milestone: "M2" })}
-              </dd>
+              <dd>{cardTotal === undefined ? "" : t("home.cardCount", { count: cardTotal })}</dd>
             </dl>
+            {byType.length > 0 && (
+              <ul aria-label={t("home.cardsByType")} className="flex flex-wrap gap-1.5">
+                {byType.map(({ type, count }) => {
+                  const Icon = typeIcon(type.icon);
+                  return (
+                    <li
+                      key={type.id}
+                      className="flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-0.5 text-xs"
+                    >
+                      <Icon
+                        aria-hidden
+                        className="size-3.5"
+                        style={{ color: typeColor(type.color) }}
+                      />
+                      {type.name}
+                      <span className="text-muted-foreground">{count}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
             {world.description ? (
               <p className="text-sm whitespace-pre-line">{world.description}</p>
             ) : (

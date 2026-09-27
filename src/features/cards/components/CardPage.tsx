@@ -20,6 +20,7 @@ import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import {
   useCard,
+  useMarkOpened,
   useRenameCard,
   useSetCardAliases,
   useSetCardImage,
@@ -251,6 +252,7 @@ export function CardPage() {
   const navigate = useNavigate();
   const card = useCard(cardId);
   const types = useCardTypes();
+  useMarkOpened(cardId);
   const trash = useTrashCard(cardId);
   const all = types.data ?? [];
 

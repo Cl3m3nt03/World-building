@@ -85,6 +85,41 @@ pub async fn set_title(pool: &SqlitePool, id: &str, title: &str, now: &str) -> A
     Ok(result.rows_affected() == 1)
 }
 
+/// Records that the document was opened now. Returns whether it exists.
+pub async fn set_opened(pool: &SqlitePool, id: &str, now: &str) -> AppResult<bool> {
+    let result = sqlx::query!("UPDATE documents SET opened_at = ? WHERE id = ?", now, id)
+        .execute(pool)
+        .await?;
+    Ok(result.rows_affected() == 1)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecentRow {
+    pub id: String,
+    pub kind: String,
+    pub title: String,
+    pub opened_at: String,
+    pub image_asset_id: Option<String>,
+    pub type_id: Option<String>,
+}
+
+/// Live documents opened at least once, most recent first, with the image
+/// and type of the cards among them.
+pub async fn recent(pool: &SqlitePool, limit: i64) -> AppResult<Vec<RecentRow>> {
+    Ok(sqlx::query_as!(
+        RecentRow,
+        r#"SELECT d.id AS "id!", d.kind, d.title, d.opened_at AS "opened_at!",
+                  c.image_asset_id, c.type_id
+           FROM documents d LEFT JOIN cards c ON c.document_id = d.id
+           WHERE d.opened_at IS NOT NULL AND d.trashed_at IS NULL
+           ORDER BY d.opened_at DESC
+           LIMIT ?"#,
+        limit
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// Puts a document in the trash (`Some(date)`) or takes it out (`None`).
 /// Returns whether the document exists.
 pub async fn set_trashed(pool: &SqlitePool, id: &str, trashed_at: Option<&str>) -> AppResult<bool> {

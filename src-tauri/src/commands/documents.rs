@@ -1,7 +1,7 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
-use crate::domain::documents::{self, Document, DocumentFilter};
+use crate::domain::documents::{self, Document, DocumentFilter, RecentDocument};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -24,6 +24,23 @@ pub async fn list_documents(
     filter: DocumentFilter,
 ) -> AppResult<Vec<Document>> {
     documents::list(&pool(&state, "list_documents").await?, &filter).await
+}
+
+/// Records that a document was opened (recent documents on Home).
+#[tauri::command]
+#[specta::specta]
+pub async fn mark_document_opened(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    documents::mark_opened(&pool(&state, "mark_document_opened").await?, &id).await
+}
+
+/// Documents opened most recently, not in the trash (at most `limit`).
+#[tauri::command]
+#[specta::specta]
+pub async fn recent_documents(
+    state: State<'_, AppState>,
+    limit: u32,
+) -> AppResult<Vec<RecentDocument>> {
+    documents::recent(&pool(&state, "recent_documents").await?, limit).await
 }
 
 #[tauri::command]

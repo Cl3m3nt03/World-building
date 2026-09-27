@@ -160,6 +160,48 @@ pub async fn list(pool: &SqlitePool, filter: &DocumentFilter) -> AppResult<Vec<D
         .collect()
 }
 
+/// A document opened recently, for the Home tab.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RecentDocument {
+    pub id: String,
+    pub kind: DocumentKind,
+    pub title: String,
+    /// RFC 3339.
+    pub opened_at: String,
+    /// For a card: its image and type.
+    pub image_asset_id: Option<String>,
+    pub type_id: Option<String>,
+}
+
+/// Records that a document was just opened (recent documents, "pick up where
+/// you left off").
+pub async fn mark_opened(pool: &SqlitePool, id: &str) -> AppResult<()> {
+    if queries::set_opened(pool, id, &now()).await? {
+        Ok(())
+    } else {
+        Err(AppError::InvalidInput(format!("document not found: {id}")))
+    }
+}
+
+/// The `limit` documents opened most recently, not in the trash.
+pub async fn recent(pool: &SqlitePool, limit: u32) -> AppResult<Vec<RecentDocument>> {
+    queries::recent(pool, i64::from(limit))
+        .await?
+        .into_iter()
+        .map(|row| {
+            Ok(RecentDocument {
+                kind: DocumentKind::parse(&row.kind)?,
+                id: row.id,
+                title: row.title,
+                opened_at: row.opened_at,
+                image_asset_id: row.image_asset_id,
+                type_id: row.type_id,
+            })
+        })
+        .collect()
+}
+
 pub async fn rename(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Document> {
     let title = validate_title(title)?;
     if !queries::set_title(pool, id, &title, &now()).await? {

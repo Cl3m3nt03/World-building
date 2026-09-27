@@ -144,6 +144,26 @@ pub async fn set_aliases(pool: &SqlitePool, id: &str, aliases: &[String]) -> App
     get(pool, id).await
 }
 
+/// How many live cards a type (or subtype) has.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeCount {
+    pub type_id: String,
+    pub count: u32,
+}
+
+/// Number of live cards per type or subtype (for the world summary).
+pub async fn count_by_type(pool: &SqlitePool) -> AppResult<Vec<TypeCount>> {
+    Ok(queries::count_by_type(pool)
+        .await?
+        .into_iter()
+        .map(|(type_id, count)| TypeCount {
+            type_id,
+            count: u32::try_from(count).unwrap_or(u32::MAX),
+        })
+        .collect())
+}
+
 /// Number of cards of a type and its subtypes (to ask where they go before
 /// deleting it).
 pub async fn count_of_type(pool: &SqlitePool, type_id: &str) -> AppResult<u32> {

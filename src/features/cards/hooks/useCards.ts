@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { type Card, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cardKeys, documentKeys } from "./keys";
@@ -115,4 +116,31 @@ export function useEmptyTrash() {
     mutationFn: () => unwrap(commands.emptyTrash()),
     onSuccess: changed,
   });
+}
+
+/** Documents opened most recently (Home). */
+export function useRecentDocuments(limit: number) {
+  return useQuery({
+    queryKey: [...documentKeys.all(), "recent", limit],
+    queryFn: () => unwrap(commands.recentDocuments(limit)),
+  });
+}
+
+/** Number of live cards per type or subtype (Home summary). */
+export function useCardCounts() {
+  return useQuery({
+    queryKey: [...documentKeys.all(), "countByType"],
+    queryFn: () => unwrap(commands.countCardsByType()),
+  });
+}
+
+/** Records the opening of a document once per id (recent documents). */
+export function useMarkOpened(id: string) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    commands
+      .markDocumentOpened(id)
+      .then(() => queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "recent"] }))
+      .catch((error: unknown) => console.warn("Cannot record the opening", error));
+  }, [id, queryClient]);
 }
