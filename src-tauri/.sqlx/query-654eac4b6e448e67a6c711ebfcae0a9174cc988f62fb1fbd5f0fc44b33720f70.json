@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM card_types WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "654eac4b6e448e67a6c711ebfcae0a9174cc988f62fb1fbd5f0fc44b33720f70"
+}

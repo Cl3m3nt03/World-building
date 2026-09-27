@@ -5,7 +5,7 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
 use crate::db;
-use crate::domain::media;
+use crate::domain::{card_types, media};
 use crate::error::{AppError, AppResult};
 use crate::settings::{self, RecentWorld};
 use crate::state::AppState;
@@ -24,6 +24,7 @@ pub async fn create_world(
 ) -> AppResult<WorldInfo> {
     let root = Path::new(&parent_dir).join(world::folder_name(&name)?);
     let world = world::create_with(&root, &name, genre, &db::MIGRATOR).await?;
+    ensure_card_types(&state, &world).await;
     Ok(activate(&state, world).await)
 }
 
@@ -37,7 +38,19 @@ pub async fn open_world(state: State<'_, AppState>, path: String) -> AppResult<W
     if let Err(error) = media::sync(&world.pool, &world.assets_dir()).await {
         tracing::warn!(%error, "cannot sync the media library");
     }
+    // A world made before M2 gets the default types of its genre, once.
+    ensure_card_types(&state, &world).await;
     Ok(activate(&state, world).await)
+}
+
+/// Creates the default card types of the world's genre, in the app language,
+/// unless the world already got them. Not fatal: types can be made by hand.
+async fn ensure_card_types(state: &AppState, world: &OpenWorld) {
+    let language = state.settings.lock().await.preferences.language;
+    if let Err(error) = card_types::ensure_defaults(&world.pool, world.info().genre, language).await
+    {
+        tracing::warn!(%error, "cannot create the default card types");
+    }
 }
 
 /// Closes the open world. Does nothing if no world is open.

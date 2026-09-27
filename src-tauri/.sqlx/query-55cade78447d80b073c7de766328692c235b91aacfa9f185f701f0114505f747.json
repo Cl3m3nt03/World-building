@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO meta (key, value) VALUES (?1, ?2)\n         ON CONFLICT (key) DO UPDATE SET value = ?2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "55cade78447d80b073c7de766328692c235b91aacfa9f185f701f0114505f747"
+}
