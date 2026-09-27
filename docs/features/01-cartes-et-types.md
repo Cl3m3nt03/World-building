@@ -69,15 +69,19 @@ Chaque type définit des réglages appliqués à la création de chaque nouvelle
 | Orientation par défaut | Portrait, Paysage (forme de l'image de la carte) |
 | Format sur le canvas | Quatre formats de vignette pour le canvas (voir `06-canvas.md`) |
 
-**Types par défaut proposés** (à valider par Clément). Les captures du board montrent, pour un monde de fantasy : Personnage, Lieu (avec les sous-types Royaume, Ville, Hameau, Donjon, Point de repère), Faction, Objet, Événement, Lore, Écologie. La liste ci-dessous en tient compte :
+**Types par défaut** (validés par Clément le 27/09/2026). Ils sont créés à la création du monde, selon son genre. Les sous-types de *Lieu* dépendent du genre : « Donjon » n'a pas de sens en science-fiction.
 
-| Genre | Types |
-|---|---|
-| Tous | Personnage, Lieu (Royaume, Ville, Hameau, Donjon, Point de repère), Objet, Événement, Faction, Lore, Note |
-| Fantasy | + Système de magie, Religion, Race, Créature, Écologie |
-| Science-fiction | + Technologie, Vaisseau, Espèce, Planète |
-| Cyberpunk | + Technologie, Corporation, Implant |
-| Romance | + Relation, Lieu de rencontre |
+| Genre | Types ajoutés aux types communs | Sous-types de *Lieu* |
+|---|---|---|
+| Tous (types communs) | Personnage, Lieu, Objet, Événement, Faction, Lore, Note | — |
+| Fantasy | Système de magie, Religion, Race, Créature, Écologie | Royaume, Ville, Hameau, Donjon, Point de repère |
+| Science-fiction | Technologie, Vaisseau, Espèce, Planète | Système stellaire, Station, Colonie, Base |
+| Cyberpunk | Technologie, Corporation, Implant | Mégalopole, Quartier, Planque, Réseau |
+| Romance | Relation, Lieu de rencontre | Ville, Maison, Lieu de rencontre |
+| Contemporain | Organisation, Relation | Pays, Ville, Quartier, Bâtiment |
+| Autre | — | Région, Ville, Bâtiment |
+
+Chaque type par défaut a une icône, une couleur et un template guidé (par exemple Personnage : Background, Personnalité, Apparence). Changer le genre d'un monde plus tard n'ajoute ni ne supprime aucun type. Un monde créé avant M2 reçoit les types de son genre à sa première ouverture.
 
 Supprimer un type qui contient des cartes demande vers quel type déplacer ces cartes.
 
