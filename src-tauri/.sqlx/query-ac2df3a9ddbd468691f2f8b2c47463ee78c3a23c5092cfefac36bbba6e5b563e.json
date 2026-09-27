@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE property_definitions SET applies_to_existing = 1 WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ac2df3a9ddbd468691f2f8b2c47463ee78c3a23c5092cfefac36bbba6e5b563e"
+}

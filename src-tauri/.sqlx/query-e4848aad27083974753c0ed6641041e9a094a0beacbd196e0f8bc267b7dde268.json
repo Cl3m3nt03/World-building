@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE property_definitions SET kind = ?, target_type_ids = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "e4848aad27083974753c0ed6641041e9a094a0beacbd196e0f8bc267b7dde268"
+}

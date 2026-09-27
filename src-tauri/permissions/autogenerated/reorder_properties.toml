@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reorder-properties"
+description = "Enables the reorder_properties command without any pre-configured scope."
+commands.allow = ["reorder_properties"]
+
+[[permission]]
+identifier = "deny-reorder-properties"
+description = "Denies the reorder_properties command without any pre-configured scope."
+commands.deny = ["reorder_properties"]

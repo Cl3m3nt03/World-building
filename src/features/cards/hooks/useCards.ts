@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { propertyKeys } from "@/features/properties";
 import { type Card, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cardKeys, documentKeys } from "./keys";
@@ -43,9 +44,13 @@ export function useRenameCard(id: string) {
 
 export function useSetCardType(id: string) {
   const saved = useCardSaved();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (typeId: string) => unwrap(commands.setCardType(id, typeId)),
-    onSuccess: saved,
+    onSuccess: (card) => {
+      saved(card);
+      void queryClient.invalidateQueries({ queryKey: propertyKeys.ofCard(id) });
+    },
   });
 }
 

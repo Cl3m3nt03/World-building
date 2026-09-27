@@ -5,6 +5,7 @@ pub mod card_types;
 pub mod cards;
 pub mod documents;
 pub mod links;
+pub mod properties;
 
 use std::path::Path;
 use std::time::Duration;

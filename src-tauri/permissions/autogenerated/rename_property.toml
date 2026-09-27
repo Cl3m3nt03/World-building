@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-rename-property"
+description = "Enables the rename_property command without any pre-configured scope."
+commands.allow = ["rename_property"]
+
+[[permission]]
+identifier = "deny-rename-property"
+description = "Denies the rename_property command without any pre-configured scope."
+commands.deny = ["rename_property"]

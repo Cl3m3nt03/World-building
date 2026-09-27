@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-card-properties"
+description = "Enables the card_properties command without any pre-configured scope."
+commands.allow = ["card_properties"]
+
+[[permission]]
+identifier = "deny-card-properties"
+description = "Denies the card_properties command without any pre-configured scope."
+commands.deny = ["card_properties"]

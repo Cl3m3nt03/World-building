@@ -70,6 +70,27 @@ export const commands = {
 	countTypeCards: (typeId: string) => typedError<number, AppError>(__TAURI_INVOKE("count_type_cards", { typeId })),
 	/**  Number of live cards per type or subtype. */
 	countCardsByType: () => typedError<TypeCount[], AppError>(__TAURI_INVOKE("count_cards_by_type")),
+	/**  Properties defined on a card type (not the inherited ones). */
+	listTypeProperties: (typeId: string) => typedError<PropertyDefinition[], AppError>(__TAURI_INVOKE("list_type_properties", { typeId })),
+	/**  The properties a card shows (its type's, then its own) with its values. */
+	cardProperties: (cardId: string) => typedError<CardProperty[], AppError>(__TAURI_INVOKE("card_properties", { cardId })),
+	/**  Adds a property to a type or a card. */
+	createProperty: (owner: PropertyOwner, label: string, kind: PropertyKind) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("create_property", { owner, label, kind })),
+	renameProperty: (id: string, label: string) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("rename_property", { id, label })),
+	/**  Changes a property's kind; values of the old kind are dropped. */
+	setPropertyKind: (id: string, kind: PropertyKind, targetTypeIds: string[]) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("set_property_kind", { id, kind, targetTypeIds })),
+	/**  Shows a type property on the cards created before it too. */
+	applyPropertyToExisting: (id: string) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("apply_property_to_existing", { id })),
+	reorderProperties: (ids: string[]) => typedError<null, AppError>(__TAURI_INVOKE("reorder_properties", { ids })),
+	/**  Number of values deleting the property would lose. */
+	countPropertyValues: (id: string) => typedError<number, AppError>(__TAURI_INVOKE("count_property_values", { id })),
+	deleteProperty: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_property", { id })),
+	/**  Sets or clears (`null`) a card's value; returns the card's properties. */
+	setPropertyValue: (cardId: string, propertyId: string, value: { kind: "text"; value: string } | { kind: "number"; value: number | null } | 
+/**  A card id. */
+{ kind: "card"; value: string } | 
+/**  Card ids. */
+{ kind: "cards"; value: string[] } | null) => typedError<CardProperty[], AppError>(__TAURI_INVOKE("set_property_value", { cardId, propertyId, value })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -233,6 +254,12 @@ export type Card = {
 	trashedAt: string | null,
 };
 
+/**  A property as a card shows it: its definition and the card's value. */
+export type CardProperty = {
+	definition: PropertyDefinition,
+	value: PropertyValue | null,
+};
+
 export type CardType = {
 	id: string,
 	/**  Set for a subtype. */
@@ -311,6 +338,40 @@ export type Preferences = {
 	radioVolume: number,
 	radioMode: RadioMode,
 };
+
+export type PropertyDefinition = {
+	id: string,
+	owner: PropertyOwner,
+	label: string,
+	kind: PropertyKind,
+	/**  For links: card types allowed as targets (empty: any). */
+	targetTypeIds: string[],
+	/**  For a type property: whether cards created before it show it too. */
+	appliesToExisting: boolean,
+	sortOrder: number,
+	/**  RFC 3339. */
+	createdAt: string,
+};
+
+export type PropertyKind = "text" | "number" | 
+/**  A link to one card. */
+"card" | 
+/**  Links to several cards. */
+"cards";
+
+/**  Where a property is defined. */
+export type PropertyOwner = 
+/**  On a card type: its cards and its subtypes' cards show it. */
+{ on: "type"; typeId: string } | 
+/**  On one card only. */
+{ on: "card"; cardId: string };
+
+/**  A card's value for a property. */
+export type PropertyValue = { kind: "text"; value: string } | { kind: "number"; value: number | null } | 
+/**  A card id. */
+{ kind: "card"; value: string } | 
+/**  Card ids. */
+{ kind: "cards"; value: string[] };
 
 /**  How the radio moves on at the end of a track. */
 export type RadioMode = 

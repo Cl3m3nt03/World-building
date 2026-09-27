@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
+import { CardProperties } from "@/features/properties";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import {
@@ -304,6 +305,7 @@ export function CardPage() {
             <TypePicker card={card.data} types={all} />
           </div>
           <Aliases card={card.data} />
+          <CardProperties key={`${card.data.id}-${card.data.typeId}`} cardId={card.data.id} />
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
       </header>
