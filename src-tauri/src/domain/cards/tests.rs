@@ -108,6 +108,27 @@ async fn create_and_edit_a_card() {
 }
 
 #[tokio::test]
+async fn list_separates_live_cards_from_the_trash() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let frodo = create(fx.pool(), &character, "Frodon").await.unwrap();
+    create(fx.pool(), &character, "bilbon").await.unwrap();
+    documents::trash(fx.pool(), &frodo.id).await.unwrap();
+
+    let live: Vec<String> = list(fx.pool(), false)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|c| c.title)
+        .collect();
+    assert_eq!(live, ["bilbon"]);
+    let trashed = list(fx.pool(), true).await.unwrap();
+    assert_eq!(trashed.len(), 1);
+    assert_eq!(trashed[0].id, frodo.id);
+    assert_eq!(trashed[0].type_id.as_deref(), Some(character.as_str()));
+}
+
+#[tokio::test]
 async fn a_card_needs_an_existing_type() {
     let fx = Fixture::new().await;
     assert!(create(fx.pool(), "no-such-type", "Gandalf").await.is_err());

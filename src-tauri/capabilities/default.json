@@ -27,6 +27,7 @@
     "allow-reorder-card-types",
     "allow-delete-card-type",
     "allow-create-card",
+    "allow-list-cards",
     "allow-get-card",
     "allow-set-card-type",
     "allow-set-card-image",

@@ -14,7 +14,7 @@
   "settings.theme.system": "Système",
   "settings.transparency": "Effets de transparence",
   "sidebar.label": "Barre latérale",
-  "sidebar.empty": "Aucun document pour l'instant",
+  "sidebar.empty": "Aucune carte pour l'instant. Clic droit ici ou « Nouvelle carte » pour en créer une.",
   "sidebar.resize": "Redimensionner la barre latérale",
   "workspace.startWith": "Commencer avec…",
   "workspace.create.card": "Carte",
@@ -246,5 +246,18 @@
   "cards.trash": "Mettre à la corbeille",
   "cardTypes.deleteCards_one": "Ce type a une carte. Où la déplacer ?",
   "cardTypes.deleteCards_other": "Ce type a {{count}} cartes. Où les déplacer ?",
-  "cardTypes.moveTo": "Type de destination"
+  "cardTypes.moveTo": "Type de destination",
+  "sidebar.cards": "Cartes",
+  "sidebar.newCard": "Nouvelle carte",
+  "trash.title": "Corbeille",
+  "trash.description": "Les cartes supprimées restent ici tant que la corbeille n'est pas vidée.",
+  "trash.empty": "La corbeille est vide.",
+  "trash.restore": "Restaurer",
+  "trash.restoreNamed": "Restaurer {{name}}",
+  "trash.delete": "Supprimer définitivement",
+  "trash.deleteNamed": "Supprimer définitivement {{name}}",
+  "trash.emptyAction": "Vider la corbeille",
+  "trash.emptyConfirm_one": "Supprimer définitivement la carte de la corbeille ?",
+  "trash.emptyConfirm_other": "Supprimer définitivement les {{count}} cartes de la corbeille ?",
+  "trash.emptyForGood": "Vider définitivement"
 }
