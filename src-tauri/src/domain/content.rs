@@ -83,6 +83,35 @@ fn node_text(node: &Value, out: &mut String) {
     }
 }
 
+/// Adds to `out` the card ids of the mention nodes under `node`, once each.
+fn node_mentions(node: &Value, out: &mut Vec<String>) {
+    if node.get("type").and_then(Value::as_str) == Some("mention")
+        && let Some(id) = node.pointer("/attrs/id").and_then(Value::as_str)
+        && !id.is_empty()
+        && !out.iter().any(|known| known == id)
+    {
+        out.push(id.to_owned());
+    }
+    if let Some(children) = node.get("content").and_then(Value::as_array) {
+        for child in children {
+            node_mentions(child, out);
+        }
+    }
+}
+
+/// Cards mentioned (`@`) in the text blocks, in order of first mention.
+pub fn mentions(blocks: &[Value]) -> Vec<String> {
+    let mut out = Vec::new();
+    for block in blocks {
+        if block.get("type").and_then(Value::as_str) == Some("text")
+            && let Some(doc) = block.get("doc")
+        {
+            node_mentions(doc, &mut out);
+        }
+    }
+    out
+}
+
 /// Plain text of the blocks, for search: text blocks and image captions.
 pub fn plain_text(blocks: &[Value]) -> String {
     let mut out = String::new();
@@ -137,6 +166,28 @@ mod tests {
         );
         let too_big = format!("[{}]", " ".repeat(MAX_CONTENT_BYTES));
         assert!(parse(&too_big).is_err());
+    }
+
+    fn mention(id: &str, label: &str) -> Value {
+        serde_json::json!({ "type": "mention", "attrs": { "id": id, "label": label } })
+    }
+
+    #[test]
+    fn mentions_are_listed_once_in_order() {
+        let blocks = vec![
+            serde_json::json!({ "id": "a", "type": "text", "doc": { "type": "doc", "content": [
+                { "type": "paragraph", "content": [
+                    { "type": "text", "text": "Avec " }, mention("gandalf", "Gandalf"),
+                    { "type": "text", "text": " et " }, mention("frodo", "Frodon"),
+                ] },
+                { "type": "bulletList", "content": [{ "type": "listItem", "content": [
+                    { "type": "paragraph", "content": [mention("gandalf", "Gandalf")] }
+                ] }] }
+            ] } }),
+            serde_json::json!({ "id": "b", "type": "image", "caption": "@sam" }),
+        ];
+        assert_eq!(mentions(&blocks), ["gandalf", "frodo"]);
+        assert_eq!(plain_text(&blocks), "Avec Gandalf et Frodon\nGandalf\n@sam");
     }
 
     #[test]

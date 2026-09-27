@@ -78,6 +78,7 @@ function BlockTypeMenu({
 }
 
 function SortableBlock({
+  cardId,
   block,
   index,
   count,
@@ -87,6 +88,7 @@ function SortableBlock({
   onMove,
   onDelete,
 }: {
+  cardId: string;
   block: Block;
   index: number;
   count: number;
@@ -156,6 +158,7 @@ function SortableBlock({
       </div>
       <div className="relative min-w-0 flex-1">
         <TextBlockEditor
+          cardId={cardId}
           doc={block.doc}
           label={label}
           autoFocus={focus}
@@ -270,6 +273,7 @@ export function BlockEditor({ cardId }: { cardId: string }) {
               {blocks.map((block, index) => (
                 <SortableBlock
                   key={block.id}
+                  cardId={cardId}
                   block={block}
                   index={index}
                   count={blocks.length}

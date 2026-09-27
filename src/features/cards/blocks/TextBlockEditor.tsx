@@ -1,10 +1,17 @@
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useMentionWorld } from "./mentions/MentionContext";
+import { MentionSuggestions } from "./mentions/MentionSuggestions";
+import { cardMention } from "./mentions/mentionExtension";
+import { searchMentions } from "./mentions/search";
+import { createSuggestionStore } from "./mentions/suggestionStore";
 
 type TextBlockEditorProps = {
+  /** The card being edited (left out of its own mentions). */
+  cardId: string;
   doc: JSONContent;
   /** Accessible name of the text area. */
   label: string;
@@ -23,6 +30,7 @@ type TextBlockEditorProps = {
  * undo / redo (Ctrl+Z, Ctrl+Y).
  */
 export function TextBlockEditor({
+  cardId,
   doc,
   label,
   onChange,
@@ -33,11 +41,17 @@ export function TextBlockEditor({
   // Latest callbacks, read by the editor's handlers created once.
   const callbacks = useRef({ onChange, onSlash });
   callbacks.current = { onChange, onSlash };
+  // The latest cards, read by the "@" search built once with the editor.
+  const world = useMentionWorld();
+  const worldRef = useRef(world);
+  worldRef.current = world;
+  const [suggestions] = useState(createSuggestionStore);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Placeholder.configure({ placeholder: t("blocks.textPlaceholder") }),
+      cardMention((query) => searchMentions(worldRef.current.cards, query, cardId), suggestions),
     ],
     content: doc,
     autofocus: autoFocus ? "end" : false,
@@ -72,5 +86,10 @@ export function TextBlockEditor({
     onUpdate: ({ editor: current }) => callbacks.current.onChange(current.getJSON()),
   });
 
-  return <EditorContent editor={editor} />;
+  return (
+    <>
+      <EditorContent editor={editor} />
+      <MentionSuggestions store={suggestions} />
+    </>
+  );
 }

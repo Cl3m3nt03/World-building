@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use sqlx::SqlitePool;
+use sqlx::{Sqlite, SqlitePool, Transaction};
 
 use crate::db::links::{self as queries, LinkRow};
 use crate::domain::documents::DocumentKind;
@@ -74,10 +74,24 @@ pub async fn replace(
     targets: &[String],
 ) -> AppResult<()> {
     let mut tx = pool.begin().await?;
-    queries::delete_from(&mut tx, source_id, kind.as_str(), detail).await?;
+    replace_in(&mut tx, source_id, kind, detail, targets).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// `replace`, inside the caller's transaction (the links then change
+/// together with what they come from).
+pub async fn replace_in(
+    tx: &mut Transaction<'_, Sqlite>,
+    source_id: &str,
+    kind: LinkKind,
+    detail: Option<&str>,
+    targets: &[String],
+) -> AppResult<()> {
+    queries::delete_from(tx, source_id, kind.as_str(), detail).await?;
     for target in targets {
         queries::insert(
-            &mut tx,
+            tx,
             &LinkRow {
                 source_id: source_id.to_owned(),
                 target_id: target.clone(),
@@ -87,7 +101,6 @@ pub async fn replace(
         )
         .await?;
     }
-    tx.commit().await?;
     Ok(())
 }
 

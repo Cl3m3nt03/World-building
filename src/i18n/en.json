@@ -316,5 +316,13 @@
   "blocks.actions": "Actions of block {{index}}",
   "blocks.moveUp": "Move up",
   "blocks.moveDown": "Move down",
-  "blocks.delete": "Delete the block"
+  "blocks.delete": "Delete the block",
+  "mentions.label": "Cards to mention",
+  "mentions.none": "No card matches.",
+  "mentions.alias": "alias: {{alias}}",
+  "mentions.count_one": "{{count}} card",
+  "mentions.count_other": "{{count}} cards",
+  "mentions.open": "Open the card {{name}}",
+  "mentions.dead": "This card is in the trash or was deleted.",
+  "mentions.deadNamed": "{{name}} (card in the trash or deleted)"
 }
