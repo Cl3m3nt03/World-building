@@ -65,6 +65,38 @@ pub async fn delete_all_from(tx: &mut Transaction<'_, Sqlite>, source_id: &str) 
     Ok(())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BacklinkRow {
+    pub source_id: String,
+    pub source_kind: String,
+    pub source_title: String,
+    pub source_type_id: Option<String>,
+    pub link_kind: String,
+    /// Label of the link property, for `property` links.
+    pub property_label: Option<String>,
+}
+
+/// Links to `target_id` whose source is a live document (not in the trash,
+/// not deleted), with what the backlinks show: the source's title and type,
+/// and the property the link comes from.
+pub async fn backlinks(pool: &SqlitePool, target_id: &str) -> AppResult<Vec<BacklinkRow>> {
+    Ok(sqlx::query_as!(
+        BacklinkRow,
+        r#"SELECT l.source_id, d.kind AS source_kind, d.title AS source_title,
+                  c.type_id AS source_type_id, l.kind AS link_kind,
+                  p.label AS "property_label?"
+           FROM links l
+           JOIN documents d ON d.id = l.source_id AND d.trashed_at IS NULL
+           LEFT JOIN cards c ON c.document_id = d.id
+           LEFT JOIN property_definitions p ON l.kind = 'property' AND p.id = l.detail
+           WHERE l.target_id = ?
+           ORDER BY d.title COLLATE NOCASE, l.kind, p.label"#,
+        target_id
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// Links pointing to `target_id`.
 pub async fn to_target(pool: &SqlitePool, target_id: &str) -> AppResult<Vec<LinkRow>> {
     Ok(sqlx::query_as!(

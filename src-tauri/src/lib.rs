@@ -63,6 +63,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::properties::count_property_values,
         commands::properties::delete_property,
         commands::properties::set_property_value,
+        commands::links::card_backlinks,
         commands::settings::get_settings,
         commands::settings::update_preferences,
         commands::settings::set_default_worlds_dir,

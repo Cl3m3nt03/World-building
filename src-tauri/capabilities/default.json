@@ -46,6 +46,7 @@
     "allow-count-property-values",
     "allow-delete-property",
     "allow-set-property-value",
+    "allow-card-backlinks",
     "allow-get-settings",
     "allow-update-preferences",
     "allow-set-default-worlds-dir",

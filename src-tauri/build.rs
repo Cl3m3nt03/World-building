@@ -44,6 +44,7 @@ const COMMANDS: &[&str] = &[
     "count_property_values",
     "delete_property",
     "set_property_value",
+    "card_backlinks",
     "get_settings",
     "update_preferences",
     "set_default_worlds_dir",

@@ -8,6 +8,7 @@ use specta::Type;
 use sqlx::SqlitePool;
 
 use crate::db::links::{self as queries, LinkRow};
+use crate::domain::documents::DocumentKind;
 use crate::error::{AppError, AppResult};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
@@ -88,6 +89,54 @@ pub async fn replace(
     }
     tx.commit().await?;
     Ok(())
+}
+
+/// A document that cites a card, and how ("cited in" at the bottom of a card).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Backlink {
+    pub source_id: String,
+    pub source_kind: DocumentKind,
+    pub source_title: String,
+    /// For a card: its type.
+    pub source_type_id: Option<String>,
+    /// How the source cites the card: mentions, link properties (by label)…
+    pub via: Vec<BacklinkVia>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BacklinkVia {
+    pub kind: LinkKind,
+    /// The property's label, for a link property.
+    pub property_label: Option<String>,
+}
+
+/// Live documents citing `target_id`, by title, each once with every way
+/// it cites the card.
+pub async fn backlinks(pool: &SqlitePool, target_id: &str) -> AppResult<Vec<Backlink>> {
+    let mut backlinks: Vec<Backlink> = Vec::new();
+    for row in queries::backlinks(pool, target_id).await? {
+        let via = BacklinkVia {
+            kind: LinkKind::parse(&row.link_kind)?,
+            property_label: row.property_label,
+        };
+        match backlinks.last_mut() {
+            Some(last) if last.source_id == row.source_id => {
+                if !last.via.contains(&via) {
+                    last.via.push(via);
+                }
+            }
+            _ => backlinks.push(Backlink {
+                source_kind: DocumentKind::parse(&row.source_kind)?,
+                source_id: row.source_id,
+                source_title: row.source_title,
+                source_type_id: row.source_type_id,
+                via: vec![via],
+            }),
+        }
+    }
+    Ok(backlinks)
 }
 
 /// Removes the links of `kind` made with `detail` by any source.

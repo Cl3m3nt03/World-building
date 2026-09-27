@@ -290,5 +290,19 @@
   "properties.applySkip": "Skip",
   "properties.applyYes": "Yes",
   "properties.inherits": "Cards of this subtype also show the properties of \"{{name}}\".",
-  "properties.notANumber": "Not a number: the value is not saved."
+  "properties.notANumber": "Not a number: the value is not saved.",
+  "properties.targets": "Accepted card types",
+  "properties.targetsHint": "Nothing checked: any card. A type also accepts its subtypes.",
+  "properties.missingCard": "Missing card",
+  "properties.removeLink": "Remove the link to {{name}}",
+  "properties.pickFor": "Choose a card for {{name}}",
+  "properties.addLink": "Add",
+  "properties.chooseCard": "Choose a card",
+  "cards.pickerSearch": "Search a card (name or alias)…",
+  "cards.pickerNone": "No card matches.",
+  "backlinks.title": "Cited in",
+  "backlinks.none": "No card cites this one yet.",
+  "backlinks.via.mention": "mention",
+  "backlinks.via.property": "property",
+  "backlinks.via.mapPin": "map pin"
 }

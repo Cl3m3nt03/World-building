@@ -16,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
-import { CardProperties } from "@/features/properties";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +28,8 @@ import {
   useTrashCard,
 } from "../hooks/useCards";
 import { typeLabel } from "../typeLabel";
+import { Backlinks } from "./Backlinks";
+import { CardProperties } from "./CardProperties";
 
 /** Delay before a typed title is saved. */
 const SAVE_DELAY_MS = 500;
@@ -309,6 +310,7 @@ export function CardPage() {
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
       </header>
+      <Backlinks cardId={card.data.id} />
     </article>
   );
 }
