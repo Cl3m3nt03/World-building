@@ -28,6 +28,16 @@ export const commands = {
 	deleteAsset: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_asset", { id })),
 	/**  Where an asset is used, to warn before deleting it. */
 	assetUsages: (id: string) => typedError<AssetUsage[], AppError>(__TAURI_INVOKE("asset_usages", { id })),
+	/**  Documents of the open world, live or in the trash, by title. */
+	listDocuments: (filter: DocumentFilter) => typedError<Document[], AppError>(__TAURI_INVOKE("list_documents", { filter })),
+	renameDocument: (id: string, title: string) => typedError<Document, AppError>(__TAURI_INVOKE("rename_document", { id, title })),
+	/**  Puts a document in the world's trash, from where it can be restored. */
+	trashDocument: (id: string) => typedError<Document, AppError>(__TAURI_INVOKE("trash_document", { id })),
+	restoreDocument: (id: string) => typedError<Document, AppError>(__TAURI_INVOKE("restore_document", { id })),
+	/**  Deletes a document of the trash for good. */
+	deleteDocument: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_document", { id })),
+	/**  Deletes everything in the trash for good. Returns how many documents. */
+	emptyTrash: () => typedError<number, AppError>(__TAURI_INVOKE("empty_trash")),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -162,6 +172,27 @@ export type AssetKind = "image" | "audio" | "other";
 export type AssetUsage = 
 /**  The main image of the open world. */
 { kind: "worldMainImage"; worldName: string };
+
+export type Document = {
+	id: string,
+	kind: DocumentKind,
+	title: string,
+	/**  RFC 3339 dates. */
+	createdAt: string,
+	updatedAt: string,
+	/**  Last opening, if ever. */
+	openedAt: string | null,
+	/**  Set while the document is in the trash. */
+	trashedAt: string | null,
+};
+
+export type DocumentFilter = {
+	kind?: DocumentKind | null,
+	/**  The trash's content instead of the live documents. */
+	trashed?: boolean,
+};
+
+export type DocumentKind = "card" | "map" | "graph" | "canvas" | "tree";
 
 /**  Genre of a world. It decides the card types proposed by default (M2). */
 export type Genre = "fantasy" | "scienceFiction" | "romance" | "cyberpunk" | "contemporary" | "other";

@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT source_id, target_id, kind, detail FROM links\n         WHERE target_id = ? ORDER BY source_id, kind, detail",
+  "describe": {
+    "columns": [
+      {
+        "name": "source_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "name": "target_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "target_id"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "detail",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "detail"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "951c5fac2e1d3b81da641dcb031e9f192f1993d9a91502e3f10e6008b6959a63"
+}
