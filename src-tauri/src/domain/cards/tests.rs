@@ -194,6 +194,61 @@ async fn content_is_saved_with_its_plain_text() {
 }
 
 #[tokio::test]
+async fn mentions_in_the_content_are_links_and_backlinks() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let frodo = create(fx.pool(), &character, "Frodon").await.unwrap();
+    let sam = create(fx.pool(), &character, "Sam").await.unwrap();
+    let gollum = create(fx.pool(), &character, "Gollum").await.unwrap();
+    let with_mentions = |ids: &[&str]| {
+        let nodes: Vec<serde_json::Value> = ids
+            .iter()
+            .map(|id| serde_json::json!({ "type": "mention", "attrs": { "id": id, "label": "x" } }))
+            .collect();
+        serde_json::json!([{ "id": "b", "type": "text", "doc": { "type": "doc", "content": [
+            { "type": "paragraph", "content": nodes }
+        ] } }])
+        .to_string()
+    };
+
+    // Frodon mentions Sam, Gollum, and himself (no link to himself).
+    set_content(
+        fx.pool(),
+        &frodo.id,
+        &with_mentions(&[&sam.id, &gollum.id, &frodo.id]),
+    )
+    .await
+    .unwrap();
+    let cited_sam = links::backlinks(fx.pool(), &sam.id).await.unwrap();
+    assert_eq!(cited_sam.len(), 1);
+    assert_eq!(cited_sam[0].source_id, frodo.id);
+    assert_eq!(cited_sam[0].via[0].kind, LinkKind::Mention);
+    assert!(
+        links::backlinks(fx.pool(), &frodo.id)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+
+    // The mention of Gollum is removed: so is its backlink.
+    set_content(fx.pool(), &frodo.id, &with_mentions(&[&sam.id]))
+        .await
+        .unwrap();
+    assert!(
+        links::backlinks(fx.pool(), &gollum.id)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(links::backlinks(fx.pool(), &sam.id).await.unwrap().len(), 1);
+
+    // A mention of a card deleted for good stays as a dead reference.
+    documents::trash(fx.pool(), &sam.id).await.unwrap();
+    documents::delete_forever(fx.pool(), &sam.id).await.unwrap();
+    assert_eq!(links::to_target(fx.pool(), &sam.id).await.unwrap().len(), 1);
+}
+
+#[tokio::test]
 async fn a_card_needs_an_existing_type() {
     let fx = Fixture::new().await;
     assert!(create(fx.pool(), "no-such-type", "Gandalf").await.is_err());

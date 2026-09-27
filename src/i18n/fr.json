@@ -316,5 +316,13 @@
   "blocks.actions": "Actions du bloc {{index}}",
   "blocks.moveUp": "Monter",
   "blocks.moveDown": "Descendre",
-  "blocks.delete": "Supprimer le bloc"
+  "blocks.delete": "Supprimer le bloc",
+  "mentions.label": "Cartes à mentionner",
+  "mentions.none": "Aucune carte ne correspond.",
+  "mentions.alias": "alias : {{alias}}",
+  "mentions.count_one": "{{count}} carte",
+  "mentions.count_other": "{{count}} cartes",
+  "mentions.open": "Ouvrir la carte {{name}}",
+  "mentions.dead": "Cette carte est à la corbeille ou a été supprimée.",
+  "mentions.deadNamed": "{{name}} (carte à la corbeille ou supprimée)"
 }

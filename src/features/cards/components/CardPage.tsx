@@ -19,8 +19,10 @@ import { AssetImage, ImagePickerDialog } from "@/features/media";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { BlockEditor } from "../blocks/BlockEditor";
+import { MentionContext } from "../blocks/mentions/MentionContext";
 import {
   useCard,
+  useCardList,
   useMarkOpened,
   useRenameCard,
   useSetCardAliases,
@@ -257,6 +259,9 @@ export function CardPage() {
   const types = useCardTypes();
   useMarkOpened(cardId);
   const trash = useTrashCard(cardId);
+  // Live cards, for the mentions (current names, dead references).
+  const allCards = useCardList(false);
+  const trashedCards = useCardList(true);
   const all = types.data ?? [];
 
   if (card.isError) {
@@ -311,7 +316,20 @@ export function CardPage() {
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
       </header>
-      <BlockEditor key={card.data.id} cardId={card.data.id} />
+      <MentionContext.Provider
+        value={{
+          cards: allCards.data ?? [],
+          trashed: trashedCards.data ?? [],
+          types: all,
+          open: (id) =>
+            void navigate({
+              to: "/world/$worldId/world/card/$cardId",
+              params: { worldId, cardId: id },
+            }),
+        }}
+      >
+        <BlockEditor key={card.data.id} cardId={card.data.id} />
+      </MentionContext.Provider>
       <Backlinks cardId={card.data.id} />
     </article>
   );

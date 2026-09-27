@@ -149,3 +149,27 @@
   pointer-events: none;
   color: var(--bz-text-muted);
 }
+
+/* "@" mentions in the card blocks. */
+.prose-bz .mention-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  border-radius: var(--bz-radius-sm);
+  background: var(--bz-hover);
+  padding: 0 0.3em;
+  color: var(--bz-text);
+  text-decoration: none;
+}
+.prose-bz .mention-link:hover {
+  text-decoration: underline;
+}
+.prose-bz .mention-link:focus-visible {
+  outline: 2px solid var(--bz-accent);
+  outline-offset: 1px;
+}
+/* A mention of a card in the trash or deleted. */
+.prose-bz .mention-dead {
+  color: var(--bz-text-muted);
+  text-decoration: line-through;
+}

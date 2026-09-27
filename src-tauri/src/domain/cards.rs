@@ -8,6 +8,7 @@ use sqlx::SqlitePool;
 use crate::db::cards::{self as queries, CardRow};
 use crate::db::documents as document_queries;
 use crate::domain::documents::{self, DocumentKind, now};
+use crate::domain::links::{self, LinkKind};
 use crate::domain::{card_types, content};
 use crate::error::{AppError, AppResult};
 
@@ -171,13 +172,21 @@ pub async fn content(pool: &SqlitePool, id: &str) -> AppResult<String> {
         .ok_or_else(|| AppError::InvalidInput(format!("card not found: {id}")))
 }
 
-/// Replaces the card's content blocks and their plain text.
+/// Replaces the card's content blocks, their plain text and the `mention`
+/// links they make, together. A card mentioning itself makes no link.
+/// Mentioned cards are not checked: a mention of a card deleted for good
+/// stays, as a dead reference.
 pub async fn set_content(pool: &SqlitePool, id: &str, json: &str) -> AppResult<()> {
     get(pool, id).await?;
     let blocks = content::parse(json)?;
     let text = content::plain_text(&blocks);
+    let mentioned: Vec<String> = content::mentions(&blocks)
+        .into_iter()
+        .filter(|target| target != id)
+        .collect();
     let mut tx = pool.begin().await?;
     queries::set_content(&mut tx, id, json, &text).await?;
+    links::replace_in(&mut tx, id, LinkKind::Mention, None, &mentioned).await?;
     document_queries::touch(&mut tx, id, &now()).await?;
     tx.commit().await?;
     Ok(())
