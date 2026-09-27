@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM property_values WHERE card_id = ? AND property_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "146703a765dcc378c74222538168771da4574174adbcf2579a37dc6dacec1aa8"
+}

@@ -65,8 +65,6 @@ impl TryFrom<LinkRow> for Link {
 
 /// Replaces the links of `kind` that `source_id` makes (for one `detail`, or
 /// for all when `detail` is `None`) with links to `targets`.
-// Used by link properties and mentions (M2 steps 2.8 and 2.10).
-#[cfg_attr(not(test), allow(dead_code))]
 pub async fn replace(
     pool: &SqlitePool,
     source_id: &str,
@@ -90,6 +88,11 @@ pub async fn replace(
     }
     tx.commit().await?;
     Ok(())
+}
+
+/// Removes the links of `kind` made with `detail` by any source.
+pub async fn remove_detail(pool: &SqlitePool, kind: LinkKind, detail: &str) -> AppResult<()> {
+    queries::delete_by_detail(pool, kind.as_str(), detail).await
 }
 
 /// Links pointing to `target_id`, whether their source still exists or not.

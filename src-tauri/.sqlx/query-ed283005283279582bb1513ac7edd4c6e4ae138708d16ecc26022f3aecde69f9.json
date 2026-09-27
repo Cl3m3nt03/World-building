@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM links WHERE kind = ? AND detail = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "ed283005283279582bb1513ac7edd4c6e4ae138708d16ecc26022f3aecde69f9"
+}

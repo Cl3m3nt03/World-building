@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TypeProperties } from "@/features/properties";
 import type { CanvasFormat, CardType, Orientation } from "@/lib/bindings";
 import { colorLabel, TYPE_COLORS, typeColor } from "../colors";
 import {
@@ -270,6 +271,15 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
           </form>
         </Section>
       )}
+
+      <Section title={t("properties.title")}>
+        {parent && (
+          <p className="-mt-1 text-sm text-muted-foreground">
+            {t("properties.inherits", { name: parent.name })}
+          </p>
+        )}
+        <TypeProperties typeId={type.id} />
+      </Section>
 
       <Section title={t("cardTypes.defaults")}>
         <p className="-mt-1 text-sm text-muted-foreground">{t("cardTypes.defaultsHint")}</p>

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-apply-property-to-existing"
+description = "Enables the apply_property_to_existing command without any pre-configured scope."
+commands.allow = ["apply_property_to_existing"]
+
+[[permission]]
+identifier = "deny-apply-property-to-existing"
+description = "Denies the apply_property_to_existing command without any pre-configured scope."
+commands.deny = ["apply_property_to_existing"]

@@ -148,6 +148,13 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 - **Liste** : `list_cards(trashed)` renvoie les cartes (ou celles de la corbeille) par nom, avec leur type, pour la sidebar de M2 et la corbeille.
 - **Création depuis un menu** : l'élément de menu qui lance la création est démonté quand le menu se ferme ; la suite (ouvrir la carte) passe donc par la promesse de `mutateAsync`, pas par les callbacks de `mutate`, qui ne s'exécutent pas pour un appelant démonté.
 
+### Propriétés des cartes
+
+- **Tables** (`src-tauri/src/domain/properties.rs`, requêtes dans `src-tauri/src/db/properties.rs`, migration `0006`) : `property_definitions` (propriétaire : un type **ou** une carte, libellé, nature `text` / `number` / `card` / `cards`, types cibles des liens, `applies_to_existing`, ordre, date de création) et `property_values` (une valeur JSON par carte et propriété ; supprimer la carte ou la propriété supprime ses valeurs).
+- **Ce qu'une carte affiche** (`card_properties`) : les propriétés du type parent (pour un sous-type), puis celles de son type, puis les siennes. Une propriété de type ne s'affiche sur une carte créée avant elle que si `applies_to_existing` est vrai (`apply_property_to_existing`, le « Oui » du bandeau).
+- **Valeurs** (`set_property_value`) : la nature doit correspondre ; texte de 10 000 caractères au plus, nombre fini, 200 cartes au plus par lien multiple ; une valeur vide est retirée. Une valeur lien doit viser une carte hors corbeille d'un type autorisé (un sous-type est autorisé si son type l'est), et remplace les liens `property` de la carte pour cette propriété.
+- **Commandes** : `list_type_properties`, `card_properties`, `create_property(owner, label, kind)`, `rename_property`, `set_property_kind` (efface les valeurs et leurs liens si la nature change), `apply_property_to_existing`, `reorder_properties`, `count_property_values`, `delete_property` (avec ses valeurs et ses liens), `set_property_value`.
+
 ### Vignettes des mondes
 
 La liste des mondes affiche l'image principale de chaque monde **sans l'ouvrir** : une vignette (640 px au plus sur le grand côté, jamais agrandie, PNG) est mise en cache dans `<dossier de config>	humbnails\<id du monde>.png` (`src-tauri/src/thumbnails.rs`, crate `image`). Elle est regénérée quand l'image principale change (`set_world_main_image`), créée à l'ouverture d'un monde si elle manque, et supprimée si le monde n'a plus d'image. Les mondes récents mémorisent l'identifiant, le genre et la présence d'une vignette. Le protocole `bzthumb://<id>` la sert en lecture seule ; il n'accepte qu'un UUID, donc aucun autre fichier du dossier de config n'est atteignable. La CSP l'autorise pour `img-src` seulement.

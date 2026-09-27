@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO property_values (card_id, property_id, value) VALUES (?1, ?2, ?3)\n         ON CONFLICT (card_id, property_id) DO UPDATE SET value = ?3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "3a727b74985ef37c63f7a2f25f4201f1d054c40708e4c4f84cc89a1266824e92"
+}

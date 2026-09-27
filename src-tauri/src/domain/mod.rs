@@ -5,3 +5,4 @@ pub mod cards;
 pub mod documents;
 pub mod links;
 pub mod media;
+pub mod properties;

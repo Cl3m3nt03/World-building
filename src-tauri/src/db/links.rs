@@ -44,6 +44,19 @@ pub async fn insert(tx: &mut Transaction<'_, Sqlite>, row: &LinkRow) -> AppResul
     Ok(())
 }
 
+/// Removes the links of `kind` made with `detail`, whatever their source
+/// (a property is deleted).
+pub async fn delete_by_detail(pool: &SqlitePool, kind: &str, detail: &str) -> AppResult<()> {
+    sqlx::query!(
+        "DELETE FROM links WHERE kind = ? AND detail = ?",
+        kind,
+        detail
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 /// Removes every link whose source is `source_id` (the source is deleted).
 pub async fn delete_all_from(tx: &mut Transaction<'_, Sqlite>, source_id: &str) -> AppResult<()> {
     sqlx::query!("DELETE FROM links WHERE source_id = ?", source_id)
