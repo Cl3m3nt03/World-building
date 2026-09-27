@@ -66,6 +66,10 @@ export const commands = {
 	setCardImage: (id: string, assetId: string | null) => typedError<Card, AppError>(__TAURI_INVOKE("set_card_image", { id, assetId })),
 	/**  Replaces the card's aliases (trimmed, without duplicates). */
 	setCardAliases: (id: string, aliases: string[]) => typedError<Card, AppError>(__TAURI_INVOKE("set_card_aliases", { id, aliases })),
+	/**  The card's content blocks, as JSON. */
+	getCardContent: (id: string) => typedError<string, AppError>(__TAURI_INVOKE("get_card_content", { id })),
+	/**  Replaces the card's content blocks (JSON: a list of blocks). */
+	setCardContent: (id: string, content: string) => typedError<null, AppError>(__TAURI_INVOKE("set_card_content", { id, content })),
 	/**  Number of cards of a type and its subtypes. */
 	countTypeCards: (typeId: string) => typedError<number, AppError>(__TAURI_INVOKE("count_type_cards", { typeId })),
 	/**  Number of live cards per type or subtype. */

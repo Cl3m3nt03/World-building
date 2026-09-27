@@ -304,5 +304,17 @@
   "backlinks.none": "Aucune carte ne cite celle-ci pour l'instant.",
   "backlinks.via.mention": "mention",
   "backlinks.via.property": "propriété",
-  "backlinks.via.mapPin": "épingle de map"
+  "backlinks.via.mapPin": "épingle de map",
+  "blocks.title": "Contenu",
+  "blocks.empty": "Commencez à écrire… (ou ajoutez un bloc avec « + »)",
+  "blocks.add": "Ajouter un bloc",
+  "blocks.insert": "Insérer un bloc",
+  "blocks.types.text": "Texte",
+  "blocks.textLabel": "Bloc de texte {{index}}",
+  "blocks.textPlaceholder": "Écrivez, ou tapez « / » pour insérer un bloc",
+  "blocks.drag": "Déplacer le bloc {{index}} (Espace, puis flèches)",
+  "blocks.actions": "Actions du bloc {{index}}",
+  "blocks.moveUp": "Monter",
+  "blocks.moveDown": "Descendre",
+  "blocks.delete": "Supprimer le bloc"
 }

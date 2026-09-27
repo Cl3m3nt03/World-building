@@ -100,3 +100,52 @@
     @apply font-heading;
   }
 }
+
+/* Rich text of the card blocks (TipTap). */
+.prose-bz {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.prose-bz > * + * {
+  margin-top: 0.5em;
+}
+.prose-bz h1 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.prose-bz h2 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.prose-bz h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.prose-bz ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.prose-bz ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.prose-bz blockquote {
+  border-left: 3px solid var(--bz-border-strong);
+  padding-left: 0.8em;
+  color: var(--bz-text-muted);
+}
+.prose-bz code {
+  border-radius: var(--bz-radius-sm);
+  background: var(--bz-hover);
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+}
+.prose-bz p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--bz-text-muted);
+}

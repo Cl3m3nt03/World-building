@@ -18,6 +18,7 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
+import { BlockEditor } from "../blocks/BlockEditor";
 import {
   useCard,
   useMarkOpened,
@@ -310,6 +311,7 @@ export function CardPage() {
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
       </header>
+      <BlockEditor key={card.data.id} cardId={card.data.id} />
       <Backlinks cardId={card.data.id} />
     </article>
   );

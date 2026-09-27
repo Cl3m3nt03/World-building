@@ -155,6 +155,13 @@ Vitest, avec Testing Library et jsdom pour les tests de composants (directive `/
 - **Valeurs** (`set_property_value`) : la nature doit correspondre ; texte de 10 000 caractères au plus, nombre fini, 200 cartes au plus par lien multiple ; une valeur vide est retirée. Une valeur lien doit viser une carte hors corbeille d'un type autorisé (un sous-type est autorisé si son type l'est), et remplace les liens `property` de la carte pour cette propriété.
 - **Commandes** : `list_type_properties`, `card_properties`, `create_property(owner, label, kind)`, `rename_property`, `set_property_kind` (efface les valeurs et leurs liens si la nature change), `apply_property_to_existing`, `reorder_properties`, `count_property_values`, `delete_property` (avec ses valeurs et ses liens), `set_property_value`.
 
+### Contenu des cartes (blocs)
+
+- **Format** (`src-tauri/src/domain/content.rs`) : `cards.content` contient un tableau JSON de blocs `{ id, type, … }` ; le bloc texte a un document TipTap dans `doc`. Le Rust vérifie le plan (tableau, identifiants uniques, type connu : `text`, `image`, `stats5e`, `map`), la taille (4 Mo, 500 blocs), et dérive `content_text` (texte des blocs texte, libellé des mentions, légendes d'images) pour la recherche. La forme interne des blocs appartient au front.
+- **Commandes** : `get_card_content(id)` et `set_card_content(id, content)` (chaîne JSON) ; l'enregistrement met à jour la date de modification du document.
+- **Front** (`src/features/cards/blocks/`) : `BlockEditor` garde les blocs en mémoire et les enregistre 600 ms après la dernière modification, immédiatement pour un ajout, un déplacement ou une suppression, et en quittant la carte. Chaque bloc texte est un éditeur TipTap (StarterKit + Placeholder) ; le réordonnancement utilise dnd-kit (souris et clavier). Les modifications successives s'appliquent au dernier état connu (référence), jamais à un état figé au rendu.
+- **Dépendances** : `@tiptap/react`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-placeholder` et `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, conformes à l'ADR 0001 (TipTap pour l'éditeur, dnd-kit pour le glisser-déposer).
+
 ### Rétroliens
 
 `card_backlinks(cardId)` (`src-tauri/src/domain/links.rs`) : les liens vers la carte dont la source est un document vivant (ni à la corbeille, ni supprimé), avec le titre et le type de la source et, pour un lien de propriété, le libellé de la propriété. Chaque source apparaît une fois, avec toutes ses façons de citer la carte. Côté front, la requête est rangée sous les clés des documents : toute modification de carte ou de valeur lien la rafraîchit.

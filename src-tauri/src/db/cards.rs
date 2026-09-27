@@ -85,6 +85,32 @@ pub async fn set_aliases(
     Ok(())
 }
 
+/// The card's content blocks (JSON), if the card exists.
+pub async fn content(pool: &SqlitePool, id: &str) -> AppResult<Option<String>> {
+    Ok(
+        sqlx::query_scalar!("SELECT content FROM cards WHERE document_id = ?", id)
+            .fetch_optional(pool)
+            .await?,
+    )
+}
+
+pub async fn set_content(
+    tx: &mut Transaction<'_, Sqlite>,
+    id: &str,
+    content: &str,
+    text: &str,
+) -> AppResult<()> {
+    sqlx::query!(
+        "UPDATE cards SET content = ?, content_text = ? WHERE document_id = ?",
+        content,
+        text,
+        id
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
 /// Cards in the trash (`trashed = true`) or out of it, by title
 /// (case-insensitive for ASCII).
 pub async fn list(pool: &SqlitePool, trashed: bool) -> AppResult<Vec<CardRow>> {
