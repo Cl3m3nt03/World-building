@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/globals.css";
@@ -5,6 +6,8 @@ import { App } from "./app/App";
 import { initTheme } from "./app/theme";
 import { loadPreferences } from "./features/settings";
 import { initI18n } from "./i18n";
+import { commands } from "./lib/bindings";
+import { BEFORE_CLOSE_EVENT, flushPendingSaves } from "./lib/pendingSaves";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -24,3 +27,11 @@ async function start(root: HTMLElement): Promise<void> {
 }
 
 void start(rootElement);
+
+// Closing the window saves the pending edits first (text typed less than a
+// second ago): the Rust holds the close back and asks (see closing.rs), then
+// closes the window anyway after a few seconds.
+void listen(BEFORE_CLOSE_EVENT, async () => {
+  await flushPendingSaves(3000);
+  await commands.finishClose();
+});

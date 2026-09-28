@@ -1,3 +1,4 @@
+mod closing;
 mod commands;
 mod db;
 mod domain;
@@ -81,6 +82,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::world::delete_world,
         commands::world::set_world_theme,
         commands::world::set_world_preferences,
+        closing::finish_close,
         commands::world::set_world_main_image,
     ])
 }
@@ -95,6 +97,13 @@ pub fn run() -> tauri::Result<()> {
         .invoke_handler(builder.invoke_handler())
         .register_asynchronous_uri_scheme_protocol(protocol::SCHEME, protocol::handle)
         .register_asynchronous_uri_scheme_protocol(thumbnails::SCHEME, protocol::handle_thumbnail)
+        .manage(closing::Closing::default())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let closing = window.state::<closing::Closing>();
+                closing::on_close_requested(window, &closing, api);
+            }
+        })
         .setup(|app| {
             let log_dir = paths::log_dir(app.handle())?;
             let guard = logging::init(&log_dir)?;

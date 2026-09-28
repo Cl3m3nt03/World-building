@@ -46,6 +46,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { TemplateSection } from "@/lib/bindings";
+import { usePendingSave } from "@/lib/pendingSaves";
 import { ImageBlockView } from "./ImageBlockView";
 import { type Block, type BlockType, move, newBlock } from "./model";
 import { Stats5eBlockView } from "./stats/Stats5eBlockView";
@@ -272,18 +273,24 @@ export function BlockEditor({
     }
   }, [content.data, blocks]);
 
+  // The save in progress, awaited before the world closes.
+  const saving = useRef<Promise<unknown> | undefined>(undefined);
   const flush = useCallback(() => {
     clearTimeout(timer.current);
     if (pending.current) {
-      save.mutate(pending.current);
+      // A failure is shown under the blocks (`save.error`).
+      saving.current = save.mutateAsync(pending.current).catch(() => {});
       pending.current = null;
     }
-  }, [save.mutate]);
+    return saving.current;
+  }, [save.mutateAsync]);
 
-  // Unsaved changes are saved when leaving the card.
+  // Unsaved changes are saved when leaving the card, and before the world
+  // or the window closes.
   const flushRef = useRef(flush);
   flushRef.current = flush;
-  useEffect(() => () => flushRef.current(), []);
+  useEffect(() => () => void flushRef.current(), []);
+  usePendingSave(flush);
 
   const update = (change: (previous: Block[]) => Block[], immediately = false) => {
     const next = change(current.current);
