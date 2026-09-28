@@ -11,6 +11,7 @@ export {
   useOpenWorld,
   usePreviewWorldTheme,
   useSetWorldMainImage,
+  useSetWorldPreferences,
   useSetWorldTheme,
   useUpdateWorld,
 } from "./hooks/useWorlds";

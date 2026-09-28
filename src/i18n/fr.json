@@ -467,5 +467,13 @@
   "worldTheme.color.blue": "Bleu",
   "worldTheme.color.teal": "Sarcelle",
   "worldTheme.color.green": "Vert",
-  "worldTheme.color.slate": "Ardoise"
+  "worldTheme.color.slate": "Ardoise",
+  "mentions.linkTo": "Lier à « {{name}} »",
+  "mentions.linkShortcut": "Alt+Entrée",
+  "worldSettings.preferences.entityDetection": "Détection d'entités",
+  "worldSettings.preferences.entityDetectionHelp": "Souligner dans les blocs texte les noms et alias de cartes écrits en toutes lettres, pour les lier en un clic ou avec Alt+Entrée.",
+  "worldSettings.preferences.autoMentionLinks": "Liens automatiques des mentions",
+  "worldSettings.preferences.autoMentionLinksHelp": "Transformer en mention le nom ou l'alias d'une carte dès qu'on le tape. Retour arrière juste après garde le texte. Désactivez pour lier les cartes vous-même, avec @.",
+  "worldSettings.preferences.animateNewLinks": "Animer les nouveaux liens",
+  "worldSettings.preferences.animateNewLinksHelp": "Faire apparaître avec une courte animation une mention créée automatiquement. Jamais si Windows demande de réduire les animations."
 }

@@ -50,7 +50,7 @@ Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles e
 - **Types** : nombre de types et « Gérer les types », qui ouvre l'écran des types (voir `01-cartes-et-types.md`).
 - **Médias** : nombre de fichiers et « Ouvrir la médiathèque ».
 - **Thème** : voir « Thème du monde ».
-- **Préférences** : se termine par la **zone dangereuse**. « Supprimer le monde » demande de taper le nom du monde (les espaces autour sont ignorés, pas la casse). Le monde est fermé, son dossier part dans la **corbeille de Windows** (on peut l'y restaurer, puis l'ouvrir avec « Ouvrir un monde »), il quitte la liste des mondes et l'app revient à cette liste. Si le dossier ne peut pas être déplacé (fichier ouvert ailleurs…), un message le dit et le monde reste ouvert, intact.
+- **Préférences** : les préférences d'écriture du monde, chacune avec un interrupteur et son explication : **Détection d'entités**, **Liens automatiques des mentions** et **Animer les nouveaux liens** (voir `01-cartes-et-types.md`, « Noms de cartes dans le texte »). Toutes sont activées par défaut, s'appliquent aussitôt et sont retrouvées après relance. La section se termine par la **zone dangereuse**. « Supprimer le monde » demande de taper le nom du monde (les espaces autour sont ignorés, pas la casse). Le monde est fermé, son dossier part dans la **corbeille de Windows** (on peut l'y restaurer, puis l'ouvrir avec « Ouvrir un monde »), il quitte la liste des mondes et l'app revient à cette liste. Si le dossier ne peut pas être déplacé (fichier ouvert ailleurs…), un message le dit et le monde reste ouvert, intact.
 
 Collaboration et Site & domaine, présents chez vvd, sont retirés (voir `docs/contexte.md`). Importer et Exporter arriveront avec leurs modules.
 

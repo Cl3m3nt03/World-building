@@ -7,7 +7,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { useUiStore } from "@/app/stores/ui";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { AppSettings, Asset, WorldInfo, WorldPatch } from "@/lib/bindings";
+import type { AppSettings, Asset, WorldInfo, WorldPatch, WorldPreferences } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const IMAGE: Asset = {
@@ -28,6 +28,7 @@ const WORLD: WorldInfo = {
   description: "",
   mainImage: null,
   theme: { kind: "default" },
+  preferences: { entityDetection: true, autoMentionLinks: true, animateNewLinks: true },
   path: "C:\\Mondes\\Aldoria",
   schemaVersion: 6,
   createdAt: "2026-09-26T10:00:00Z",
@@ -86,6 +87,13 @@ beforeEach(() => {
       }
       case "set_world_main_image":
         if (world) world = { ...world, mainImage: (payload as { assetId: string | null }).assetId };
+        return world;
+      case "set_world_preferences":
+        if (world)
+          world = {
+            ...world,
+            preferences: (payload as { preferences: WorldPreferences }).preferences,
+          };
         return world;
       case "delete_world":
         if (deleteFails) throw { code: "io", message: "recycle bin: access denied" };
@@ -262,4 +270,32 @@ test("a failed deletion is said and the world stays open", async () => {
 
   expect(await within(confirm).findByRole("alert")).toBeTruthy();
   expect(router.state.location.pathname).toBe(`/world/${WORLD.id}/home`);
+});
+
+test("the writing preferences are all on by default and saved when switched", async () => {
+  const { dialog } = await renderSettings();
+  act(() => useUiStore.getState().openWorldSettings("preferences"));
+
+  const autoLinks = await within(dialog).findByRole("switch", {
+    name: "Liens automatiques des mentions",
+  });
+  for (const name of [
+    "Détection d'entités",
+    "Liens automatiques des mentions",
+    "Animer les nouveaux liens",
+  ]) {
+    expect(within(dialog).getByRole("switch", { name }).getAttribute("aria-checked")).toBe("true");
+  }
+
+  fireEvent.click(autoLinks);
+
+  await waitFor(() =>
+    expect(calls).toContainEqual({
+      command: "set_world_preferences",
+      payload: {
+        preferences: { entityDetection: true, autoMentionLinks: false, animateNewLinks: true },
+      },
+    }),
+  );
+  await waitFor(() => expect(autoLinks.getAttribute("aria-checked")).toBe("false"));
 });

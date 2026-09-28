@@ -631,3 +631,25 @@ async fn a_deleted_asset_is_forgotten_as_main_image_and_background() {
     assert!(!world.forget_asset(&id).unwrap());
     world.close().await;
 }
+
+// --- Preferences ------------------------------------------------------------
+
+#[tokio::test]
+async fn preferences_survive_a_reopening_and_defaults_are_not_written() {
+    let (_dir, root) = temp_root();
+    let mut world = create(&root, "W", &V1).await.unwrap();
+    assert_eq!(world.info().preferences, WorldPreferences::default());
+    let json = std::fs::read_to_string(root.join(WORLD_FILE)).unwrap();
+    assert!(!json.contains("preferences"), "{json}");
+
+    let off = WorldPreferences {
+        auto_mention_links: false,
+        ..WorldPreferences::default()
+    };
+    world.set_preferences(off).unwrap();
+    world.close().await;
+
+    let reopened = open(&root, &V1).await.unwrap();
+    assert_eq!(reopened.info().preferences, off);
+    reopened.close().await;
+}

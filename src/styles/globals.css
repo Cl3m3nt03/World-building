@@ -168,6 +168,27 @@
   outline: 2px solid var(--bz-accent);
   outline-offset: 1px;
 }
+/* A mention just created from a typed or detected name ("Animate new links"). */
+.prose-bz .mention-fresh .mention-link {
+  animation: bz-mention-appear 600ms ease-out;
+}
+@keyframes bz-mention-appear {
+  from {
+    background: color-mix(in srgb, var(--bz-accent) 45%, transparent);
+    transform: scale(0.92);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prose-bz .mention-fresh .mention-link {
+    animation: none;
+  }
+}
+/* A card name written in the text ("Entity detection"). */
+.prose-bz .entity-detected {
+  text-decoration: underline dotted var(--bz-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
 /* A mention of a card in the trash or deleted. */
 .prose-bz .mention-dead {
   color: var(--bz-text-muted);
