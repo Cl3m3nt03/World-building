@@ -24,8 +24,10 @@ use crate::db;
 use crate::error::{AppError, AppResult};
 
 pub mod assets;
+pub mod preferences;
 pub mod theme;
 
+pub use preferences::WorldPreferences;
 pub use theme::WorldTheme;
 
 pub const WORLD_FILE: &str = "world.json";
@@ -54,8 +56,8 @@ pub enum Genre {
 
 /// Content of `world.json`.
 ///
-/// Fields added after 0.1.0 (`genre`, `description`, `mainImage`, `theme`)
-/// are optional when reading, so older worlds still open.
+/// Fields added after 0.1.0 (`genre`, `description`, `mainImage`, `theme`,
+/// `preferences`) are optional when reading, so older worlds still open.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldFile {
@@ -76,6 +78,13 @@ pub struct WorldFile {
         skip_serializing_if = "WorldTheme::is_default"
     )]
     pub theme: WorldTheme,
+    /// Absent: all on. Read tolerantly (see `preferences`).
+    #[serde(
+        default,
+        deserialize_with = "preferences::deserialize_lenient",
+        skip_serializing_if = "WorldPreferences::is_default"
+    )]
+    pub preferences: WorldPreferences,
     pub schema_version: i64,
     #[serde(with = "time::serde::rfc3339")]
     pub created_at: OffsetDateTime,
@@ -96,6 +105,7 @@ pub struct WorldInfo {
     /// Asset id of the main image, if any.
     pub main_image: Option<String>,
     pub theme: WorldTheme,
+    pub preferences: WorldPreferences,
     /// Absolute path of the world folder.
     pub path: String,
     pub schema_version: u32,
@@ -121,6 +131,7 @@ impl OpenWorld {
             description: self.file.description.clone(),
             main_image: self.file.main_image.clone(),
             theme: self.file.theme.clone(),
+            preferences: self.file.preferences,
             path: self.root.display().to_string(),
             schema_version: u32::try_from(self.file.schema_version).unwrap_or(u32::MAX),
             created_at: format_date(self.file.created_at),
@@ -177,6 +188,13 @@ impl OpenWorld {
         }
         let mut file = self.file.clone();
         file.theme = theme;
+        self.save(file)
+    }
+
+    /// Sets the writing preferences.
+    pub fn set_preferences(&mut self, preferences: WorldPreferences) -> AppResult<()> {
+        let mut file = self.file.clone();
+        file.preferences = preferences;
         self.save(file)
     }
 
@@ -420,6 +438,7 @@ async fn create_in(
         description: String::new(),
         main_image: None,
         theme: WorldTheme::Default,
+        preferences: WorldPreferences::default(),
         schema_version: db::latest_version(migrator),
         created_at: created,
         updated_at: created,

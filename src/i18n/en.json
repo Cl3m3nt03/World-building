@@ -467,5 +467,13 @@
   "worldTheme.color.blue": "Blue",
   "worldTheme.color.teal": "Teal",
   "worldTheme.color.green": "Green",
-  "worldTheme.color.slate": "Slate"
+  "worldTheme.color.slate": "Slate",
+  "mentions.linkTo": "Link to “{{name}}”",
+  "mentions.linkShortcut": "Alt+Enter",
+  "worldSettings.preferences.entityDetection": "Entity detection",
+  "worldSettings.preferences.entityDetectionHelp": "Underline card names and aliases written in text blocks, to link them with a click or Alt+Enter.",
+  "worldSettings.preferences.autoMentionLinks": "Automatic mention links",
+  "worldSettings.preferences.autoMentionLinksHelp": "Turn a card name or alias into a mention as soon as it is typed. Backspace right after keeps the text. Turn off to link cards yourself, with @.",
+  "worldSettings.preferences.animateNewLinks": "Animate new links",
+  "worldSettings.preferences.animateNewLinksHelp": "Show a mention created automatically with a short animation. Never when Windows asks to reduce animations."
 }

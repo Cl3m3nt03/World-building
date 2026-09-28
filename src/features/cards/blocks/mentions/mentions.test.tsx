@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 import type { Card } from "@/lib/bindings";
 import { TextBlockEditor } from "../TextBlockEditor";
-import { MentionContext, type MentionWorld } from "./MentionContext";
+import { DEFAULT_PREFERENCES, MentionContext, type MentionWorld } from "./MentionContext";
 import { MAX_SUGGESTIONS, searchMentions } from "./search";
 import { createSuggestionStore } from "./suggestionStore";
 
@@ -75,7 +75,14 @@ test("the suggestion store moves, wraps around, picks and closes", () => {
 });
 
 function renderMention(world: Partial<MentionWorld>, id: string, label: string) {
-  const value: MentionWorld = { cards: [], trashed: [], types: [], open: vi.fn(), ...world };
+  const value: MentionWorld = {
+    cards: [],
+    trashed: [],
+    types: [],
+    preferences: DEFAULT_PREFERENCES,
+    open: vi.fn(),
+    ...world,
+  };
   render(
     <MentionContext.Provider value={value}>
       <TextBlockEditor

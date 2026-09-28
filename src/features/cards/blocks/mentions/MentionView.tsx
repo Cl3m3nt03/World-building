@@ -1,6 +1,7 @@
 import { NodeViewWrapper, type ReactNodeViewProps } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
 import { typeColor, typeIcon } from "@/features/card-types";
+import { forgetFresh, isFresh } from "./fresh";
 import { useMentionWorld } from "./MentionContext";
 
 /**
@@ -33,7 +34,11 @@ export function MentionView({ node }: ReactNodeViewProps) {
   const type = types.find((candidate) => candidate.id === card.typeId);
   const Icon = typeIcon(type?.icon ?? "shapes");
   return (
-    <NodeViewWrapper as="span" className="mention">
+    <NodeViewWrapper
+      as="span"
+      className={isFresh(node) ? "mention mention-fresh" : "mention"}
+      onAnimationEnd={() => forgetFresh(node)}
+    >
       <a
         href={`#card-${card.id}`}
         aria-label={t("mentions.open", { name: card.title })}

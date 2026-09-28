@@ -16,10 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
+import { useCurrentWorld } from "@/features/world";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { BlockEditor, type BlockEditorHandle } from "../blocks/BlockEditor";
-import { MentionContext } from "../blocks/mentions/MentionContext";
+import { DEFAULT_PREFERENCES, MentionContext } from "../blocks/mentions/MentionContext";
 import { effectiveTemplate } from "../blocks/template";
 import {
   useCard,
@@ -263,6 +264,7 @@ export function CardPage() {
   // Live cards, for the mentions (current names, dead references).
   const allCards = useCardList(false);
   const trashedCards = useCardList(true);
+  const { data: world } = useCurrentWorld();
   const all = types.data ?? [];
   const blocksRef = useRef<BlockEditorHandle>(null);
 
@@ -338,6 +340,7 @@ export function CardPage() {
           cards: allCards.data ?? [],
           trashed: trashedCards.data ?? [],
           types: all,
+          preferences: world?.preferences ?? DEFAULT_PREFERENCES,
           open: (id) =>
             void navigate({
               to: "/world/$worldId/world/card/$cardId",

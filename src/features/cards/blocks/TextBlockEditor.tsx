@@ -1,8 +1,17 @@
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { EntityChip } from "./mentions/EntityChip";
+import { entityNames } from "./mentions/entities";
+import {
+  type ChipListener,
+  cardEntities,
+  entityPluginKey,
+  linkDetectedAtCaret,
+  REFRESH_ENTITIES,
+} from "./mentions/entityExtension";
 import { useMentionWorld } from "./mentions/MentionContext";
 import { MentionSuggestions } from "./mentions/MentionSuggestions";
 import { cardMention } from "./mentions/mentionExtension";
@@ -49,6 +58,11 @@ export function TextBlockEditor({
   const worldRef = useRef(world);
   worldRef.current = world;
   const [suggestions] = useState(createSuggestionStore);
+  // Card names that can be detected or linked here, read by the editor's
+  // extension at each keystroke.
+  const names = useMemo(() => entityNames(world.cards, cardId), [world.cards, cardId]);
+  const entitySource = useRef({ names, preferences: world.preferences });
+  const [chip, setChip] = useState<Parameters<ChipListener>[0]>(null);
 
   const editor = useEditor({
     extensions: [
@@ -67,6 +81,7 @@ export function TextBlockEditor({
         },
       }),
       cardMention((query) => searchMentions(worldRef.current.cards, query, cardId), suggestions),
+      cardEntities(() => entitySource.current, setChip),
     ],
     content: doc,
     autofocus: autoFocus ? "end" : false,
@@ -99,12 +114,31 @@ export function TextBlockEditor({
       },
     },
     onUpdate: ({ editor: current }) => callbacks.current.onChange(current.getJSON()),
+    onBlur: () => setChip(null),
   });
+
+  // New cards, renamed cards or changed preferences: the extension reads
+  // them from now on, and looks for the names again.
+  const { preferences } = world;
+  useEffect(() => {
+    entitySource.current = { names, preferences };
+    if (!editor || editor.isDestroyed) return;
+    editor.view.dispatch(editor.state.tr.setMeta(entityPluginKey, REFRESH_ENTITIES));
+  }, [editor, names, preferences]);
 
   return (
     <>
       <EditorContent editor={editor} />
       <MentionSuggestions store={suggestions} />
+      {editor && chip && (
+        <EntityChip
+          chip={chip}
+          onLink={() => {
+            linkDetectedAtCaret(editor.view, () => entitySource.current);
+            setChip(null);
+          }}
+        />
+      )}
     </>
   );
 }

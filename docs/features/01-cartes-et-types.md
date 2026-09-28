@@ -50,6 +50,12 @@ Les blocs peuvent être réordonnés par glisser-déposer et supprimés.
 
 **Mentions (2.10)** : taper `@` après une espace (ou en début de ligne) ouvre la liste des cartes, filtrée par nom et par alias en ignorant la casse et les accents (les noms d'abord, puis les alias, avec l'alias trouvé indiqué ; la carte en cours n'y est pas). Les flèches choisissent, Entrée ou Tab insère, Échap referme. La mention insère le nom de la carte, pas l'alias tapé. Elle affiche toujours le nom actuel de la carte (renommer la carte la met à jour) et l'ouvre d'un clic. Une mention d'une carte à la corbeille s'affiche barrée, avec son dernier nom ; d'une carte supprimée définitivement, barrée avec le nom qu'elle avait. Chaque mention crée un lien `mention` (une carte qui se mentionne elle-même n'en crée pas), donc une entrée dans « Cité dans » de la carte mentionnée.
 
+**Noms de cartes dans le texte (2.18)** : trois préférences du monde (Réglages du monde › Préférences, toutes activées par défaut) agissent dans les blocs texte. Un « nom » est le nom ou un alias d'une carte vivante, d'au moins deux caractères, écrit comme un mot entier (la casse est ignorée) ; la carte en cours n'est jamais proposée, ni un nom partagé par deux cartes (ambigu), ni le texte tapé après `@` ou déjà mentionné.
+
+- **Liens automatiques des mentions** : un nom tapé devient une mention dès le caractère suivant (espace, ponctuation) ou `Entrée`. **Retour arrière** juste après rend le texte tapé. Si un nom plus long commence par ce nom et ce séparateur (« Minas », puis une espace, avec une carte « Minas Tirith »), le lien attend le mot suivant : « Minas Tirith » est lié s'il est complété, sinon « Minas » est lié quand le mot suivant se termine (ou en fin de ligne).
+- **Détection d'entités** : les noms déjà écrits (texte collé, écrit avant la carte, lien refusé par Retour arrière, liens automatiques désactivés) sont soulignés en pointillés. Quand on place le curseur sur l'un d'eux (clic, flèches), une petite pastille « Lier à « Gondor » » apparaît dessous ; elle le transforme en mention, comme `Alt+Entrée`. Elle n'apparaît jamais pendant la frappe.
+- **Animer les nouveaux liens** : une mention créée par un lien automatique ou par « Lier » apparaît avec une courte animation, jamais si Windows demande de réduire les animations.
+
 ## Templates guidés
 
 Chaque type peut avoir un template guidé : une liste de sections avec un titre et une question d'aide. Par exemple, pour un personnage : *Background*, *Personnalité*, *Apparence*.

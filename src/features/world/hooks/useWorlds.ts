@@ -7,6 +7,7 @@ import {
   type Genre,
   type WorldInfo,
   type WorldPatch,
+  type WorldPreferences,
   type WorldTheme,
 } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
@@ -145,6 +146,26 @@ export function useSetWorldTheme() {
     onMutate: async (theme) => {
       await queryClient.cancelQueries({ queryKey: worldKeys.current() });
       preview(theme);
+    },
+    onSuccess: (world) => queryClient.setQueryData(worldKeys.current(), world),
+    onError: () => queryClient.invalidateQueries({ queryKey: worldKeys.current() }),
+  });
+}
+
+/**
+ * Sets the writing preferences of the open world. They apply at once; if
+ * saving fails, the saved ones come back.
+ */
+export function useSetWorldPreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (preferences: WorldPreferences) =>
+      unwrap(commands.setWorldPreferences(preferences)),
+    onMutate: async (preferences) => {
+      await queryClient.cancelQueries({ queryKey: worldKeys.current() });
+      queryClient.setQueryData<WorldInfo | null>(worldKeys.current(), (world) =>
+        world ? { ...world, preferences } : world,
+      );
     },
     onSuccess: (world) => queryClient.setQueryData(worldKeys.current(), world),
     onError: () => queryClient.invalidateQueries({ queryKey: worldKeys.current() }),

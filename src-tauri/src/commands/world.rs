@@ -10,7 +10,7 @@ use crate::error::{AppError, AppResult};
 use crate::settings::{self, AppSettings, RecentWorld};
 use crate::state::AppState;
 use crate::thumbnails;
-use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch, WorldTheme};
+use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch, WorldPreferences, WorldTheme};
 
 /// Creates a world named `name`, of the given genre, in a new folder inside
 /// `parent_dir` (the folder is named after the world), and opens it.
@@ -130,6 +130,21 @@ pub async fn set_world_theme(
         .as_mut()
         .ok_or_else(|| AppError::NoWorldOpen("set_world_theme".into()))?;
     world.set_theme(theme)?;
+    Ok(world.info())
+}
+
+/// Sets the writing preferences of the open world.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_world_preferences(
+    state: State<'_, AppState>,
+    preferences: WorldPreferences,
+) -> AppResult<WorldInfo> {
+    let mut guard = state.world.lock().await;
+    let world = guard
+        .as_mut()
+        .ok_or_else(|| AppError::NoWorldOpen("set_world_preferences".into()))?;
+    world.set_preferences(preferences)?;
     Ok(world.info())
 }
 

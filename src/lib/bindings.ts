@@ -144,6 +144,7 @@ export const commands = {
 	/**  Asset id of the main image, if any. */
 	mainImage: string | null,
 	theme: WorldTheme,
+	preferences: WorldPreferences,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
@@ -165,6 +166,8 @@ export const commands = {
 	 *  media library).
 	 */
 	setWorldTheme: (theme: WorldTheme) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_theme", { theme })),
+	/**  Sets the writing preferences of the open world. */
+	setWorldPreferences: (preferences: WorldPreferences) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_preferences", { preferences })),
 	/**  Sets (asset id) or clears (`null`) the main image of the open world. */
 	setWorldMainImage: (assetId: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_main_image", { assetId })),
 };
@@ -480,6 +483,7 @@ export type WorldInfo = {
 	/**  Asset id of the main image, if any. */
 	mainImage: string | null,
 	theme: WorldTheme,
+	preferences: WorldPreferences,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
@@ -493,6 +497,21 @@ export type WorldPatch = {
 	name?: string | null,
 	genre?: Genre | null,
 	description?: string | null,
+};
+
+export type WorldPreferences = {
+	/**
+	 *  Card names and aliases written in text blocks are underlined, and
+	 *  can be turned into mentions.
+	 */
+	entityDetection: boolean,
+	/**
+	 *  A card name or alias typed in a text block becomes a mention as soon
+	 *  as the next character is typed.
+	 */
+	autoMentionLinks: boolean,
+	/**  A mention created automatically shows with a short animation. */
+	animateNewLinks: boolean,
 };
 
 export type WorldTheme = 
