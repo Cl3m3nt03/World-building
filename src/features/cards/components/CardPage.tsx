@@ -18,6 +18,7 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { useCurrentWorld } from "@/features/world";
 import type { Card, CardType } from "@/lib/bindings";
+import { usePendingSave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
 import { BlockEditor, type BlockEditorHandle } from "../blocks/BlockEditor";
 import { DEFAULT_PREFERENCES, MentionContext } from "../blocks/mentions/MentionContext";
@@ -63,11 +64,15 @@ function TitleField({ card }: { card: Card }) {
     return () => cancelAnimationFrame(frame);
   }, [focusTitleOf, card.id, setFocusTitle]);
 
+  // Returns the save, awaited before the world or the window closes.
   const save = (value: string) => {
     clearTimeout(timer.current);
     const trimmed = value.trim();
-    if (trimmed !== "" && trimmed !== card.title) rename.mutate(trimmed);
+    if (trimmed === "" || trimmed === card.title) return undefined;
+    // A failure is shown under the title (`rename.error`).
+    return rename.mutateAsync(trimmed).catch(() => {});
   };
+  usePendingSave(() => save(title));
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -88,9 +93,9 @@ function TitleField({ card }: { card: Card }) {
           clearTimeout(timer.current);
           timer.current = setTimeout(() => save(value), SAVE_DELAY_MS);
         }}
-        onBlur={() => save(title)}
+        onBlur={() => void save(title)}
         onKeyDown={(event) => {
-          if (event.key === "Enter") save(title);
+          if (event.key === "Enter") void save(title);
         }}
         className="h-auto border-transparent bg-transparent px-1 py-1 font-heading text-3xl font-bold shadow-none hover:border-border focus-visible:border-ring md:text-3xl dark:bg-transparent"
       />

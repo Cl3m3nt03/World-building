@@ -64,6 +64,7 @@
     "allow-delete-world",
     "allow-set-world-theme",
     "allow-set-world-preferences",
+    "allow-finish-close",
     "allow-set-world-main-image"
   ]
 }

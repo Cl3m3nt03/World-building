@@ -168,6 +168,8 @@ export const commands = {
 	setWorldTheme: (theme: WorldTheme) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_theme", { theme })),
 	/**  Sets the writing preferences of the open world. */
 	setWorldPreferences: (preferences: WorldPreferences) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_preferences", { preferences })),
+	/**  Closes the app once the front has saved its pending edits. */
+	finishClose: () => typedError<null, AppError>(__TAURI_INVOKE("finish_close")),
 	/**  Sets (asset id) or clears (`null`) the main image of the open world. */
 	setWorldMainImage: (assetId: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_main_image", { assetId })),
 };

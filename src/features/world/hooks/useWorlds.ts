@@ -11,6 +11,7 @@ import {
   type WorldTheme,
 } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
+import { flushPendingSaves } from "@/lib/pendingSaves";
 import { thumbnailsChanged } from "../thumbnails";
 import { worldKeys } from "./keys";
 
@@ -49,7 +50,11 @@ export function useOpenWorld() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   return useMutation({
-    mutationFn: (path: string) => unwrap(commands.openWorld(path)),
+    mutationFn: async (path: string) => {
+      // Opening a world closes the open one: its pending edits are saved first.
+      await flushPendingSaves();
+      return unwrap(commands.openWorld(path));
+    },
     onSuccess: async (world) => {
       onWorldOpened(queryClient, world);
       await navigate({ to: "/world/$worldId/home", params: { worldId: world.id } });
@@ -57,12 +62,18 @@ export function useOpenWorld() {
   });
 }
 
-/** Closes the open world and goes back to the world list. */
+/**
+ * Closes the open world and goes back to the world list. Pending edits (text
+ * typed less than a second ago) are saved first.
+ */
 export function useCloseWorld() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   return useMutation({
-    mutationFn: () => unwrap(commands.closeWorld()),
+    mutationFn: async () => {
+      await flushPendingSaves();
+      return unwrap(commands.closeWorld());
+    },
     onSuccess: async () => {
       queryClient.setQueryData(worldKeys.current(), null);
       await navigate({ to: "/" });

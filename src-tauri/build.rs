@@ -62,6 +62,7 @@ const COMMANDS: &[&str] = &[
     "delete_world",
     "set_world_theme",
     "set_world_preferences",
+    "finish_close",
     "set_world_main_image",
 ];
 

@@ -13,6 +13,7 @@ import {
   useSetPropertyValue,
 } from "@/features/properties";
 import type { CardProperty, PropertyValue } from "@/lib/bindings";
+import { usePendingSave } from "@/lib/pendingSaves";
 import { useCardList } from "../hooks/useCards";
 import { CardPicker } from "./CardPicker";
 
@@ -58,14 +59,19 @@ function TextValue({ cardId, property, inputId }: FieldProps) {
   useEffect(() => setText(saved), [saved]);
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  // Returns the save, awaited before the world or the window closes.
   const save = (value: string) => {
     clearTimeout(timer.current);
-    if (value === saved) return;
+    if (value === saved) return undefined;
     if (definition.kind === "number" && value.trim() !== "" && fromText("number", value) === null) {
-      return;
+      return undefined;
     }
-    setValue.mutate({ propertyId: definition.id, value: fromText(definition.kind, value) });
+    // A failure is shown under the field (`setValue.error`).
+    return setValue
+      .mutateAsync({ propertyId: definition.id, value: fromText(definition.kind, value) })
+      .catch(() => {});
   };
+  usePendingSave(() => save(text));
 
   return (
     <div className="flex flex-col gap-1">
@@ -81,7 +87,7 @@ function TextValue({ cardId, property, inputId }: FieldProps) {
           clearTimeout(timer.current);
           timer.current = setTimeout(() => save(value), SAVE_DELAY_MS);
         }}
-        onBlur={() => save(text)}
+        onBlur={() => void save(text)}
       />
       {invalid && <p className="text-xs text-destructive">{t("properties.notANumber")}</p>}
       {setValue.isError && <AppErrorMessage error={setValue.error} />}
