@@ -29,16 +29,26 @@ export const sidebarLink = (title: string) => $(`//aside//a[normalize-space()="$
 export async function createCard(type: string, title: string) {
   await $("button=Nouvelle carte").click();
   await $(`//*[@role="menuitem"][normalize-space()="${type}"]`).click();
-  // The new card opens with its title selected (checked by the unit tests
-  // and in the real app); here the title is replaced the way a user can
-  // always do it, which does not depend on WebDriver's focus timing.
+  // The new card opens with its title selected: typing at once replaces it
+  // (keys typed while the menu was still closing used to be lost, #122).
   const titleField = await $("aria/Nom de la carte");
-  await browser.waitUntil(async () => (await titleField.getValue()) === `${type} sans nom`, {
-    timeoutMsg: `the new ${type} card did not open`,
-  });
-  await titleField.click();
-  await browser.keys(["Control", "a"]);
+  await browser.waitUntil(
+    async () =>
+      browser.execute(() => {
+        const input = document.activeElement;
+        return (
+          input instanceof HTMLInputElement &&
+          input.value.endsWith(" sans nom") &&
+          input.selectionStart === 0 &&
+          input.selectionEnd === input.value.length
+        );
+      }),
+    { timeoutMsg: `the new ${type} card did not open with its title selected` },
+  );
   await browser.keys(title);
+  await browser.waitUntil(async () => (await titleField.getValue()) === title, {
+    timeoutMsg: `typing did not replace the title of the new ${type} card`,
+  });
   await sidebarLink(title).waitForDisplayed({ timeoutMsg: `${title} never showed in the sidebar` });
 }
 
