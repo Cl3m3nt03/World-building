@@ -123,6 +123,13 @@ function CreateCardItems({
  * card, the new card's title must keep it instead (it is selected to be
  * typed over); after Escape, the trigger gets it back as usual.
  */
+/**
+ * The creation menus close at once, without an exit animation: while a menu
+ * fades out, the item under the mouse takes the focus back, so the first
+ * letters typed in the new card's title would go to the menu and be lost.
+ */
+const NO_EXIT_ANIMATION = "w-64 data-[state=closed]:animate-none";
+
 function useKeepNewCardFocus() {
   const created = useRef(false);
   return {
@@ -148,7 +155,11 @@ export function CreateCardMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-64" onCloseAutoFocus={focus.onCloseAutoFocus}>
+      <DropdownMenuContent
+        align={align}
+        className={NO_EXIT_ANIMATION}
+        onCloseAutoFocus={focus.onCloseAutoFocus}
+      >
         <CreateCardItems parts={DROPDOWN} onCreate={focus.onCreate} />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -161,7 +172,7 @@ export function CreateCardContextMenu({ children }: { children: ReactNode }) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-64" onCloseAutoFocus={focus.onCloseAutoFocus}>
+      <ContextMenuContent className={NO_EXIT_ANIMATION} onCloseAutoFocus={focus.onCloseAutoFocus}>
         <CreateCardItems parts={CONTEXT} onCreate={focus.onCreate} />
       </ContextMenuContent>
     </ContextMenu>
