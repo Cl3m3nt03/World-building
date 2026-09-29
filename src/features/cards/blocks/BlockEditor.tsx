@@ -79,11 +79,14 @@ function BlockTypeMenu({
   onPick,
   open,
   onOpenChange,
+  onCloseAutoFocus,
   children,
 }: {
   onPick: (type: BlockType) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Where the focus goes when the menu closes (default: back to its trigger). */
+  onCloseAutoFocus?: (event: Event) => void;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -93,7 +96,11 @@ function BlockTypeMenu({
       {...(onOpenChange === undefined ? {} : { onOpenChange })}
     >
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent
+        align="start"
+        className="w-56"
+        {...(onCloseAutoFocus === undefined ? {} : { onCloseAutoFocus })}
+      >
         <DropdownMenuLabel>{t("blocks.insert")}</DropdownMenuLabel>
         {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
           <DropdownMenuItem key={type} onSelect={() => onPick(type)}>
@@ -136,6 +143,8 @@ function SortableBlock({
   const { t } = useTranslation();
   const [slashOpen, setSlashOpen] = useState(false);
   const removeSlashLine = useRef<(() => void) | null>(null);
+  const refocusSlashLine = useRef<(() => void) | null>(null);
+  const picked = useRef(false);
   const {
     attributes,
     listeners,
@@ -199,8 +208,10 @@ function SortableBlock({
             label={label}
             autoFocus={focus}
             onChange={(doc) => onChange({ ...block, doc })}
-            onSlash={(removeLine) => {
+            onSlash={(removeLine, refocus) => {
               removeSlashLine.current = removeLine;
+              refocusSlashLine.current = refocus;
+              picked.current = false;
               setSlashOpen(true);
             }}
             prompt={block.prompt}
@@ -213,7 +224,15 @@ function SortableBlock({
         <BlockTypeMenu
           open={slashOpen}
           onOpenChange={setSlashOpen}
+          // The menu's trigger cannot take the focus: closed without a choice
+          // (Escape), the focus goes back to the line where "/" was typed; a
+          // new block takes it itself.
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (!picked.current) refocusSlashLine.current?.();
+          }}
           onPick={(type) => {
+            picked.current = true;
             setSlashOpen(false);
             removeSlashLine.current?.();
             onInsertAfter(type);

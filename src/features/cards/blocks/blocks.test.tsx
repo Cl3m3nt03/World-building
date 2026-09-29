@@ -136,3 +136,22 @@ test("move and parseContent helpers", () => {
     parseContent('[{"id":"x","type":"video"},{"id":"y","type":"text","doc":{}}]'),
   ).toHaveLength(1);
 });
+
+test('"/" on an empty line opens the block menu; Escape gives the focus back to the text', async () => {
+  initial = [textBlock("t1", "")];
+  renderEditor();
+  const text = await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  act(() => text.focus());
+  await act(async () => {
+    fireEvent.keyDown(text, { key: "/" });
+  });
+  expect(await screen.findByRole("menuitem", { name: "Texte" })).toBeTruthy();
+
+  await act(async () => {
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+  });
+
+  await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Texte" })).toBeNull());
+  await waitFor(() => expect(document.activeElement).toBe(text));
+});
