@@ -21,7 +21,7 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 
 - **En haut à gauche** : le monde courant, avec la miniature de son image principale. Un clic ouvre les **réglages du monde** (voir plus bas), sur la section Général.
 - **Fond** : celui du thème du monde (voir « Thème du monde »), flouté et assombri (ADR 0003). Par défaut, c'est l'image principale du monde ouvert ; sans image, le dégradé par défaut. Une image introuvable donne aussi le dégradé. Sur la liste des mondes, le fond est la vignette du dernier monde ouvert. Changer l'image principale met aussi à jour la vignette du monde dans la liste.
-- **En haut au centre** : les onglets **Home**, **World**, **Wiki** et **Quill**.
+- **En haut au centre** : les onglets **Home**, **World**, **Wiki** et **Quill**. Une page rattachée à un onglet sans en être l'accueil (la médiathèque, sous Home) laisse cet onglet en surbrillance, et un clic dessus ramène à son accueil ; un clic sur l'onglet d'une page qui lui appartient déjà (une carte ouverte dans World) ne change rien.
 - **En haut à droite** : la radio, les réglages et le bouton « Mondes ».
 - **À gauche** : la sidebar (voir `02-organisation.md`), présente dans l'onglet World.
 - **Au centre** : l'espace de travail, où l'on crée et édite.
