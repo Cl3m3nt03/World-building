@@ -4,12 +4,15 @@ import { QueryClient } from "@tanstack/react-query";
  * TanStack Query wraps the Tauri commands (src/lib/bindings.ts, from 0.8).
  *
  * Key conventions:
- * - A key starts with the domain, then narrows down: ["world", worldId],
- *   ["cards", worldId, "list", filters], ["cards", worldId, "detail", cardId].
+ * - A key starts with the domain, then narrows down: ["cards", "list",
+ *   filters], ["cards", "detail", cardId].
  * - Each feature exposes its keys from one factory in
- *   src/features/<module>/hooks/keys.ts, e.g.
- *   `cardKeys.detail(worldId, cardId)`, so invalidation can target a prefix
- *   (`cardKeys.all(worldId)`) without hand-written arrays.
+ *   src/features/<module>/hooks/keys.ts, e.g. `cardKeys.detail(cardId)`, so
+ *   invalidation can target a prefix (`cardKeys.all()`) without hand-written
+ *   arrays.
+ * - Keys do not carry the world id: one world is open at a time, and
+ *   everything but the "app" and "world" roots is removed from the cache
+ *   when the world changes (`forgetWorldData`, features/world).
  */
 export function createQueryClient(): QueryClient {
   return new QueryClient({

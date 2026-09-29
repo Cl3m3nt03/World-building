@@ -25,7 +25,21 @@ export function useCurrentWorld() {
   return useQuery(currentWorldQuery);
 }
 
+/** Query key roots that do not belong to a world: app settings and info, the open world. */
+const APP_ROOTS: readonly unknown[] = [appKeys.all()[0], worldKeys.all()[0]];
+
+/**
+ * Forgets everything cached about the open world (cards, types, properties,
+ * documents, media…) when it closes or another one opens. The keys of those
+ * queries do not carry the world id, and their data never goes stale on its
+ * own: kept, the next world would show the previous one's.
+ */
+export function forgetWorldData(queryClient: QueryClient) {
+  queryClient.removeQueries({ predicate: (query) => !APP_ROOTS.includes(query.queryKey[0]) });
+}
+
 function onWorldOpened(queryClient: QueryClient, world: WorldInfo) {
+  forgetWorldData(queryClient);
   queryClient.setQueryData(worldKeys.current(), world);
   // Opening a world updates the recent worlds.
   void queryClient.invalidateQueries({ queryKey: appKeys.settings() });
@@ -77,6 +91,7 @@ export function useCloseWorld() {
     onSuccess: async () => {
       queryClient.setQueryData(worldKeys.current(), null);
       await navigate({ to: "/" });
+      forgetWorldData(queryClient);
     },
   });
 }
@@ -98,6 +113,7 @@ export function useDeleteWorld() {
       queryClient.setQueryData(worldKeys.current(), null);
       void queryClient.invalidateQueries({ queryKey: worldKeys.missing() });
       await navigate({ to: "/" });
+      forgetWorldData(queryClient);
     },
     onError: async () => {
       const world = await queryClient.fetchQuery({ ...currentWorldQuery, staleTime: 0 });
