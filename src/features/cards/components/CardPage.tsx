@@ -299,7 +299,10 @@ export function CardPage() {
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
-              <TitleField card={card.data} />
+              {/* One field per card: a field kept from the previous card would
+                  show its title for a moment, and the update to the new one
+                  would drop the selection of a new card's title. */}
+              <TitleField key={card.data.id} card={card.data} />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

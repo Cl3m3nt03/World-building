@@ -177,6 +177,26 @@ test("the Card tile creates a card of the chosen type and opens it, title select
   expect(title.value).toBe("Ville sans nom");
 });
 
+test("a card created from another card's page opens with its whole title selected", async () => {
+  const router = await renderAt("/world/demo/world/card/aragorn");
+  const previous = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  await waitFor(() => expect(previous.value).toBe("Aragorn"));
+
+  await openMenu(screen.getByRole("button", { name: "Nouvelle carte" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Lieu" }));
+  });
+
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/new"));
+  const title = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  await waitFor(() => expect(document.activeElement).toBe(title));
+  // A field of its own: the previous card's field, updated to the new title
+  // after the selection, would leave the caret at the end (typing appended).
+  expect(title).not.toBe(previous);
+  expect(title.value).toBe("Lieu sans nom");
+  expect([title.selectionStart, title.selectionEnd]).toEqual([0, title.value.length]);
+});
+
 test("the creation menu offers to make a new type", async () => {
   await renderAt("/world/demo/world");
 
