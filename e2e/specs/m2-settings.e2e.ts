@@ -3,6 +3,7 @@
  * - a world theme is kept after closing and reopening the world;
  * - a typed card name becomes a mention, and no longer once the automatic
  *   links are switched off (kept after reopening the world);
+ * - another world shows nothing of this one (#109);
  * - a deleted world leaves the world list.
  */
 
@@ -96,6 +97,24 @@ describe("M2: world settings, theme and writing preferences", () => {
     await expect($("aria/Bloc de texte 1")).toHaveText(expect.stringContaining("puis le Gondor"));
     // Still the one mention typed before: the second name stayed text.
     expect(await mentionCount("Gondor")).toBe(1);
+  });
+
+  it("shows nothing of this world in another one", async () => {
+    await $("button=Mondes").click();
+    await $("h1=Mondes").waitForDisplayed();
+    await createWorld("Númenor", "Science-fiction");
+    await openTab("World");
+    await expect($("aside a")).not.toBeExisting();
+    await openTab("Home");
+    await $("button=Types").click();
+    await $('//*[@role="dialog"]//button[normalize-space()="Vaisseau"]').waitForDisplayed();
+    await expect(
+      $('//*[@role="dialog"]//button[normalize-space()="Système de magie"]'),
+    ).not.toBeExisting();
+    await browser.keys("Escape");
+    await $('[role="dialog"]').waitForExist({ reverse: true });
+
+    await reopenWorld();
   });
 
   it("deletes the world, which leaves the world list", async () => {

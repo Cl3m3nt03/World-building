@@ -6,11 +6,15 @@
 export const currentWorldButton = (name: string) =>
   $(`aria/Monde courant : ${name}. Modifier le monde`);
 
-export async function createWorld(name: string) {
+export async function createWorld(name: string, genre?: string) {
   await $("button=Créer un monde").click();
   const nameInput = await $("aria/Nom");
   await nameInput.waitForDisplayed();
   await nameInput.setValue(name);
+  if (genre) {
+    await $('[role="dialog"] button[role="combobox"]').click();
+    await $(`//*[@role="option"][normalize-space()="${genre}"]`).click();
+  }
   await $("button=Créer").click();
   await currentWorldButton(name).waitForDisplayed();
 }

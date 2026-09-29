@@ -37,7 +37,7 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
 
 ### État
 
-- **Données du monde** : TanStack Query, par-dessus les commandes Tauri (à partir de 0.8). Client configuré dans `src/lib/query.ts` (pas de retry, données fraîches jusqu'à invalidation, puisque le Rust est le seul à écrire). Conventions de clés décrites dans ce fichier : le domaine d'abord, puis le détail (`["cards", worldId, "detail", cardId]`), avec une fabrique de clés par feature dans `src/features/<module>/hooks/keys.ts`.
+- **Données du monde** : TanStack Query, par-dessus les commandes Tauri (à partir de 0.8). Client configuré dans `src/lib/query.ts` (pas de retry, données fraîches jusqu'à invalidation, puisque le Rust est le seul à écrire). Conventions de clés décrites dans ce fichier : le domaine d'abord, puis le détail (`["cards", "detail", cardId]`), avec une fabrique de clés par feature dans `src/features/<module>/hooks/keys.ts`. Les clés ne contiennent pas l'identifiant du monde : un seul monde est ouvert à la fois, et **tout ce qui appartient au monde est retiré du cache** quand on en ouvre, crée, ferme ou supprime un (`forgetWorldData`, `src/features/world/hooks/useWorlds.ts`). Seules les racines `app` (réglages, infos) et `world` (monde ouvert, mondes introuvables) restent. Sans cela, les données n'expirant jamais d'elles-mêmes, un nouveau monde affichait les cartes, types et images du précédent (#109).
 - **État d'interface** : Zustand, `src/app/stores/ui.ts` (thème, transparence, largeur de la sidebar). Jamais de données du monde dans ce store. `useThemeSync` répercute le thème et la transparence sur `<html>`.
 
 ### Erreurs
