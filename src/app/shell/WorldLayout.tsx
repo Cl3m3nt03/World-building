@@ -31,7 +31,8 @@ export function tabFromPath(pathname: string): ShellTab | undefined {
  */
 export function WorldLayout() {
   const { worldId } = useParams({ from: "/world/$worldId" });
-  const tab = useLocation({ select: (location) => tabFromPath(location.pathname) }) ?? "home";
+  const pathTab = useLocation({ select: (location) => tabFromPath(location.pathname) });
+  const tab = pathTab ?? "home";
   const navigate = useNavigate();
   const cardTypesOpen = useUiStore((state) => state.cardTypesOpen);
   const setCardTypesOpen = useUiStore((state) => state.setCardTypesOpen);
@@ -45,7 +46,15 @@ export function WorldLayout() {
       }}
       className="flex h-full flex-col gap-2 p-2"
     >
-      <TopBar activeTab={tab} />
+      <TopBar
+        activeTab={tab}
+        // A page outside the tabs (the media library, under Home) highlights
+        // Home: a click on it must still lead back there. Within a tab (a card
+        // in World), the click changes nothing.
+        onTabClick={(value) => {
+          if (pathTab !== value) void navigate({ to: TAB_ROUTES[value], params: { worldId } });
+        }}
+      />
       <TabsContent value={tab} className="min-h-0 flex-1">
         <Outlet />
       </TabsContent>

@@ -21,9 +21,14 @@ const TABS: { value: ShellTab; icon: LucideIcon; label: TranslationKey }[] = [
 
 type TopBarProps = {
   activeTab: ShellTab;
+  /**
+   * A tab was clicked. Also called for the tab already shown: from a page
+   * inside it (the media library, under Home), it leads back to the tab.
+   */
+  onTabClick: (tab: ShellTab) => void;
 };
 
-export function TopBar({ activeTab }: TopBarProps) {
+export function TopBar({ activeTab, onTabClick }: TopBarProps) {
   const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
@@ -64,6 +69,7 @@ export function TopBar({ activeTab }: TopBarProps) {
           const active = value === activeTab;
           const trigger = (
             <TabsTrigger
+              onClick={() => onTabClick(value)}
               key={value}
               value={value}
               aria-label={t(label)}
