@@ -27,9 +27,10 @@ type TextBlockEditorProps = {
   onChange: (doc: JSONContent) => void;
   /**
    * "/" typed on an empty line: open the block menu. `removeLine` deletes
-   * that empty line (call it when a block is inserted in its place).
+   * that empty line (call it when a block is inserted in its place);
+   * `refocus` puts the focus back on that line (the menu was closed).
    */
-  onSlash: (removeLine: () => void) => void;
+  onSlash: (removeLine: () => void, refocus: () => void) => void;
   autoFocus?: boolean;
   /** Help question of a guided template section (shown under its title while empty). */
   prompt?: string | undefined;
@@ -107,7 +108,7 @@ export function TextBlockEditor({
               view.dispatch(state.tr.delete(start, start + line.nodeSize));
             }
           };
-          callbacks.current.onSlash(removeLine);
+          callbacks.current.onSlash(removeLine, () => view.focus());
           return true;
         }
         return false;
