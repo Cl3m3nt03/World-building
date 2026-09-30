@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.3.0](https://github.com/Cl3m3nt03/World-building/compare/v0.2.0...v0.3.0) (2026-09-29)
+
+
+### Fonctionnalités
+
+* **card-types:** add card types and genre default types ([#85](https://github.com/Cl3m3nt03/World-building/issues/85)) ([bac1730](https://github.com/Cl3m3nt03/World-building/commit/bac1730211cda9501a8143965f3c16f9d55e3624)), closes [#70](https://github.com/Cl3m3nt03/World-building/issues/70)
+* **card-types:** add the card types screen ([#86](https://github.com/Cl3m3nt03/World-building/issues/86)) ([ca25f41](https://github.com/Cl3m3nt03/World-building/commit/ca25f418f57a75b87fdbdf3afb3472202c845ce5)), closes [#71](https://github.com/Cl3m3nt03/World-building/issues/71)
+* **cards:** add the block editor with rich text blocks ([#92](https://github.com/Cl3m3nt03/World-building/issues/92)) ([488cd0f](https://github.com/Cl3m3nt03/World-building/commit/488cd0f0d14e95fb381dc55fcf57cde06ca954b4)), closes [#77](https://github.com/Cl3m3nt03/World-building/issues/77)
+* **cards:** add the D&D 5e stat block and show the map block as coming ([#98](https://github.com/Cl3m3nt03/World-building/issues/98)) ([f7d25d4](https://github.com/Cl3m3nt03/World-building/commit/f7d25d4e0fc797738f4f6d809a18d3add608e4b4)), closes [#81](https://github.com/Cl3m3nt03/World-building/issues/81)
+* **cards:** add the image block and card usages of images ([#96](https://github.com/Cl3m3nt03/World-building/issues/96)) ([8421123](https://github.com/Cl3m3nt03/World-building/commit/8421123c58a716f03d1d5e213b9e46aa884339b6)), closes [#79](https://github.com/Cl3m3nt03/World-building/issues/79)
+* **cards:** create cards and edit their page ([#87](https://github.com/Cl3m3nt03/World-building/issues/87)) ([dbaa13f](https://github.com/Cl3m3nt03/World-building/commit/dbaa13fc1c8b66d78292227d137cc5ec3591979b)), closes [#72](https://github.com/Cl3m3nt03/World-building/issues/72)
+* **cards:** edit guided templates and apply them to cards ([#97](https://github.com/Cl3m3nt03/World-building/issues/97)) ([1664e05](https://github.com/Cl3m3nt03/World-building/commit/1664e0518863f1c5926befc54fced740e80f4df9)), closes [#80](https://github.com/Cl3m3nt03/World-building/issues/80)
+* **cards:** list cards in the sidebar and add the trash ([#88](https://github.com/Cl3m3nt03/World-building/issues/88)) ([c1d8cee](https://github.com/Cl3m3nt03/World-building/commit/c1d8ceee32354aa880080020d667e4907114f68a)), closes [#73](https://github.com/Cl3m3nt03/World-building/issues/73)
+* **cards:** mention cards with @ in text blocks ([#95](https://github.com/Cl3m3nt03/World-building/issues/95)) ([74eb87e](https://github.com/Cl3m3nt03/World-building/commit/74eb87edbc93dd196d86235785c3fe57d001178e)), closes [#78](https://github.com/Cl3m3nt03/World-building/issues/78)
+* **cards:** world writing preferences for card names in text blocks ([#105](https://github.com/Cl3m3nt03/World-building/issues/105)) ([8ff6e25](https://github.com/Cl3m3nt03/World-building/commit/8ff6e25dc206241fde29f506a123a5d7838ba52b)), closes [#100](https://github.com/Cl3m3nt03/World-building/issues/100)
+* **documents:** add the shared documents table, trash and links ([#84](https://github.com/Cl3m3nt03/World-building/issues/84)) ([aed6c3b](https://github.com/Cl3m3nt03/World-building/commit/aed6c3baec87ac130b5b31c989709c007ac40774)), closes [#69](https://github.com/Cl3m3nt03/World-building/issues/69)
+* **home:** resume the last card and show recent documents ([#89](https://github.com/Cl3m3nt03/World-building/issues/89)) ([793beb5](https://github.com/Cl3m3nt03/World-building/commit/793beb5adbf03ace1cbcc850678f29eaf1e2cb32)), closes [#74](https://github.com/Cl3m3nt03/World-building/issues/74)
+* **properties:** add text and number properties to types and cards ([#90](https://github.com/Cl3m3nt03/World-building/issues/90)) ([bd2992b](https://github.com/Cl3m3nt03/World-building/commit/bd2992bebce7913663cd2598de2a9a10f930ece6)), closes [#75](https://github.com/Cl3m3nt03/World-building/issues/75)
+* **properties:** link properties to cards and show backlinks ([#91](https://github.com/Cl3m3nt03/World-building/issues/91)) ([0a9c992](https://github.com/Cl3m3nt03/World-building/commit/0a9c9922f38145e27835c6365ae2ad6f0c1b973a)), closes [#76](https://github.com/Cl3m3nt03/World-building/issues/76)
+* **world:** world settings screen and world deletion ([#103](https://github.com/Cl3m3nt03/World-building/issues/103)) ([f9de94d](https://github.com/Cl3m3nt03/World-building/commit/f9de94d2855512517e3b4e86f93f690152af6b2b))
+* **world:** world settings screen in sections, and world deletion to the recycle bin ([f9de94d](https://github.com/Cl3m3nt03/World-building/commit/f9de94d2855512517e3b4e86f93f690152af6b2b)), closes [#94](https://github.com/Cl3m3nt03/World-building/issues/94)
+* **world:** world theme with shipped themes and a custom theme ([#104](https://github.com/Cl3m3nt03/World-building/issues/104)) ([c953b2f](https://github.com/Cl3m3nt03/World-building/commit/c953b2fcf59b1cd42a696932b0ce9dbd8dfa8ceb)), closes [#93](https://github.com/Cl3m3nt03/World-building/issues/93)
+
+
+### Corrections
+
+* **cards:** give the focus back to the text when the slash menu is dismissed ([#119](https://github.com/Cl3m3nt03/World-building/issues/119)) ([c31500c](https://github.com/Cl3m3nt03/World-building/commit/c31500c46a638fc56e7b6c05fc9c63d6a0a9e6e5)), closes [#118](https://github.com/Cl3m3nt03/World-building/issues/118)
+* **cards:** keep the first letters typed in a new card's title ([#123](https://github.com/Cl3m3nt03/World-building/issues/123)) ([c29189b](https://github.com/Cl3m3nt03/World-building/commit/c29189b22e605a872025b6b919a5b92997fb3fea)), closes [#122](https://github.com/Cl3m3nt03/World-building/issues/122)
+* **cards:** save pending edits before the world or the window closes ([#107](https://github.com/Cl3m3nt03/World-building/issues/107)) ([6b8acb6](https://github.com/Cl3m3nt03/World-building/commit/6b8acb60620cf6599b8c77af6a4b8fe520a0c2b2)), closes [#106](https://github.com/Cl3m3nt03/World-building/issues/106)
+* **cards:** select the whole title of a card created from another card ([#117](https://github.com/Cl3m3nt03/World-building/issues/117)) ([d68b5d7](https://github.com/Cl3m3nt03/World-building/commit/d68b5d78eaad1d052c56b9133f4ec92538495185)), closes [#116](https://github.com/Cl3m3nt03/World-building/issues/116)
+* **settings:** treat both path separators as one in recent worlds ([#64](https://github.com/Cl3m3nt03/World-building/issues/64)) ([ae0aee5](https://github.com/Cl3m3nt03/World-building/commit/ae0aee5c007c98bc5dd69bab35f1f201d0d5c9e4)), closes [#62](https://github.com/Cl3m3nt03/World-building/issues/62)
+* **shell:** let the Home tab lead back from the media library ([#121](https://github.com/Cl3m3nt03/World-building/issues/121)) ([78fbae2](https://github.com/Cl3m3nt03/World-building/commit/78fbae2227f842237290b63d8a481a833a45c8de)), closes [#120](https://github.com/Cl3m3nt03/World-building/issues/120)
+* **world:** forget the previous world's data when the world changes ([#115](https://github.com/Cl3m3nt03/World-building/issues/115)) ([f4534c5](https://github.com/Cl3m3nt03/World-building/commit/f4534c5d939cd1d0cec526371d67faddff9f8de8)), closes [#109](https://github.com/Cl3m3nt03/World-building/issues/109)
+
 ## [0.2.0](https://github.com/Cl3m3nt03/World-building/compare/v0.1.0...v0.2.0) (2026-09-26)
 
 
