@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO links (source_id, target_id, kind, detail)\n         SELECT ?, target_id, kind, detail FROM links WHERE source_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "a7018eba1f7bff740ea4f3053bfb0bbc5a86f7132baaff9ac8e3b51ddd7c7ae1"
+}

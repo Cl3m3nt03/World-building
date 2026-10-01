@@ -189,3 +189,68 @@ pub async fn clear_value(pool: &SqlitePool, card_id: &str, property_id: &str) ->
     .await?;
     Ok(())
 }
+
+/// Ids of the properties that belong to the card itself (not to its type).
+pub async fn own_definition_ids(
+    tx: &mut Transaction<'_, Sqlite>,
+    card_id: &str,
+) -> AppResult<Vec<String>> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT id AS "id!" FROM property_definitions WHERE card_id = ? ORDER BY sort_order"#,
+        card_id
+    )
+    .fetch_all(&mut **tx)
+    .await?)
+}
+
+/// Copies the definition `from` as `id`, owned by the card `card_id`.
+pub async fn copy_definition(
+    tx: &mut Transaction<'_, Sqlite>,
+    from: &str,
+    id: &str,
+    card_id: &str,
+    created_at: &str,
+) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO property_definitions (id, type_id, card_id, label, kind, target_type_ids,
+                                           applies_to_existing, sort_order, created_at)
+         SELECT ?, NULL, ?, label, kind, target_type_ids, applies_to_existing, sort_order, ?
+         FROM property_definitions WHERE id = ?",
+        id,
+        card_id,
+        created_at,
+        from
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+/// Copies every property value of the card `from` to the card `to`; values
+/// of the properties in `renamed` (old id, new id) go to the new id.
+pub async fn copy_values(
+    tx: &mut Transaction<'_, Sqlite>,
+    from: &str,
+    to: &str,
+    renamed: &[(String, String)],
+) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO property_values (card_id, property_id, value)
+         SELECT ?, property_id, value FROM property_values WHERE card_id = ?",
+        to,
+        from
+    )
+    .execute(&mut **tx)
+    .await?;
+    for (old, new) in renamed {
+        sqlx::query!(
+            "UPDATE property_values SET property_id = ? WHERE card_id = ? AND property_id = ?",
+            new,
+            to,
+            old
+        )
+        .execute(&mut **tx)
+        .await?;
+    }
+    Ok(())
+}

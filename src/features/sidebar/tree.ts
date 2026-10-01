@@ -281,3 +281,64 @@ function withPins(tree: DocumentTree, pins: string[]): DocumentTree {
     })),
   };
 }
+
+// --- Move to… (step 3.6) ------------------------------------------------------
+
+/** Where "Move to…" can put a document: the root, a folder, or under a document. */
+export type Destination = {
+  /** `"root"`, or the node's key. */
+  key: string;
+  kind: "root" | "folder" | "document";
+  /** The folder's or document's name (`""` for the root). */
+  label: string;
+  /** Names of the folders and documents around it, outermost first. */
+  path: string[];
+  /** The move there: at the end of that place. */
+  move: Move & { kind: "document" };
+  /** The document is already there. */
+  current: boolean;
+};
+
+/**
+ * Every place the document `key` can go, in tree order: the root, then each
+ * folder and document but itself and its descendants (no cycle).
+ */
+export function moveDestinations(roots: TreeNode[], key: string): Destination[] {
+  const map = locate(roots);
+  const moved = map.get(key);
+  if (moved?.node.kind !== "document") return [];
+  const id = moved.node.document.id;
+  const currentKey = moved.parent?.key ?? "root";
+  const endOf = (children: TreeNode[]) => children.filter((child) => child.key !== key).length;
+
+  const destinations: Destination[] = [
+    {
+      key: "root",
+      kind: "root",
+      label: "",
+      path: [],
+      move: { kind: "document", id, place: { kind: "root" }, index: endOf(roots) },
+      current: currentKey === "root",
+    },
+  ];
+  const walk = (nodes: TreeNode[], path: string[]) => {
+    for (const node of nodes) {
+      if (node.key === key) continue;
+      destinations.push({
+        key: node.key,
+        kind: node.kind,
+        label: nodeName(node),
+        path,
+        move: { kind: "document", id, place: placeOf(node), index: endOf(node.children) },
+        current: currentKey === node.key,
+      });
+      walk(node.children, [...path, nodeName(node)]);
+    }
+  };
+  walk(roots, []);
+  return destinations;
+}
+
+function nodeName(node: TreeNode): string {
+  return node.kind === "folder" ? node.folder.name : node.document.title;
+}

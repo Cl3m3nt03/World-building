@@ -7,6 +7,7 @@ import {
   applyPinned,
   buildTree,
   dropMove,
+  moveDestinations,
   pinnedDocuments,
   type TreeNode,
   visibleRows,
@@ -289,5 +290,38 @@ describe("pins", () => {
     expect(ids(applyPinMove(tree, "c", 0))).toEqual(["c", "b", "a"]);
     expect(ids(applyPinMove(tree, "b", 9))).toEqual(["a", "c", "b"]);
     expect(applyPinMove(tree, "zzz", 0)).toBe(tree);
+  });
+});
+
+describe("moveDestinations", () => {
+  const roots = buildTree(sample);
+  const show = (key: string) =>
+    moveDestinations(roots, key).map(
+      (d) =>
+        `${[...d.path, d.label || "/"].join(" › ")} ${d.move.place.kind}:${"id" in d.move.place ? d.move.place.id : ""}@${d.move.index}${d.current ? " (here)" : ""}`,
+    );
+
+  it("offers the root, folders and documents, at the end of each", () => {
+    expect(show("d:arya")).toEqual([
+      "/ root:@2 (here)",
+      "places folder:places@2",
+      "places › winterfell parent:winterfell@1",
+      "places › winterfell › crypt parent:crypt@0",
+      "places › north folder:north@1",
+      "places › north › wall parent:wall@0",
+      "lore folder:lore@0",
+    ]);
+  });
+
+  it("never offers the document itself or its descendants", () => {
+    const keys = moveDestinations(roots, "d:winterfell").map((d) => d.key);
+    expect(keys).not.toContain("d:winterfell");
+    expect(keys).not.toContain("d:crypt");
+    expect(moveDestinations(roots, "d:winterfell").find((d) => d.current)?.key).toBe("f:places");
+  });
+
+  it("is empty for a folder or an unknown key", () => {
+    expect(moveDestinations(roots, "f:places")).toEqual([]);
+    expect(moveDestinations(roots, "d:nope")).toEqual([]);
   });
 });

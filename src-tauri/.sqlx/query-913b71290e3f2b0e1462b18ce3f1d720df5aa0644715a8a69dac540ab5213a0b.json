@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO cards (document_id, type_id, image_asset_id, aliases, content, content_text)\n         SELECT ?, type_id, image_asset_id, aliases, content, content_text\n         FROM cards WHERE document_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "913b71290e3f2b0e1462b18ce3f1d720df5aa0644715a8a69dac540ab5213a0b"
+}

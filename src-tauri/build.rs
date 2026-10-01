@@ -27,6 +27,7 @@ const COMMANDS: &[&str] = &[
     "reorder_card_types",
     "delete_card_type",
     "create_card",
+    "duplicate_card",
     "list_cards",
     "get_card",
     "set_card_type",

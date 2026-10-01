@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO property_values (card_id, property_id, value)\n         SELECT ?, property_id, value FROM property_values WHERE card_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "1a3265c92ef8a6059f50e69bca464915227e5dfc623b77655afb217c2357f4e8"
+}

@@ -108,3 +108,32 @@ pub async fn to_target(pool: &SqlitePool, target_id: &str) -> AppResult<Vec<Link
     .fetch_all(pool)
     .await?)
 }
+
+/// Copies every link made by `from` as links made by `to`; links whose
+/// `detail` is in `renamed` (old, new) get the new detail.
+pub async fn copy_from(
+    tx: &mut Transaction<'_, Sqlite>,
+    from: &str,
+    to: &str,
+    renamed: &[(String, String)],
+) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT OR IGNORE INTO links (source_id, target_id, kind, detail)
+         SELECT ?, target_id, kind, detail FROM links WHERE source_id = ?",
+        to,
+        from
+    )
+    .execute(&mut **tx)
+    .await?;
+    for (old, new) in renamed {
+        sqlx::query!(
+            "UPDATE links SET detail = ? WHERE source_id = ? AND detail = ?",
+            new,
+            to,
+            old
+        )
+        .execute(&mut **tx)
+        .await?;
+    }
+    Ok(())
+}
