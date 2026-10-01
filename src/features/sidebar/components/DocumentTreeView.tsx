@@ -41,6 +41,7 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { Button } from "@/components/ui/button";
 import {
   ContextMenuItem,
   ContextMenuSeparator,
@@ -61,13 +62,17 @@ import {
 import {
   ancestorKeys,
   buildTree,
+  DEFAULT_VIEW,
   type DropPosition,
   documentKey,
   dropMove,
   folderKey,
+  isFiltered,
   type Move,
   type TreeNode,
   type TreeRow,
+  type TreeView,
+  viewTree,
   visibleRows,
 } from "../tree";
 import { DeleteFolderDialog, FolderIconDialog, folderIcon } from "./FolderDialogs";
@@ -93,6 +98,9 @@ type Props = {
   tree: DocumentTree;
   /** The document open in the workspace, if any. */
   currentId: string | null;
+  /** Filters and sort (the sidebar's view menu). */
+  view: TreeView;
+  onViewChange: (view: TreeView) => void;
   ref?: Ref<DocumentTreeHandle>;
 };
 
@@ -113,7 +121,7 @@ type Props = {
  *
  * Which folders are open is kept for the session; per world in step 3.9.
  */
-export function DocumentTreeView({ tree, currentId, ref }: Props) {
+export function DocumentTreeView({ tree, currentId, view, onViewChange, ref }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -121,7 +129,35 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
 
   const roots = useMemo(() => buildTree(tree), [tree]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
-  const rows = useMemo(() => visibleRows(roots, expanded), [roots, expanded]);
+  // Filters and sort: a card type stands for its subtypes too.
+  const typeIds = useMemo(() => {
+    const chosen = new Set(view.typeIds);
+    for (const type of types.data ?? []) {
+      if (type.parentId !== null && chosen.has(type.parentId)) chosen.add(type.id);
+    }
+    return [...chosen];
+  }, [view.typeIds, types.data]);
+  const shown = useMemo(() => viewTree(roots, { ...view, typeIds }), [roots, view, typeIds]);
+  const filtered = isFiltered(view);
+  const sorted = view.sort !== "manual";
+  // Filtering opens what holds the matches, so they are in sight.
+  const filterKey = `${view.kinds.join()}|${view.typeIds.join()}`;
+  const openedFor = useRef("|");
+  useEffect(() => {
+    if (openedFor.current === filterKey) return;
+    openedFor.current = filterKey;
+    if (!filtered) return;
+    const parents: string[] = [];
+    const walk = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        if (node.children.length > 0) parents.push(node.key);
+        walk(node.children);
+      }
+    };
+    walk(shown.roots);
+    setExpanded((previous) => new Set([...previous, ...parents]));
+  }, [filterKey, filtered, shown.roots]);
+  const rows = useMemo(() => visibleRows(shown.roots, expanded), [shown.roots, expanded]);
   const indexOf = useMemo(() => new Map(rows.map((row, index) => [row.node.key, index])), [rows]);
   const nodeOf = useMemo(() => new Map(rows.map((row) => [row.node.key, row.node])), [rows]);
   const typesById = useMemo(
@@ -504,6 +540,13 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
     const rect = element.getBoundingClientRect();
     const ratio = (pointerY.current - rect.top) / rect.height;
     const position: DropPosition = ratio < 0.25 ? "before" : ratio > 0.75 ? "after" : "inside";
+    // Sorted by name or date, a row cannot be put before or after another:
+    // only filed inside.
+    if (sorted && position !== "inside") {
+      setDrop(null);
+      clearHover();
+      return;
+    }
     setDrop((previous) =>
       previous?.key === overKey && previous.position === position
         ? previous
@@ -582,6 +625,18 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
           <AppErrorMessage error={error} />
         </div>
       )}
+      {sorted && rows.length > 0 && (
+        <p className="mx-2 flex items-center justify-between gap-2 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
+          {view.sort === "name" ? t("sidebar.view.sortedByName") : t("sidebar.view.sortedByDate")}
+          <button
+            type="button"
+            onClick={() => onViewChange({ ...view, sort: "manual", reversed: false })}
+            className="shrink-0 rounded-sm underline underline-offset-2 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {t("sidebar.view.backToManual")}
+          </button>
+        </p>
+      )}
       <CreateCardContextMenu
         before={folderMenu || documentMenu || undefined}
         after={menuFolder ? undefined : rootMenu}
@@ -596,9 +651,18 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
         }}
       >
         {rows.length === 0 ? (
-          // An empty world: room for the right click, and what to do.
+          // An empty world (or nothing matching): room for the right click.
           <div className="min-h-0 flex-1 p-2" onContextMenuCapture={() => setMenuKey(null)}>
-            <p className="p-2 text-center text-xs text-muted-foreground">{t("sidebar.empty")}</p>
+            {filtered && roots.length > 0 ? (
+              <p className="flex flex-col items-center gap-2 p-2 text-center text-xs text-muted-foreground">
+                {t("sidebar.view.noMatch")}
+                <Button size="sm" variant="secondary" onClick={() => onViewChange(DEFAULT_VIEW)}>
+                  {t("sidebar.view.reset")}
+                </Button>
+              </p>
+            ) : (
+              <p className="p-2 text-center text-xs text-muted-foreground">{t("sidebar.empty")}</p>
+            )}
           </div>
         ) : (
           <div
@@ -637,6 +701,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
                     isCurrent={node.key === currentKey}
                     isTabStop={node.key === tabStop}
                     isDragged={node.key === dragKey}
+                    isContext={shown.context.has(node.key)}
                     drop={indicator}
                     visual={nodeVisual(node, isOpen, typesById)}
                     onClick={() => {
@@ -781,6 +846,8 @@ type TreeItemProps = {
   isCurrent: boolean;
   isTabStop: boolean;
   isDragged: boolean;
+  /** Shown only because a match is inside it (filters). */
+  isContext: boolean;
   drop: DropPosition | "refused" | undefined;
   visual: Visual;
   onClick: () => void;
@@ -801,6 +868,7 @@ function TreeItem({
   isCurrent,
   isTabStop,
   isDragged,
+  isContext,
   drop,
   visual: { Icon, color, label },
   onClick,
@@ -838,10 +906,11 @@ function TreeItem({
       aria-expanded={hasChildren ? isOpen : undefined}
       aria-selected={node.kind === "document" ? isCurrent : undefined}
       aria-current={isCurrent ? "page" : undefined}
+      data-context={isContext || undefined}
       onClick={onClick}
       onFocus={onFocus}
       onKeyDown={onKeyDown}
-      className={`absolute left-0 flex w-full cursor-default items-center gap-1.5 rounded-md pr-2 text-sm text-muted-foreground outline-none select-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-secondary aria-[current=page]:text-foreground data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--color-primary)] data-[drop=before]:shadow-[inset_0_2px_0_0_var(--color-primary)] data-[drop=inside]:bg-primary/15 data-[drop=inside]:ring-1 data-[drop=inside]:ring-primary data-[drop=refused]:cursor-not-allowed data-[drop=refused]:bg-destructive/10 data-[drop=refused]:ring-1 data-[drop=refused]:ring-destructive ${isDragged ? "opacity-40" : ""}`}
+      className={`absolute left-0 flex w-full cursor-default items-center gap-1.5 rounded-md pr-2 text-sm text-muted-foreground outline-none select-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-secondary aria-[current=page]:text-foreground data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--color-primary)] data-[drop=before]:shadow-[inset_0_2px_0_0_var(--color-primary)] data-[drop=inside]:bg-primary/15 data-[drop=inside]:ring-1 data-[drop=inside]:ring-primary data-[drop=refused]:cursor-not-allowed data-[drop=refused]:bg-destructive/10 data-[drop=refused]:ring-1 data-[drop=refused]:ring-destructive data-context:opacity-60 ${isDragged ? "opacity-40" : ""}`}
       style={{
         height: ROW_HEIGHT,
         // `top`, not a transform: dnd-kit measures drop targets without

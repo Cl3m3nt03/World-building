@@ -738,3 +738,66 @@ test("Ctrl+K from another tab opens the World tab with the search field focused"
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
   await waitFor(() => expect(document.activeElement).toBe(searchField()));
 });
+
+test("filters by card type and sorts by name; manual order comes back", async () => {
+  const typedTypes: CardType[] = [
+    TYPES[0] as CardType,
+    { ...(TYPES[0] as CardType), id: "place", name: "Lieu", icon: "map-pin", color: "green" },
+  ];
+  mockIPC((command) => {
+    if (command === "list_card_types") return typedTypes;
+    if (command === "document_tree")
+      return {
+        folders: [folder("Places", 1)],
+        documents: [
+          { ...doc("Zed", 0), typeId: "character" },
+          { ...doc("Winterfell", 0, { folderId: "Places" }), typeId: "place" },
+          { ...doc("Arya", 1, { folderId: "Places" }), typeId: "character" },
+          { ...doc("Bran", 2), typeId: "character" },
+        ],
+      };
+    if (command === "current_world") return WORLD;
+    if (command === "get_settings") return SETTINGS;
+    return undefined;
+  });
+  await renderAt("/world/demo/world");
+  await waitFor(() =>
+    expect(rows()).toEqual(["Zed 1 1/3 -", "Places 1 2/3 false", "Bran 1 3/3 -"]),
+  );
+
+  await openMenu(screen.getByRole("button", { name: "Filtres et tri" }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Personnage" }));
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Nom" }));
+  });
+  // The menu stays open while choices are made.
+  expect(screen.getByRole("menu")).toBeTruthy();
+  await act(async () => {
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Escape" });
+  });
+
+  // Characters only, by name, folders first and open; Places only holds a match.
+  await waitFor(() =>
+    expect(rows()).toEqual(["Places 1 1/3 true", "Arya 2 1/1 -", "Bran 1 2/3 -", "Zed 1 3/3 -"]),
+  );
+  expect(item("Places").hasAttribute("data-context")).toBe(true);
+  expect(screen.getByRole("button", { name: "Filtres et tri (actifs)" })).toBeTruthy();
+  expect(screen.getByText("Trié par nom : le glisser-déposer ne réordonne pas.")).toBeTruthy();
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Ordre manuel" }));
+  });
+  await waitFor(() =>
+    expect(rows()).toEqual(["Zed 1 1/3 -", "Places 1 2/3 true", "Arya 2 1/1 -", "Bran 1 3/3 -"]),
+  );
+});
+
+/** Opens a Radix menu the keyboard way (Enter on its focused trigger). */
+async function openMenu(trigger: HTMLElement) {
+  await act(async () => {
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: "Enter" });
+  });
+}
