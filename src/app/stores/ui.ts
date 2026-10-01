@@ -40,6 +40,9 @@ type UiState = {
   /** A card just created: its page opens with the title selected. */
   focusCardTitle: string | null;
   setFocusCardTitle: (cardId: string | null) => void;
+  /** Bumped by Ctrl+K: the sidebar's search field takes the focus. */
+  searchRequest: number;
+  requestSearch: () => void;
 };
 
 /**
@@ -69,4 +72,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setCardTypesOpen: (cardTypesOpen) => set({ cardTypesOpen }),
   focusCardTitle: null,
   setFocusCardTitle: (focusCardTitle) => set({ focusCardTitle }),
+  searchRequest: 0,
+  requestSearch: () => set((state) => ({ searchRequest: state.searchRequest + 1 })),
 }));

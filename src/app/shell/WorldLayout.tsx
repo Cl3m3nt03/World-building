@@ -1,4 +1,5 @@
 import { Outlet, useLocation, useNavigate, useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useUiStore } from "@/app/stores/ui";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CardTypesDialog } from "@/features/card-types";
@@ -27,7 +28,7 @@ export function tabFromPath(pathname: string): ShellTab | undefined {
 
 /**
  * Layout of an open world (ADR 0003): three-island top bar, then the active
- * tab's route. The tabs are driven by the URL.
+ * tab's route. The tabs are driven by the URL. Ctrl+K opens the search.
  */
 export function WorldLayout() {
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -37,6 +38,21 @@ export function WorldLayout() {
   const cardTypesOpen = useUiStore((state) => state.cardTypesOpen);
   const setCardTypesOpen = useUiStore((state) => state.setCardTypesOpen);
   const { data: world } = useCurrentWorld();
+  const requestSearch = useUiStore((state) => state.requestSearch);
+
+  // Ctrl+K, from anywhere in the world: the World tab and its search field.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "k") return;
+      if (event.altKey || event.shiftKey) return;
+      event.preventDefault();
+      if (pathTab !== "world") void navigate({ to: TAB_ROUTES.world, params: { worldId } });
+      requestSearch();
+    };
+    // Capture: before an editor or a menu handles the keys itself.
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [pathTab, navigate, worldId, requestSearch]);
 
   return (
     <Tabs

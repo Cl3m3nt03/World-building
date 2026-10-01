@@ -12,6 +12,7 @@ import type {
   CardType,
   DocumentTree,
   Folder,
+  SearchHit,
   TreeDocument,
   WorldInfo,
 } from "@/lib/bindings";
@@ -91,6 +92,46 @@ const SAMPLE: DocumentTree = {
   ],
 };
 
+const SEARCH_HITS: SearchHit[] = [
+  {
+    id: "Arya",
+    kind: "card",
+    title: [{ text: "Arya", matched: true }],
+    typeId: "character",
+    imageAssetId: null,
+    match: { kind: "name" },
+  },
+  {
+    id: "Wall",
+    kind: "card",
+    title: [{ text: "Wall", matched: false }],
+    typeId: "character",
+    imageAssetId: null,
+    match: {
+      kind: "alias",
+      alias: [
+        { text: "Arya", matched: true },
+        { text: "'s post", matched: false },
+      ],
+    },
+  },
+  {
+    id: "Crypt",
+    kind: "card",
+    title: [{ text: "Crypt", matched: false }],
+    typeId: "character",
+    imageAssetId: null,
+    match: {
+      kind: "content",
+      excerpt: [
+        { text: "…where ", matched: false },
+        { text: "Arya", matched: true },
+        { text: " hid…", matched: false },
+      ],
+    },
+  },
+];
+
 let tree: DocumentTree;
 let calls: { command: string; args: Record<string, unknown> }[];
 
@@ -118,6 +159,8 @@ beforeEach(() => {
         };
         return tree.folders.find((f) => f.id === args.id);
       }
+      case "search_documents":
+        return (args.query as string) === "" ? [] : SEARCH_HITS;
       case "delete_folder":
       case "move_document":
         return null;
@@ -645,4 +688,53 @@ test("Rename and Move to… from the menu get the focus once the menu is closed"
   await menuAction("Arya", "Déplacer vers…");
   const filter = await screen.findByRole("combobox", { name: "Filtrer les destinations" });
   await waitFor(() => expect(document.activeElement).toBe(filter));
+});
+
+const searchField = () => screen.getByRole("combobox", { name: "Rechercher dans le monde" });
+
+test("typing searches: names first, then content with an excerpt; Enter opens, Escape clears", async () => {
+  const router = await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Places")).toBeTruthy());
+
+  fireEvent.change(searchField(), { target: { value: "ary" } });
+  const results = await screen.findByRole("listbox", { name: "Résultats de la recherche" });
+  await waitFor(() => expect(within(results).getAllByRole("option")).toHaveLength(3));
+  expect(screen.queryByRole("tree")).toBeNull();
+  const groups = within(results)
+    .getAllByRole("group")
+    .map((g) => g.getAttribute("aria-label"));
+  expect(groups).toEqual(["Noms", "Contenu"]);
+  expect(
+    within(results)
+      .getAllByRole("option")
+      .map((o) => o.textContent),
+  ).toEqual(["Arya", "WallAlias : Arya's post", "Crypt…where Arya hid…"]);
+  expect(results.querySelectorAll("mark")).toHaveLength(3);
+
+  for (let i = 0; i < 2; i++) {
+    await act(async () => {
+      fireEvent.keyDown(searchField(), { key: "ArrowDown" });
+    });
+  }
+  const options = within(results).getAllByRole("option");
+  expect(searchField().getAttribute("aria-activedescendant")).toBe(options[2]?.id);
+  await act(async () => {
+    fireEvent.keyDown(searchField(), { key: "Enter" });
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/Crypt"));
+
+  await act(async () => {
+    fireEvent.keyDown(searchField(), { key: "Escape" });
+  });
+  expect((searchField() as HTMLInputElement).value).toBe("");
+  expect(await screen.findByRole("tree")).toBeTruthy();
+});
+
+test("Ctrl+K from another tab opens the World tab with the search field focused", async () => {
+  const router = await renderAt("/world/demo/home");
+  await act(async () => {
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
+  await waitFor(() => expect(document.activeElement).toBe(searchField()));
 });

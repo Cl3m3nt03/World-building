@@ -486,7 +486,10 @@ async fn a_world_of_0_3_0_opens_with_its_cards_at_the_root_in_creation_order() {
 
     let reopened = world::open(&root_path, &db::MIGRATOR).await.unwrap();
 
-    assert_eq!(reopened.info().schema_version, 7);
+    assert_eq!(
+        i64::from(reopened.info().schema_version),
+        db::latest_version(&db::MIGRATOR)
+    );
     let tree = tree(&reopened.pool).await.unwrap();
     assert!(tree.folders.is_empty());
     assert_eq!(draw(&tree, &Place::Root), "Rohan Aragorn Gondor");

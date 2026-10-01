@@ -40,6 +40,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::documents::restore_document,
         commands::documents::delete_document,
         commands::documents::empty_trash,
+        commands::documents::search_documents,
         commands::card_types::list_card_types,
         commands::card_types::create_card_type,
         commands::card_types::update_card_type,

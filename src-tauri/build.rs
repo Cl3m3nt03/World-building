@@ -20,6 +20,7 @@ const COMMANDS: &[&str] = &[
     "restore_document",
     "delete_document",
     "empty_trash",
+    "search_documents",
     "list_card_types",
     "create_card_type",
     "update_card_type",

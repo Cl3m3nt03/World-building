@@ -42,6 +42,11 @@ export const commands = {
 	deleteDocument: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_document", { id })),
 	/**  Deletes everything in the trash for good. Returns how many documents. */
 	emptyTrash: () => typedError<number, AppError>(__TAURI_INVOKE("empty_trash")),
+	/**
+	 *  Live documents matching what was typed: by name or alias first, then by
+	 *  content with an excerpt.
+	 */
+	searchDocuments: (query: string) => typedError<SearchHit[], AppError>(__TAURI_INVOKE("search_documents", { query })),
 	/**  Card types of the open world: each type followed by its subtypes, in order. */
 	listCardTypes: () => typedError<CardType[], AppError>(__TAURI_INVOKE("list_card_types")),
 	/**  Creates a type, or a subtype when `parentId` is set. */
@@ -525,10 +530,35 @@ export type RecentWorld = {
 	lastOpenedAt: string,
 };
 
+export type SearchHit = {
+	id: string,
+	kind: DocumentKind,
+	/**  The name, with the matched words. */
+	title: TextPart[],
+	typeId: string | null,
+	imageAssetId: string | null,
+	match: SearchMatch,
+};
+
+/**  Where a document matched. */
+export type SearchMatch = 
+/**  Its name. */
+{ kind: "name" } | 
+/**  One of its aliases (the first that matched). */
+{ kind: "alias"; alias: TextPart[] } | 
+/**  Its content: an excerpt around the words. */
+{ kind: "content"; excerpt: TextPart[] };
+
 /**  A section of a guided template: a title and a question to help write it. */
 export type TemplateSection = {
 	title: string,
 	prompt: string,
+};
+
+/**  A piece of text, matched by the query or not (to highlight it). */
+export type TextPart = {
+	text: string,
+	matched: boolean,
 };
 
 export type Theme = "light" | "dark" | "system";
