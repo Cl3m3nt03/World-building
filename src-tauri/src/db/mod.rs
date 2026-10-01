@@ -6,6 +6,7 @@ pub mod cards;
 pub mod documents;
 pub mod links;
 pub mod properties;
+pub mod search;
 pub mod tree;
 
 use std::path::Path;

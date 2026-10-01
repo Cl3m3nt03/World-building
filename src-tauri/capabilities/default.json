@@ -30,6 +30,7 @@
     "allow-restore-document",
     "allow-delete-document",
     "allow-empty-trash",
+    "allow-search-documents",
     "allow-list-card-types",
     "allow-create-card-type",
     "allow-update-card-type",

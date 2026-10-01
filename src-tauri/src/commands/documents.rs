@@ -2,6 +2,7 @@ use sqlx::SqlitePool;
 use tauri::State;
 
 use crate::domain::documents::{self, Document, DocumentFilter, RecentDocument};
+use crate::domain::search::{self, SearchHit};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -79,4 +80,15 @@ pub async fn delete_document(state: State<'_, AppState>, id: String) -> AppResul
 pub async fn empty_trash(state: State<'_, AppState>) -> AppResult<u32> {
     let count = documents::empty_trash(&pool(&state, "empty_trash").await?).await?;
     Ok(u32::try_from(count).unwrap_or(u32::MAX))
+}
+
+/// Live documents matching what was typed: by name or alias first, then by
+/// content with an excerpt.
+#[tauri::command]
+#[specta::specta]
+pub async fn search_documents(
+    state: State<'_, AppState>,
+    query: String,
+) -> AppResult<Vec<SearchHit>> {
+    search::search(&pool(&state, "search_documents").await?, &query).await
 }
