@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT pinned_order FROM documents WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "pinned_order",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "pinned_order"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "e3a2a4e9a7fbac99f661227534a4eff57fdfba30ac70187829817d93c0cfdce7"
+}

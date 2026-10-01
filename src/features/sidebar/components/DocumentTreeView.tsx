@@ -18,6 +18,8 @@ import {
   FolderPlus,
   type LucideIcon,
   Pencil,
+  Pin,
+  PinOff,
   Shapes,
   Trash2,
 } from "lucide-react";
@@ -39,7 +41,12 @@ import { ContextMenuItem, ContextMenuShortcut } from "@/components/ui/context-me
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
 import type { CardType, DocumentTree } from "@/lib/bindings";
-import { useCreateFolder, useMoveInTree, useUpdateFolder } from "../hooks/useDocumentTree";
+import {
+  useCreateFolder,
+  useMoveInTree,
+  useSetPinned,
+  useUpdateFolder,
+} from "../hooks/useDocumentTree";
 import {
   ancestorKeys,
   buildTree,
@@ -365,6 +372,19 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
       </ContextMenuItem>
     </>
   );
+  const setPinned = useSetPinned();
+  const menuNode = menuKey ? allNodes.get(menuKey) : undefined;
+  const menuDocument = menuNode?.kind === "document" ? menuNode.document : null;
+  const documentMenu = menuDocument && (
+    <ContextMenuItem
+      onSelect={() =>
+        setPinned.mutate({ id: menuDocument.id, pinned: menuDocument.pinnedOrder === null })
+      }
+    >
+      {menuDocument.pinnedOrder === null ? <Pin /> : <PinOff />}
+      {menuDocument.pinnedOrder === null ? t("sidebar.pins.pin") : t("sidebar.pins.unpin")}
+    </ContextMenuItem>
+  );
   const rootMenu = (
     <ContextMenuItem onSelect={() => newFolder(null)}>
       <FolderPlus />
@@ -467,7 +487,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
   };
 
   const dragged = dragKey ? nodeOf.get(dragKey) : undefined;
-  const error = move.error ?? createFolder.error ?? updateFolder.error;
+  const error = move.error ?? createFolder.error ?? updateFolder.error ?? setPinned.error;
 
   return (
     <DndContext
@@ -495,7 +515,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
         </div>
       )}
       <CreateCardContextMenu
-        before={folderMenu || undefined}
+        before={folderMenu || documentMenu || undefined}
         after={menuFolder ? undefined : rootMenu}
         create={!menuFolder}
         onCloseAutoFocus={(event) => {

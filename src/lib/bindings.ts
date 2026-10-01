@@ -144,6 +144,10 @@ export const commands = {
 	 *  trash (`trash`).
 	 */
 	deleteFolder: (id: string, mode: FolderDeletion) => typedError<null, AppError>(__TAURI_INVOKE("delete_folder", { id, mode })),
+	/**  Pins a document (at the end of the pins) or unpins it. */
+	setDocumentPinned: (id: string, pinned: boolean) => typedError<null, AppError>(__TAURI_INVOKE("set_document_pinned", { id, pinned })),
+	/**  Moves a pinned document to `index` among the pins. */
+	movePin: (id: string, index: number) => typedError<null, AppError>(__TAURI_INVOKE("move_pin", { id, index })),
 	/**
 	 *  Creates a world named `name`, of the given genre, in a new folder inside
 	 *  `parent_dir` (the folder is named after the world), and opens it.

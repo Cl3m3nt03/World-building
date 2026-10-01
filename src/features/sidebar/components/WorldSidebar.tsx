@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CreateCardMenu, TrashDialog } from "@/features/cards";
 import { useDocumentTree } from "../hooks/useDocumentTree";
 import { type DocumentTreeHandle, DocumentTreeView } from "./DocumentTreeView";
+import { PinnedSection } from "./PinnedSection";
 
 /**
  * Sidebar of the World tab (docs/features/02-organisation.md): the world's
@@ -28,6 +29,7 @@ export function WorldSidebar() {
             <AppErrorMessage error={tree.error} />
           </div>
         )}
+        {tree.data && <PinnedSection tree={tree.data} currentId={cardId ?? null} />}
         {tree.data && (
           <DocumentTreeView ref={treeView} tree={tree.data} currentId={cardId ?? null} />
         )}
