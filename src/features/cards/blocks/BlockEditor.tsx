@@ -3,6 +3,7 @@ import {
   closestCenter,
   DndContext,
   type DragEndEvent,
+  type DragMoveEvent,
   KeyboardSensor,
   type Over,
   PointerSensor,
@@ -12,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  type SortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -19,17 +21,25 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
+  Columns2,
   GripVertical,
   ImageIcon,
   Map as MapIcon,
   MoreHorizontal,
   Plus,
+  Rows2,
   Swords,
   Trash2,
   Type,
 } from "lucide-react";
 import {
+  type CSSProperties,
+  Fragment,
+  type KeyboardEvent,
+  type PointerEvent,
   type ReactNode,
   type Ref,
   useCallback,
@@ -51,7 +61,21 @@ import {
 import type { TemplateSection } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { ImageBlockView } from "./ImageBlockView";
-import { type Block, type BlockType, move, newBlock } from "./model";
+import {
+  leaveRow,
+  MAX_ROW_BLOCKS,
+  MIN_WIDTH,
+  moveInRow,
+  moveRow,
+  moveToRow,
+  normalize,
+  placeBeside,
+  resize,
+  rowOf,
+  rows,
+  WIDTH_STEP,
+} from "./layout";
+import { type Block, type BlockType, newBlock } from "./model";
 import { Stats5eBlockView } from "./stats/Stats5eBlockView";
 import { TextBlockEditor } from "./TextBlockEditor";
 import { templateBlocks } from "./template";
@@ -70,6 +94,15 @@ const BLOCK_CHOICES: {
   { type: "image", icon: ImageIcon, label: "blocks.types.image" },
   { type: "stats5e", icon: Swords, label: "blocks.types.stats5e" },
 ];
+
+/** While a block is dropped beside another, the others do not make room. */
+const stayInPlace: SortingStrategy = () => null;
+
+/** Share of a block's width, on each side, where a dropped block goes beside it. */
+const SIDE_ZONE = 0.25;
+
+/** Where a dragged block would land, shown on the block under it. */
+type DropHint = "left" | "right" | "before" | "after";
 
 const BLOCK_LABELS = {
   text: "blocks.textLabel",
@@ -122,25 +155,112 @@ function BlockTypeMenu({
   );
 }
 
+/**
+ * The border between two blocks of a line: dragged with the pointer, or
+ * moved with ← → (10 % at a time), it shares their width. Hidden when the
+ * window is too narrow for blocks side by side.
+ */
+function ColumnResizer({
+  width,
+  label,
+  onResize,
+  snapshot,
+  onEnd,
+}: {
+  /** Width of the block on its left, as a share of the line. */
+  width: number;
+  label: string;
+  /** Moves the border by `delta`; while dragging, from the blocks at the start. */
+  onResize: (delta: number, from?: Block[]) => void;
+  snapshot: () => Block[];
+  onEnd: () => void;
+}) {
+  const start = useRef<{ x: number; lineWidth: number; blocks: Block[] } | null>(null);
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step = { ArrowLeft: -WIDTH_STEP, ArrowRight: WIDTH_STEP }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    onResize(step);
+  };
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const line = event.currentTarget.parentElement;
+    if (!line) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    start.current = { x: event.clientX, lineWidth: line.clientWidth, blocks: snapshot() };
+  };
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const from = start.current;
+    if (!from || from.lineWidth === 0) return;
+    onResize((event.clientX - from.x) / from.lineWidth, from.blocks);
+  };
+  const onPointerUp = () => {
+    if (!start.current) return;
+    start.current = null;
+    onEnd();
+  };
+
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: an <hr> cannot take the focus and the arrow keys
+    <div
+      role="separator"
+      tabIndex={0}
+      aria-orientation="vertical"
+      aria-label={label}
+      aria-valuemin={MIN_WIDTH * 100}
+      aria-valuemax={100 - MIN_WIDTH * 100}
+      aria-valuenow={Math.round(width * 100)}
+      onKeyDown={onKeyDown}
+      onKeyUp={onEnd}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      className="group/resizer hidden w-3 shrink-0 cursor-col-resize touch-none justify-center outline-none @min-[40rem]:flex"
+    >
+      <span className="h-full w-0.5 rounded-full bg-transparent transition group-hover/resizer:bg-border group-focus-visible/resizer:bg-ring" />
+    </div>
+  );
+}
+
+/** What the block menu can do with the block's place (lines of blocks, 3.11). */
+type PlaceActions = {
+  /** The block's line can go up / down. */
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveRow: (step: -1 | 1) => void;
+  /** The block shares a line: its position on it, and the line's size. */
+  column: { index: number; count: number } | null;
+  onMoveInRow: (step: -1 | 1) => void;
+  onLeaveRow: () => void;
+  /** The line above has room: the block can go beside its last block. */
+  canJoinPrevious: boolean;
+  onJoinPrevious: () => void;
+};
+
 function SortableBlock({
   cardId,
   block,
   index,
-  count,
   focus,
+  hint,
+  style,
+  place,
   onChange,
   onInsertAfter,
-  onMove,
   onDelete,
 }: {
   cardId: string;
   block: Block;
   index: number;
-  count: number;
   focus: boolean;
+  /** Where a dragged block would land, relative to this one. */
+  hint: DropHint | null;
+  /** The column's width on a line. */
+  style: CSSProperties | undefined;
+  place: PlaceActions;
   onChange: (block: Block) => void;
   onInsertAfter: (type: BlockType) => void;
-  onMove: (to: number) => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
@@ -160,11 +280,22 @@ function SortableBlock({
   const label = t(BLOCK_LABELS[block.type], { index: index + 1 });
 
   return (
-    <li
+    <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`group flex items-start gap-1 rounded-lg ${isDragging ? "z-10 bg-accent opacity-80" : ""}`}
+      data-block={block.id}
+      style={{ ...style, transform: CSS.Transform.toString(transform), transition }}
+      className={`group relative flex min-w-0 items-start gap-1 rounded-lg @min-[40rem]:[flex:var(--column)_1_0%] ${isDragging ? "z-10 bg-accent opacity-80" : ""}`}
     >
+      {hint && (
+        <span
+          aria-hidden
+          className={
+            hint === "left" || hint === "right"
+              ? `absolute inset-y-0 w-0.5 rounded-full bg-primary ${hint === "left" ? "-left-1.5" : "-right-1.5"}`
+              : `absolute inset-x-0 h-0.5 rounded-full bg-primary ${hint === "before" ? "-top-1" : "-bottom-1"}`
+          }
+        />
+      )}
       <div className="flex shrink-0 items-center pt-0.5 opacity-40 transition group-focus-within:opacity-100 group-hover:opacity-100">
         <Button
           ref={setActivatorNodeRef}
@@ -188,14 +319,41 @@ function SortableBlock({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem disabled={index === 0} onSelect={() => onMove(index - 1)}>
+            <DropdownMenuItem disabled={!place.canMoveUp} onSelect={() => place.onMoveRow(-1)}>
               <ArrowUp />
-              {t("blocks.moveUp")}
+              {place.column ? t("blocks.moveRowUp") : t("blocks.moveUp")}
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={index === count - 1} onSelect={() => onMove(index + 1)}>
+            <DropdownMenuItem disabled={!place.canMoveDown} onSelect={() => place.onMoveRow(1)}>
               <ArrowDown />
-              {t("blocks.moveDown")}
+              {place.column ? t("blocks.moveRowDown") : t("blocks.moveDown")}
             </DropdownMenuItem>
+            {place.column ? (
+              <>
+                <DropdownMenuItem
+                  disabled={place.column.index === 0}
+                  onSelect={() => place.onMoveInRow(-1)}
+                >
+                  <ArrowLeft />
+                  {t("blocks.moveLeft")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={place.column.index === place.column.count - 1}
+                  onSelect={() => place.onMoveInRow(1)}
+                >
+                  <ArrowRight />
+                  {t("blocks.moveRight")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={place.onLeaveRow}>
+                  <Rows2 />
+                  {t("blocks.leaveRow")}
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <DropdownMenuItem disabled={!place.canJoinPrevious} onSelect={place.onJoinPrevious}>
+                <Columns2 />
+                {t("blocks.joinPrevious")}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem variant="destructive" onSelect={onDelete}>
               <Trash2 />
               {t("blocks.delete")}
@@ -244,7 +402,7 @@ function SortableBlock({
           <span aria-hidden className="absolute bottom-0 left-2 size-0" />
         </BlockTypeMenu>
       </div>
-    </li>
+    </div>
   );
 }
 
@@ -293,8 +451,9 @@ export function BlockEditor({
 
   useEffect(() => {
     if (content.data && blocks === null) {
-      current.current = content.data;
-      setBlocks(content.data);
+      const loaded = normalize(content.data);
+      current.current = loaded;
+      setBlocks(loaded);
     }
   }, [content.data, blocks]);
 
@@ -317,8 +476,11 @@ export function BlockEditor({
   useEffect(() => () => void flushRef.current(), []);
   usePendingSave(flush);
 
+  // A block dragged over another: where it would land.
+  const [drop, setDrop] = useState<{ id: string; hint: DropHint } | null>(null);
+
   const update = (change: (previous: Block[]) => Block[], immediately = false) => {
-    const next = change(current.current);
+    const next = normalize(change(current.current));
     current.current = next;
     setBlocks(next);
     pending.current = next;
@@ -350,6 +512,13 @@ export function BlockEditor({
     setFocusId(block.id);
     update((previous) => [...previous.slice(0, index), block, ...previous.slice(index)], true);
   };
+  /** A new block right under the line of the block `id`. */
+  const insertAfter = (id: string, type: BlockType) => {
+    const last = rowOf(current.current, id)?.row.blocks.at(-1);
+    insert(current.current.findIndex((block) => block.id === last?.id) + 1, type);
+  };
+  const lines = rows(blocks);
+  const hasLines = lines.some((line) => line.blocks.length > 1);
 
   // What screen readers hear while a block is moved (dnd-kit's own texts
   // are in English and name blocks by their id).
@@ -385,13 +554,64 @@ export function BlockEditor({
     },
   };
 
+  /**
+   * With the pointer, a block dragged over the left or right quarter of
+   * another goes beside it (unless that line is full); elsewhere it goes
+   * before or after the other's whole line.
+   */
+  const onDragMove = ({ active, over, activatorEvent, delta }: DragMoveEvent) => {
+    if (!over || over.id === active.id) return setDrop(null);
+    const id = String(over.id);
+    const pointer = activatorEvent as Partial<MouseEvent>;
+    if (typeof pointer.clientX === "number") {
+      const x = pointer.clientX + delta.x;
+      const { left, width } = over.rect;
+      const side =
+        x < left + width * SIDE_ZONE ? "left" : x > left + width * (1 - SIDE_ZONE) ? "right" : null;
+      const line = rowOf(current.current, id)?.row.blocks ?? [];
+      const room = line.some((block) => block.id === active.id) || line.length < MAX_ROW_BLOCKS;
+      if (side && room) return setDrop({ id, hint: side });
+    }
+    const from = lines.findIndex((line) => line.blocks.some((block) => block.id === active.id));
+    const to = lines.findIndex((line) => line.blocks.some((block) => block.id === id));
+    setDrop({ id, hint: from < to ? "after" : "before" });
+  };
   const onDragEnd = ({ active, over }: DragEndEvent) => {
+    const hint = drop?.hint;
+    setDrop(null);
     if (!over || active.id === over.id) return;
-    update((previous) => {
-      const from = previous.findIndex((block) => block.id === active.id);
-      const to = previous.findIndex((block) => block.id === over.id);
-      return move(previous, from, to);
-    }, true);
+    const id = String(active.id);
+    const target = String(over.id);
+    update(
+      (previous) =>
+        hint === "left" || hint === "right"
+          ? placeBeside(previous, id, target, hint)
+          : moveToRow(previous, id, target),
+      true,
+    );
+  };
+  // Without lines, the blocks make room as before; otherwise a line shows
+  // where the block would land.
+  const sideways = drop?.hint === "left" || drop?.hint === "right";
+  const strategy = hasLines || sideways ? stayInPlace : verticalListSortingStrategy;
+
+  const placeActions = (block: Block, lineIndex: number): PlaceActions => {
+    const line = lines[lineIndex];
+    const above = lines[lineIndex - 1];
+    const column = line && line.blocks.length > 1 ? line.blocks.indexOf(block) : -1;
+    return {
+      canMoveUp: lineIndex > 0,
+      canMoveDown: lineIndex < lines.length - 1,
+      onMoveRow: (step) => update((previous) => moveRow(previous, block.id, step), true),
+      column: line && column >= 0 ? { index: column, count: line.blocks.length } : null,
+      onMoveInRow: (step) => update((previous) => moveInRow(previous, block.id, step), true),
+      onLeaveRow: () => update((previous) => leaveRow(previous, block.id), true),
+      canJoinPrevious: above !== undefined && above.blocks.length < MAX_ROW_BLOCKS,
+      onJoinPrevious: () => {
+        const last = above?.blocks.at(-1);
+        if (last) update((previous) => placeBeside(previous, block.id, last.id, "right"), true);
+      },
+    };
   };
 
   return (
@@ -422,38 +642,67 @@ export function BlockEditor({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          onDragMove={onDragMove}
           onDragEnd={onDragEnd}
+          onDragCancel={() => setDrop(null)}
           accessibility={accessibility}
         >
-          <SortableContext
-            items={blocks.map((block) => block.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <ul className="flex flex-col gap-1">
-              {blocks.map((block, index) => (
-                <SortableBlock
-                  key={block.id}
-                  cardId={cardId}
-                  block={block}
-                  index={index}
-                  count={blocks.length}
-                  focus={block.id === focusId}
-                  onChange={(changed) =>
-                    update((previous) =>
-                      previous.map((other) => (other.id === changed.id ? changed : other)),
-                    )
+          <SortableContext items={blocks.map((block) => block.id)} strategy={strategy}>
+            <ul className="@container flex flex-col gap-1">
+              {lines.map((line, lineIndex) => (
+                <li
+                  key={line.blocks[0]?.id}
+                  className={
+                    line.blocks.length > 1
+                      ? "flex flex-col gap-1 @min-[40rem]:flex-row @min-[40rem]:gap-0"
+                      : undefined
                   }
-                  onInsertAfter={(type) => insert(index + 1, type)}
-                  onMove={(to) =>
-                    update((previous) => {
-                      const from = previous.findIndex((other) => other.id === block.id);
-                      return move(previous, from, from + (to - index));
-                    }, true)
-                  }
-                  onDelete={() =>
-                    update((previous) => previous.filter((other) => other.id !== block.id), true)
-                  }
-                />
+                >
+                  {line.blocks.map((block, column) => {
+                    const index = blocks.indexOf(block);
+                    const next = line.blocks[column + 1];
+                    return (
+                      <Fragment key={block.id}>
+                        <SortableBlock
+                          cardId={cardId}
+                          block={block}
+                          index={index}
+                          focus={block.id === focusId}
+                          hint={drop?.id === block.id ? drop.hint : null}
+                          style={
+                            line.blocks.length > 1
+                              ? ({ "--column": block.width ?? 1 } as CSSProperties)
+                              : undefined
+                          }
+                          place={placeActions(block, lineIndex)}
+                          onChange={(changed) =>
+                            update((previous) =>
+                              previous.map((other) => (other.id === changed.id ? changed : other)),
+                            )
+                          }
+                          onInsertAfter={(type) => insertAfter(block.id, type)}
+                          onDelete={() =>
+                            update(
+                              (previous) => previous.filter((other) => other.id !== block.id),
+                              true,
+                            )
+                          }
+                        />
+                        {next && (
+                          <ColumnResizer
+                            width={block.width ?? 0.5}
+                            label={t("blocks.columnWidth", { index: index + 1 })}
+                            onResize={(delta, from) =>
+                              update((previous) => resize(from ?? previous, block.id, delta))
+                            }
+                            snapshot={() => current.current}
+                            onEnd={flush}
+                          />
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </li>
               ))}
             </ul>
           </SortableContext>

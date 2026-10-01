@@ -189,3 +189,95 @@ test("moving a block with the keyboard is announced in the app's language, by bl
     ),
   );
 });
+
+/** The lines of the last save: `["a|b", "c"]`. */
+function savedLines(): string[] {
+  const out: { row: string | undefined; ids: string[] }[] = [];
+  for (const block of parseContent(saved.at(-1) ?? "[]")) {
+    const last = out.at(-1);
+    if (block.row && last?.row === block.row) last.ids.push(block.id);
+    else out.push({ row: block.row, ids: [block.id] });
+  }
+  return out.map((line) => line.ids.join("|"));
+}
+
+test('"Place beside the previous block" puts two blocks on one line, saved', async () => {
+  initial = [textBlock("a", "Gauche"), textBlock("b", "Droite"), textBlock("c", "Dessous")];
+  renderEditor();
+
+  await openMenu(await screen.findByRole("button", { name: "Actions du bloc 2" }));
+  await act(async () => {
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Placer à côté du bloc précédent" }),
+    );
+  });
+
+  await waitFor(() => expect(savedLines()).toEqual(["a|b", "c"]));
+  expect(parseContent(saved.at(-1) as string).map((block) => block.width)).toEqual([
+    0.5,
+    0.5,
+    undefined,
+  ]);
+  // Both blocks are in the same item of the list, which stacks them on a
+  // narrow window and lines them up on a wide one.
+  const left = screen.getByRole("textbox", { name: "Bloc de texte 1" }).closest("li");
+  expect(left).toBe(screen.getByRole("textbox", { name: "Bloc de texte 2" }).closest("li"));
+  expect(left?.className).toContain("@min-[40rem]:flex-row");
+  expect(left?.parentElement?.className).toContain("@container");
+});
+
+test("a saved line shows side by side; its border moves with the arrows", async () => {
+  initial = [
+    { ...textBlock("a", "Gauche"), row: "r", width: 0.5 },
+    { ...textBlock("b", "Droite"), row: "r", width: 0.5 },
+  ];
+  renderEditor();
+
+  const border = await screen.findByRole("separator", { name: "Largeur du bloc 1" });
+  expect(border.getAttribute("aria-valuenow")).toBe("50");
+  fireEvent.keyDown(border, { key: "ArrowRight" });
+  fireEvent.keyUp(border, { key: "ArrowRight" });
+
+  expect(border.getAttribute("aria-valuenow")).toBe("60");
+  await waitFor(() =>
+    expect(parseContent(saved.at(-1) ?? "[]").map((block) => block.width)).toEqual([0.6, 0.4]),
+  );
+});
+
+test("a block of a line moves right, then leaves the line, from its menu", async () => {
+  initial = [
+    { ...textBlock("a", "Un"), row: "r", width: 0.5 },
+    { ...textBlock("b", "Deux"), row: "r", width: 0.5 },
+    textBlock("c", "Trois"),
+  ];
+  renderEditor();
+
+  await openMenu(await screen.findByRole("button", { name: "Actions du bloc 1" }));
+  expect(screen.queryByRole("menuitem", { name: "Placer à côté du bloc précédent" })).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "Monter la ligne" })).toBeTruthy();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitem", { name: "Déplacer à droite" }));
+  });
+  await waitFor(() => expect(savedLines()).toEqual(["b|a", "c"]));
+
+  await openMenu(screen.getByRole("button", { name: "Actions du bloc 2" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Sortir de la ligne" }));
+  });
+  await waitFor(() => expect(savedLines()).toEqual(["b", "a", "c"]));
+  expect(parseContent(saved.at(-1) as string).every((block) => block.row === undefined)).toBe(true);
+});
+
+test("a full line of three cannot take a fourth block", async () => {
+  initial = [
+    { ...textBlock("a", "Un"), row: "r" },
+    { ...textBlock("b", "Deux"), row: "r" },
+    { ...textBlock("c", "Trois"), row: "r" },
+    textBlock("d", "Quatre"),
+  ];
+  renderEditor();
+
+  await openMenu(await screen.findByRole("button", { name: "Actions du bloc 4" }));
+  const join = await screen.findByRole("menuitem", { name: "Placer à côté du bloc précédent" });
+  expect(join.getAttribute("aria-disabled")).toBe("true");
+});

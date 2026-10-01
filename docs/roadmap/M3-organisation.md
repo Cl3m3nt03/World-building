@@ -108,8 +108,10 @@ Cadrage validé par Clément le 01/10/2026 (#110) : le bloc image devient une ga
 ## 3.11 — Blocs côte à côte (#111)
 **Branche** : `feat/block-columns` · **Dépend de** : —
 
-- [ ] À cadrer au démarrage de l'étape : glisser un bloc à gauche ou à droite d'un autre pour former une ligne, largeur des colonnes, affichage sur une fenêtre étroite
-- [ ] Au clavier depuis le menu du bloc
+Cadrage validé par Clément le 01/10/2026 (#111) : liste à plat avec un identifiant de ligne, 3 blocs au plus par ligne, empilement automatique sur fenêtre étroite.
+
+- [x] Glisser un bloc à gauche ou à droite d'un autre pour former une ligne, largeur des colonnes (bordure déplaçable), affichage sur une fenêtre étroite
+- [x] Au clavier depuis le menu du bloc
 
 **Critères d'acceptation** : deux blocs placés côte à côte le restent après relance, et se remettent l'un sous l'autre sur une fenêtre étroite.
 
