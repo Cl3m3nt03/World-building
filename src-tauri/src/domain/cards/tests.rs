@@ -530,3 +530,28 @@ async fn a_duplicate_copies_everything_but_the_name_and_sits_right_after() {
     let copy_row = tree.documents.iter().find(|d| d.id == copy.id).unwrap();
     assert_eq!(copy_row.pinned_order, None);
 }
+
+#[tokio::test]
+async fn every_image_of_a_gallery_is_a_usage() {
+    let fx = Fixture::new().await;
+    let place = fx.new_type("Lieu", None).await;
+    let image = fx.image().await;
+    let rivendell = create(fx.pool(), &place, "Fondcombe").await.unwrap();
+    let gallery = format!(
+        r#"[{{"id":"g","type":"image","images":[
+            {{"id":"1","assetId":"other.png","caption":"La vallée"}},
+            {{"id":"2","assetId":"{image}","caption":"La maison d'Elrond"}}]}}]"#
+    );
+    set_content(fx.pool(), &rivendell.id, &gallery)
+        .await
+        .unwrap();
+
+    assert_eq!(
+        media::card_usages(fx.pool(), &image).await.unwrap(),
+        vec![media::AssetUsage::CardBlock {
+            card_id: rivendell.id.clone(),
+            card_title: "Fondcombe".into(),
+            in_trash: false,
+        }]
+    );
+}

@@ -98,8 +98,10 @@
 ## 3.10 — Plusieurs images dans un bloc, avec défilement (#110)
 **Branche** : `feat/image-gallery-block` · **Dépend de** : —
 
-- [ ] À cadrer au démarrage de l'étape (retour d'utilisateur) : galerie défilante dans le bloc image (flèches, clavier, légende par image), réordonner et retirer les images
-- [ ] Chaque image reste listée dans les usages de la médiathèque
+Cadrage validé par Clément le 01/10/2026 (#110) : le bloc image devient une galerie, pas de nouveau type de bloc.
+
+- [x] Galerie dans le bloc image : flèches, miniatures, clavier, légende par image ; ajouter plusieurs images d'un coup, réordonner et retirer
+- [x] Chaque image reste listée dans les usages de la médiathèque
 
 **Critères d'acceptation** : un bloc de trois images se parcourt à la souris et au clavier, et reste identique après relance.
 
