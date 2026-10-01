@@ -6,10 +6,13 @@ import {
   applyPinMove,
   applyPinned,
   buildTree,
+  DEFAULT_VIEW,
   dropMove,
   moveDestinations,
   pinnedDocuments,
   type TreeNode,
+  type TreeView,
+  viewTree,
   visibleRows,
 } from "./tree";
 
@@ -323,5 +326,87 @@ describe("moveDestinations", () => {
   it("is empty for a folder or an unknown key", () => {
     expect(moveDestinations(roots, "f:places")).toEqual([]);
     expect(moveDestinations(roots, "d:nope")).toEqual([]);
+  });
+});
+
+describe("viewTree", () => {
+  // Root: [Zeta (character), Places (folder) > [Winterfell (place) > [Crypt (place)], Arya (character)], Bran (character)]
+  const typed = (id: string, order: number, typeId: string, createdAt: string, place = {}) => ({
+    ...doc(id, order, place),
+    typeId,
+    createdAt,
+  });
+  const world: DocumentTree = {
+    folders: [folder("places", 1)],
+    documents: [
+      typed("zeta", 0, "character", "2026-01-03"),
+      typed("winterfell", 0, "place", "2026-01-01", { folderId: "places" }),
+      typed("crypt", 0, "place", "2026-01-05", { parentId: "winterfell" }),
+      typed("arya", 1, "character", "2026-01-04", { folderId: "places" }),
+      typed("bran", 2, "character", "2026-01-02"),
+    ],
+  };
+  const roots = buildTree(world);
+  const show = (view: Partial<TreeView>) => {
+    const result = viewTree(roots, { ...DEFAULT_VIEW, ...view });
+    return outline(result.roots).map((line) =>
+      result.context.has(line.trim()) ? `${line} (context)` : line,
+    );
+  };
+
+  it("keeps the tree as it is by default", () => {
+    expect(show({})).toEqual(outline(roots));
+  });
+
+  it("filters by card type, keeping folders and parents around the matches", () => {
+    expect(show({ typeIds: ["character"] })).toEqual([
+      "d:zeta",
+      "f:places (context)",
+      "  d:arya",
+      "d:bran",
+    ]);
+    expect(show({ typeIds: ["place"] })).toEqual([
+      "f:places (context)",
+      "  d:winterfell",
+      "    d:crypt",
+    ]);
+    expect(show({ kinds: ["map"] })).toEqual([]);
+  });
+
+  it("sorts by name or by creation date, folders first, and reverses", () => {
+    expect(show({ sort: "name" })).toEqual([
+      "f:places",
+      "  d:arya",
+      "  d:winterfell",
+      "    d:crypt",
+      "d:bran",
+      "d:zeta",
+    ]);
+    expect(show({ sort: "name", reversed: true })).toEqual([
+      "f:places",
+      "  d:winterfell",
+      "    d:crypt",
+      "  d:arya",
+      "d:zeta",
+      "d:bran",
+    ]);
+    expect(show({ sort: "created", typeIds: ["character"] })).toEqual([
+      "f:places (context)",
+      "  d:arya",
+      "d:bran",
+      "d:zeta",
+    ]);
+    expect(show({ sort: "created", reversed: true, typeIds: ["character"] })).toEqual([
+      "f:places (context)",
+      "  d:arya",
+      "d:zeta",
+      "d:bran",
+    ]);
+  });
+
+  it("leaves the tree untouched", () => {
+    const before = outline(roots);
+    viewTree(roots, { ...DEFAULT_VIEW, sort: "name", typeIds: ["place"] });
+    expect(outline(roots)).toEqual(before);
   });
 });

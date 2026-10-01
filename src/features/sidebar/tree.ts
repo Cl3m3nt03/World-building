@@ -1,4 +1,4 @@
-import type { DocumentTree, Folder, Place, TreeDocument } from "@/lib/bindings";
+import type { DocumentKind, DocumentTree, Folder, Place, TreeDocument } from "@/lib/bindings";
 
 /**
  * The sidebar tree (M3, docs/features/02-organisation.md), built from the
@@ -341,4 +341,75 @@ export function moveDestinations(roots: TreeNode[], key: string): Destination[] 
 
 function nodeName(node: TreeNode): string {
   return node.kind === "folder" ? node.folder.name : node.document.title;
+}
+
+// --- Filters and sort (step 3.8) -------------------------------------------------
+
+export type SortBy = "manual" | "name" | "created";
+
+/** How the sidebar narrows and orders the tree. */
+export type TreeView = {
+  /** Kinds of document shown; empty: all. */
+  kinds: DocumentKind[];
+  /** Card types shown (each with its subtypes); empty: all. */
+  typeIds: string[];
+  sort: SortBy;
+  /** Name: Z to A; date: newest first. */
+  reversed: boolean;
+};
+
+export const DEFAULT_VIEW: TreeView = { kinds: [], typeIds: [], sort: "manual", reversed: false };
+
+export function isFiltered(view: TreeView): boolean {
+  return view.kinds.length > 0 || view.typeIds.length > 0;
+}
+
+const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+
+/**
+ * The tree as `view` shows it: only the documents matching the filters,
+ * with the folders and parents around them (`context` holds those that do
+ * not match themselves); each place sorted. `typeIds` must already include
+ * the subtypes of each chosen type.
+ */
+export function viewTree(
+  roots: TreeNode[],
+  view: TreeView,
+): { roots: TreeNode[]; context: ReadonlySet<string> } {
+  const filtered = isFiltered(view);
+  const kinds = new Set(view.kinds);
+  const types = new Set(view.typeIds);
+  const matches = (node: TreeNode) =>
+    node.kind === "document" &&
+    (kinds.size === 0 || kinds.has(node.document.kind)) &&
+    (types.size === 0 || (node.document.typeId !== null && types.has(node.document.typeId)));
+  const context = new Set<string>();
+
+  const order = (a: TreeNode, b: TreeNode): number => {
+    // Folders first, by name; then documents.
+    if (a.kind !== b.kind) return a.kind === "folder" ? -1 : 1;
+    let result = 0;
+    if (view.sort === "created" && a.kind === "document" && b.kind === "document") {
+      result = a.document.createdAt.localeCompare(b.document.createdAt);
+    }
+    if (result === 0) {
+      const name = (node: TreeNode) =>
+        node.kind === "folder" ? node.folder.name : node.document.title;
+      result = collator.compare(name(a), name(b));
+    }
+    return view.reversed ? -result : result;
+  };
+
+  const walk = (nodes: TreeNode[]): TreeNode[] => {
+    const kept: TreeNode[] = [];
+    for (const node of nodes) {
+      const children = walk(node.children);
+      if (!filtered || matches(node) || children.length > 0) {
+        if (filtered && !matches(node)) context.add(node.key);
+        kept.push({ ...node, children } as TreeNode);
+      }
+    }
+    return view.sort === "manual" ? kept : kept.sort(order);
+  };
+  return { roots: walk(roots), context };
 }

@@ -12,6 +12,8 @@ import { useSearch } from "../hooks/useSearch";
 type Props = {
   /** What the sidebar shows while nothing is typed (pins and tree). */
   children: ReactNode;
+  /** Buttons after the field (filters and sort). */
+  actions?: ReactNode;
 };
 
 /**
@@ -20,7 +22,7 @@ type Props = {
  * tree: name and alias matches, then content matches with an excerpt.
  * Arrows move, Enter opens, Escape clears; Ctrl+K comes here from anywhere.
  */
-export function SidebarSearch({ children }: Props) {
+export function SidebarSearch({ children, actions }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -97,8 +99,8 @@ export function SidebarSearch({ children }: Props) {
 
   return (
     <>
-      <div className="p-2 pb-1">
-        <div className="relative">
+      <div className="flex items-center gap-1 p-2 pb-1">
+        <div className="relative min-w-0 flex-1">
           <Search
             aria-hidden
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
@@ -147,6 +149,7 @@ export function SidebarSearch({ children }: Props) {
             </button>
           )}
         </div>
+        {actions}
       </div>
       {searching ? (
         <div
