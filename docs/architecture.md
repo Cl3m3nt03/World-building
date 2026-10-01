@@ -130,6 +130,7 @@ Le thème du monde (`src/features/world-theme`) : `presets.ts` (thèmes fournis,
 - Après avoir modifié une migration ou une requête : `pnpm db:prepare` (installe une base de dev dans `src-tauri/target/sqlx-dev.db`, applique les migrations, régénère `.sqlx/`), puis committer `.sqlx/`. Il faut `sqlx-cli` : `cargo install sqlx-cli --no-default-features --features sqlite`.
 - Migrations dans `src-tauri/migrations/`, nommées `NNNN_description.sql`. **On ne modifie jamais une migration fusionnée** : on en ajoute une.
 - Connexion : journal WAL, `synchronous = NORMAL`, clés étrangères actives, `busy_timeout` de 5 s, pool de 4 connexions. Sans l'extension `load-extension` de SQLite.
+- **Transactions d'écriture** : toujours `db::begin_write` (`BEGIN IMMEDIATE`), jamais `pool.begin()` (interdit par clippy, `clippy.toml`). En WAL, une transaction différée qui lit puis écrit échoue aussitôt (« database is locked ») si une autre connexion a écrit entre-temps, `busy_timeout` ou pas ; en `IMMEDIATE`, le verrou d'écriture est pris d'emblée et la seconde écriture attend son tour (#140).
 - Tests : requêtes non vérifiées (`sqlx::query`) autorisées dans les tests qui utilisent les migrations de test (`src-tauri/tests/fixtures/`), dont les tables n'existent pas dans le vrai schéma.
 
 ### Documents, corbeille et liens

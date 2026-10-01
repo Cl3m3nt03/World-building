@@ -13,6 +13,7 @@ use specta::Type;
 use sqlx::{Sqlite, SqlitePool, Transaction};
 use uuid::Uuid;
 
+use crate::db;
 use crate::db::tree::{self as queries, FolderRow};
 use crate::domain::documents::{self, DocumentKind};
 use crate::error::{AppError, AppResult};
@@ -310,7 +311,7 @@ pub async fn move_document(
     place: &Place,
     index: usize,
 ) -> AppResult<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let from = live_place(&mut tx, id).await?;
     check_document_target(&mut tx, id, place).await?;
     let (folder, parent) = columns(place);
@@ -452,7 +453,7 @@ pub async fn create_folder(
 ) -> AppResult<Folder> {
     let name = validate_folder_name(name)?;
     let icon = validate_icon(icon)?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     if let Some(parent) = parent {
         folder_row(&mut tx, parent).await?;
     }
@@ -472,7 +473,7 @@ pub async fn create_folder(
 }
 
 pub async fn update_folder(pool: &SqlitePool, id: &str, patch: &FolderPatch) -> AppResult<Folder> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let row = folder_row(&mut tx, id).await?;
     let name = match &patch.name {
         Some(name) => validate_folder_name(name)?,
@@ -496,7 +497,7 @@ pub async fn move_folder(
     parent: Option<&str>,
     index: usize,
 ) -> AppResult<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let row = folder_row(&mut tx, id).await?;
     if let Some(target) = parent {
         folder_row(&mut tx, target).await?;
@@ -525,7 +526,7 @@ pub async fn move_folder(
 /// go to the trash with their children and its subfolders are deleted
 /// (`Trash`; restored, they come back at the root).
 pub async fn delete_folder(pool: &SqlitePool, id: &str, mode: FolderDeletion) -> AppResult<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let row = folder_row(&mut tx, id).await?;
     let container = folder_place(row.parent_id.clone());
     let items = items_of(&mut tx, &container).await?;
@@ -587,7 +588,7 @@ pub async fn delete_folder(pool: &SqlitePool, id: &str, mode: FolderDeletion) ->
 /// tests to check nothing points to a deleted parent.
 #[cfg(test)]
 pub(crate) async fn children_ids(pool: &SqlitePool, id: &str) -> AppResult<Vec<String>> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let ids = queries::all_children_of(&mut tx, id).await?;
     tx.commit().await?;
     Ok(ids)

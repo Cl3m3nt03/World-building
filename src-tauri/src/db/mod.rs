@@ -11,9 +11,9 @@ pub mod tree;
 use std::path::Path;
 use std::time::Duration;
 
-use sqlx::SqlitePool;
 use sqlx::migrate::Migrator;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous};
+use sqlx::{Sqlite, SqlitePool, Transaction};
 
 use crate::error::{AppError, AppResult};
 
@@ -45,6 +45,15 @@ pub async fn connect(path: &Path, create: bool) -> AppResult<SqlitePool> {
         .max_connections(4)
         .connect_with(options)
         .await?)
+}
+
+/// Begins a transaction that writes: `BEGIN IMMEDIATE` takes the write lock
+/// at once, so a concurrent writer waits (`busy_timeout`) instead of failing.
+/// A deferred `BEGIN` that reads then writes gets `SQLITE_BUSY` at once in
+/// WAL mode when another connection wrote in between, timeout or not (#140).
+#[allow(clippy::disallowed_methods)]
+pub async fn begin_write(pool: &SqlitePool) -> AppResult<Transaction<'static, Sqlite>> {
+    Ok(pool.begin_with("BEGIN IMMEDIATE").await?)
 }
 
 /// Fails if the file is not a readable SQLite database.

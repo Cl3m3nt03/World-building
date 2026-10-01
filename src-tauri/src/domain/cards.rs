@@ -5,6 +5,7 @@ use serde::Serialize;
 use specta::Type;
 use sqlx::SqlitePool;
 
+use crate::db;
 use crate::db::cards::{self as queries, CardRow};
 use crate::db::documents as document_queries;
 use crate::domain::documents::{self, DocumentKind, now};
@@ -71,7 +72,7 @@ pub async fn list(pool: &SqlitePool, trashed: bool) -> AppResult<Vec<Card>> {
 /// Creates a card of the type (or subtype) `type_id`, titled `title`.
 pub async fn create(pool: &SqlitePool, type_id: &str, title: &str) -> AppResult<Card> {
     card_types::get(pool, type_id).await?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let document = documents::create_in(&mut tx, DocumentKind::Card, title).await?;
     queries::insert(&mut tx, &document.id, type_id).await?;
     tx.commit().await?;
@@ -82,7 +83,7 @@ pub async fn create(pool: &SqlitePool, type_id: &str, title: &str) -> AppResult<
 pub async fn set_type(pool: &SqlitePool, id: &str, type_id: &str) -> AppResult<Card> {
     get(pool, id).await?;
     card_types::get(pool, type_id).await?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     queries::set_type(&mut tx, id, type_id).await?;
     document_queries::touch(&mut tx, id, &now()).await?;
     tx.commit().await?;
@@ -97,7 +98,7 @@ pub async fn set_image(pool: &SqlitePool, id: &str, asset_id: Option<&str>) -> A
     {
         return Err(AppError::InvalidInput(format!("asset not found: {asset}")));
     }
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     queries::set_image(&mut tx, id, asset_id).await?;
     document_queries::touch(&mut tx, id, &now()).await?;
     tx.commit().await?;
@@ -138,7 +139,7 @@ pub async fn set_aliases(pool: &SqlitePool, id: &str, aliases: &[String]) -> App
     get(pool, id).await?;
     let json = serde_json::to_string(&clean_aliases(aliases)?)
         .map_err(|error| AppError::Internal(error.to_string()))?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     queries::set_aliases(&mut tx, id, &json).await?;
     document_queries::touch(&mut tx, id, &now()).await?;
     tx.commit().await?;
@@ -184,7 +185,7 @@ pub async fn set_content(pool: &SqlitePool, id: &str, json: &str) -> AppResult<(
         .into_iter()
         .filter(|target| target != id)
         .collect();
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     queries::set_content(&mut tx, id, json, &text).await?;
     links::replace_in(&mut tx, id, LinkKind::Mention, None, &mentioned).await?;
     document_queries::touch(&mut tx, id, &now()).await?;

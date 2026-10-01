@@ -8,6 +8,7 @@ use specta::Type;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
+use crate::db;
 use crate::db::properties::{self as queries, DefinitionRow};
 use crate::domain::documents::now;
 use crate::domain::links::{self, LinkKind};
@@ -294,7 +295,7 @@ pub async fn reorder(pool: &SqlitePool, ids: &[String]) -> AppResult<()> {
             "reorder must list every property of the owner exactly once".into(),
         ));
     }
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     for (order, id) in (0_i64..).zip(ids) {
         queries::set_order(&mut tx, id, order).await?;
     }

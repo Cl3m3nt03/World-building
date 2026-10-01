@@ -10,6 +10,7 @@ use specta::Type;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
+use crate::db;
 use crate::db::card_types::{self as queries, CardTypeRow};
 use crate::db::cards as card_queries;
 use crate::domain::documents::now;
@@ -261,7 +262,7 @@ pub async fn create(pool: &SqlitePool, new: NewCardType) -> AppResult<CardType> 
         parent_id: new.parent_id,
         created_at: now(),
     };
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     queries::insert(&mut tx, &row).await?;
     tx.commit().await?;
     Ok(row.into())
@@ -302,7 +303,7 @@ pub async fn duplicate(pool: &SqlitePool, id: &str, name: &str) -> AppResult<Car
         ..source.clone()
     };
     let subtypes = queries::siblings(pool, Some(&source.id)).await?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     queries::insert(&mut tx, &copy).await?;
     for sub in subtypes {
         let sub_copy = CardTypeRow {
@@ -337,7 +338,7 @@ pub async fn reorder(pool: &SqlitePool, ids: &[String]) -> AppResult<()> {
             "reorder must list every sibling type exactly once".into(),
         ));
     }
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     for (order, id) in (0_i64..).zip(ids) {
         queries::set_order(&mut tx, id, order).await?;
     }
@@ -363,7 +364,7 @@ pub async fn delete(pool: &SqlitePool, id: &str, move_cards_to: Option<&str>) ->
             ));
         }
     }
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     if let (true, Some(target)) = (has_cards, move_cards_to) {
         card_queries::move_type(&mut tx, id, target).await?;
     }
@@ -375,7 +376,7 @@ pub async fn delete(pool: &SqlitePool, id: &str, move_cards_to: Option<&str>) ->
 /// Creates the default types of `genre`, named in `language`.
 async fn seed(pool: &SqlitePool, genre: Genre, language: Language) -> AppResult<()> {
     let created_at = now();
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     for (order, default) in (0_i64..).zip(defaults::types_for(genre)) {
         let template: Vec<TemplateSection> = default
             .template
