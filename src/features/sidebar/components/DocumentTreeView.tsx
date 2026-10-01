@@ -12,12 +12,22 @@ import {
 } from "@dnd-kit/core";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { defaultRangeExtractor, type Range, useVirtualizer } from "@tanstack/react-virtual";
-import { ChevronRight, Folder, FolderOpen, type LucideIcon } from "lucide-react";
+import {
+  ChevronRight,
+  FolderOpen,
+  FolderPlus,
+  type LucideIcon,
+  Pencil,
+  Shapes,
+  Trash2,
+} from "lucide-react";
 import {
   type KeyboardEvent,
   type MouseEvent,
+  type Ref,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -25,20 +35,24 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { ContextMenuItem, ContextMenuShortcut } from "@/components/ui/context-menu";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
+import { CreateCardContextMenu } from "@/features/cards";
 import type { CardType, DocumentTree } from "@/lib/bindings";
-import { useMoveInTree } from "../hooks/useDocumentTree";
+import { useCreateFolder, useMoveInTree, useUpdateFolder } from "../hooks/useDocumentTree";
 import {
   ancestorKeys,
   buildTree,
   type DropPosition,
   documentKey,
   dropMove,
+  folderKey,
   type Move,
   type TreeNode,
   type TreeRow,
   visibleRows,
 } from "../tree";
+import { DeleteFolderDialog, FolderIconDialog, folderIcon } from "./FolderDialogs";
 
 /** Height of a row, in pixels: fixed, so thousands of rows scroll without measuring. */
 const ROW_HEIGHT = 32;
@@ -50,10 +64,17 @@ const OPEN_ON_HOVER_MS = 700;
 /** Where a drag would land: the row under the pointer, and the move it makes. */
 type Drop = { key: string; position: DropPosition; move: Move | "refused" | null };
 
+/** What the rest of the sidebar can ask of the tree. */
+export type DocumentTreeHandle = {
+  /** Creates a folder at the end of the root and lets its name be typed. */
+  newFolder: () => void;
+};
+
 type Props = {
   tree: DocumentTree;
   /** The document open in the workspace, if any. */
   currentId: string | null;
+  ref?: Ref<DocumentTreeHandle>;
 };
 
 /**
@@ -67,9 +88,13 @@ type Props = {
  * folder, or under a document as its child). A drop that would put an item
  * into itself, or a folder under a document, is shown refused.
  *
+ * Folders are made from the bottom bar or a right click, and named at once
+ * in their row; a folder's right click (or F2 / Delete) renames it, changes
+ * its icon or deletes it.
+ *
  * Which folders are open is kept for the session; per world in step 3.9.
  */
-export function DocumentTreeView({ tree, currentId }: Props) {
+export function DocumentTreeView({ tree, currentId, ref }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -220,11 +245,132 @@ export function DocumentTreeView({ tree, currentId }: Props) {
       case " ":
         activate(row);
         break;
+      case "F2":
+        if (row.node.kind !== "folder") return;
+        setEditingKey(row.node.key);
+        break;
+      case "Delete":
+        if (row.node.kind !== "folder") return;
+        setDeleteKey(row.node.key);
+        break;
       default:
         return;
     }
     event.preventDefault();
   };
+
+  // --- Folders -----------------------------------------------------------------
+
+  const createFolder = useCreateFolder();
+  const updateFolder = useUpdateFolder();
+  // The folder whose name is being typed, in its row.
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [iconFolderId, setIconFolderId] = useState<string | null>(null);
+  const [deleteKey, setDeleteKey] = useState<string | null>(null);
+  // A row to scroll to (and focus) once the tree has it, e.g. a new folder.
+  const [revealKey, setRevealKey] = useState<string | null>(null);
+  // The row a right click was made on (`null`: the empty space below them).
+  const [menuKey, setMenuKey] = useState<string | null>(null);
+  // A menu action that moves the focus itself (a name to type, a dialog).
+  const keepMenuFocus = useRef(false);
+
+  useEffect(() => {
+    if (revealKey === null) return;
+    const index = indexOf.get(revealKey);
+    if (index === undefined) return;
+    setRevealKey(null);
+    setActiveKey(revealKey);
+    virtualizer.scrollToIndex(index, { align: "auto" });
+  }, [revealKey, indexOf, virtualizer]);
+
+  const newFolder = (parentId: string | null) => {
+    createFolder.mutate(
+      { parentId, name: t("sidebar.folder.defaultName") },
+      {
+        onSuccess: (folder) => {
+          if (parentId) setOpen(folderKey(parentId), true);
+          setEditingKey(folderKey(folder.id));
+          setRevealKey(folderKey(folder.id));
+        },
+      },
+    );
+  };
+  useImperativeHandle(ref, () => ({ newFolder: () => newFolder(null) }));
+
+  const finishRename = (node: TreeNode, name: string | null) => {
+    setEditingKey(null);
+    pendingFocus.current = node.key;
+    if (node.kind !== "folder" || name === null) return;
+    const trimmed = name.trim();
+    if (trimmed !== "" && trimmed !== node.folder.name) {
+      updateFolder.mutate({ id: node.folder.id, patch: { name: trimmed } });
+    }
+  };
+
+  const allNodes = useMemo(() => {
+    const map = new Map<string, TreeNode>();
+    const walk = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        map.set(node.key, node);
+        walk(node.children);
+      }
+    };
+    walk(roots);
+    return map;
+  }, [roots]);
+  const folderNode = (key: string | null) => {
+    const node = key ? allNodes.get(key) : undefined;
+    return node?.kind === "folder" ? node : null;
+  };
+  const menuFolder = folderNode(menuKey);
+  const iconFolder = iconFolderId
+    ? (tree.folders.find((folder) => folder.id === iconFolderId) ?? null)
+    : null;
+
+  const folderMenu = menuFolder && (
+    <>
+      <ContextMenuItem onSelect={() => newFolder(menuFolder.folder.id)}>
+        <FolderPlus />
+        {t("sidebar.folder.newSub")}
+      </ContextMenuItem>
+      <ContextMenuItem
+        onSelect={() => {
+          keepMenuFocus.current = true;
+          setEditingKey(menuFolder.key);
+        }}
+      >
+        <Pencil />
+        {t("sidebar.folder.rename")}
+        <ContextMenuShortcut>{t("sidebar.folder.renameKey")}</ContextMenuShortcut>
+      </ContextMenuItem>
+      <ContextMenuItem
+        onSelect={() => {
+          keepMenuFocus.current = true;
+          setIconFolderId(menuFolder.folder.id);
+        }}
+      >
+        <Shapes />
+        {t("sidebar.folder.changeIcon")}
+      </ContextMenuItem>
+      <ContextMenuItem
+        variant="destructive"
+        onSelect={() => {
+          keepMenuFocus.current = true;
+          setDeleteKey(menuFolder.key);
+        }}
+      >
+        <Trash2 />
+        {t("sidebar.folder.delete")}
+        <ContextMenuShortcut>{t("sidebar.folder.deleteKey")}</ContextMenuShortcut>
+      </ContextMenuItem>
+    </>
+  );
+  const rootMenu = (
+    <ContextMenuItem onSelect={() => newFolder(null)}>
+      <FolderPlus />
+      {t("sidebar.folder.new")}
+    </ContextMenuItem>
+  );
 
   // --- Drag and drop -----------------------------------------------------------
 
@@ -321,6 +467,7 @@ export function DocumentTreeView({ tree, currentId }: Props) {
   };
 
   const dragged = dragKey ? nodeOf.get(dragKey) : undefined;
+  const error = move.error ?? createFolder.error ?? updateFolder.error;
 
   return (
     <DndContext
@@ -342,56 +489,85 @@ export function DocumentTreeView({ tree, currentId }: Props) {
         },
       }}
     >
-      {move.error && (
+      {error && (
         <div className="px-2 pt-2">
-          <AppErrorMessage error={move.error} />
+          <AppErrorMessage error={error} />
         </div>
       )}
-      <div
-        ref={scrollRef}
-        role="tree"
-        aria-label={t("sidebar.tree")}
-        data-tree-viewport=""
-        className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-2"
+      <CreateCardContextMenu
+        before={folderMenu || undefined}
+        after={menuFolder ? undefined : rootMenu}
+        create={!menuFolder}
+        onCloseAutoFocus={(event) => {
+          if (keepMenuFocus.current) event.preventDefault();
+          keepMenuFocus.current = false;
+        }}
       >
-        <div role="none" className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
-          {virtualizer.getVirtualItems().map((item) => {
-            const row = rows[item.index];
-            if (!row) return null;
-            const { node } = row;
-            const isOpen = node.children.length > 0 && expanded.has(node.key);
-            const indicator =
-              drop?.key === node.key && drop.move !== null
-                ? drop.move === "refused"
-                  ? "refused"
-                  : drop.position
-                : undefined;
-            return (
-              <TreeItem
-                key={item.key}
-                row={row}
-                top={item.start}
-                isOpen={isOpen}
-                isCurrent={node.key === currentKey}
-                isTabStop={node.key === tabStop}
-                isDragged={node.key === dragKey}
-                drop={indicator}
-                visual={nodeVisual(node, isOpen, typesById)}
-                onClick={() => {
-                  if (!justDropped.current) activate(row);
-                }}
-                onToggle={(event) => {
-                  event.stopPropagation();
-                  setActiveKey(node.key);
-                  setOpen(node.key, !isOpen);
-                }}
-                onFocus={() => setActiveKey(node.key)}
-                onKeyDown={(event) => onKeyDown(event, item.index)}
-              />
-            );
-          })}
-        </div>
-      </div>
+        {rows.length === 0 ? (
+          // An empty world: room for the right click, and what to do.
+          <div className="min-h-0 flex-1 p-2" onContextMenuCapture={() => setMenuKey(null)}>
+            <p className="p-2 text-center text-xs text-muted-foreground">{t("sidebar.empty")}</p>
+          </div>
+        ) : (
+          <div
+            ref={scrollRef}
+            role="tree"
+            aria-label={t("sidebar.tree")}
+            data-tree-viewport=""
+            className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-2"
+            onContextMenuCapture={(event) => {
+              const row = (event.target as HTMLElement).closest<HTMLElement>("[data-key]");
+              setMenuKey(row?.dataset.key ?? null);
+            }}
+          >
+            <div
+              role="none"
+              className="relative w-full"
+              style={{ height: virtualizer.getTotalSize() }}
+            >
+              {virtualizer.getVirtualItems().map((item) => {
+                const row = rows[item.index];
+                if (!row) return null;
+                const { node } = row;
+                const isOpen = node.children.length > 0 && expanded.has(node.key);
+                const indicator =
+                  drop?.key === node.key && drop.move !== null
+                    ? drop.move === "refused"
+                      ? "refused"
+                      : drop.position
+                    : undefined;
+                return (
+                  <TreeItem
+                    key={item.key}
+                    row={row}
+                    top={item.start}
+                    isOpen={isOpen}
+                    isCurrent={node.key === currentKey}
+                    isTabStop={node.key === tabStop}
+                    isDragged={node.key === dragKey}
+                    drop={indicator}
+                    visual={nodeVisual(node, isOpen, typesById)}
+                    onClick={() => {
+                      if (!justDropped.current) activate(row);
+                    }}
+                    onToggle={(event) => {
+                      event.stopPropagation();
+                      setActiveKey(node.key);
+                      setOpen(node.key, !isOpen);
+                    }}
+                    onFocus={() => setActiveKey(node.key)}
+                    onKeyDown={(event) => onKeyDown(event, item.index)}
+                    editing={node.key === editingKey}
+                    onRenamed={(name) => finishRename(node, name)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </CreateCardContextMenu>
+      <FolderIconDialog folder={iconFolder} onClose={() => setIconFolderId(null)} />
+      <DeleteFolderDialog node={folderNode(deleteKey)} onClose={() => setDeleteKey(null)} />
       {/* In <body>: the glass panel's backdrop-filter would make it the
           containing block of the fixed overlay, shifting it off the pointer. */}
       {createPortal(
@@ -417,7 +593,7 @@ function nodeVisual(
 ): Visual {
   if (node.kind === "folder") {
     const Icon =
-      node.folder.icon === "folder" ? (isOpen ? FolderOpen : Folder) : typeIcon(node.folder.icon);
+      node.folder.icon === "folder" && isOpen ? FolderOpen : folderIcon(node.folder.icon);
     return { Icon, label: node.folder.name };
   }
   const type = node.document.typeId ? typesById.get(node.document.typeId) : undefined;
@@ -441,6 +617,10 @@ type TreeItemProps = {
   onToggle: (event: MouseEvent) => void;
   onFocus: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+  /** The name is being typed, in an input in place of the label. */
+  editing: boolean;
+  /** The typed name, or `null` when cancelled (Escape). */
+  onRenamed: (name: string | null) => void;
 };
 
 /** One row: a `treeitem`, draggable with the pointer and a drop target. */
@@ -457,7 +637,10 @@ function TreeItem({
   onToggle,
   onFocus,
   onKeyDown,
+  editing,
+  onRenamed,
 }: TreeItemProps) {
+  const { t } = useTranslation();
   const { node } = row;
   const hasChildren = node.children.length > 0;
   // Only the pointer listeners: the row keeps its tree role and tab stop
@@ -508,8 +691,51 @@ function TreeItem({
         <span aria-hidden className="size-4 shrink-0" />
       )}
       <Icon aria-hidden className="size-4 shrink-0" style={color ? { color } : undefined} />
-      <span className="truncate">{label}</span>
+      {editing ? (
+        <RenameInput label={t("sidebar.folder.name")} name={label} onDone={onRenamed} />
+      ) : (
+        <span className="truncate">{label}</span>
+      )}
     </div>
+  );
+}
+
+/** The name of a row, typed in place: Enter or leaving keeps it, Escape cancels. */
+function RenameInput({
+  label,
+  name,
+  onDone,
+}: {
+  label: string;
+  name: string;
+  onDone: (name: string | null) => void;
+}) {
+  const done = useRef(false);
+  const finish = (value: string | null) => {
+    if (done.current) return;
+    done.current = true;
+    onDone(value);
+  };
+  return (
+    <input
+      aria-label={label}
+      defaultValue={name}
+      maxLength={100}
+      // biome-ignore lint/a11y/noAutofocus: the input appears because its name is to be typed now.
+      autoFocus
+      onFocus={(event) => event.currentTarget.select()}
+      onBlur={(event) => finish(event.currentTarget.value)}
+      onKeyDown={(event) => {
+        // The row's keys (arrows, Enter, Space…) are the input's here.
+        event.stopPropagation();
+        if (event.key === "Enter") finish(event.currentTarget.value);
+        if (event.key === "Escape") finish(null);
+      }}
+      // Selecting text with the mouse must not drag the row.
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+      className="h-6 min-w-0 flex-1 rounded-sm border border-ring bg-background px-1 text-sm text-foreground outline-none"
+    />
   );
 }
 

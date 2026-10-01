@@ -166,14 +166,41 @@ export function CreateCardMenu({
   );
 }
 
-/** A zone (the `children`, rendered `asChild`) whose right click opens the card creation menu. */
-export function CreateCardContextMenu({ children }: { children: ReactNode }) {
+/**
+ * A zone (the `children`, rendered `asChild`) whose right click opens the
+ * card creation menu. `before` / `after` add items around the creation
+ * items (the sidebar's folder actions); `create={false}` leaves only them.
+ */
+export function CreateCardContextMenu({
+  children,
+  before,
+  after,
+  create = true,
+  onCloseAutoFocus,
+}: {
+  children: ReactNode;
+  before?: ReactNode;
+  after?: ReactNode;
+  create?: boolean;
+  /** Called when the menu closes, after the new card's focus is kept. */
+  onCloseAutoFocus?: (event: Event) => void;
+}) {
   const focus = useKeepNewCardFocus();
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className={NO_EXIT_ANIMATION} onCloseAutoFocus={focus.onCloseAutoFocus}>
-        <CreateCardItems parts={CONTEXT} onCreate={focus.onCreate} />
+      <ContextMenuContent
+        className={NO_EXIT_ANIMATION}
+        onCloseAutoFocus={(event) => {
+          focus.onCloseAutoFocus(event);
+          onCloseAutoFocus?.(event);
+        }}
+      >
+        {before}
+        {before && create && <ContextMenuSeparator />}
+        {create && <CreateCardItems parts={CONTEXT} onCreate={focus.onCreate} />}
+        {after && create && <ContextMenuSeparator />}
+        {after}
       </ContextMenuContent>
     </ContextMenu>
   );
