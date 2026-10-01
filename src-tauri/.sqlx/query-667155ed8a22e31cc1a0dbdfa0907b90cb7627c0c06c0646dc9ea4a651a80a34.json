@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE documents SET folder_id = ?, parent_id = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "667155ed8a22e31cc1a0dbdfa0907b90cb7627c0c06c0646dc9ea4a651a80a34"
+}

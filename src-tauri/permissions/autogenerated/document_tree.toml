@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-document-tree"
+description = "Enables the document_tree command without any pre-configured scope."
+commands.allow = ["document_tree"]
+
+[[permission]]
+identifier = "deny-document-tree"
+description = "Denies the document_tree command without any pre-configured scope."
+commands.deny = ["document_tree"]

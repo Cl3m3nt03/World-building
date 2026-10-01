@@ -123,6 +123,27 @@ export const commands = {
 	 *  accepted, so the front cannot make the app open arbitrary locations.
 	 */
 	revealInExplorer: (path: string) => typedError<null, AppError>(__TAURI_INVOKE("reveal_in_explorer", { path })),
+	/**  The sidebar's folders and live documents, with their place and order. */
+	documentTree: () => typedError<DocumentTree, AppError>(__TAURI_INVOKE("document_tree")),
+	/**
+	 *  Moves a live document (with its children) to `index` of `place`. Refused
+	 *  if it would go under itself or one of its descendants.
+	 */
+	moveDocument: (id: string, place: Place, index: number) => typedError<null, AppError>(__TAURI_INVOKE("move_document", { id, place, index })),
+	/**  Creates a folder at the end of `parentId` (the root when `null`). */
+	createFolder: (parentId: string | null, name: string, icon: string) => typedError<Folder, AppError>(__TAURI_INVOKE("create_folder", { parentId, name, icon })),
+	/**  Renames a folder or changes its icon. */
+	updateFolder: (id: string, patch: FolderPatch) => typedError<Folder, AppError>(__TAURI_INVOKE("update_folder", { id, patch })),
+	/**
+	 *  Moves a folder (with its content) to `index` of `parentId` (the root when
+	 *  `null`). Refused if it would go into itself or one of its subfolders.
+	 */
+	moveFolder: (id: string, parentId: string | null, index: number) => typedError<null, AppError>(__TAURI_INVOKE("move_folder", { id, parentId, index })),
+	/**
+	 *  Deletes a folder: its content takes its place (`lift`), or goes to the
+	 *  trash (`trash`).
+	 */
+	deleteFolder: (id: string, mode: FolderDeletion) => typedError<null, AppError>(__TAURI_INVOKE("delete_folder", { id, mode })),
 	/**
 	 *  Creates a world named `name`, of the given genre, in a new folder inside
 	 *  `parent_dir` (the folder is named after the world), and opens it.
@@ -353,6 +374,37 @@ export type DocumentFilter = {
 
 export type DocumentKind = "card" | "map" | "graph" | "canvas" | "tree";
 
+/**
+ *  Everything the sidebar shows: folders and live documents, with their place
+ *  and order (the front builds the tree).
+ */
+export type DocumentTree = {
+	folders: Folder[],
+	documents: TreeDocument[],
+};
+
+export type Folder = {
+	id: string,
+	/**  Enclosing folder; `None` at the root. */
+	parentId: string | null,
+	name: string,
+	icon: string,
+	sortOrder: number,
+};
+
+/**  What to do with a folder's content when deleting it. */
+export type FolderDeletion = 
+/**  Its folders and documents take its place, in the same order. */
+"lift" | 
+/**  Its documents (and their children) go to the trash; its folders are deleted. */
+"trash";
+
+/**  Changes to a folder; absent fields are left as they are. */
+export type FolderPatch = {
+	name?: string | null,
+	icon?: string | null,
+};
+
 /**  Genre of a world. It decides the card types proposed by default (M2). */
 export type Genre = "fantasy" | "scienceFiction" | "romance" | "cyberpunk" | "contemporary" | "other";
 
@@ -383,6 +435,11 @@ export type NewCardType = {
 
 /**  Shape of the card's image. */
 export type Orientation = "portrait" | "landscape";
+
+/**  Where a document or a folder is. */
+export type Place = { kind: "root" } | { kind: "folder"; id: string } | 
+/**  Under a document (documents only). */
+{ kind: "parent"; id: string };
 
 /**  Preferences edited by the user in the settings. */
 export type Preferences = {
@@ -469,6 +526,24 @@ export type TemplateSection = {
 };
 
 export type Theme = "light" | "dark" | "system";
+
+/**  A live document as the sidebar shows it. */
+export type TreeDocument = {
+	id: string,
+	kind: DocumentKind,
+	title: string,
+	/**  Its folder, when it is not under a parent. */
+	folderId: string | null,
+	parentId: string | null,
+	sortOrder: number,
+	/**  Position among the pinned documents; `None` when not pinned. */
+	pinnedOrder: number | null,
+	/**  RFC 3339. */
+	createdAt: string,
+	/**  For a card: its type and image. */
+	typeId: string | null,
+	imageAssetId: string | null,
+};
 
 /**  How many live cards a type (or subtype) has. */
 export type TypeCount = {
