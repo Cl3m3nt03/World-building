@@ -155,3 +155,37 @@ test('"/" on an empty line opens the block menu; Escape gives the focus back to 
   await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Texte" })).toBeNull());
   await waitFor(() => expect(document.activeElement).toBe(text));
 });
+
+test("moving a block with the keyboard is announced in the app's language, by block name", async () => {
+  initial = [textBlock("a", "Il était une fois"), textBlock("b", "La fin")];
+  renderEditor();
+  const handle = await screen.findByRole("button", {
+    name: "Déplacer le bloc 2 (Espace, puis flèches)",
+  });
+
+  // The instructions dnd-kit links to each handle.
+  const describedBy = handle.getAttribute("aria-describedby") ?? "";
+  expect(document.getElementById(describedBy)?.textContent).toBe(
+    "Pour déplacer un bloc au clavier : Espace pour le saisir, flèches haut et bas pour le déplacer, Espace pour le déposer, Échap pour annuler.",
+  );
+
+  await act(async () => {
+    handle.focus();
+    fireEvent.keyDown(handle, { code: "Space", key: " " });
+  });
+  // Picked up (jsdom lays nothing out: every block overlaps, so dnd-kit may
+  // then report it over the first one).
+  await waitFor(() =>
+    expect(document.querySelector("[id^=DndLiveRegion]")?.textContent).toMatch(
+      /^Bloc de texte 2 (saisi, position 2|en position 1) sur 2\.$/,
+    ),
+  );
+  await act(async () => {
+    fireEvent.keyDown(document.activeElement ?? handle, { code: "Escape", key: "Escape" });
+  });
+  await waitFor(() =>
+    expect(document.querySelector("[id^=DndLiveRegion]")?.textContent).toBe(
+      "Déplacement annulé : Bloc de texte 2 reste en position 2 sur 2.",
+    ),
+  );
+});
