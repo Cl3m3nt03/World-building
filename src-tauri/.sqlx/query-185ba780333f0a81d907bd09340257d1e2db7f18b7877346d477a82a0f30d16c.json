@@ -1,0 +1,134 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.id AS \"id!\", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,\n                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.sort_order, d.created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "folder_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "folder_id"
+          }
+        }
+      },
+      {
+        "name": "parent_id",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "parent_id"
+          }
+        }
+      },
+      {
+        "name": "sort_order",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "sort_order"
+          }
+        }
+      },
+      {
+        "name": "pinned_order",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "pinned_order"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "type_id",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "type_id"
+          }
+        }
+      },
+      {
+        "name": "image_asset_id",
+        "ordinal": 9,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "image_asset_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "185ba780333f0a81d907bd09340257d1e2db7f18b7877346d477a82a0f30d16c"
+}

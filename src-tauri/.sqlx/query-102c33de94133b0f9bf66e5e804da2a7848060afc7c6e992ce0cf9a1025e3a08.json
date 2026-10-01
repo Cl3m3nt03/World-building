@@ -1,0 +1,45 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT folder_id, parent_id, trashed_at IS NOT NULL AS \"trashed!: bool\"\n           FROM documents WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "folder_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "folder_id"
+          }
+        }
+      },
+      {
+        "name": "parent_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "parent_id"
+          }
+        }
+      },
+      {
+        "name": "trashed!: bool",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "102c33de94133b0f9bf66e5e804da2a7848060afc7c6e992ce0cf9a1025e3a08"
+}

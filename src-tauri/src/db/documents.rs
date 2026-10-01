@@ -120,19 +120,6 @@ pub async fn recent(pool: &SqlitePool, limit: i64) -> AppResult<Vec<RecentRow>> 
     .await?)
 }
 
-/// Puts a document in the trash (`Some(date)`) or takes it out (`None`).
-/// Returns whether the document exists.
-pub async fn set_trashed(pool: &SqlitePool, id: &str, trashed_at: Option<&str>) -> AppResult<bool> {
-    let result = sqlx::query!(
-        "UPDATE documents SET trashed_at = ? WHERE id = ?",
-        trashed_at,
-        id
-    )
-    .execute(pool)
-    .await?;
-    Ok(result.rows_affected() == 1)
-}
-
 /// Ids of the documents in the trash.
 pub async fn trashed_ids(pool: &SqlitePool) -> AppResult<Vec<String>> {
     Ok(

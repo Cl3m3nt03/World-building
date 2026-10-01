@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE documents SET sort_order = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e80ccfe1aae6603e6b478e8c5ece48958eac924cee7e66a8c629dd52936e00dc"
+}

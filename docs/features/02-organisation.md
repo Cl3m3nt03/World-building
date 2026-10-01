@@ -18,6 +18,8 @@ De haut en bas :
 La sidebar peut être redimensionnée et repliée. Sa largeur et l'état ouvert/fermé des dossiers sont mémorisés pour chaque monde.
 
 
+**Réalisé en M3 (3.1)** : le socle de données de l'arborescence existe (dossiers, parent / enfant, ordre manuel, place des épingles), sans interface pour l'instant. Choix validés par Clément le 01/10/2026 : dans la racine et dans un dossier, **dossiers et documents se mélangent librement** dans un même ordre ; mettre à la corbeille un document qui a des enfants **laisse ses enfants dans la sidebar**, à sa place. Un document restauré revient à son emplacement s'il existe encore, sinon à la racine. Les cartes d'un monde de la 0.3.0 sont à la racine, dans l'ordre de création.
+
 **État en M2** : en attendant M3, la sidebar de l'onglet World est une liste simple des cartes du monde, par nom (icône et couleur de leur type). Un clic ouvre la carte, qui est mise en évidence. Un clic droit n'importe où ouvre le menu de création ; en bas, « Nouvelle carte » ouvre le même menu et l'icône **Corbeille** ouvre la corbeille du monde : chaque carte s'y restaure ou s'y supprime définitivement, et « Vider la corbeille » demande une confirmation qui indique le nombre de cartes.
 
 ## Recherche

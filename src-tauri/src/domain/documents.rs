@@ -11,6 +11,8 @@ use uuid::Uuid;
 
 use crate::db::documents::{self as queries, DocumentRow};
 use crate::db::links as link_queries;
+use crate::db::tree as tree_queries;
+use crate::domain::tree;
 use crate::error::{AppError, AppResult};
 
 #[cfg(test)]
@@ -115,8 +117,8 @@ pub fn validate_title(title: &str) -> AppResult<String> {
     Ok(title.to_owned())
 }
 
-/// Creates a document of `kind` in `tx`. The caller adds the kind's own
-/// data in the same transaction.
+/// Creates a document of `kind` in `tx`, at the end of the sidebar's root.
+/// The caller adds the kind's own data in the same transaction.
 pub async fn create_in(
     tx: &mut Transaction<'_, Sqlite>,
     kind: DocumentKind,
@@ -132,7 +134,9 @@ pub async fn create_in(
         opened_at: None,
         trashed_at: None,
     };
+    let order = tree::root_len(tx).await?;
     queries::insert(tx, &row).await?;
+    tree_queries::set_document_order(tx, &row.id, order).await?;
     row.try_into()
 }
 
@@ -211,18 +215,24 @@ pub async fn rename(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Docum
 }
 
 /// Puts a document in the trash. Links to it are kept: it can come back.
+/// Its children stay in the sidebar, in its place (see `tree`).
 pub async fn trash(pool: &SqlitePool, id: &str) -> AppResult<Document> {
     let document = get(pool, id).await?;
     if document.trashed_at.is_none() {
-        queries::set_trashed(pool, id, Some(&now())).await?;
+        let mut tx = pool.begin().await?;
+        tree::trash_document(&mut tx, id, &now()).await?;
+        tx.commit().await?;
     }
     get(pool, id).await
 }
 
+/// Takes a document out of the trash, back to its place in the sidebar if
+/// that place still exists, else at the end of the root.
 pub async fn restore(pool: &SqlitePool, id: &str) -> AppResult<Document> {
-    if !queries::set_trashed(pool, id, None).await? {
-        return Err(AppError::InvalidInput(format!("document not found: {id}")));
-    }
+    get(pool, id).await?;
+    let mut tx = pool.begin().await?;
+    tree::restore_document(&mut tx, id).await?;
+    tx.commit().await?;
     get(pool, id).await
 }
 

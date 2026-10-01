@@ -10,4 +10,5 @@ pub mod documents;
 pub mod links;
 pub mod properties;
 pub mod settings;
+pub mod tree;
 pub mod world;
