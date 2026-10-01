@@ -493,3 +493,47 @@ async fn a_world_of_0_3_0_opens_with_its_cards_at_the_root_in_creation_order() {
     assert!(tree.documents.iter().all(|d| d.pinned_order.is_none()));
     reopened.close().await;
 }
+
+// --- Concurrency (#140) -----------------------------------------------------------
+
+/// Writes running at the same time (an autosave and a move, say) wait for
+/// each other instead of failing with "database is locked".
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn concurrent_writes_all_succeed() {
+    let fx = Fixture::new().await;
+    let shelf = fx.folder(None, "Shelf").await;
+
+    let creations = (0..40).map(|i| {
+        let pool = fx.pool().clone();
+        tokio::spawn(async move {
+            documents::create(&pool, DocumentKind::Card, &format!("C{i}"))
+                .await
+                .map(|document| document.id)
+        })
+    });
+    let mut ids = Vec::new();
+    for task in creations.collect::<Vec<_>>() {
+        ids.push(task.await.unwrap().expect("a concurrent creation failed"));
+    }
+
+    let moves = ids.iter().enumerate().map(|(i, id)| {
+        let pool = fx.pool().clone();
+        let (id, shelf) = (id.clone(), shelf.clone());
+        tokio::spawn(async move {
+            let place = if i % 2 == 0 {
+                Place::Folder { id: shelf }
+            } else {
+                Place::Root
+            };
+            move_document(&pool, &id, &place, 0).await
+        })
+    });
+    for task in moves.collect::<Vec<_>>() {
+        task.await.unwrap().expect("a concurrent move failed");
+    }
+
+    // Every place is still numbered 0..n, with every document in it.
+    let tree = tree(fx.pool()).await.unwrap();
+    assert_eq!(tree.documents.len(), 40);
+    draw(&tree, &Place::Root);
+}

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use sqlx::{Sqlite, SqlitePool, Transaction};
 
+use crate::db;
 use crate::db::links::{self as queries, LinkRow};
 use crate::domain::documents::DocumentKind;
 use crate::error::{AppError, AppResult};
@@ -73,7 +74,7 @@ pub async fn replace(
     detail: Option<&str>,
     targets: &[String],
 ) -> AppResult<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     replace_in(&mut tx, source_id, kind, detail, targets).await?;
     tx.commit().await?;
     Ok(())

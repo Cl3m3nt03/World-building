@@ -1,3 +1,10 @@
 # `unwrap()` and `expect()` are denied in Cargo.toml, except in tests (see CLAUDE.md).
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
+
+# A transaction that writes starts with `db::begin_write` (BEGIN IMMEDIATE), never
+# a deferred `begin()`: in WAL mode a read-then-write transaction fails with
+# "database is locked" when another connection writes in between (#140).
+disallowed-methods = [
+  { path = "sqlx::Pool::begin", reason = "use db::begin_write (BEGIN IMMEDIATE), see #140" },
+]

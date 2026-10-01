@@ -9,6 +9,7 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 use uuid::Uuid;
 
+use crate::db;
 use crate::db::documents::{self as queries, DocumentRow};
 use crate::db::links as link_queries;
 use crate::db::tree as tree_queries;
@@ -143,7 +144,7 @@ pub async fn create_in(
 /// Creates a document of `kind` with no data of its own (tests).
 #[cfg(test)]
 pub async fn create(pool: &SqlitePool, kind: DocumentKind, title: &str) -> AppResult<Document> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     let document = create_in(&mut tx, kind, title).await?;
     tx.commit().await?;
     Ok(document)
@@ -219,7 +220,7 @@ pub async fn rename(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Docum
 pub async fn trash(pool: &SqlitePool, id: &str) -> AppResult<Document> {
     let document = get(pool, id).await?;
     if document.trashed_at.is_none() {
-        let mut tx = pool.begin().await?;
+        let mut tx = db::begin_write(pool).await?;
         tree::trash_document(&mut tx, id, &now()).await?;
         tx.commit().await?;
     }
@@ -230,7 +231,7 @@ pub async fn trash(pool: &SqlitePool, id: &str) -> AppResult<Document> {
 /// that place still exists, else at the end of the root.
 pub async fn restore(pool: &SqlitePool, id: &str) -> AppResult<Document> {
     get(pool, id).await?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     tree::restore_document(&mut tx, id).await?;
     tx.commit().await?;
     get(pool, id).await
@@ -245,7 +246,7 @@ pub async fn delete_forever(pool: &SqlitePool, id: &str) -> AppResult<()> {
             "only a document in the trash can be deleted for good: {id}"
         )));
     }
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     link_queries::delete_all_from(&mut tx, id).await?;
     queries::delete(&mut tx, id).await?;
     tx.commit().await?;
@@ -255,7 +256,7 @@ pub async fn delete_forever(pool: &SqlitePool, id: &str) -> AppResult<()> {
 /// Deletes every document of the trash for good. Returns how many.
 pub async fn empty_trash(pool: &SqlitePool) -> AppResult<usize> {
     let ids = queries::trashed_ids(pool).await?;
-    let mut tx = pool.begin().await?;
+    let mut tx = db::begin_write(pool).await?;
     for id in &ids {
         link_queries::delete_all_from(&mut tx, id).await?;
         queries::delete(&mut tx, id).await?;
