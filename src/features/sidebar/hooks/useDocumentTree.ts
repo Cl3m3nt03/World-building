@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cardKeys, documentKeys } from "@/features/cards";
 import { commands, type DocumentTree, type FolderDeletion, type FolderPatch } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
-import { applyMove, type Move } from "../tree";
+import { applyMove, applyPinMove, applyPinned, type Move } from "../tree";
 
 /**
  * Query key of the sidebar tree: under the documents' key, so every change
@@ -77,4 +77,37 @@ export function useDeleteFolder() {
         queryClient.invalidateQueries({ queryKey: cardKeys.all() }),
       ]),
   });
+}
+
+/** Shows `change` on the cached tree at once, then takes the Rust's tree. */
+function useOptimisticTree<T>(
+  run: (value: T) => Promise<unknown>,
+  change: (tree: DocumentTree, value: T) => DocumentTree,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: run,
+    onMutate: async (value: T) => {
+      await queryClient.cancelQueries({ queryKey: treeKey() });
+      queryClient.setQueryData<DocumentTree>(treeKey(), (tree) => tree && change(tree, value));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: treeKey() }),
+  });
+}
+
+/** Pins a document (at the end of the pins) or unpins it. */
+export function useSetPinned() {
+  return useOptimisticTree(
+    ({ id, pinned }: { id: string; pinned: boolean }) =>
+      unwrap(commands.setDocumentPinned(id, pinned)),
+    (tree, { id, pinned }) => applyPinned(tree, id, pinned),
+  );
+}
+
+/** Moves a pinned document to `index` among the pins. */
+export function useMovePin() {
+  return useOptimisticTree(
+    ({ id, index }: { id: string; index: number }) => unwrap(commands.movePin(id, index)),
+    (tree, { id, index }) => applyPinMove(tree, id, index),
+  );
 }

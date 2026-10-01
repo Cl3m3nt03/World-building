@@ -300,3 +300,44 @@ pub async fn folder_exists(tx: &mut Transaction<'_, Sqlite>, id: &str) -> AppRes
     .await?
         > 0)
 }
+
+// --- Pins ---------------------------------------------------------------------
+
+/// Live pinned documents, in their pin order.
+pub async fn live_pins(tx: &mut Transaction<'_, Sqlite>) -> AppResult<Vec<String>> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT id AS "id!" FROM documents
+           WHERE trashed_at IS NULL AND pinned_order IS NOT NULL
+           ORDER BY pinned_order, created_at, id"#
+    )
+    .fetch_all(&mut **tx)
+    .await?)
+}
+
+/// Position among the pins of any document (live or trashed): `None` when
+/// the document does not exist, `Some(None)` when it is not pinned.
+pub async fn pinned_order(
+    tx: &mut Transaction<'_, Sqlite>,
+    id: &str,
+) -> AppResult<Option<Option<i64>>> {
+    Ok(
+        sqlx::query_scalar!("SELECT pinned_order FROM documents WHERE id = ?", id)
+            .fetch_optional(&mut **tx)
+            .await?,
+    )
+}
+
+pub async fn set_pinned_order(
+    tx: &mut Transaction<'_, Sqlite>,
+    id: &str,
+    order: Option<i64>,
+) -> AppResult<()> {
+    sqlx::query!(
+        "UPDATE documents SET pinned_order = ? WHERE id = ?",
+        order,
+        id
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}

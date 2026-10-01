@@ -357,7 +357,9 @@ pub async fn trash_document(
         .collect();
     let at = index.min(lifted.len());
     lifted.splice(at..at, children);
-    write_order(tx, &lifted).await
+    write_order(tx, &lifted).await?;
+    // It leaves the pins; its `pinned_order` stays, to come back there.
+    renumber_pins(tx).await
 }
 
 /// Takes a document out of the trash, back to its place (at the end) if that
@@ -377,7 +379,19 @@ pub async fn restore_document(tx: &mut Transaction<'_, Sqlite>, id: &str) -> App
     let (folder, parent) = columns(&place);
     queries::set_document_place(tx, id, folder, parent).await?;
     queries::set_trashed(tx, id, None).await?;
-    insert_at(tx, &place, Item::Document(id.to_owned()), usize::MAX).await
+    insert_at(tx, &place, Item::Document(id.to_owned()), usize::MAX).await?;
+    // Pinned when trashed: back among the pins, where it was.
+    if let Some(Some(order)) = queries::pinned_order(tx, id).await? {
+        let mut pins: Vec<String> = queries::live_pins(tx)
+            .await?
+            .into_iter()
+            .filter(|pin| pin != id)
+            .collect();
+        let at = usize::try_from(order).unwrap_or(0).min(pins.len());
+        pins.insert(at, id.to_owned());
+        write_pins(tx, &pins).await?;
+    }
+    Ok(())
 }
 
 /// Every live document under `id`, at any depth.
@@ -396,6 +410,59 @@ async fn live_descendants(tx: &mut Transaction<'_, Sqlite>, id: &str) -> AppResu
         }
     }
     Ok(found)
+}
+
+// --- Pins ---------------------------------------------------------------------
+
+/// Writes the pin order of `ids`: 0, 1, 2…
+async fn write_pins(tx: &mut Transaction<'_, Sqlite>, ids: &[String]) -> AppResult<()> {
+    for (index, id) in ids.iter().enumerate() {
+        let order = i64::try_from(index).unwrap_or(i64::MAX);
+        queries::set_pinned_order(tx, id, Some(order)).await?;
+    }
+    Ok(())
+}
+
+/// Numbers the live pins again (0..n), after some left them.
+async fn renumber_pins(tx: &mut Transaction<'_, Sqlite>) -> AppResult<()> {
+    let pins = queries::live_pins(tx).await?;
+    write_pins(tx, &pins).await
+}
+
+/// Pins a live document (at the end of the pins) or unpins it. Pinning a
+/// pinned document, or unpinning one that is not, changes nothing.
+pub async fn set_pinned(pool: &SqlitePool, id: &str, pinned: bool) -> AppResult<()> {
+    let mut tx = db::begin_write(pool).await?;
+    live_place(&mut tx, id).await?;
+    let mut pins = queries::live_pins(&mut tx).await?;
+    let is_pinned = pins.iter().any(|pin| pin == id);
+    if pinned == is_pinned {
+        return Ok(());
+    }
+    if pinned {
+        pins.push(id.to_owned());
+    } else {
+        pins.retain(|pin| pin != id);
+        queries::set_pinned_order(&mut tx, id, None).await?;
+    }
+    write_pins(&mut tx, &pins).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// Moves a pinned document to `index` among the pins (counted without it).
+pub async fn move_pin(pool: &SqlitePool, id: &str, index: usize) -> AppResult<()> {
+    let mut tx = db::begin_write(pool).await?;
+    live_place(&mut tx, id).await?;
+    let mut pins = queries::live_pins(&mut tx).await?;
+    if !pins.iter().any(|pin| pin == id) {
+        return Err(AppError::InvalidInput(format!("document not pinned: {id}")));
+    }
+    pins.retain(|pin| pin != id);
+    pins.insert(index.min(pins.len()), id.to_owned());
+    write_pins(&mut tx, &pins).await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 // --- Folders ------------------------------------------------------------------
@@ -577,6 +644,7 @@ pub async fn delete_folder(pool: &SqlitePool, id: &str, mode: FolderDeletion) ->
             for folder in subtree.iter().rev() {
                 queries::delete_folder(&mut tx, folder).await?;
             }
+            renumber_pins(&mut tx).await?;
         }
     }
     write_order(&mut tx, &remaining).await?;

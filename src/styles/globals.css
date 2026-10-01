@@ -75,10 +75,22 @@
 }
 
 /* Native scrolling (e.g. a virtualized list) with a thin bar like the Radix
-   ScrollArea's, instead of the Windows bar and its arrows. */
+   ScrollArea's, instead of the Windows bar and its arrows. WebView2 keeps the
+   arrows with `scrollbar-width: thin`, so the bar is drawn here instead. */
 @utility scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--bz-border) transparent;
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background: var(--bz-border-strong);
+    background-clip: content-box;
+  }
 }
 
 @layer base {

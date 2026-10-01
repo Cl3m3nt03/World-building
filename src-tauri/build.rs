@@ -60,6 +60,8 @@ const COMMANDS: &[&str] = &[
     "update_folder",
     "move_folder",
     "delete_folder",
+    "set_document_pinned",
+    "move_pin",
     "create_world",
     "open_world",
     "close_world",

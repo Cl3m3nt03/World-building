@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\" FROM documents\n           WHERE trashed_at IS NULL AND pinned_order IS NOT NULL\n           ORDER BY pinned_order, created_at, id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c2c9e944d3c20dcb44fb564e1c2c26e751d4be73c79bdbf706b44b06a2796ee1"
+}

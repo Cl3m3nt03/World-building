@@ -120,6 +120,16 @@ beforeEach(() => {
       }
       case "delete_folder":
         return null;
+      case "set_document_pinned": {
+        const count = tree.documents.filter((d) => d.pinnedOrder !== null).length;
+        tree = {
+          ...tree,
+          documents: tree.documents.map((d) =>
+            d.id === args.id ? { ...d, pinnedOrder: args.pinned ? count : null } : d,
+          ),
+        };
+        return null;
+      }
       case "current_world":
         return WORLD;
       case "get_settings":
@@ -416,4 +426,50 @@ test("Delete on a folder asks what to do with its content", async () => {
     expect(callsOf("delete_folder")[0]?.args).toEqual({ id: "Places", mode: "lift" }),
   );
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+const pinned = () =>
+  within(screen.getByRole("region", { name: "Épinglés" }))
+    .getAllByRole("link")
+    .map((link) => link.textContent);
+
+test("pinned documents show at the top, in their order; nothing while none is pinned", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  expect(screen.queryByRole("region", { name: "Épinglés" })).toBeNull();
+  cleanup();
+
+  tree = {
+    ...SAMPLE,
+    documents: SAMPLE.documents.map((d) =>
+      d.id === "Arya" ? { ...d, pinnedOrder: 1 } : d.id === "Wall" ? { ...d, pinnedOrder: 0 } : d,
+    ),
+  };
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(pinned()).toEqual(["Wall", "Arya"]));
+});
+
+test("a document's right click pins it, a pin's right click unpins it", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+
+  await act(async () => {
+    fireEvent.contextMenu(item("Arya"));
+  });
+  expect(screen.getAllByRole("menuitem")[0]?.textContent).toBe("Épingler");
+  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitem", { name: "Épingler" }));
+  });
+  expect(callsOf("set_document_pinned")[0]?.args).toEqual({ id: "Arya", pinned: true });
+  await waitFor(() => expect(pinned()).toEqual(["Arya"]));
+
+  const tile = within(screen.getByRole("region", { name: "Épinglés" })).getByRole("link");
+  await act(async () => {
+    fireEvent.contextMenu(tile);
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitem", { name: "Désépingler" }));
+  });
+  expect(callsOf("set_document_pinned")[1]?.args).toEqual({ id: "Arya", pinned: false });
+  await waitFor(() => expect(screen.queryByRole("region", { name: "Épinglés" })).toBeNull());
 });

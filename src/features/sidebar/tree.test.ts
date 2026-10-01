@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { DocumentTree, Folder, TreeDocument } from "@/lib/bindings";
-import { ancestorKeys, applyMove, buildTree, dropMove, type TreeNode, visibleRows } from "./tree";
+import {
+  ancestorKeys,
+  applyMove,
+  applyPinMove,
+  applyPinned,
+  buildTree,
+  dropMove,
+  pinnedDocuments,
+  type TreeNode,
+  visibleRows,
+} from "./tree";
 
 function folder(id: string, sortOrder: number, parentId: string | null = null): Folder {
   return { id, parentId, name: id, icon: "folder", sortOrder };
@@ -248,5 +258,36 @@ describe("applyMove", () => {
     const copy = structuredClone(sample);
     applyMove(sample, { kind: "document", id: "wall", place: { kind: "root" }, index: 0 });
     expect(sample).toEqual(copy);
+  });
+});
+
+describe("pins", () => {
+  const pinnedSample: DocumentTree = {
+    folders: [],
+    documents: [
+      { ...doc("a", 0), pinnedOrder: 1 },
+      { ...doc("b", 1), pinnedOrder: 0 },
+      doc("c", 2),
+    ],
+  };
+  const ids = (tree: DocumentTree) => pinnedDocuments(tree).map((d) => d.id);
+
+  it("lists the pins in their order", () => {
+    expect(ids(pinnedSample)).toEqual(["b", "a"]);
+  });
+
+  it("pins at the end and unpins closing the gap", () => {
+    expect(ids(applyPinned(pinnedSample, "c", true))).toEqual(["b", "a", "c"]);
+    const unpinned = applyPinned(pinnedSample, "b", false);
+    expect(ids(unpinned)).toEqual(["a"]);
+    expect(unpinned.documents.find((d) => d.id === "a")?.pinnedOrder).toBe(0);
+    expect(applyPinned(pinnedSample, "a", true)).toBe(pinnedSample);
+  });
+
+  it("moves a pin, counting the index without it", () => {
+    const tree = applyPinned(pinnedSample, "c", true);
+    expect(ids(applyPinMove(tree, "c", 0))).toEqual(["c", "b", "a"]);
+    expect(ids(applyPinMove(tree, "b", 9))).toEqual(["a", "c", "b"]);
+    expect(applyPinMove(tree, "zzz", 0)).toBe(tree);
   });
 });

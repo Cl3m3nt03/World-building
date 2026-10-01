@@ -537,3 +537,104 @@ async fn concurrent_writes_all_succeed() {
     assert_eq!(tree.documents.len(), 40);
     draw(&tree, &Place::Root);
 }
+
+// --- Pins (step 3.5) -----------------------------------------------------------
+
+/// Titles of the live pinned documents in their order, checking it is 0..n.
+async fn pins(fx: &Fixture) -> Vec<String> {
+    let tree = tree(fx.pool()).await.unwrap();
+    let mut pinned: Vec<&TreeDocument> = tree
+        .documents
+        .iter()
+        .filter(|d| d.pinned_order.is_some())
+        .collect();
+    pinned.sort_by_key(|d| d.pinned_order);
+    let orders: Vec<i32> = pinned.iter().filter_map(|d| d.pinned_order).collect();
+    let expected: Vec<i32> = (0..i32::try_from(pinned.len()).unwrap()).collect();
+    assert_eq!(orders, expected, "pins are not numbered 0..n");
+    pinned.iter().map(|d| d.title.clone()).collect()
+}
+
+#[tokio::test]
+async fn pinning_appends_and_unpinning_closes_the_gap() {
+    let fx = Fixture::new().await;
+    let a = fx.doc("A").await;
+    let b = fx.doc("B").await;
+    let c = fx.doc("C").await;
+
+    set_pinned(fx.pool(), &b, true).await.unwrap();
+    set_pinned(fx.pool(), &a, true).await.unwrap();
+    set_pinned(fx.pool(), &c, true).await.unwrap();
+    // Pinning twice changes nothing.
+    set_pinned(fx.pool(), &a, true).await.unwrap();
+    assert_eq!(pins(&fx).await, ["B", "A", "C"]);
+
+    set_pinned(fx.pool(), &a, false).await.unwrap();
+    assert_eq!(pins(&fx).await, ["B", "C"]);
+    set_pinned(fx.pool(), &a, false).await.unwrap();
+    assert_eq!(pins(&fx).await, ["B", "C"]);
+    // The tree itself is untouched.
+    assert_eq!(fx.outline().await, "A B C");
+}
+
+#[tokio::test]
+async fn pins_are_reordered() {
+    let fx = Fixture::new().await;
+    let a = fx.doc("A").await;
+    let b = fx.doc("B").await;
+    let c = fx.doc("C").await;
+    for id in [&a, &b, &c] {
+        set_pinned(fx.pool(), id, true).await.unwrap();
+    }
+
+    move_pin(fx.pool(), &c, 0).await.unwrap();
+    assert_eq!(pins(&fx).await, ["C", "A", "B"]);
+    move_pin(fx.pool(), &c, 99).await.unwrap();
+    assert_eq!(pins(&fx).await, ["A", "B", "C"]);
+
+    let d = fx.doc("D").await;
+    assert!(move_pin(fx.pool(), &d, 0).await.is_err(), "D is not pinned");
+    assert!(set_pinned(fx.pool(), "nope", true).await.is_err());
+}
+
+#[tokio::test]
+async fn a_trashed_pin_leaves_the_pins_and_comes_back_in_its_place() {
+    let fx = Fixture::new().await;
+    let a = fx.doc("A").await;
+    let b = fx.doc("B").await;
+    let c = fx.doc("C").await;
+    for id in [&a, &b, &c] {
+        set_pinned(fx.pool(), id, true).await.unwrap();
+    }
+
+    documents::trash(fx.pool(), &b).await.unwrap();
+    assert_eq!(pins(&fx).await, ["A", "C"]);
+    assert!(
+        set_pinned(fx.pool(), &b, false).await.is_err(),
+        "B is in the trash"
+    );
+
+    documents::restore(fx.pool(), &b).await.unwrap();
+    assert_eq!(pins(&fx).await, ["A", "B", "C"]);
+}
+
+#[tokio::test]
+async fn trashing_a_folder_takes_its_documents_out_of_the_pins() {
+    let fx = Fixture::new().await;
+    let shelf = fx.folder(None, "Shelf").await;
+    let a = fx.doc("A").await;
+    let b = fx.doc("B").await;
+    move_document(fx.pool(), &a, &folder(&shelf), 0)
+        .await
+        .unwrap();
+    set_pinned(fx.pool(), &a, true).await.unwrap();
+    set_pinned(fx.pool(), &b, true).await.unwrap();
+
+    delete_folder(fx.pool(), &shelf, FolderDeletion::Trash)
+        .await
+        .unwrap();
+    assert_eq!(pins(&fx).await, ["B"]);
+
+    documents::restore(fx.pool(), &a).await.unwrap();
+    assert_eq!(pins(&fx).await, ["A", "B"]);
+}

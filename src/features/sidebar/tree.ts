@@ -244,3 +244,40 @@ export function applyMove(tree: DocumentTree, move: Move): DocumentTree {
   renumber(destination);
   return { folders, documents };
 }
+
+// --- Pins (step 3.5) -------------------------------------------------------------
+
+/** The pinned documents, in their pin order. */
+export function pinnedDocuments(tree: DocumentTree): TreeDocument[] {
+  return tree.documents
+    .filter((document) => document.pinnedOrder !== null)
+    .sort((a, b) => (a.pinnedOrder ?? 0) - (b.pinnedOrder ?? 0));
+}
+
+/** The tree with `id` pinned (at the end) or unpinned, pins numbered 0..n. */
+export function applyPinned(tree: DocumentTree, id: string, pinned: boolean): DocumentTree {
+  const pins = pinnedDocuments(tree).map((document) => document.id);
+  const has = pins.includes(id);
+  if (pinned === has || !tree.documents.some((document) => document.id === id)) return tree;
+  return withPins(tree, pinned ? [...pins, id] : pins.filter((pin) => pin !== id));
+}
+
+/** The tree with the pinned `id` moved to `index` among the pins (counted without it). */
+export function applyPinMove(tree: DocumentTree, id: string, index: number): DocumentTree {
+  const pins = pinnedDocuments(tree).map((document) => document.id);
+  if (!pins.includes(id)) return tree;
+  const others = pins.filter((pin) => pin !== id);
+  others.splice(Math.min(index, others.length), 0, id);
+  return withPins(tree, others);
+}
+
+function withPins(tree: DocumentTree, pins: string[]): DocumentTree {
+  const order = new Map(pins.map((id, index) => [id, index]));
+  return {
+    folders: tree.folders,
+    documents: tree.documents.map((document) => ({
+      ...document,
+      pinnedOrder: order.get(document.id) ?? null,
+    })),
+  };
+}

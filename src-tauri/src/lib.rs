@@ -80,6 +80,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::tree::update_folder,
         commands::tree::move_folder,
         commands::tree::delete_folder,
+        commands::tree::set_document_pinned,
+        commands::tree::move_pin,
         commands::world::create_world,
         commands::world::open_world,
         commands::world::close_world,
