@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DocumentTree, Folder, TreeDocument } from "@/lib/bindings";
-import { ancestorKeys, buildTree, type TreeNode, visibleRows } from "./tree";
+import { ancestorKeys, applyMove, buildTree, dropMove, type TreeNode, visibleRows } from "./tree";
 
 function folder(id: string, sortOrder: number, parentId: string | null = null): Folder {
   return { id, parentId, name: id, icon: "folder", sortOrder };
@@ -122,5 +122,131 @@ describe("ancestorKeys", () => {
       documents: [doc("a", 0, { parentId: "b" }), doc("b", 0, { parentId: "a" })],
     };
     expect(ancestorKeys(tree, "a")).toEqual(["d:a", "d:b"]);
+  });
+});
+
+describe("dropMove", () => {
+  const roots = buildTree(sample);
+
+  it("moves a document before or after a row, in that row's place", () => {
+    expect(dropMove(roots, "d:arya", "f:places", "before")).toEqual({
+      kind: "document",
+      id: "arya",
+      place: { kind: "root" },
+      index: 0,
+    });
+    // Index counted without the moved row: after Lore is the end of [Places, Lore].
+    expect(dropMove(roots, "d:arya", "f:lore", "after")).toEqual({
+      kind: "document",
+      id: "arya",
+      place: { kind: "root" },
+      index: 2,
+    });
+    expect(dropMove(roots, "d:arya", "d:crypt", "after")).toEqual({
+      kind: "document",
+      id: "arya",
+      place: { kind: "parent", id: "winterfell" },
+      index: 1,
+    });
+  });
+
+  it("files into a folder, or under a document, at the end", () => {
+    expect(dropMove(roots, "d:arya", "f:north", "inside")).toEqual({
+      kind: "document",
+      id: "arya",
+      place: { kind: "folder", id: "north" },
+      index: 1,
+    });
+    expect(dropMove(roots, "d:wall", "d:winterfell", "inside")).toEqual({
+      kind: "document",
+      id: "wall",
+      place: { kind: "parent", id: "winterfell" },
+      index: 1,
+    });
+  });
+
+  it("moves folders among folders and documents, never under a document", () => {
+    expect(dropMove(roots, "f:lore", "f:north", "inside")).toEqual({
+      kind: "folder",
+      id: "lore",
+      parentId: "north",
+      index: 1,
+    });
+    expect(dropMove(roots, "f:north", "d:arya", "after")).toEqual({
+      kind: "folder",
+      id: "north",
+      parentId: null,
+      index: 2,
+    });
+    expect(dropMove(roots, "f:lore", "d:winterfell", "inside")).toBe("refused");
+    expect(dropMove(roots, "f:lore", "d:crypt", "before")).toBe("refused");
+  });
+
+  it("refuses a drop into itself or one of its descendants", () => {
+    expect(dropMove(roots, "f:places", "f:north", "inside")).toBe("refused");
+    expect(dropMove(roots, "f:places", "d:wall", "before")).toBe("refused");
+    expect(dropMove(roots, "d:winterfell", "d:crypt", "inside")).toBe("refused");
+  });
+
+  it("does nothing when the row stays where it is", () => {
+    expect(dropMove(roots, "d:arya", "d:arya", "inside")).toBeNull();
+    expect(dropMove(roots, "d:arya", "f:places", "after")).toBeNull();
+    expect(dropMove(roots, "d:arya", "f:lore", "before")).toBeNull();
+    expect(dropMove(roots, "d:crypt", "d:winterfell", "inside")).toBeNull();
+  });
+});
+
+describe("applyMove", () => {
+  const moved = (move: Parameters<typeof applyMove>[1]) =>
+    outline(buildTree(applyMove(sample, move)));
+
+  it("moves a document between places and renumbers both", () => {
+    const tree = applyMove(sample, {
+      kind: "document",
+      id: "crypt",
+      place: { kind: "root" },
+      index: 0,
+    });
+    expect(outline(buildTree(tree))).toEqual([
+      "d:crypt",
+      "f:places",
+      "  d:winterfell",
+      "  f:north",
+      "    d:wall",
+      "d:arya",
+      "f:lore",
+    ]);
+    const root = [
+      ...tree.folders.filter((f) => f.parentId === null),
+      ...tree.documents.filter((d) => d.parentId === null && d.folderId === null),
+    ];
+    expect(root.map((entry) => entry.sortOrder).sort()).toEqual([0, 1, 2, 3]);
+  });
+
+  it("reorders inside one place and moves folders", () => {
+    expect(moved({ kind: "document", id: "arya", place: { kind: "root" }, index: 2 })).toEqual([
+      "f:places",
+      "  d:winterfell",
+      "    d:crypt",
+      "  f:north",
+      "    d:wall",
+      "f:lore",
+      "d:arya",
+    ]);
+    expect(moved({ kind: "folder", id: "north", parentId: null, index: 0 })).toEqual([
+      "f:north",
+      "  d:wall",
+      "f:places",
+      "  d:winterfell",
+      "    d:crypt",
+      "d:arya",
+      "f:lore",
+    ]);
+  });
+
+  it("leaves the given tree untouched", () => {
+    const copy = structuredClone(sample);
+    applyMove(sample, { kind: "document", id: "wall", place: { kind: "root" }, index: 0 });
+    expect(sample).toEqual(copy);
   });
 });
