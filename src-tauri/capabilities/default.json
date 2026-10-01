@@ -23,6 +23,8 @@
     "allow-delete-folder",
     "allow-set-document-pinned",
     "allow-move-pin",
+    "allow-get-sidebar-state",
+    "allow-set-sidebar-state",
     "allow-mark-document-opened",
     "allow-recent-documents",
     "allow-rename-document",

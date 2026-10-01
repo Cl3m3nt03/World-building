@@ -101,6 +101,10 @@ type Props = {
   /** Filters and sort (the sidebar's view menu). */
   view: TreeView;
   onViewChange: (view: TreeView) => void;
+  /** Keys of the folders and parents open when the tree first shows. */
+  initialExpanded: string[];
+  /** Called when folders or parents open or close (to remember them). */
+  onExpandedChange: (expanded: string[]) => void;
   ref?: Ref<DocumentTreeHandle>;
 };
 
@@ -121,14 +125,30 @@ type Props = {
  *
  * Which folders are open is kept for the session; per world in step 3.9.
  */
-export function DocumentTreeView({ tree, currentId, view, onViewChange, ref }: Props) {
+export function DocumentTreeView({
+  tree,
+  currentId,
+  view,
+  onViewChange,
+  initialExpanded,
+  onExpandedChange,
+  ref,
+}: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { worldId } = useParams({ from: "/world/$worldId" });
   const types = useCardTypes();
 
   const roots = useMemo(() => buildTree(tree), [tree]);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(initialExpanded));
+  // Every change after the first render is remembered (per world, ADR 0005).
+  const reportExpanded = useRef(onExpandedChange);
+  reportExpanded.current = onExpandedChange;
+  const firstExpanded = useRef(expanded);
+  useEffect(() => {
+    if (expanded === firstExpanded.current) return;
+    reportExpanded.current([...expanded]);
+  }, [expanded]);
   // Filters and sort: a card type stands for its subtypes too.
   const typeIds = useMemo(() => {
     const chosen = new Set(view.typeIds);

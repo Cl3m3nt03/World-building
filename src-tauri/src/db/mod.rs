@@ -8,6 +8,7 @@ pub mod links;
 pub mod properties;
 pub mod search;
 pub mod tree;
+pub mod ui_state;
 
 use std::path::Path;
 use std::time::Duration;

@@ -18,10 +18,8 @@ type UiState = {
   theme: ThemePreference;
   transparency: TransparencyPreference;
   /** Sidebar width in pixels, kept across tab switches. */
-  sidebarWidth: number;
   setTheme: (theme: ThemePreference) => void;
   setTransparency: (transparency: TransparencyPreference) => void;
-  setSidebarWidth: (width: number) => void;
   /** Radio volume (0–100) and mode, saved in the app settings. */
   radioVolume: number;
   radioMode: RadioMode;
@@ -47,16 +45,14 @@ type UiState = {
 
 /**
  * UI-only state (never world data, see CLAUDE.md). Theme and transparency are
- * saved in the app settings (features/settings); the sidebar width per world in M3.
+ * saved in the app settings (features/settings); the sidebar's state per world
+ * in the world (features/sidebar, ADR 0005).
  */
 export const useUiStore = create<UiState>()((set) => ({
   theme: "system",
   transparency: "on",
-  sidebarWidth: SIDEBAR_WIDTH.default,
   setTheme: (theme) => set({ theme }),
   setTransparency: (transparency) => set({ transparency }),
-  setSidebarWidth: (width) =>
-    set({ sidebarWidth: Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, width)) }),
   radioVolume: 70,
   radioMode: "loop",
   setRadioVolume: (volume) => {

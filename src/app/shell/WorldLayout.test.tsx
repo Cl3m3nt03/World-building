@@ -53,6 +53,8 @@ beforeEach(() => {
     switch (command) {
       case "current_world":
         return WORLD;
+      case "get_sidebar_state":
+        return {};
       case "get_settings":
         return SETTINGS;
       case "get_card":

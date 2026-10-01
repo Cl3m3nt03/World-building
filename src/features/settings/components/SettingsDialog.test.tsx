@@ -3,7 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
+import { useUiStore } from "@/app/stores/ui";
 import { i18n } from "@/i18n";
 import type { AppSettings } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
@@ -25,7 +25,7 @@ beforeEach(async () => {
     recentWorlds: [],
     defaultWorldsDir: "D:/Mondes",
   };
-  useUiStore.setState({ theme: "system", transparency: "on", sidebarWidth: SIDEBAR_WIDTH.default });
+  useUiStore.setState({ theme: "system", transparency: "on" });
   await i18n.changeLanguage("fr");
   mockIPC((command, payload) => {
     calls.push({ command, payload });

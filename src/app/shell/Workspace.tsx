@@ -1,12 +1,22 @@
 import { Outlet } from "@tanstack/react-router";
-import { LayoutGrid, type LucideIcon, Map as MapIcon, Share2, SquareUser } from "lucide-react";
+import {
+  LayoutGrid,
+  type LucideIcon,
+  Map as MapIcon,
+  PanelLeftOpen,
+  Share2,
+  SquareUser,
+} from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
+import type { PanelImperativeHandle } from "react-resizable-panels";
+import { SIDEBAR_WIDTH } from "@/app/stores/ui";
+import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CreateCardMenu } from "@/features/cards";
-import { WorldSidebar } from "@/features/sidebar";
+import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import type { TranslationKey } from "@/i18n";
 
 /** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
@@ -70,27 +80,83 @@ export function StartWith() {
   );
 }
 
-/** World tab: resizable sidebar + central workspace. */
+/**
+ * World tab: resizable sidebar + central workspace. The sidebar's width and
+ * collapse are kept per world (ADR 0005); collapsed, a button at the top
+ * left of the workspace brings it back. The handle takes the focus and is
+ * moved with the arrow keys.
+ */
 export function WorldWorkspace() {
   const { t } = useTranslation();
-  const sidebarWidth = useUiStore((state) => state.sidebarWidth);
-  const setSidebarWidth = useUiStore((state) => state.setSidebarWidth);
+  const sidebar = useSidebarState();
+  const panel = useRef<PanelImperativeHandle>(null);
+  const expandButton = useRef<HTMLButtonElement>(null);
+  const group = useRef<HTMLDivElement>(null);
+  // Collapsing or expanding with a button moves the focus to what is now
+  // there (the button that undoes it, or the sidebar's search field).
+  const moveFocus = useRef(false);
+  const state = sidebar.state;
+  const collapsed = state?.collapsed ?? false;
+  useEffect(() => {
+    if (!moveFocus.current) return;
+    moveFocus.current = false;
+    if (collapsed) expandButton.current?.focus();
+    else group.current?.querySelector<HTMLElement>("aside [role=combobox]")?.focus();
+  }, [collapsed]);
+  if (sidebar.error) return <AppErrorMessage error={sidebar.error} />;
+  if (!state) return null;
+  const width = state.width ?? SIDEBAR_WIDTH.default;
+
   return (
-    <ResizablePanelGroup orientation="horizontal" className="gap-1">
+    <ResizablePanelGroup elementRef={group} orientation="horizontal" className="gap-1">
       <ResizablePanel
-        defaultSize={sidebarWidth}
+        panelRef={panel}
+        defaultSize={collapsed ? 0 : width}
         minSize={SIDEBAR_WIDTH.min}
         maxSize={SIDEBAR_WIDTH.max}
-        onResize={(size) => setSidebarWidth(size.inPixels)}
+        collapsible
+        collapsedSize={0}
+        onResize={(size) => {
+          const nowCollapsed = size.inPixels < 1;
+          const nowWidth = Math.round(size.inPixels);
+          if (nowCollapsed !== collapsed || (!nowCollapsed && nowWidth !== width)) {
+            sidebar.update(
+              nowCollapsed ? { collapsed: true } : { collapsed: false, width: nowWidth },
+            );
+          }
+        }}
       >
-        <WorldSidebar />
+        {!collapsed && (
+          <WorldSidebar
+            onCollapse={() => {
+              moveFocus.current = true;
+              panel.current?.collapse();
+            }}
+          />
+        )}
       </ResizablePanel>
       <ResizableHandle
         aria-label={t("sidebar.resize")}
         className="w-1 rounded-full bg-transparent hover:bg-border-strong focus-visible:bg-primary"
       />
       <ResizablePanel>
-        <main className="h-full">
+        <main className="relative h-full">
+          {collapsed && (
+            <Button
+              ref={expandButton}
+              variant="secondary"
+              size="icon-sm"
+              aria-label={t("sidebar.expand")}
+              title={t("sidebar.expand")}
+              onClick={() => {
+                moveFocus.current = true;
+                panel.current?.expand();
+              }}
+              className="glass absolute top-2 left-2 z-10"
+            >
+              <PanelLeftOpen />
+            </Button>
+          )}
           <Outlet />
         </main>
       </ResizablePanel>

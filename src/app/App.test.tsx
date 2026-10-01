@@ -48,6 +48,8 @@ beforeEach(() => {
       case "close_world":
         openWorld = null;
         return null;
+      case "get_sidebar_state":
+        return {};
       case "get_settings":
         return SETTINGS;
       default:

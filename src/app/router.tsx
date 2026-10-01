@@ -15,6 +15,7 @@ import { WorldLayout } from "@/app/shell/WorldLayout";
 import { CardPage } from "@/features/cards";
 import { HomeScreen } from "@/features/home";
 import { MediaLibraryScreen } from "@/features/media";
+import { sidebarStateQuery } from "@/features/sidebar";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -79,6 +80,9 @@ const homeRoute = createRoute({
 const worldTabRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "world",
+  // The sidebar's width and collapse are known before the panels are laid out.
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(sidebarStateQuery).catch(() => undefined),
   component: WorldWorkspace,
 });
 

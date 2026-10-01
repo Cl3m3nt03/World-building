@@ -2,6 +2,7 @@ use sqlx::SqlitePool;
 use tauri::State;
 
 use crate::domain::tree::{self, DocumentTree, Folder, FolderDeletion, FolderPatch, Place};
+use crate::domain::ui_state::{self, SidebarState};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -103,4 +104,21 @@ pub async fn delete_folder(
     mode: FolderDeletion,
 ) -> AppResult<()> {
     tree::delete_folder(&pool(&state, "delete_folder").await?, &id, mode).await
+}
+
+/// The open world's sidebar state (width, collapse, open folders, view).
+#[tauri::command]
+#[specta::specta]
+pub async fn get_sidebar_state(state: State<'_, AppState>) -> AppResult<SidebarState> {
+    ui_state::sidebar(&pool(&state, "get_sidebar_state").await?).await
+}
+
+/// Saves the open world's sidebar state; returns it as saved (bounded).
+#[tauri::command]
+#[specta::specta]
+pub async fn set_sidebar_state(
+    state: State<'_, AppState>,
+    sidebar: SidebarState,
+) -> AppResult<SidebarState> {
+    ui_state::set_sidebar(&pool(&state, "set_sidebar_state").await?, sidebar).await
 }

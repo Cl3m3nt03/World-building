@@ -13,6 +13,7 @@ import type {
   DocumentTree,
   Folder,
   SearchHit,
+  SidebarState,
   TreeDocument,
   WorldInfo,
 } from "@/lib/bindings";
@@ -133,12 +134,14 @@ const SEARCH_HITS: SearchHit[] = [
 ];
 
 let tree: DocumentTree;
+let sidebarState: SidebarState;
 let calls: { command: string; args: Record<string, unknown> }[];
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mockConvertFileSrc("windows");
   tree = SAMPLE;
+  sidebarState = {};
   calls = [];
   mockIPC((command, payload) => {
     const args = payload as { id: string } & Record<string, unknown>;
@@ -193,6 +196,10 @@ beforeEach(() => {
       }
       case "current_world":
         return WORLD;
+      case "get_sidebar_state":
+        return sidebarState;
+      case "set_sidebar_state":
+        return args.sidebar;
       case "get_settings":
         return SETTINGS;
       case "list_card_types":
@@ -758,6 +765,7 @@ test("filters by card type and sorts by name; manual order comes back", async ()
       };
     if (command === "current_world") return WORLD;
     if (command === "get_settings") return SETTINGS;
+    if (command === "get_sidebar_state") return {};
     return undefined;
   });
   await renderAt("/world/demo/world");
@@ -766,10 +774,11 @@ test("filters by card type and sorts by name; manual order comes back", async ()
   );
 
   await openMenu(screen.getByRole("button", { name: "Filtres et tri" }));
+  // Quick choices in a row (no re-render in between) all count.
   await act(async () => {
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Personnage" }));
-  });
-  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Lieu" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Lieu" }));
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Nom" }));
   });
   // The menu stays open while choices are made.
@@ -801,3 +810,38 @@ async function openMenu(trigger: HTMLElement) {
     fireEvent.keyDown(trigger, { key: "Enter" });
   });
 }
+
+test("the sidebar opens as saved for the world, and remembers opened folders", async () => {
+  sidebarState = { expanded: ["f:Places"], view: { sort: "name" } };
+  await renderAt("/world/demo/world");
+
+  // Saved: Places open, sorted by name (folders first).
+  await waitFor(() =>
+    expect(rows()).toEqual([
+      "Places 1 1/2 true",
+      "North 2 1/2 false",
+      "Winterfell 2 2/2 false",
+      "Arya 1 2/2 -",
+    ]),
+  );
+
+  await act(async () => {
+    fireEvent.click(item("North"));
+  });
+  await waitFor(
+    () =>
+      expect(callsOf("set_sidebar_state").at(-1)?.args.sidebar).toEqual({
+        expanded: ["f:Places", "f:North"],
+        view: { sort: "name" },
+      }),
+    { timeout: 2000 },
+  );
+});
+
+test("a collapsed sidebar stays collapsed, with a button to bring it back", async () => {
+  sidebarState = { collapsed: true };
+  await renderAt("/world/demo/world");
+
+  expect(await screen.findByRole("button", { name: "Déplier la barre latérale" })).toBeTruthy();
+  expect(screen.queryByRole("complementary", { name: "Barre latérale" })).toBeNull();
+});
