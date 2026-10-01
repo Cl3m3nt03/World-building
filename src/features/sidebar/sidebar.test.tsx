@@ -119,7 +119,25 @@ beforeEach(() => {
         return tree.folders.find((f) => f.id === args.id);
       }
       case "delete_folder":
+      case "move_document":
         return null;
+      case "rename_document":
+        tree = {
+          ...tree,
+          documents: tree.documents.map((d) =>
+            d.id === args.id ? { ...d, title: args.title as string } : d,
+          ),
+        };
+        return {};
+      case "trash_document":
+        tree = { ...tree, documents: tree.documents.filter((d) => d.id !== args.id) };
+        return {};
+      case "duplicate_card": {
+        const original = tree.documents.find((d) => d.id === args.id);
+        const copy = { ...(original as TreeDocument), id: "copy", title: args.title as string };
+        tree = { ...tree, documents: [...tree.documents, copy] };
+        return { id: "copy", title: copy.title };
+      }
       case "set_document_pinned": {
         const count = tree.documents.filter((d) => d.pinnedOrder !== null).length;
         tree = {
@@ -378,6 +396,25 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
   await act(async () => {
     fireEvent.contextMenu(item("Arya"));
   });
+  // A document's own actions, then card creation in a submenu, then New folder.
+  expect(names()).toEqual([
+    "OuvrirEntrée",
+    "RenommerF2",
+    "Épingler",
+    "Dupliquer",
+    "Déplacer vers…",
+    "Visible dans le wikiArrive avec M8",
+    "Mettre à la corbeilleSuppr",
+    "Nouvelle carte",
+    "Nouveau dossier",
+  ]);
+  await act(async () => {
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+  });
+
+  await act(async () => {
+    fireEvent.contextMenu(screen.getByRole("tree"), { clientY: 600 });
+  });
   expect(names()).toContain("Personnage");
   expect(names().at(-1)).toBe("Nouveau dossier");
 });
@@ -456,7 +493,6 @@ test("a document's right click pins it, a pin's right click unpins it", async ()
   await act(async () => {
     fireEvent.contextMenu(item("Arya"));
   });
-  expect(screen.getAllByRole("menuitem")[0]?.textContent).toBe("Épingler");
   await act(async () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Épingler" }));
   });
@@ -504,4 +540,109 @@ test("Rename, Change icon and Delete from a folder's menu get the focus once the
   await fromMenu("Supprimer le dossier…Suppr");
   const remove = await screen.findByRole("dialog", { name: "Supprimer le dossier « Places » ?" });
   await waitFor(() => expect(remove.contains(document.activeElement)).toBe(true));
+});
+
+async function menuAction(row: string, action: string) {
+  await act(async () => {
+    fireEvent.contextMenu(item(row));
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("menuitem", { name: action }));
+  });
+}
+
+test("F2 renames a document in place", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  await act(async () => item("Arya").focus());
+
+  await press("F2");
+  const input = (await screen.findByRole("textbox", {
+    name: "Nom du document",
+  })) as HTMLInputElement;
+  expect(input.value).toBe("Arya");
+  fireEvent.change(input, { target: { value: "Arya Stark" } });
+  await act(async () => {
+    fireEvent.keyDown(input, { key: "Enter" });
+  });
+  await waitFor(() =>
+    expect(callsOf("rename_document")[0]?.args).toEqual({ id: "Arya", title: "Arya Stark" }),
+  );
+  await waitFor(() => expect(document.activeElement).toBe(item("Arya Stark")));
+});
+
+test("Delete puts a document in the trash and leaves the open card", async () => {
+  const router = await renderAt("/world/demo/world/card/Arya");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  await act(async () => item("Arya").focus());
+
+  await press("Delete");
+  await waitFor(() => expect(callsOf("trash_document")[0]?.args).toEqual({ id: "Arya" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
+  await waitFor(() => expect(item("Arya")).toBeUndefined());
+});
+
+test("Duplicate makes a copy named after the card", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+
+  await menuAction("Arya", "Dupliquer");
+  expect(callsOf("duplicate_card")[0]?.args).toEqual({ id: "Arya", title: "Arya (copie)" });
+  await waitFor(() => expect(item("Arya (copie)")).toBeTruthy());
+});
+
+test("Move to… picks a destination with the keyboard, never the document itself", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+
+  await menuAction("Arya", "Déplacer vers…");
+  const dialog = await screen.findByRole("dialog", { name: "Déplacer « Arya »" });
+  const options = () =>
+    within(dialog)
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+  // The root is its place: not offered.
+  expect(options()).toEqual([
+    "Places",
+    "Winterfellcomme enfant",
+    "Cryptcomme enfant",
+    "North",
+    "Wallcomme enfant",
+  ]);
+
+  const filter = within(dialog).getByRole("combobox", { name: "Filtrer les destinations" });
+  fireEvent.change(filter, { target: { value: "nor" } });
+  expect(options()).toEqual(["NorthPlaces"]);
+  await act(async () => {
+    fireEvent.keyDown(filter, { key: "Enter" });
+  });
+  expect(callsOf("move_document")[0]?.args).toEqual({
+    id: "Arya",
+    place: { kind: "folder", id: "North" },
+    index: 1,
+  });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+test("Rename and Move to… from the menu get the focus once the menu is closed", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+
+  await menuAction("Arya", "RenommerF2");
+  const input = await screen.findByRole("textbox", { name: "Nom du document" });
+  await waitFor(() => expect(document.activeElement).toBe(input));
+  await act(async () => {
+    fireEvent.keyDown(input, { key: "Escape" });
+  });
+
+  await menuAction("Places", "RenommerF2");
+  const folderInput = await screen.findByRole("textbox", { name: "Nom du dossier" });
+  await waitFor(() => expect(document.activeElement).toBe(folderInput));
+  await act(async () => {
+    fireEvent.keyDown(folderInput, { key: "Escape" });
+  });
+
+  await menuAction("Arya", "Déplacer vers…");
+  const filter = await screen.findByRole("combobox", { name: "Filtrer les destinations" });
+  await waitFor(() => expect(document.activeElement).toBe(filter));
 });

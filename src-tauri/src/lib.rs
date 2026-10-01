@@ -47,6 +47,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::card_types::reorder_card_types,
         commands::card_types::delete_card_type,
         commands::cards::create_card,
+        commands::cards::duplicate_card,
         commands::cards::list_cards,
         commands::cards::get_card,
         commands::cards::set_card_type,

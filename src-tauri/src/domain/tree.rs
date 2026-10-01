@@ -394,6 +394,25 @@ pub async fn restore_document(tx: &mut Transaction<'_, Sqlite>, id: &str) -> App
     Ok(())
 }
 
+/// Puts the new document `id` right after `original`, in its place.
+pub(crate) async fn place_after(
+    tx: &mut Transaction<'_, Sqlite>,
+    original: &str,
+    id: &str,
+) -> AppResult<()> {
+    let place = live_place(tx, original).await?;
+    let items = items_of(tx, &place).await?;
+    let index = items
+        .iter()
+        .position(|item| *item == Item::Document(original.to_owned()))
+        .map_or(items.len(), |at| at + 1);
+    let (folder, parent) = columns(&place);
+    queries::set_document_place(tx, id, folder, parent).await?;
+    // The root loses the new document if it was there (`create_in`).
+    renumber(tx, &Place::Root).await?;
+    insert_at(tx, &place, Item::Document(id.to_owned()), index).await
+}
+
 /// Every live document under `id`, at any depth.
 async fn live_descendants(tx: &mut Transaction<'_, Sqlite>, id: &str) -> AppResult<Vec<String>> {
     let mut found = Vec::new();

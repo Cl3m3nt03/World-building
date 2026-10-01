@@ -111,3 +111,42 @@ export function useMovePin() {
     (tree, { id, index }) => applyPinMove(tree, id, index),
   );
 }
+
+/** After a change to one document: its card and every document list refresh. */
+function useDocumentChanged() {
+  const queryClient = useQueryClient();
+  return (id: string) =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: cardKeys.detail(id) }),
+      queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
+    ]);
+}
+
+/** Renames a document (from its row). */
+export function useRenameDocument() {
+  const changed = useDocumentChanged();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      unwrap(commands.renameDocument(id, title)),
+    onSuccess: (_document, { id }) => changed(id),
+  });
+}
+
+/** Puts a document in the trash (from its row). */
+export function useTrashDocument() {
+  const changed = useDocumentChanged();
+  return useMutation({
+    mutationFn: (id: string) => unwrap(commands.trashDocument(id)),
+    onSuccess: (_document, id) => changed(id),
+  });
+}
+
+/** Duplicates a card as `title`, right after it. */
+export function useDuplicateCard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      unwrap(commands.duplicateCard(id, title)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
+  });
+}

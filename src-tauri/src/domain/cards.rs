@@ -4,13 +4,16 @@
 use serde::Serialize;
 use specta::Type;
 use sqlx::SqlitePool;
+use uuid::Uuid;
 
 use crate::db;
 use crate::db::cards::{self as queries, CardRow};
 use crate::db::documents as document_queries;
+use crate::db::links as link_queries;
+use crate::db::properties as property_queries;
 use crate::domain::documents::{self, DocumentKind, now};
 use crate::domain::links::{self, LinkKind};
-use crate::domain::{card_types, content};
+use crate::domain::{card_types, content, tree};
 use crate::error::{AppError, AppResult};
 
 #[cfg(test)]
@@ -75,6 +78,36 @@ pub async fn create(pool: &SqlitePool, type_id: &str, title: &str) -> AppResult<
     let mut tx = db::begin_write(pool).await?;
     let document = documents::create_in(&mut tx, DocumentKind::Card, title).await?;
     queries::insert(&mut tx, &document.id, type_id).await?;
+    tx.commit().await?;
+    get(pool, &document.id).await
+}
+
+/// Duplicates a live card as `title`: same type, image, aliases, content,
+/// properties (its own ones copied) and links, placed right after it. Not
+/// pinned.
+pub async fn duplicate(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Card> {
+    get(pool, id).await?;
+    let mentioned = content::mentions(&content::parse(&content(pool, id).await?)?);
+    let mut tx = db::begin_write(pool).await?;
+    let document = documents::create_in(&mut tx, DocumentKind::Card, title).await?;
+    queries::copy_data(&mut tx, id, &document.id).await?;
+    let now = now();
+    let mut renamed = Vec::new();
+    for old in property_queries::own_definition_ids(&mut tx, id).await? {
+        let new = Uuid::new_v4().to_string();
+        property_queries::copy_definition(&mut tx, &old, &new, &document.id, &now).await?;
+        renamed.push((old, new));
+    }
+    property_queries::copy_values(&mut tx, id, &document.id, &renamed).await?;
+    link_queries::copy_from(&mut tx, id, &document.id, &renamed).await?;
+    // The same text: a mention of the original (no link from itself) is one
+    // from the copy.
+    let mentioned: Vec<String> = mentioned
+        .into_iter()
+        .filter(|target| *target != document.id)
+        .collect();
+    links::replace_in(&mut tx, &document.id, LinkKind::Mention, None, &mentioned).await?;
+    tree::place_after(&mut tx, id, &document.id).await?;
     tx.commit().await?;
     get(pool, &document.id).await
 }

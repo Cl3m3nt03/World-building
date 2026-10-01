@@ -216,3 +216,18 @@ pub async fn clear_image(pool: &SqlitePool, asset_id: &str) -> AppResult<()> {
     .await?;
     Ok(())
 }
+
+/// Copies the card data of `from` (type, image, aliases, content) to the new
+/// document `to`.
+pub async fn copy_data(tx: &mut Transaction<'_, Sqlite>, from: &str, to: &str) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO cards (document_id, type_id, image_asset_id, aliases, content, content_text)
+         SELECT ?, type_id, image_asset_id, aliases, content, content_text
+         FROM cards WHERE document_id = ?",
+        to,
+        from
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}

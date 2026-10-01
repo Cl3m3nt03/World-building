@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-duplicate-card"
+description = "Enables the duplicate_card command without any pre-configured scope."
+commands.allow = ["duplicate_card"]
+
+[[permission]]
+identifier = "deny-duplicate-card"
+description = "Denies the duplicate_card command without any pre-configured scope."
+commands.deny = ["duplicate_card"]

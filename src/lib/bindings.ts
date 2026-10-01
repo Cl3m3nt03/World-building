@@ -58,6 +58,8 @@ export const commands = {
 	 *  put it in the trash with `trash_document`.
 	 */
 	createCard: (typeId: string, title: string) => typedError<Card, AppError>(__TAURI_INVOKE("create_card", { typeId, title })),
+	/**  Duplicates a card as `title`, right after it in the sidebar. */
+	duplicateCard: (id: string, title: string) => typedError<Card, AppError>(__TAURI_INVOKE("duplicate_card", { id, title })),
 	/**  Cards of the open world (or of its trash), by title. */
 	listCards: (trashed: boolean) => typedError<Card[], AppError>(__TAURI_INVOKE("list_cards", { trashed })),
 	getCard: (id: string) => typedError<Card, AppError>(__TAURI_INVOKE("get_card", { id })),

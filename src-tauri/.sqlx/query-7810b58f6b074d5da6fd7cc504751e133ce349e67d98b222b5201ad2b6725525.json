@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO property_definitions (id, type_id, card_id, label, kind, target_type_ids,\n                                           applies_to_existing, sort_order, created_at)\n         SELECT ?, NULL, ?, label, kind, target_type_ids, applies_to_existing, sort_order, ?\n         FROM property_definitions WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "7810b58f6b074d5da6fd7cc504751e133ce349e67d98b222b5201ad2b6725525"
+}

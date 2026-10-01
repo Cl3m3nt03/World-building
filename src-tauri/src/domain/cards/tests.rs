@@ -378,3 +378,155 @@ async fn a_card_deleted_for_good_takes_its_data_with_it() {
     assert!(get(fx.pool(), &card.id).await.is_err());
     assert_eq!(count_of_type(fx.pool(), &character).await.unwrap(), 0);
 }
+
+#[tokio::test]
+async fn a_duplicate_copies_everything_but_the_name_and_sits_right_after() {
+    use crate::domain::properties::{self, PropertyKind, PropertyOwner, PropertyValue};
+    use crate::domain::tree::{self, Place};
+
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let shelf = tree::create_folder(fx.pool(), None, "Shelf", "folder")
+        .await
+        .unwrap();
+    let aragorn = create(fx.pool(), &character, "Aragorn").await.unwrap();
+    let boromir = create(fx.pool(), &character, "Boromir").await.unwrap();
+    let gimli = create(fx.pool(), &character, "Gimli").await.unwrap();
+    for (index, id) in [&aragorn.id, &gimli.id].into_iter().enumerate() {
+        tree::move_document(
+            fx.pool(),
+            id,
+            &Place::Folder {
+                id: shelf.id.clone(),
+            },
+            index,
+        )
+        .await
+        .unwrap();
+    }
+    let image = fx.image().await;
+    set_image(fx.pool(), &aragorn.id, Some(&image))
+        .await
+        .unwrap();
+    set_aliases(fx.pool(), &aragorn.id, &["Grands-Pas".to_owned()])
+        .await
+        .unwrap();
+    let content =
+        serde_json::json!([{ "id": "b", "type": "text", "doc": { "type": "doc", "content": [
+        { "type": "paragraph", "content": [
+            { "type": "mention", "attrs": { "id": boromir.id, "label": "Boromir" } },
+            { "type": "mention", "attrs": { "id": aragorn.id, "label": "Aragorn" } }
+        ] }
+    ] } }])
+        .to_string();
+    set_content(fx.pool(), &aragorn.id, &content).await.unwrap();
+    let age = properties::create(
+        fx.pool(),
+        PropertyOwner::Type {
+            type_id: character.clone(),
+        },
+        "Âge",
+        PropertyKind::Number,
+    )
+    .await
+    .unwrap();
+    // Created after the cards: shown on them too.
+    properties::apply_to_existing(fx.pool(), &age.id)
+        .await
+        .unwrap();
+    let friend = properties::create(
+        fx.pool(),
+        PropertyOwner::Card {
+            card_id: aragorn.id.clone(),
+        },
+        "Ami",
+        PropertyKind::Card,
+    )
+    .await
+    .unwrap();
+    properties::set_value(
+        fx.pool(),
+        &aragorn.id,
+        &age.id,
+        Some(PropertyValue::Number(87.0)),
+    )
+    .await
+    .unwrap();
+    properties::set_value(
+        fx.pool(),
+        &aragorn.id,
+        &friend.id,
+        Some(PropertyValue::Card(gimli.id.clone())),
+    )
+    .await
+    .unwrap();
+    tree::set_pinned(fx.pool(), &aragorn.id, true)
+        .await
+        .unwrap();
+
+    let copy = duplicate(fx.pool(), &aragorn.id, "Aragorn (copie)")
+        .await
+        .unwrap();
+
+    assert_eq!(copy.title, "Aragorn (copie)");
+    assert_eq!(copy.type_id.as_deref(), Some(character.as_str()));
+    assert_eq!(copy.image_asset_id.as_deref(), Some(image.as_str()));
+    assert_eq!(copy.aliases, ["Grands-Pas"]);
+    assert_eq!(super::content(fx.pool(), &copy.id).await.unwrap(), content);
+
+    // Its own property is a new one, with the same label and value.
+    let shown = properties::of_card(fx.pool(), &copy.id).await.unwrap();
+    let value_of = |label: &str| {
+        shown
+            .iter()
+            .find(|p| p.definition.label == label)
+            .and_then(|p| p.value.clone())
+    };
+    assert_eq!(value_of("Âge"), Some(PropertyValue::Number(87.0)));
+    assert_eq!(value_of("Ami"), Some(PropertyValue::Card(gimli.id.clone())));
+    let own = shown.iter().find(|p| p.definition.label == "Ami").unwrap();
+    assert_ne!(own.definition.id, friend.id);
+    // Removing the original's property leaves the copy's.
+    properties::delete(fx.pool(), &friend.id).await.unwrap();
+    assert!(
+        properties::of_card(fx.pool(), &copy.id)
+            .await
+            .unwrap()
+            .iter()
+            .any(|p| p.definition.label == "Ami")
+    );
+
+    // Links: Boromir is cited by both, Aragorn by its copy.
+    async fn cites(pool: &SqlitePool, id: &str) -> Vec<String> {
+        let mut sources: Vec<String> = links::backlinks(pool, id)
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|b| b.source_title)
+            .collect();
+        sources.sort();
+        sources
+    }
+    assert_eq!(
+        cites(fx.pool(), &boromir.id).await,
+        ["Aragorn", "Aragorn (copie)"]
+    );
+    // The original lost its "Ami" property above; the copy kept its own.
+    assert_eq!(cites(fx.pool(), &gimli.id).await, ["Aragorn (copie)"]);
+    assert_eq!(cites(fx.pool(), &aragorn.id).await, ["Aragorn (copie)"]);
+
+    // Right after the original, in its folder; not pinned.
+    let tree = tree::tree(fx.pool()).await.unwrap();
+    let mut in_shelf: Vec<_> = tree
+        .documents
+        .iter()
+        .filter(|d| d.folder_id.as_deref() == Some(shelf.id.as_str()))
+        .collect();
+    in_shelf.sort_by_key(|d| d.sort_order);
+    let titles: Vec<&str> = in_shelf.iter().map(|d| d.title.as_str()).collect();
+    assert_eq!(titles, ["Aragorn", "Aragorn (copie)", "Gimli"]);
+    let orders: Vec<i32> = in_shelf.iter().map(|d| d.sort_order).collect();
+    assert_eq!(orders, [0, 1, 2]);
+    let copy_row = tree.documents.iter().find(|d| d.id == copy.id).unwrap();
+    assert_eq!(copy_row.pinned_order, None);
+}

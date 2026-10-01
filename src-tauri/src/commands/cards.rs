@@ -109,3 +109,15 @@ pub async fn count_cards_by_type(state: State<'_, AppState>) -> AppResult<Vec<Ty
 pub async fn count_type_cards(state: State<'_, AppState>, type_id: String) -> AppResult<u32> {
     cards::count_of_type(&pool(&state, "count_type_cards").await?, &type_id).await
 }
+
+/// Duplicates a card as `title`, right after it in the sidebar.
+#[tauri::command]
+#[specta::specta]
+pub async fn duplicate_card(
+    state: State<'_, AppState>,
+    id: String,
+    title: String,
+) -> AppResult<Card> {
+    let pool = pool(&state, "duplicate_card").await?;
+    cards::duplicate(&pool, &id, &title).await
+}

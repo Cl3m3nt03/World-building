@@ -13,9 +13,13 @@ import {
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { defaultRangeExtractor, type Range, useVirtualizer } from "@tanstack/react-virtual";
 import {
+  ArrowUpRight,
   ChevronRight,
+  Copy,
+  FolderInput,
   FolderOpen,
   FolderPlus,
+  Globe,
   type LucideIcon,
   Pencil,
   Pin,
@@ -37,14 +41,21 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
-import { ContextMenuItem, ContextMenuShortcut } from "@/components/ui/context-menu";
+import {
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+} from "@/components/ui/context-menu";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
 import type { CardType, DocumentTree } from "@/lib/bindings";
 import {
   useCreateFolder,
+  useDuplicateCard,
   useMoveInTree,
+  useRenameDocument,
   useSetPinned,
+  useTrashDocument,
   useUpdateFolder,
 } from "../hooks/useDocumentTree";
 import {
@@ -60,6 +71,7 @@ import {
   visibleRows,
 } from "../tree";
 import { DeleteFolderDialog, FolderIconDialog, folderIcon } from "./FolderDialogs";
+import { MoveToDialog } from "./MoveToDialog";
 
 /** Height of a row, in pixels: fixed, so thousands of rows scroll without measuring. */
 const ROW_HEIGHT = 32;
@@ -253,12 +265,11 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
         activate(row);
         break;
       case "F2":
-        if (row.node.kind !== "folder") return;
         setEditingKey(row.node.key);
         break;
       case "Delete":
-        if (row.node.kind !== "folder") return;
-        setDeleteKey(row.node.key);
+        if (row.node.kind === "folder") setDeleteKey(row.node.key);
+        else trashDocument(row.node);
         break;
       default:
         return;
@@ -305,13 +316,17 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
   };
   useImperativeHandle(ref, () => ({ newFolder: () => newFolder(null) }));
 
+  const renameDocument = useRenameDocument();
   const finishRename = (node: TreeNode, name: string | null) => {
     setEditingKey(null);
     pendingFocus.current = node.key;
-    if (node.kind !== "folder" || name === null) return;
-    const trimmed = name.trim();
-    if (trimmed !== "" && trimmed !== node.folder.name) {
+    const trimmed = name?.trim() ?? "";
+    // Cancelled, emptied or unchanged: the name stays.
+    if (trimmed === "" || trimmed === nodeLabel(node)) return;
+    if (node.kind === "folder") {
       updateFolder.mutate({ id: node.folder.id, patch: { name: trimmed } });
+    } else {
+      renameDocument.mutate({ id: node.document.id, title: trimmed });
     }
   };
 
@@ -370,18 +385,66 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
       </ContextMenuItem>
     </>
   );
+  // --- Documents ---------------------------------------------------------------
+
   const setPinned = useSetPinned();
-  const menuNode = menuKey ? allNodes.get(menuKey) : undefined;
-  const menuDocument = menuNode?.kind === "document" ? menuNode.document : null;
-  const documentMenu = menuDocument && (
-    <ContextMenuItem
-      onSelect={() =>
-        setPinned.mutate({ id: menuDocument.id, pinned: menuDocument.pinnedOrder === null })
+  const duplicate = useDuplicateCard();
+  const trash = useTrashDocument();
+  // The document whose "Move to…" dialog is open.
+  const [moveKey, setMoveKey] = useState<string | null>(null);
+  const documentNode = (key: string | null) => {
+    const node = key ? allNodes.get(key) : undefined;
+    return node?.kind === "document" ? node : null;
+  };
+
+  /** Trashes a document; the focus goes to the row after it (or before). */
+  function trashDocument(node: TreeNode & { kind: "document" }) {
+    const index = indexOf.get(node.key);
+    const next = index === undefined ? undefined : (rows[index + 1] ?? rows[index - 1]);
+    trash.mutate(node.document.id, {
+      onSuccess: () => {
+        if (next) {
+          pendingFocus.current = next.node.key;
+          setActiveKey(next.node.key);
+        }
+        if (node.key === currentKey) {
+          void navigate({ to: "/world/$worldId/world", params: { worldId } });
+        }
+      },
+    });
+  }
+
+  const menuDocumentNode = documentNode(menuKey);
+  const documentMenu = menuDocumentNode && (
+    <DocumentMenu
+      node={menuDocumentNode}
+      onOpen={() => {
+        const row = rows[indexOf.get(menuDocumentNode.key) ?? -1];
+        if (row) activate(row);
+      }}
+      onRename={() => {
+        afterMenu.current = () => setEditingKey(menuDocumentNode.key);
+      }}
+      onPin={(pinned) => setPinned.mutate({ id: menuDocumentNode.document.id, pinned })}
+      onDuplicate={() =>
+        duplicate.mutate(
+          {
+            id: menuDocumentNode.document.id,
+            title: t("sidebar.document.copyTitle", { title: menuDocumentNode.document.title }),
+          },
+          {
+            onSuccess: (card) => {
+              pendingFocus.current = documentKey(card.id);
+              setRevealKey(documentKey(card.id));
+            },
+          },
+        )
       }
-    >
-      {menuDocument.pinnedOrder === null ? <Pin /> : <PinOff />}
-      {menuDocument.pinnedOrder === null ? t("sidebar.pins.pin") : t("sidebar.pins.unpin")}
-    </ContextMenuItem>
+      onMove={() => {
+        afterMenu.current = () => setMoveKey(menuDocumentNode.key);
+      }}
+      onTrash={() => trashDocument(menuDocumentNode)}
+    />
   );
   const rootMenu = (
     <ContextMenuItem onSelect={() => newFolder(null)}>
@@ -485,7 +548,14 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
   };
 
   const dragged = dragKey ? nodeOf.get(dragKey) : undefined;
-  const error = move.error ?? createFolder.error ?? updateFolder.error ?? setPinned.error;
+  const error =
+    move.error ??
+    createFolder.error ??
+    updateFolder.error ??
+    setPinned.error ??
+    renameDocument.error ??
+    duplicate.error ??
+    trash.error;
 
   return (
     <DndContext
@@ -516,6 +586,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
         before={folderMenu || documentMenu || undefined}
         after={menuFolder ? undefined : rootMenu}
         create={!menuFolder}
+        createLabel={menuDocumentNode ? t("sidebar.newCard") : undefined}
         onCloseAutoFocus={(event) => {
           const run = afterMenu.current;
           afterMenu.current = null;
@@ -589,6 +660,21 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
       </CreateCardContextMenu>
       <FolderIconDialog folder={iconFolder} onClose={() => setIconFolderId(null)} />
       <DeleteFolderDialog node={folderNode(deleteKey)} onClose={() => setDeleteKey(null)} />
+      <MoveToDialog
+        node={documentNode(moveKey)}
+        roots={roots}
+        onClose={() => {
+          if (moveKey) pendingFocus.current = moveKey;
+          setMoveKey(null);
+        }}
+        onPick={(destination) => {
+          const key = moveKey;
+          if (!key) return;
+          move.mutate(destination.move);
+          if (destination.key !== "root") setOpen(destination.key, true);
+          setRevealKey(key);
+        }}
+      />
       {/* In <body>: the glass panel's backdrop-filter would make it the
           containing block of the fixed overlay, shifting it off the pointer. */}
       {createPortal(
@@ -598,6 +684,69 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
         document.body,
       )}
     </DndContext>
+  );
+}
+
+type DocumentMenuProps = {
+  node: TreeNode & { kind: "document" };
+  onOpen: () => void;
+  onRename: () => void;
+  onPin: (pinned: boolean) => void;
+  onDuplicate: () => void;
+  onMove: () => void;
+  onTrash: () => void;
+};
+
+/** A document's right click: what can be done to it (card creation follows). */
+function DocumentMenu({
+  node,
+  onOpen,
+  onRename,
+  onPin,
+  onDuplicate,
+  onMove,
+  onTrash,
+}: DocumentMenuProps) {
+  const { t } = useTranslation();
+  const pinned = node.document.pinnedOrder !== null;
+  return (
+    <>
+      <ContextMenuItem onSelect={onOpen}>
+        <ArrowUpRight />
+        {t("sidebar.document.open")}
+        <ContextMenuShortcut>{t("sidebar.document.openKey")}</ContextMenuShortcut>
+      </ContextMenuItem>
+      <ContextMenuItem onSelect={onRename}>
+        <Pencil />
+        {t("sidebar.folder.rename")}
+        <ContextMenuShortcut>{t("sidebar.folder.renameKey")}</ContextMenuShortcut>
+      </ContextMenuItem>
+      <ContextMenuItem onSelect={() => onPin(!pinned)}>
+        {pinned ? <PinOff /> : <Pin />}
+        {pinned ? t("sidebar.pins.unpin") : t("sidebar.pins.pin")}
+      </ContextMenuItem>
+      {node.document.kind === "card" && (
+        <ContextMenuItem onSelect={onDuplicate}>
+          <Copy />
+          {t("sidebar.document.duplicate")}
+        </ContextMenuItem>
+      )}
+      <ContextMenuItem onSelect={onMove}>
+        <FolderInput />
+        {t("sidebar.document.moveTo")}
+      </ContextMenuItem>
+      <ContextMenuItem disabled>
+        <Globe />
+        {t("sidebar.document.wiki")}
+        <ContextMenuShortcut>{t("sidebar.document.soon", { milestone: "M8" })}</ContextMenuShortcut>
+      </ContextMenuItem>
+      <ContextMenuSeparator />
+      <ContextMenuItem variant="destructive" onSelect={onTrash}>
+        <Trash2 />
+        {t("sidebar.document.trash")}
+        <ContextMenuShortcut>{t("sidebar.folder.deleteKey")}</ContextMenuShortcut>
+      </ContextMenuItem>
+    </>
   );
 }
 
@@ -713,7 +862,11 @@ function TreeItem({
       )}
       <Icon aria-hidden className="size-4 shrink-0" style={color ? { color } : undefined} />
       {editing ? (
-        <RenameInput label={t("sidebar.folder.name")} name={label} onDone={onRenamed} />
+        <RenameInput
+          label={node.kind === "folder" ? t("sidebar.folder.name") : t("sidebar.document.name")}
+          name={label}
+          onDone={onRenamed}
+        />
       ) : (
         <span className="truncate">{label}</span>
       )}

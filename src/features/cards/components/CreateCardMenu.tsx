@@ -9,6 +9,9 @@ import {
   ContextMenuItem,
   ContextMenuLabel,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
@@ -176,12 +179,15 @@ export function CreateCardContextMenu({
   before,
   after,
   create = true,
+  createLabel,
   onCloseAutoFocus,
 }: {
   children: ReactNode;
   before?: ReactNode;
   after?: ReactNode;
   create?: boolean;
+  /** When given, the creation items go in a submenu with this label. */
+  createLabel?: string | undefined;
   /** Called when the menu closes, after the new card's focus is kept. */
   onCloseAutoFocus?: (event: Event) => void;
 }) {
@@ -190,7 +196,8 @@ export function CreateCardContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent
-        className={NO_EXIT_ANIMATION}
+        // A document menu has entries with longer hints ("Coming with M8").
+        className={cn(NO_EXIT_ANIMATION, createLabel && "w-72")}
         onCloseAutoFocus={(event) => {
           focus.onCloseAutoFocus(event);
           onCloseAutoFocus?.(event);
@@ -198,7 +205,20 @@ export function CreateCardContextMenu({
       >
         {before}
         {before && create && <ContextMenuSeparator />}
-        {create && <CreateCardItems parts={CONTEXT} onCreate={focus.onCreate} />}
+        {create &&
+          (createLabel ? (
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <Plus />
+                {createLabel}
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent className={NO_EXIT_ANIMATION}>
+                <CreateCardItems parts={CONTEXT} onCreate={focus.onCreate} />
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          ) : (
+            <CreateCardItems parts={CONTEXT} onCreate={focus.onCreate} />
+          ))}
         {after && create && <ContextMenuSeparator />}
         {after}
       </ContextMenuContent>
