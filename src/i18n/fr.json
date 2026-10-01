@@ -244,6 +244,8 @@
   "cardTypes.deleteCards_other": "Ce type a {{count}} cartes. Où les déplacer ?",
   "cardTypes.moveTo": "Type de destination",
   "sidebar.tree": "Documents du monde",
+  "sidebar.collapse": "Replier la barre latérale",
+  "sidebar.expand": "Déplier la barre latérale",
   "sidebar.view.button": "Filtres et tri",
   "sidebar.view.buttonActive": "Filtres et tri (actifs)",
   "sidebar.view.kinds": "Documents",

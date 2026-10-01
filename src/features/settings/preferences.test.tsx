@@ -2,7 +2,7 @@
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
+import { useUiStore } from "@/app/stores/ui";
 import { i18n } from "@/i18n";
 import type { AppSettings, Preferences } from "@/lib/bindings";
 import { loadPreferences, usePreferencesSync } from "./preferences";
@@ -20,7 +20,7 @@ const saved: AppSettings = {
 };
 
 beforeEach(async () => {
-  useUiStore.setState({ theme: "system", transparency: "on", sidebarWidth: SIDEBAR_WIDTH.default });
+  useUiStore.setState({ theme: "system", transparency: "on" });
   await i18n.changeLanguage("fr");
 });
 

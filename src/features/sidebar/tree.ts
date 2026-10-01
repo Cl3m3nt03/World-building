@@ -1,4 +1,4 @@
-import type { DocumentKind, DocumentTree, Folder, Place, TreeDocument } from "@/lib/bindings";
+import type { DocumentTree, Folder, Place, SidebarView, TreeDocument } from "@/lib/bindings";
 
 /**
  * The sidebar tree (M3, docs/features/02-organisation.md), built from the
@@ -345,18 +345,12 @@ function nodeName(node: TreeNode): string {
 
 // --- Filters and sort (step 3.8) -------------------------------------------------
 
-export type SortBy = "manual" | "name" | "created";
-
-/** How the sidebar narrows and orders the tree. */
-export type TreeView = {
-  /** Kinds of document shown; empty: all. */
-  kinds: DocumentKind[];
-  /** Card types shown (each with its subtypes); empty: all. */
-  typeIds: string[];
-  sort: SortBy;
-  /** Name: Z to A; date: newest first. */
-  reversed: boolean;
-};
+/**
+ * How the sidebar narrows and orders the tree: kinds of document and card
+ * types shown (empty: all; a type stands for its subtypes), sort, and
+ * reversed (name: Z to A; date: newest first). Saved per world (3.9).
+ */
+export type TreeView = Required<SidebarView>;
 
 export const DEFAULT_VIEW: TreeView = { kinds: [], typeIds: [], sort: "manual", reversed: false };
 

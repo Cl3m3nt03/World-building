@@ -155,6 +155,10 @@ export const commands = {
 	setDocumentPinned: (id: string, pinned: boolean) => typedError<null, AppError>(__TAURI_INVOKE("set_document_pinned", { id, pinned })),
 	/**  Moves a pinned document to `index` among the pins. */
 	movePin: (id: string, index: number) => typedError<null, AppError>(__TAURI_INVOKE("move_pin", { id, index })),
+	/**  The open world's sidebar state (width, collapse, open folders, view). */
+	getSidebarState: () => typedError<SidebarState, AppError>(__TAURI_INVOKE("get_sidebar_state")),
+	/**  Saves the open world's sidebar state; returns it as saved (bounded). */
+	setSidebarState: (sidebar: SidebarState) => typedError<SidebarState, AppError>(__TAURI_INVOKE("set_sidebar_state", { sidebar })),
 	/**
 	 *  Creates a world named `name`, of the given genre, in a new folder inside
 	 *  `parent_dir` (the folder is named after the world), and opens it.
@@ -548,6 +552,25 @@ export type SearchMatch =
 { kind: "alias"; alias: TextPart[] } | 
 /**  Its content: an excerpt around the words. */
 { kind: "content"; excerpt: TextPart[] };
+
+export type SidebarState = {
+	/**  In pixels; `None`: the default width. */
+	width?: number | null,
+	collapsed?: boolean,
+	/**  Keys of the open folders and parents (`f:<id>`, `d:<id>`). */
+	expanded?: string[],
+	view?: SidebarView,
+};
+
+/**  Filters and sort of the sidebar (step 3.8). */
+export type SidebarView = {
+	kinds?: DocumentKind[],
+	typeIds?: string[],
+	sort?: SortBy,
+	reversed?: boolean,
+};
+
+export type SortBy = "manual" | "name" | "created";
 
 /**  A section of a guided template: a title and a question to help write it. */
 export type TemplateSection = {

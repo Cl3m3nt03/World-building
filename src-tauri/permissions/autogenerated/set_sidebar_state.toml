@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-sidebar-state"
+description = "Enables the set_sidebar_state command without any pre-configured scope."
+commands.allow = ["set_sidebar_state"]
+
+[[permission]]
+identifier = "deny-set-sidebar-state"
+description = "Denies the set_sidebar_state command without any pre-configured scope."
+commands.deny = ["set_sidebar_state"]

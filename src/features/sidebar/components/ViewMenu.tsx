@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import type { TranslationKey } from "@/i18n";
-import type { DocumentKind } from "@/lib/bindings";
+import type { DocumentKind, SortBy } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
-import { DEFAULT_VIEW, isFiltered, type SortBy, type TreeView } from "../tree";
+import { DEFAULT_VIEW, isFiltered, type TreeView } from "../tree";
 
 /** Kinds of document, and the milestone bringing those not made yet. */
 const KINDS: { kind: DocumentKind; label: TranslationKey; milestone?: string }[] = [
@@ -34,7 +34,14 @@ const SORTS: { sort: SortBy; label: TranslationKey }[] = [
   { sort: "created", label: "sidebar.view.sort.created" },
 ];
 
-type Props = { view: TreeView; onChange: (view: TreeView) => void };
+type Props = {
+  view: TreeView;
+  /**
+   * What changes, or how from the latest view: merged with the view as
+   * saved, so quick choices in a row all count.
+   */
+  onChange: (change: Partial<TreeView> | ((latest: TreeView) => Partial<TreeView>)) => void;
+};
 
 /**
  * Filters (kinds of document, card types) and sort of the sidebar, next to
@@ -72,7 +79,7 @@ export function ViewMenu({ view, onChange }: Props) {
             checked={view.kinds.includes(kind)}
             disabled={milestone !== undefined}
             onSelect={keepOpen}
-            onCheckedChange={() => onChange({ ...view, kinds: toggle(view.kinds, kind) })}
+            onCheckedChange={() => onChange((latest) => ({ kinds: toggle(latest.kinds, kind) }))}
           >
             {t(label)}
             {milestone && (
@@ -91,7 +98,9 @@ export function ViewMenu({ view, onChange }: Props) {
               key={type.id}
               checked={view.typeIds.includes(type.id)}
               onSelect={keepOpen}
-              onCheckedChange={() => onChange({ ...view, typeIds: toggle(view.typeIds, type.id) })}
+              onCheckedChange={() =>
+                onChange((latest) => ({ typeIds: toggle(latest.typeIds, type.id) }))
+              }
               className={cn(type.parentId && "pl-12")}
             >
               <Icon aria-hidden style={{ color: typeColor(type.color) }} />
@@ -105,7 +114,7 @@ export function ViewMenu({ view, onChange }: Props) {
           value={view.sort}
           onValueChange={(sort) => {
             const chosen = SORTS.find((candidate) => candidate.sort === sort);
-            if (chosen) onChange({ ...view, sort: chosen.sort });
+            if (chosen) onChange({ sort: chosen.sort });
           }}
         >
           {SORTS.map(({ sort, label }) => (
@@ -118,7 +127,7 @@ export function ViewMenu({ view, onChange }: Props) {
           checked={view.reversed}
           disabled={view.sort === "manual"}
           onSelect={keepOpen}
-          onCheckedChange={(reversed) => onChange({ ...view, reversed: reversed === true })}
+          onCheckedChange={(reversed) => onChange({ reversed: reversed === true })}
         >
           {view.sort === "created" ? t("sidebar.view.newestFirst") : t("sidebar.view.reversed")}
         </DropdownMenuCheckboxItem>

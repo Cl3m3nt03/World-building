@@ -64,6 +64,8 @@ const COMMANDS: &[&str] = &[
     "delete_folder",
     "set_document_pinned",
     "move_pin",
+    "get_sidebar_state",
+    "set_sidebar_state",
     "create_world",
     "open_world",
     "close_world",

@@ -244,6 +244,8 @@
   "cardTypes.deleteCards_other": "This type has {{count}} cards. Where should they go?",
   "cardTypes.moveTo": "Destination type",
   "sidebar.tree": "World documents",
+  "sidebar.collapse": "Collapse the sidebar",
+  "sidebar.expand": "Expand the sidebar",
   "sidebar.view.button": "Filters and sort",
   "sidebar.view.buttonActive": "Filters and sort (active)",
   "sidebar.view.kinds": "Documents",
