@@ -278,8 +278,9 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
   const [revealKey, setRevealKey] = useState<string | null>(null);
   // The row a right click was made on (`null`: the empty space below them).
   const [menuKey, setMenuKey] = useState<string | null>(null);
-  // A menu action that moves the focus itself (a name to type, a dialog).
-  const keepMenuFocus = useRef(false);
+  // A menu action that moves the focus (a name to type, a dialog) runs once
+  // the menu is gone: while it is open, its focus trap takes the focus back.
+  const afterMenu = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (revealKey === null) return;
@@ -342,8 +343,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
       </ContextMenuItem>
       <ContextMenuItem
         onSelect={() => {
-          keepMenuFocus.current = true;
-          setEditingKey(menuFolder.key);
+          afterMenu.current = () => setEditingKey(menuFolder.key);
         }}
       >
         <Pencil />
@@ -352,8 +352,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
       </ContextMenuItem>
       <ContextMenuItem
         onSelect={() => {
-          keepMenuFocus.current = true;
-          setIconFolderId(menuFolder.folder.id);
+          afterMenu.current = () => setIconFolderId(menuFolder.folder.id);
         }}
       >
         <Shapes />
@@ -362,8 +361,7 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
       <ContextMenuItem
         variant="destructive"
         onSelect={() => {
-          keepMenuFocus.current = true;
-          setDeleteKey(menuFolder.key);
+          afterMenu.current = () => setDeleteKey(menuFolder.key);
         }}
       >
         <Trash2 />
@@ -519,8 +517,11 @@ export function DocumentTreeView({ tree, currentId, ref }: Props) {
         after={menuFolder ? undefined : rootMenu}
         create={!menuFolder}
         onCloseAutoFocus={(event) => {
-          if (keepMenuFocus.current) event.preventDefault();
-          keepMenuFocus.current = false;
+          const run = afterMenu.current;
+          afterMenu.current = null;
+          if (!run) return;
+          event.preventDefault();
+          run();
         }}
       >
         {rows.length === 0 ? (

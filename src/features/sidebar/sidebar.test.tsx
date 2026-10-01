@@ -473,3 +473,35 @@ test("a document's right click pins it, a pin's right click unpins it", async ()
   expect(callsOf("set_document_pinned")[1]?.args).toEqual({ id: "Arya", pinned: false });
   await waitFor(() => expect(screen.queryByRole("region", { name: "Épinglés" })).toBeNull());
 });
+
+test("Rename, Change icon and Delete from a folder's menu get the focus once the menu is closed", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Places")).toBeTruthy());
+  const fromMenu = async (action: string) => {
+    await act(async () => {
+      fireEvent.contextMenu(item("Places"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("menuitem", { name: action }));
+    });
+  };
+
+  await fromMenu("RenommerF2");
+  const input = await screen.findByRole("textbox", { name: "Nom du dossier" });
+  await waitFor(() => expect(document.activeElement).toBe(input));
+  await act(async () => {
+    fireEvent.keyDown(input, { key: "Escape" });
+  });
+
+  await fromMenu("Changer l'icône…");
+  const icons = await screen.findByRole("dialog", { name: "Icône de « Places »" });
+  await waitFor(() => expect(icons.contains(document.activeElement)).toBe(true));
+  await act(async () => {
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Escape" });
+  });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+  await fromMenu("Supprimer le dossier…Suppr");
+  const remove = await screen.findByRole("dialog", { name: "Supprimer le dossier « Places » ?" });
+  await waitFor(() => expect(remove.contains(document.activeElement)).toBe(true));
+});
