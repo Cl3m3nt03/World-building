@@ -6,7 +6,14 @@ import { ABILITIES, type Ability, MAX_SCORE, MIN_SCORE, SKILLS, type Skill } fro
  * side (src-tauri/src/domain/content.rs checks the outline and derives the
  * plain text used by search).
  */
-export type TextBlock = {
+/**
+ * A block's place on a line of blocks side by side (M3 step 3.11, see
+ * `layout.ts`): neighbours with the same `row` share the line, each taking
+ * its `width` (a share of it). Absent for a block alone on its line.
+ */
+export type BlockPlace = { row?: string; width?: number };
+
+export type TextBlock = BlockPlace & {
   id: string;
   type: "text";
   doc: JSONContent;
@@ -19,13 +26,13 @@ export type GalleryImage = { id: string; assetId: string; caption: string };
  * Images of the media library shown one at a time, with arrows and
  * thumbnails (M3 step 3.10). Empty until images are chosen.
  */
-export type ImageBlock = { id: string; type: "image"; images: GalleryImage[] };
+export type ImageBlock = BlockPlace & { id: string; type: "image"; images: GalleryImage[] };
 /** Most images in one image block (also checked by the Rust side). */
 export const MAX_GALLERY_IMAGES = 50;
 /** An action of a 5e stat block ("Épée longue", "Attaque au corps à corps…"). */
 export type StatAction = { id: string; name: string; description: string };
 /** A D&D 5e character or creature sheet. */
-export type Stats5eBlock = {
+export type Stats5eBlock = BlockPlace & {
   id: string;
   type: "stats5e";
   abilities: Record<Ability, number>;
@@ -153,8 +160,17 @@ function readImageBlock(id: string, value: Record<string, unknown>): ImageBlock 
   return { id, type: "image", images };
 }
 
-/** A saved block, or `null` if it is unknown or malformed. */
+/** A saved block with its place on a line, if it has one. */
 function readBlock(value: unknown): Block | null {
+  const block = readBlockContent(value);
+  if (!block || !isRecord(value)) return block;
+  if (typeof value.row === "string" && value.row !== "") block.row = value.row;
+  if (typeof value.width === "number" && Number.isFinite(value.width)) block.width = value.width;
+  return block;
+}
+
+/** A saved block, or `null` if it is unknown or malformed. */
+function readBlockContent(value: unknown): Block | null {
   if (!isRecord(value) || typeof value.id !== "string") return null;
   if (value.type === "text" && isRecord(value.doc)) {
     const block: TextBlock = { id: value.id, type: "text", doc: value.doc as JSONContent };
