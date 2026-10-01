@@ -3,6 +3,7 @@ mod commands;
 mod db;
 mod domain;
 mod error;
+mod library;
 mod logging;
 mod paths;
 mod protocol;
@@ -32,6 +33,12 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::assets::rename_asset,
         commands::assets::delete_asset,
         commands::assets::asset_usages,
+        commands::library::list_library_assets,
+        commands::library::import_library_asset,
+        commands::library::add_assets_to_library,
+        commands::library::rename_library_asset,
+        commands::library::remove_library_asset,
+        commands::library::pick_library_asset,
         commands::documents::list_documents,
         commands::documents::mark_document_opened,
         commands::documents::recent_documents,
@@ -109,6 +116,10 @@ pub fn run() -> tauri::Result<()> {
         .invoke_handler(builder.invoke_handler())
         .register_asynchronous_uri_scheme_protocol(protocol::SCHEME, protocol::handle)
         .register_asynchronous_uri_scheme_protocol(thumbnails::SCHEME, protocol::handle_thumbnail)
+        .register_asynchronous_uri_scheme_protocol(
+            protocol::LIBRARY_SCHEME,
+            protocol::handle_library,
+        )
         .manage(closing::Closing::default())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

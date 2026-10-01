@@ -13,3 +13,11 @@ export function assetUrl(assetId: string): string {
 export function useAssetUrl(assetId: string | null | undefined): string | undefined {
   return useMemo(() => (assetId ? assetUrl(assetId) : undefined), [assetId]);
 }
+
+/** Custom protocol serving the library shared by the worlds (ADR 0006). */
+export const LIBRARY_SCHEME = "bzlibrary";
+
+/** URL of an asset of the library shared by the worlds. */
+export function libraryAssetUrl(assetId: string): string {
+  return convertFileSrc(assetId, LIBRARY_SCHEME);
+}

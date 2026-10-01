@@ -12,14 +12,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { Asset, AssetUsage } from "@/lib/bindings";
+import { useRenameLibraryAsset } from "../hooks/useLibrary";
 import { useAssetUsages, useDeleteAsset, useRenameAsset } from "../hooks/useManageAsset";
 
 type DialogProps = { asset: Asset | null; onClose: () => void };
 
-/** Renames an asset; the file keeps its hash name. */
-export function RenameAssetDialog({ asset, onClose }: DialogProps) {
+/** Renames an asset (of the world, or of the library); the file keeps its hash name. */
+export function RenameAssetDialog({
+  asset,
+  onClose,
+  library = false,
+}: DialogProps & { library?: boolean }) {
   const { t } = useTranslation();
-  const rename = useRenameAsset();
+  const renameInWorld = useRenameAsset();
+  const renameInLibrary = useRenameLibraryAsset();
+  const rename = library ? renameInLibrary : renameInWorld;
   const [name, setName] = useState("");
   const inputId = useId();
 

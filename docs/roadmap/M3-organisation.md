@@ -123,8 +123,8 @@ Cadrage validé par Clément le 01/10/2026 (#111) : liste à plat avec un identi
 ## 3.13 — Médiathèque partagée entre les mondes (#113)
 **Branche** : `feat/shared-media` · **Dépend de** : —
 
-- [ ] **Décision à prendre avec Clément, puis ADR** : un monde doit rester autonome (ADR 0001). Piste proposée : une bibliothèque commune où l'on pioche, l'image choisie étant copiée dans le monde
-- [ ] Puis la réalisation selon la décision
+- [x] **Décision prise avec Clément le 01/10/2026 (#113), ADR 0006** : une bibliothèque commune où l'on pioche, l'image choisie étant copiée dans le monde (qui reste autonome, ADR 0001)
+- [x] Réalisation : bibliothèque dans le dossier de l'app, « Ajouter à la bibliothèque » depuis la médiathèque, onglet « Bibliothèque » du sélecteur d'image, section Bibliothèque des réglages de l'app
 
 ## 3.14 — Tests de bout en bout M3
 **Branche** : `test/e2e-m3` · **Dépend de** : 3.3 à 3.9

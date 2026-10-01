@@ -23,6 +23,7 @@ function image(letter: string, name: string): Asset {
 const CASTLE = image("a", "Château.png");
 const FOREST = image("b", "Forêt.png");
 const IMPORTED = image("c", "Import.png");
+const LIBRARY = image("d", "Blason.png");
 
 type Call = { command: string; payload: unknown };
 let calls: Call[];
@@ -41,6 +42,9 @@ beforeEach(() => {
     }
     if (command === "plugin:dialog|open") return "C:\\images\\import.png";
     if (command === "import_asset") return { asset: IMPORTED, created: true };
+    if (command === "list_library_assets") return [LIBRARY];
+    if (command === "pick_library_asset")
+      return { asset: { ...LIBRARY, name: "Copie" }, created: true };
     return null;
   });
 });
@@ -147,5 +151,23 @@ test("several images: Space ticks them, Enter returns them in the order ticked",
   fireEvent.keyDown(castle, { key: "Enter" });
 
   expect(onPickMany).toHaveBeenCalledWith([FOREST.id, CASTLE.id]);
+  expect(onOpenChange).toHaveBeenCalledWith(false);
+});
+
+test("the library tab copies the chosen image into the world, then returns it", async () => {
+  const { onPick, onOpenChange } = renderPicker();
+
+  const tab = await screen.findByRole("tab", { name: "Bibliothèque BuilderZ" });
+  fireEvent.mouseDown(tab);
+  fireEvent.click(tab);
+  const blason = await screen.findByRole("option", { name: "Blason.png" });
+  expect(blason.querySelector("img")?.getAttribute("src")).toBe(
+    `http://bzlibrary.localhost/${LIBRARY.id}`,
+  );
+  fireEvent.click(blason);
+  fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
+
+  await waitFor(() => expect(onPick).toHaveBeenCalledWith(LIBRARY.id));
+  expect(calls).toContainEqual({ command: "pick_library_asset", payload: { id: LIBRARY.id } });
   expect(onOpenChange).toHaveBeenCalledWith(false);
 });
