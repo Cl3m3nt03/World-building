@@ -22,6 +22,16 @@ if (typeof window !== "undefined") {
   Element.prototype.hasPointerCapture ??= () => false;
   Element.prototype.releasePointerCapture ??= () => {};
 
+  // jsdom lays nothing out: the sidebar tree's viewport (virtualized) gets a
+  // height, so its rows render as in the app.
+  const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return this.hasAttribute("data-tree-viewport") ? 640 : offsetHeight?.get?.call(this);
+    },
+  });
+
   globalThis.ResizeObserver ??= class {
     observe() {}
     unobserve() {}

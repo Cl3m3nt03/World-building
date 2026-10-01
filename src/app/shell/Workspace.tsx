@@ -5,7 +5,8 @@ import { SIDEBAR_WIDTH, useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CardsSidebar, CreateCardMenu } from "@/features/cards";
+import { CreateCardMenu } from "@/features/cards";
+import { WorldSidebar } from "@/features/sidebar";
 import type { TranslationKey } from "@/i18n";
 
 /** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
@@ -82,7 +83,7 @@ export function WorldWorkspace() {
         maxSize={SIDEBAR_WIDTH.max}
         onResize={(size) => setSidebarWidth(size.inPixels)}
       >
-        <CardsSidebar />
+        <WorldSidebar />
       </ResizablePanel>
       <ResizableHandle
         aria-label={t("sidebar.resize")}
