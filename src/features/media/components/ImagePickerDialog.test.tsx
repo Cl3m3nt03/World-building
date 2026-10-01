@@ -119,3 +119,33 @@ test("returns an imported image right away", async () => {
     payload: { path: "C:\\images\\import.png" },
   });
 });
+
+test("several images: Space ticks them, Enter returns them in the order ticked", async () => {
+  const onPickMany = vi.fn();
+  const onOpenChange = vi.fn();
+  render(
+    <QueryClientProvider client={createQueryClient()}>
+      <ImagePickerDialog
+        open
+        multiple
+        max={5}
+        onOpenChange={onOpenChange}
+        onPickMany={onPickMany}
+      />
+    </QueryClientProvider>,
+  );
+
+  const castle = await screen.findByRole("option", { name: "Château.png" });
+  castle.focus();
+  fireEvent.keyDown(castle, { key: "ArrowRight" });
+  const forest = screen.getByRole("option", { name: "Forêt.png" });
+  fireEvent.keyDown(forest, { key: " " });
+  fireEvent.keyDown(forest, { key: "ArrowLeft" });
+  fireEvent.keyDown(castle, { key: " " });
+  expect(castle.getAttribute("aria-selected")).toBe("true");
+  expect(forest.getAttribute("aria-selected")).toBe("true");
+  fireEvent.keyDown(castle, { key: "Enter" });
+
+  expect(onPickMany).toHaveBeenCalledWith([FOREST.id, CASTLE.id]);
+  expect(onOpenChange).toHaveBeenCalledWith(false);
+});

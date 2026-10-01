@@ -180,7 +180,8 @@ pub struct AssetUserRow {
 }
 
 /// Cards (in the trash too) using an asset as their image or in an image
-/// block, by title. Blocks are read with SQLite's JSON functions.
+/// block (any image of its gallery, or the single image of an older block),
+/// by title. Blocks are read with SQLite's JSON functions.
 pub async fn using_asset(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<AssetUserRow>> {
     Ok(sqlx::query_as!(
         AssetUserRow,
@@ -190,14 +191,22 @@ pub async fn using_asset(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<Ass
                   EXISTS (
                       SELECT 1 FROM json_each(c.content) AS block
                       WHERE json_extract(block.value, '$.type') = 'image'
-                        AND json_extract(block.value, '$.assetId') = ?1
+                        AND (json_extract(block.value, '$.assetId') = ?1
+                             OR EXISTS (
+                                 SELECT 1 FROM json_each(block.value, '$.images') AS image
+                                 WHERE json_extract(image.value, '$.assetId') = ?1
+                             ))
                   ) AS "in_block!: bool"
            FROM cards c JOIN documents d ON d.id = c.document_id
            WHERE c.image_asset_id = ?1
               OR EXISTS (
                   SELECT 1 FROM json_each(c.content) AS block
                   WHERE json_extract(block.value, '$.type') = 'image'
-                    AND json_extract(block.value, '$.assetId') = ?1
+                    AND (json_extract(block.value, '$.assetId') = ?1
+                         OR EXISTS (
+                             SELECT 1 FROM json_each(block.value, '$.images') AS image
+                             WHERE json_extract(image.value, '$.assetId') = ?1
+                         ))
               )
            ORDER BY d.title COLLATE NOCASE"#,
         asset_id

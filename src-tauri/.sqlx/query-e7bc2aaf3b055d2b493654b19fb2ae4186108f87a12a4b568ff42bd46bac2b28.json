@@ -1,0 +1,59 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.id AS \"id!\", d.title,\n                  d.trashed_at IS NOT NULL AS \"in_trash!: bool\",\n                  COALESCE(c.image_asset_id = ?1, 0) AS \"as_image!: bool\",\n                  EXISTS (\n                      SELECT 1 FROM json_each(c.content) AS block\n                      WHERE json_extract(block.value, '$.type') = 'image'\n                        AND (json_extract(block.value, '$.assetId') = ?1\n                             OR EXISTS (\n                                 SELECT 1 FROM json_each(block.value, '$.images') AS image\n                                 WHERE json_extract(image.value, '$.assetId') = ?1\n                             ))\n                  ) AS \"in_block!: bool\"\n           FROM cards c JOIN documents d ON d.id = c.document_id\n           WHERE c.image_asset_id = ?1\n              OR EXISTS (\n                  SELECT 1 FROM json_each(c.content) AS block\n                  WHERE json_extract(block.value, '$.type') = 'image'\n                    AND (json_extract(block.value, '$.assetId') = ?1\n                         OR EXISTS (\n                             SELECT 1 FROM json_each(block.value, '$.images') AS image\n                             WHERE json_extract(image.value, '$.assetId') = ?1\n                         ))\n              )\n           ORDER BY d.title COLLATE NOCASE",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "in_trash!: bool",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "as_image!: bool",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "in_block!: bool",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e7bc2aaf3b055d2b493654b19fb2ae4186108f87a12a4b568ff42bd46bac2b28"
+}

@@ -5,8 +5,11 @@
 //!
 //! ```json
 //! [{ "id": "…", "type": "text", "doc": { "type": "doc", "content": [ … ] } },
-//!  { "id": "…", "type": "image", "assetId": "…", "caption": "…" }]
+//!  { "id": "…", "type": "image", "images": [{ "id": "…", "assetId": "…", "caption": "…" }] }]
 //! ```
+//!
+//! An image block is a gallery (M3 step 3.10). Blocks saved before hold one
+//! image as `assetId` and `caption`, still read.
 
 use serde_json::Value;
 
@@ -18,6 +21,8 @@ pub const BLOCK_TYPES: [&str; 4] = ["text", "image", "stats5e", "map"];
 pub const MAX_CONTENT_BYTES: usize = 4 * 1024 * 1024;
 /// Most blocks in one card.
 pub const MAX_BLOCKS: usize = 500;
+/// Most images in one image block.
+pub const MAX_GALLERY_IMAGES: usize = 50;
 
 /// Checks the outline of `json` (an array of blocks with a unique string id
 /// and a known type) and returns its blocks.
@@ -56,9 +61,52 @@ pub fn parse(json: &str) -> AppResult<Vec<Value>> {
                 "unknown block type: {kind}"
             )));
         }
+        if kind == "image" {
+            check_gallery(block)?;
+        }
         ids.push(id);
     }
     Ok(blocks)
+}
+
+/// Checks the `images` of an image block, when it has some: a list of at
+/// most [`MAX_GALLERY_IMAGES`] objects.
+fn check_gallery(block: &Value) -> AppResult<()> {
+    let Some(images) = block.get("images") else {
+        return Ok(());
+    };
+    let Value::Array(images) = images else {
+        return Err(AppError::InvalidInput(
+            "an image block's images must be a list".into(),
+        ));
+    };
+    if images.len() > MAX_GALLERY_IMAGES {
+        return Err(AppError::InvalidInput(format!(
+            "an image block has at most {MAX_GALLERY_IMAGES} images"
+        )));
+    }
+    if !images.iter().all(Value::is_object) {
+        return Err(AppError::InvalidInput(
+            "every image of a block must be an object".into(),
+        ));
+    }
+    Ok(())
+}
+
+/// Captions of an image block: those of its gallery, or the single caption
+/// of a block saved before galleries.
+fn captions(block: &Value) -> Vec<&str> {
+    match block.get("images").and_then(Value::as_array) {
+        Some(images) => images
+            .iter()
+            .filter_map(|image| image.get("caption").and_then(Value::as_str))
+            .collect(),
+        None => block
+            .get("caption")
+            .and_then(Value::as_str)
+            .into_iter()
+            .collect(),
+    }
 }
 
 /// Text of a TipTap node: its text leaves, with a line break after each
@@ -123,11 +171,11 @@ pub fn plain_text(blocks: &[Value]) -> String {
                 }
             }
             Some("image") => {
-                if let Some(caption) = block.get("caption").and_then(Value::as_str)
-                    && !caption.trim().is_empty()
-                {
-                    out.push_str(caption.trim());
-                    out.push('\n');
+                for caption in captions(block) {
+                    if !caption.trim().is_empty() {
+                        out.push_str(caption.trim());
+                        out.push('\n');
+                    }
                 }
             }
             _ => {}
@@ -188,6 +236,24 @@ mod tests {
         ];
         assert_eq!(mentions(&blocks), ["gandalf", "frodo"]);
         assert_eq!(plain_text(&blocks), "Avec Gandalf et Frodon\nGandalf\n@sam");
+    }
+
+    #[test]
+    fn gallery_is_checked_and_its_captions_are_searched() {
+        let image = |caption: &str| serde_json::json!({ "id": caption, "assetId": "x.png", "caption": caption });
+        let gallery = serde_json::json!([{ "id": "g", "type": "image",
+            "images": [image("Fondcombe"), image(" "), image("La vallée")] }]);
+        let blocks = parse(&gallery.to_string()).unwrap();
+        assert_eq!(plain_text(&blocks), "Fondcombe\nLa vallée");
+
+        assert!(parse(r#"[{ "id": "g", "type": "image", "images": [] }]"#).is_ok());
+        assert!(parse(r#"[{ "id": "g", "type": "image", "images": {} }]"#).is_err());
+        assert!(parse(r#"[{ "id": "g", "type": "image", "images": ["x.png"] }]"#).is_err());
+        let too_many: Vec<Value> = (0..=MAX_GALLERY_IMAGES)
+            .map(|i| image(&i.to_string()))
+            .collect();
+        let too_many = serde_json::json!([{ "id": "g", "type": "image", "images": too_many }]);
+        assert!(parse(&too_many.to_string()).is_err());
     }
 
     #[test]

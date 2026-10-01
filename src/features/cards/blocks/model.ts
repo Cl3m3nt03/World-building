@@ -13,8 +13,15 @@ export type TextBlock = {
   /** Help question of a guided template section, shown until the section is written. */
   prompt?: string;
 };
-/** An image of the media library, with a caption. `assetId` is null until one is chosen. */
-export type ImageBlock = { id: string; type: "image"; assetId: string | null; caption: string };
+/** An image of a gallery: a media library image with its own caption. */
+export type GalleryImage = { id: string; assetId: string; caption: string };
+/**
+ * Images of the media library shown one at a time, with arrows and
+ * thumbnails (M3 step 3.10). Empty until images are chosen.
+ */
+export type ImageBlock = { id: string; type: "image"; images: GalleryImage[] };
+/** Most images in one image block (also checked by the Rust side). */
+export const MAX_GALLERY_IMAGES = 50;
 /** An action of a 5e stat block ("Épée longue", "Attaque au corps à corps…"). */
 export type StatAction = { id: string; name: string; description: string };
 /** A D&D 5e character or creature sheet. */
@@ -45,7 +52,7 @@ export function emptyTextBlock(): TextBlock {
 }
 
 export function emptyImageBlock(): ImageBlock {
-  return { id: newId(), type: "image", assetId: null, caption: "" };
+  return { id: newId(), type: "image", images: [] };
 }
 
 export function emptyStats5eBlock(): Stats5eBlock {
@@ -126,6 +133,26 @@ function readStats5e(id: string, value: Record<string, unknown>): Stats5eBlock {
   };
 }
 
+/**
+ * A saved image block. One saved before galleries (`assetId` and `caption`)
+ * becomes a gallery of that image; images without an asset are dropped.
+ */
+function readImageBlock(id: string, value: Record<string, unknown>): ImageBlock {
+  const saved = Array.isArray(value.images)
+    ? value.images
+    : [{ id: newId(), assetId: value.assetId, caption: value.caption }];
+  const images = saved
+    .filter(isRecord)
+    .filter((image) => typeof image.assetId === "string" && image.assetId !== "")
+    .slice(0, MAX_GALLERY_IMAGES)
+    .map((image) => ({
+      id: typeof image.id === "string" && image.id !== "" ? image.id : newId(),
+      assetId: image.assetId as string,
+      caption: text(image.caption),
+    }));
+  return { id, type: "image", images };
+}
+
 /** A saved block, or `null` if it is unknown or malformed. */
 function readBlock(value: unknown): Block | null {
   if (!isRecord(value) || typeof value.id !== "string") return null;
@@ -135,14 +162,7 @@ function readBlock(value: unknown): Block | null {
     return block;
   }
   if (value.type === "stats5e") return readStats5e(value.id, value);
-  if (value.type === "image") {
-    return {
-      id: value.id,
-      type: "image",
-      assetId: typeof value.assetId === "string" ? value.assetId : null,
-      caption: typeof value.caption === "string" ? value.caption : "",
-    };
-  }
+  if (value.type === "image") return readImageBlock(value.id, value);
   return null;
 }
 
