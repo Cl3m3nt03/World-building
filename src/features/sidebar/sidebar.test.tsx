@@ -28,6 +28,7 @@ const WORLD: WorldInfo = {
   mainImage: null,
   theme: { kind: "default" },
   preferences: { entityDetection: true, autoMentionLinks: true, animateNewLinks: true },
+  storageLimit: null,
   schemaVersion: 7,
   createdAt: "2026-10-01T10:00:00Z",
   lastOpenedAt: "2026-10-01T10:00:00Z",

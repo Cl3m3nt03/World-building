@@ -118,7 +118,9 @@ Cadrage validé par Clément le 01/10/2026 (#111) : liste à plat avec un identi
 ## 3.12 — Stockage : place utilisée et restante, limite (#112)
 **Branche** : `feat/storage` · **Dépend de** : 3.13 (à cadrer ensemble)
 
-- [ ] À cadrer : place utilisée (monde, médiathèque), place restante sur le disque, limite choisie par l'utilisateur et ce qui se passe quand elle est atteinte
+Cadrage validé par Clément le 01/10/2026 (#112) : une limite par monde, l'import refusé quand elle est atteinte.
+
+- [x] Place utilisée (monde : base, médias, sauvegardes ; bibliothèque), place restante sur le disque, limite choisie par monde (avertissement à 90 %, imports refusés à 100 %), filtre « Non utilisés » pour libérer de la place
 
 ## 3.13 — Médiathèque partagée entre les mondes (#113)
 **Branche** : `feat/shared-media` · **Dépend de** : —

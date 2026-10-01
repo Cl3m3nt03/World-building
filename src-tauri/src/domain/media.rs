@@ -155,6 +155,9 @@ pub struct AssetFilter {
     pub kind: Option<AssetKind>,
     /// Fragment of the name.
     pub search: Option<String>,
+    /// Only the assets used nowhere (3.12, to free space). Checked by the
+    /// command, which knows the world's own uses (main image, theme).
+    pub unused: Option<bool>,
 }
 
 fn now() -> String {

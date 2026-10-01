@@ -39,6 +39,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::library::rename_library_asset,
         commands::library::remove_library_asset,
         commands::library::pick_library_asset,
+        commands::library::library_storage,
         commands::documents::list_documents,
         commands::documents::mark_document_opened,
         commands::documents::recent_documents,
@@ -101,6 +102,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::world::delete_world,
         commands::world::set_world_theme,
         commands::world::set_world_preferences,
+        commands::world::world_storage,
+        commands::world::set_world_storage_limit,
         closing::finish_close,
         commands::world::set_world_main_image,
     ])

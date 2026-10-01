@@ -25,6 +25,7 @@ use crate::error::{AppError, AppResult};
 
 pub mod assets;
 pub mod preferences;
+pub mod storage;
 pub mod theme;
 
 pub use preferences::WorldPreferences;
@@ -85,6 +86,14 @@ pub struct WorldFile {
         skip_serializing_if = "WorldPreferences::is_default"
     )]
     pub preferences: WorldPreferences,
+    /// Most bytes the world may take on the disk (3.12): imports are refused
+    /// beyond. Absent: no limit. Read tolerantly (an unreadable value is no limit).
+    #[serde(
+        default,
+        deserialize_with = "deserialize_limit",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub storage_limit: Option<u64>,
     pub schema_version: i64,
     #[serde(with = "time::serde::rfc3339")]
     pub created_at: OffsetDateTime,
@@ -106,6 +115,8 @@ pub struct WorldInfo {
     pub main_image: Option<String>,
     pub theme: WorldTheme,
     pub preferences: WorldPreferences,
+    /// Storage limit in bytes, if any (f64: u64 has no safe JS type).
+    pub storage_limit: Option<f64>,
     /// Absolute path of the world folder.
     pub path: String,
     pub schema_version: u32,
@@ -132,6 +143,7 @@ impl OpenWorld {
             main_image: self.file.main_image.clone(),
             theme: self.file.theme.clone(),
             preferences: self.file.preferences,
+            storage_limit: self.file.storage_limit.map(|limit| limit as f64),
             path: self.root.display().to_string(),
             schema_version: u32::try_from(self.file.schema_version).unwrap_or(u32::MAX),
             created_at: format_date(self.file.created_at),
@@ -192,6 +204,18 @@ impl OpenWorld {
     }
 
     /// Sets the writing preferences.
+    /// Sets (or removes, with `None`) the world's storage limit.
+    pub fn set_storage_limit(&mut self, limit: Option<u64>) -> AppResult<()> {
+        let mut file = self.file.clone();
+        file.storage_limit = limit;
+        self.save(file)
+    }
+
+    /// Folder of the world.
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
     pub fn set_preferences(&mut self, preferences: WorldPreferences) -> AppResult<()> {
         let mut file = self.file.clone();
         file.preferences = preferences;
@@ -257,6 +281,23 @@ fn write_world_file(root: &Path, file: &WorldFile) -> AppResult<()> {
     std::fs::write(&tmp, json)?;
     std::fs::rename(&tmp, root.join(WORLD_FILE))?;
     Ok(())
+}
+
+/// Reads the storage limit of `world.json` tolerantly: anything but a whole
+/// number of bytes is no limit (with a warning), never a refusal to open.
+fn deserialize_limit<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = serde_json::Value::deserialize(deserializer)?;
+    match value.as_u64() {
+        Some(limit) => Ok(Some(limit)),
+        None if value.is_null() => Ok(None),
+        None => {
+            tracing::warn!(%value, "unreadable storage limit, no limit");
+            Ok(None)
+        }
+    }
 }
 
 /// Reads and checks `world.json` in `root`, without opening the world.
@@ -439,6 +480,7 @@ async fn create_in(
         main_image: None,
         theme: WorldTheme::Default,
         preferences: WorldPreferences::default(),
+        storage_limit: None,
         schema_version: db::latest_version(migrator),
         created_at: created,
         updated_at: created,

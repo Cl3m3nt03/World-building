@@ -203,3 +203,20 @@ test('"Add to the library" copies an image of the world into the library', async
   ).toBeTruthy();
   expect(calls).toContainEqual({ command: "add_assets_to_library", payload: { ids: [IMAGE.id] } });
 });
+
+test('"Unused" asks the Rust side for the files used nowhere', async () => {
+  renderScreen();
+  await screen.findByText("Carte du monde.png");
+
+  fireEvent.click(screen.getByRole("button", { name: "Non utilisés" }));
+
+  await waitFor(() =>
+    expect(calls).toContainEqual({
+      command: "list_assets",
+      payload: { filter: { kind: null, search: null, unused: true } },
+    }),
+  );
+  expect(screen.getByRole("button", { name: "Non utilisés" }).getAttribute("aria-pressed")).toBe(
+    "true",
+  );
+});

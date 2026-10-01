@@ -19,6 +19,7 @@ function world(id: string, name: string): WorldInfo {
     mainImage: null,
     theme: { kind: "default" },
     preferences: { entityDetection: true, autoMentionLinks: true, animateNewLinks: true },
+    storageLimit: null,
     path: `C:\\Mondes\\${name}`,
     schemaVersion: 6,
     createdAt: "2026-09-29T10:00:00Z",

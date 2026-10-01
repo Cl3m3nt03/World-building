@@ -5,9 +5,12 @@ use std::path::Path;
 
 use tauri::State;
 
+use crate::commands::assets::ImportTarget;
 use crate::domain::media::{Asset, AssetFilter, ImportedAsset};
 use crate::error::{AppError, AppResult};
+use crate::library;
 use crate::state::AppState;
+use crate::world::storage::{self, StorageUsage};
 
 /// Assets of the library, newest first.
 #[tauri::command]
@@ -81,16 +84,23 @@ pub async fn pick_library_asset(
     state: State<'_, AppState>,
     id: String,
 ) -> AppResult<ImportedAsset> {
-    let (pool, assets_dir) = {
-        let guard = state.world.lock().await;
-        let world = guard
-            .as_ref()
-            .ok_or_else(|| AppError::NoWorldOpen("pick_library_asset".into()))?;
-        (world.pool.clone(), world.assets_dir())
-    };
-    state
+    let target = ImportTarget::of_open_world(&state, "pick_library_asset").await?;
+    target.check_room()?;
+    let imported = state
         .library()
         .await?
-        .copy_into_world(&id, &pool, &assets_dir)
+        .copy_into_world(&id, &target.pool, &target.assets_dir)
+        .await?;
+    target.keep_within_limit(imported).await
+}
+
+/// Space used by the library, and left on its disk.
+#[tauri::command]
+#[specta::specta]
+pub async fn library_storage(state: State<'_, AppState>) -> AppResult<StorageUsage> {
+    let root = state.config_dir.join(library::LIBRARY_DIR);
+    state.library().await?;
+    tokio::task::spawn_blocking(move || storage::usage(&root, library::DATABASE_FILE, None))
         .await
+        .map_err(|error| AppError::Internal(format!("storage task failed: {error}")))
 }

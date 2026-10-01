@@ -19,6 +19,7 @@ import {
   useLibraryAssets,
   useRemoveLibraryAsset,
 } from "../hooks/useLibrary";
+import { useLibraryStorage } from "../hooks/useStorage";
 import { RenameAssetDialog } from "./AssetDialogs";
 import { AssetTile } from "./AssetTile";
 
@@ -34,6 +35,7 @@ export function LibrarySection({ enabled }: { enabled: boolean }) {
   const { t, i18n } = useTranslation();
   const assets = useLibraryAssets({ kind: null, search: null }, enabled);
   const importFile = useImportLibraryAsset();
+  const storage = useLibraryStorage(enabled);
   const [renaming, setRenaming] = useState<Asset | null>(null);
   const [removing, setRemoving] = useState<Asset | null>(null);
   const list = assets.data ?? [];
@@ -53,11 +55,20 @@ export function LibrarySection({ enabled }: { enabled: boolean }) {
     <>
       <p className="text-xs text-muted-foreground">{t("library.hint")}</p>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-muted-foreground">
-          {t("library.summary", {
-            count: list.length,
-            size: formatBytes(total, i18n.language),
-          })}
+        <span className="flex flex-col text-sm text-muted-foreground">
+          <span>
+            {t("library.summary", {
+              count: list.length,
+              size: formatBytes(total, i18n.language),
+            })}
+          </span>
+          {typeof storage.data?.available === "number" && (
+            <span className="text-xs">
+              {t("library.available", {
+                available: formatBytes(storage.data.available, i18n.language),
+              })}
+            </span>
+          )}
         </span>
         <Button
           type="button"

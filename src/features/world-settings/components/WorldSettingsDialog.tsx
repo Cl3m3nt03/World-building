@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useCardTypes } from "@/features/card-types";
 import { useAssets } from "@/features/media";
+import { StorageSection } from "@/features/media/components/StorageSection";
 import { ThemeSection } from "@/features/world-theme";
 import type { TranslationKey } from "@/i18n";
 import type { WorldInfo } from "@/lib/bindings";
@@ -161,6 +162,7 @@ export function WorldSettingsDialog({ world }: { world: WorldInfo }) {
                 void navigate({ to: "/world/$worldId/media", params: { worldId: world.id } });
               }}
             />
+            <StorageSection />
           </Panel>
           <Panel value="theme">
             <ThemeSection world={world} />

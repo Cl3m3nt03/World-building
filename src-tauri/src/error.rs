@@ -39,6 +39,9 @@ pub enum AppError {
     /// Applying the database migrations failed; the backup is kept.
     #[error("migration failed: {0}")]
     Migration(String),
+    /// The world reached the storage limit chosen for it: imports are refused.
+    #[error("storage limit reached: {0}")]
+    StorageLimitReached(String),
     /// Anything that should not happen; always a bug.
     #[error("internal error: {0}")]
     Internal(String),
