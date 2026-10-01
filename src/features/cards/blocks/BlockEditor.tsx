@@ -1,9 +1,12 @@
 import {
+  type Active,
   closestCenter,
   DndContext,
   type DragEndEvent,
   KeyboardSensor,
+  type Over,
   PointerSensor,
+  type UniqueIdentifier,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -280,6 +283,9 @@ export function BlockEditor({
   // a block inserted) each apply to the result of the previous one.
   const current = useRef<Block[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // dnd-kit reports a block over its own place right after picking it up:
+  // only a change of position is announced, so "picked up" is not cut short.
+  const lastOver = useRef<UniqueIdentifier | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -345,6 +351,40 @@ export function BlockEditor({
     update((previous) => [...previous.slice(0, index), block, ...previous.slice(index)], true);
   };
 
+  // What screen readers hear while a block is moved (dnd-kit's own texts
+  // are in English and name blocks by their id).
+  const blockAt = (id: UniqueIdentifier | undefined) => {
+    const index = (blocks ?? []).findIndex((block) => block.id === id);
+    const block = blocks?.[index];
+    return {
+      name: block ? t(BLOCK_LABELS[block.type], { index: index + 1 }) : "",
+      position: index + 1,
+      count: blocks?.length ?? 0,
+    };
+  };
+  const accessibility = {
+    screenReaderInstructions: { draggable: t("blocks.dragInstructions") },
+    announcements: {
+      onDragStart: ({ active }: { active: Active }) => {
+        lastOver.current = active.id;
+        return t("blocks.dragPicked", blockAt(active.id));
+      },
+      onDragOver: ({ active, over }: { active: Active; over: Over | null }) => {
+        if (!over || over.id === lastOver.current) return undefined;
+        lastOver.current = over.id;
+        return t("blocks.dragOver", { ...blockAt(over.id), name: blockAt(active.id).name });
+      },
+      onDragMove: () => undefined,
+      onDragEnd: ({ active, over }: { active: Active; over: Over | null }) =>
+        t("blocks.dragDropped", {
+          ...blockAt(over?.id ?? active.id),
+          name: blockAt(active.id).name,
+        }),
+      onDragCancel: ({ active }: { active: Active }) =>
+        t("blocks.dragCancelled", blockAt(active.id)),
+    },
+  };
+
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
     update((previous) => {
@@ -379,7 +419,12 @@ export function BlockEditor({
           )}
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+          accessibility={accessibility}
+        >
           <SortableContext
             items={blocks.map((block) => block.id)}
             strategy={verticalListSortingStrategy}
