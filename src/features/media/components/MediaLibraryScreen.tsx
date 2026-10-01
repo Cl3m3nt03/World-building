@@ -13,8 +13,10 @@ import { useFileDrop } from "../hooks/useFileDrop";
 import { useImportAsset, useImportAssetData } from "../hooks/useImportAsset";
 import { useAddToLibrary } from "../hooks/useLibrary";
 import { type PastedImage, usePastedImages } from "../hooks/usePastedImages";
+import { useWorldStorage } from "../hooks/useStorage";
 import { DeleteAssetDialog, RenameAssetDialog } from "./AssetDialogs";
 import { AssetTile } from "./AssetTile";
+import { StorageWarnings } from "./StorageSection";
 
 const KINDS: { value: AssetKind | null; label: TranslationKey }[] = [
   { value: null, label: "media.filter.all" },
@@ -31,10 +33,13 @@ export function MediaLibraryScreen() {
   const { t } = useTranslation();
   const [kind, setKind] = useState<AssetKind | null>(null);
   const [search, setSearch] = useState("");
+  // Only the files used nowhere, to free space (3.12).
+  const [unused, setUnused] = useState(false);
+  const storage = useWorldStorage();
   const [renaming, setRenaming] = useState<Asset | null>(null);
   const [deleting, setDeleting] = useState<Asset | null>(null);
   const searchId = useId();
-  const assets = useAssets({ kind, search: search.trim() || null });
+  const assets = useAssets({ kind, search: search.trim() || null, unused: unused || null });
   const importFile = useImportAsset();
   const importData = useImportAssetData();
   const addToLibrary = useAddToLibrary();
@@ -98,6 +103,17 @@ export function MediaLibraryScreen() {
             </button>
           ))}
         </fieldset>
+        <button
+          type="button"
+          aria-pressed={unused}
+          onClick={() => setUnused((current) => !current)}
+          className={cn(
+            "glass rounded-full px-3 py-1.5 text-sm text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+            unused && "bg-secondary text-foreground",
+          )}
+        >
+          {t("media.filter.unused")}
+        </button>
         <div className="relative min-w-48 flex-1">
           <Search
             aria-hidden
@@ -115,6 +131,7 @@ export function MediaLibraryScreen() {
         </div>
       </div>
 
+      {storage.data && <StorageWarnings usage={storage.data} />}
       {error && <AppErrorMessage error={error} />}
       {busy && <p className="text-sm text-muted-foreground">{t("media.importing")}</p>}
       <p aria-live="polite" className="text-sm text-muted-foreground empty:hidden">
@@ -132,7 +149,11 @@ export function MediaLibraryScreen() {
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <ImageUp aria-hidden className="size-10 text-muted-foreground" />
             <p className="max-w-sm text-sm text-muted-foreground">
-              {search || kind ? t("media.noMatch") : t("media.empty")}
+              {unused && !search && !kind
+                ? t("media.noUnused")
+                : search || kind || unused
+                  ? t("media.noMatch")
+                  : t("media.empty")}
             </p>
           </div>
         ) : (

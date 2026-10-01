@@ -16,7 +16,7 @@ use crate::world::assets as files;
 
 /// Folder of the library, in the app config directory.
 pub const LIBRARY_DIR: &str = "library";
-const DATABASE_FILE: &str = "library.db";
+pub const DATABASE_FILE: &str = "library.db";
 
 /// Migrations of the library database, embedded in the binary.
 pub static MIGRATOR: Migrator = sqlx::migrate!("./library-migrations");

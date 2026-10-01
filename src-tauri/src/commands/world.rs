@@ -10,6 +10,7 @@ use crate::error::{AppError, AppResult};
 use crate::settings::{self, AppSettings, RecentWorld};
 use crate::state::AppState;
 use crate::thumbnails;
+use crate::world::storage::{self, StorageUsage};
 use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch, WorldPreferences, WorldTheme};
 
 /// Creates a world named `name`, of the given genre, in a new folder inside
@@ -145,6 +146,39 @@ pub async fn set_world_preferences(
         .as_mut()
         .ok_or_else(|| AppError::NoWorldOpen("set_world_preferences".into()))?;
     world.set_preferences(preferences)?;
+    Ok(world.info())
+}
+
+/// Space used by the open world, left on its disk, and its limit (3.12).
+#[tauri::command]
+#[specta::specta]
+pub async fn world_storage(state: State<'_, AppState>) -> AppResult<StorageUsage> {
+    let root = {
+        let guard = state.world.lock().await;
+        let world = guard
+            .as_ref()
+            .ok_or_else(|| AppError::NoWorldOpen("world_storage".into()))?;
+        (world.root().to_path_buf(), world.file.storage_limit)
+    };
+    tokio::task::spawn_blocking(move || storage::usage(&root.0, world::DB_FILE, root.1))
+        .await
+        .map_err(|error| AppError::Internal(format!("storage task failed: {error}")))
+}
+
+/// Sets the open world's storage limit in bytes (at least 10 MB), or removes
+/// it with `null`. Beyond it, imports are refused.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_world_storage_limit(
+    state: State<'_, AppState>,
+    limit: Option<f64>,
+) -> AppResult<WorldInfo> {
+    let limit = storage::validate_limit(limit)?;
+    let mut guard = state.world.lock().await;
+    let world = guard
+        .as_mut()
+        .ok_or_else(|| AppError::NoWorldOpen("set_world_storage_limit".into()))?;
+    world.set_storage_limit(limit)?;
     Ok(world.info())
 }
 

@@ -146,6 +146,7 @@ async fn list_filters_by_kind_and_name() {
     let images = AssetFilter {
         kind: Some(AssetKind::Image),
         search: None,
+        unused: None,
     };
     assert_eq!(
         names(list(fx.pool(), &images).await.unwrap()),
@@ -154,6 +155,7 @@ async fn list_filters_by_kind_and_name() {
     let search = |text: &str| AssetFilter {
         kind: None,
         search: Some(text.into()),
+        unused: None,
     };
     assert_eq!(
         names(list(fx.pool(), &search("CARTE")).await.unwrap()),

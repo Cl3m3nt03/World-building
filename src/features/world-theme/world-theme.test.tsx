@@ -79,6 +79,7 @@ const WORLD: WorldInfo = {
   mainImage: null,
   theme: { kind: "default" },
   preferences: { entityDetection: true, autoMentionLinks: true, animateNewLinks: true },
+  storageLimit: null,
   path: "C:\\Mondes\\Aldoria",
   schemaVersion: 6,
   createdAt: "2026-09-26T10:00:00Z",

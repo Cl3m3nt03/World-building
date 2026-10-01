@@ -37,6 +37,7 @@ const ERROR_KEYS: Record<AppError["code"], TranslationKey> = {
   no_world_open: "errors.no_world_open",
   database: "errors.database",
   migration: "errors.migration",
+  storage_limit_reached: "errors.storage_limit_reached",
   internal: "errors.internal",
 };
 

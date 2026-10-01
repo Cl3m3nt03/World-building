@@ -43,6 +43,8 @@ export const commands = {
 	 *  other assets. Returns the world's asset.
 	 */
 	pickLibraryAsset: (id: string) => typedError<ImportedAsset, AppError>(__TAURI_INVOKE("pick_library_asset", { id })),
+	/**  Space used by the library, and left on its disk. */
+	libraryStorage: () => typedError<StorageUsage, AppError>(__TAURI_INVOKE("library_storage")),
 	/**  Documents of the open world, live or in the trash, by title. */
 	listDocuments: (filter: DocumentFilter) => typedError<Document[], AppError>(__TAURI_INVOKE("list_documents", { filter })),
 	/**  Records that a document was opened (recent documents on Home). */
@@ -196,6 +198,8 @@ export const commands = {
 	mainImage: string | null,
 	theme: WorldTheme,
 	preferences: WorldPreferences,
+	/**  Storage limit in bytes, if any (f64: u64 has no safe JS type). */
+	storageLimit: number | null,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,
@@ -219,6 +223,13 @@ export const commands = {
 	setWorldTheme: (theme: WorldTheme) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_theme", { theme })),
 	/**  Sets the writing preferences of the open world. */
 	setWorldPreferences: (preferences: WorldPreferences) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_preferences", { preferences })),
+	/**  Space used by the open world, left on its disk, and its limit (3.12). */
+	worldStorage: () => typedError<StorageUsage, AppError>(__TAURI_INVOKE("world_storage")),
+	/**
+	 *  Sets the open world's storage limit in bytes (at least 10 MB), or removes
+	 *  it with `null`. Beyond it, imports are refused.
+	 */
+	setWorldStorageLimit: (limit: number | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_storage_limit", { limit })),
 	/**  Closes the app once the front has saved its pending edits. */
 	finishClose: () => typedError<null, AppError>(__TAURI_INVOKE("finish_close")),
 	/**  Sets (asset id) or clears (`null`) the main image of the open world. */
@@ -247,6 +258,8 @@ export type AppError =
 { code: "database"; message: string } | 
 /**  Applying the database migrations failed; the backup is kept. */
 { code: "migration"; message: string } | 
+/**  The world reached the storage limit chosen for it: imports are refused. */
+{ code: "storage_limit_reached"; message: string } | 
 /**  Anything that should not happen; always a bug. */
 { code: "internal"; message: string };
 
@@ -289,6 +302,11 @@ export type AssetFilter = {
 	kind?: AssetKind | null,
 	/**  Fragment of the name. */
 	search?: string | null,
+	/**
+	 *  Only the assets used nowhere (3.12, to free space). Checked by the
+	 *  command, which knows the world's own uses (main image, theme).
+	 */
+	unused?: boolean | null,
 };
 
 export type AssetKind = "image" | "audio" | "other";
@@ -587,6 +605,23 @@ export type SidebarView = {
 
 export type SortBy = "manual" | "name" | "created";
 
+/**  Sizes in bytes (f64: u64 has no safe JS type). */
+export type StorageUsage = {
+	/**  The database with its journal files. */
+	database: number | null,
+	/**  Files of `assets/`. */
+	media: number | null,
+	mediaCount: number,
+	/**  Database copies made before migrations (`world.db.bak-*`). */
+	backups: number | null,
+	/**  The whole folder. */
+	total: number | null,
+	/**  Space left on the folder's disk, if it can be read. */
+	available: number | null,
+	/**  Limit chosen for the world, if any. */
+	limit: number | null,
+};
+
 /**  A section of a guided template: a title and a question to help write it. */
 export type TemplateSection = {
 	title: string,
@@ -635,6 +670,8 @@ export type WorldInfo = {
 	mainImage: string | null,
 	theme: WorldTheme,
 	preferences: WorldPreferences,
+	/**  Storage limit in bytes, if any (f64: u64 has no safe JS type). */
+	storageLimit: number | null,
 	/**  Absolute path of the world folder. */
 	path: string,
 	schemaVersion: number,

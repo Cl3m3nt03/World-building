@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-library-storage"
+description = "Enables the library_storage command without any pre-configured scope."
+commands.allow = ["library_storage"]
+
+[[permission]]
+identifier = "deny-library-storage"
+description = "Denies the library_storage command without any pre-configured scope."
+commands.deny = ["library_storage"]

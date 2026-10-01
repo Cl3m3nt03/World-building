@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-world-storage-limit"
+description = "Enables the set_world_storage_limit command without any pre-configured scope."
+commands.allow = ["set_world_storage_limit"]
+
+[[permission]]
+identifier = "deny-set-world-storage-limit"
+description = "Denies the set_world_storage_limit command without any pre-configured scope."
+commands.deny = ["set_world_storage_limit"]
