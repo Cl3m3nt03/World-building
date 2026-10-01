@@ -98,6 +98,24 @@ beforeEach(() => {
         return TYPES;
       case "get_card":
         return cards.get(args.id as string);
+      case "document_tree":
+        return {
+          folders: [],
+          documents: [...cards.values()]
+            .filter((card) => card.trashedAt === null)
+            .map((card, index) => ({
+              id: card.id,
+              kind: "card",
+              title: card.title,
+              folderId: null,
+              parentId: null,
+              sortOrder: index,
+              pinnedOrder: null,
+              createdAt: card.createdAt,
+              typeId: card.typeId,
+              imageAssetId: null,
+            })),
+        };
       case "list_cards":
         return [...cards.values()].filter((card) => (card.trashedAt !== null) === args.trashed);
       case "create_card": {
@@ -258,17 +276,21 @@ test("moving a card to the trash goes back to the empty workspace", async () => 
 
 test("the sidebar lists the cards and highlights the open one", async () => {
   cards.set("bree", newCard("bree", "Bree", "city"));
-  await renderAt("/world/demo/world/card/aragorn");
+  const router = await renderAt("/world/demo/world/card/aragorn");
 
-  const list = await screen.findByRole("list", { name: "Cartes" });
-  const links = await waitFor(() => {
-    const found = Array.from(list.querySelectorAll("a"));
+  const tree = await screen.findByRole("tree", { name: "Documents du monde" });
+  const items = await waitFor(() => {
+    const found = Array.from(tree.querySelectorAll<HTMLElement>("[role=treeitem]"));
     expect(found).toHaveLength(2);
     return found;
   });
-  expect(links.map((link) => link.textContent)).toEqual(["Aragorn", "Bree"]);
-  expect(links[0]?.getAttribute("aria-current")).toBe("page");
-  expect(links[1]?.getAttribute("aria-current")).toBeNull();
+  expect(items.map((item) => item.textContent)).toEqual(["Aragorn", "Bree"]);
+  expect(items.map((item) => item.getAttribute("aria-selected"))).toEqual(["true", "false"]);
+
+  await act(async () => {
+    fireEvent.click(items[1] as HTMLElement);
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/bree"));
 });
 
 test("a right click in the sidebar and the New card button open the creation menu", async () => {
@@ -276,7 +298,7 @@ test("a right click in the sidebar and the New card button open the creation men
   const sidebar = await screen.findByRole("complementary", { name: "Barre latérale" });
 
   await act(async () => {
-    fireEvent.contextMenu(sidebar.querySelector("ul, p") as HTMLElement);
+    fireEvent.contextMenu(sidebar.querySelector("[role=tree], p") as HTMLElement);
   });
   expect(await screen.findByRole("menuitem", { name: "Personnage" })).toBeTruthy();
   await act(async () => {

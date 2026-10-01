@@ -243,7 +243,7 @@
   "cardTypes.deleteCards_one": "Ce type a une carte. Où la déplacer ?",
   "cardTypes.deleteCards_other": "Ce type a {{count}} cartes. Où les déplacer ?",
   "cardTypes.moveTo": "Type de destination",
-  "sidebar.cards": "Cartes",
+  "sidebar.tree": "Documents du monde",
   "sidebar.newCard": "Nouvelle carte",
   "trash.title": "Corbeille",
   "trash.description": "Les cartes supprimées restent ici tant que la corbeille n'est pas vidée.",

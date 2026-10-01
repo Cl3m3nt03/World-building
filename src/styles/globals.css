@@ -74,6 +74,13 @@
   backdrop-filter: blur(var(--bz-blur-panel));
 }
 
+/* Native scrolling (e.g. a virtualized list) with a thin bar like the Radix
+   ScrollArea's, instead of the Windows bar and its arrows. */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bz-border) transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

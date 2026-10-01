@@ -23,7 +23,9 @@ export async function openTab(name: "Home" | "World") {
   await $(`//*[@role="tab"][@aria-label="${name}"]`).click();
 }
 
-export const sidebarLink = (title: string) => $(`//aside//a[normalize-space()="${title}"]`);
+/** A row of the sidebar tree, by its name. */
+export const sidebarItem = (title: string) =>
+  $(`//aside//*[@role="treeitem"][normalize-space()="${title}"]`);
 
 /** Creates a card of `type` from the sidebar and names it `title`. */
 export async function createCard(type: string, title: string) {
@@ -49,11 +51,11 @@ export async function createCard(type: string, title: string) {
   await browser.waitUntil(async () => (await titleField.getValue()) === title, {
     timeoutMsg: `typing did not replace the title of the new ${type} card`,
   });
-  await sidebarLink(title).waitForDisplayed({ timeoutMsg: `${title} never showed in the sidebar` });
+  await sidebarItem(title).waitForDisplayed({ timeoutMsg: `${title} never showed in the sidebar` });
 }
 
 export async function openCard(title: string) {
-  await sidebarLink(title).click();
+  await sidebarItem(title).click();
   await browser.waitUntil(async () => (await $("aria/Nom de la carte").getValue()) === title, {
     timeoutMsg: `the card ${title} did not open`,
   });

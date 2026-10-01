@@ -243,7 +243,7 @@
   "cardTypes.deleteCards_one": "This type has one card. Where should it go?",
   "cardTypes.deleteCards_other": "This type has {{count}} cards. Where should they go?",
   "cardTypes.moveTo": "Destination type",
-  "sidebar.cards": "Cards",
+  "sidebar.tree": "World documents",
   "sidebar.newCard": "New card",
   "trash.title": "Trash",
   "trash.description": "Deleted cards stay here until the trash is emptied.",

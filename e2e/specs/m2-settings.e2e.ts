@@ -104,7 +104,7 @@ describe("M2: world settings, theme and writing preferences", () => {
     await $("h1=Mondes").waitForDisplayed();
     await createWorld("Númenor", "Science-fiction");
     await openTab("World");
-    await expect($("aside a")).not.toBeExisting();
+    await expect($("aside [role=treeitem]")).not.toBeExisting();
     await openTab("Home");
     await $("button=Types").click();
     await $('//*[@role="dialog"]//button[normalize-space()="Vaisseau"]').waitForDisplayed();
