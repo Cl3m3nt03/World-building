@@ -37,6 +37,24 @@ pub async fn move_document(
     tree::move_document(&pool, &id, &place, index as usize).await
 }
 
+/// Pins a document (at the end of the pins) or unpins it.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_document_pinned(
+    state: State<'_, AppState>,
+    id: String,
+    pinned: bool,
+) -> AppResult<()> {
+    tree::set_pinned(&pool(&state, "set_document_pinned").await?, &id, pinned).await
+}
+
+/// Moves a pinned document to `index` among the pins.
+#[tauri::command]
+#[specta::specta]
+pub async fn move_pin(state: State<'_, AppState>, id: String, index: u32) -> AppResult<()> {
+    tree::move_pin(&pool(&state, "move_pin").await?, &id, index as usize).await
+}
+
 /// Creates a folder at the end of `parentId` (the root when `null`).
 #[tauri::command]
 #[specta::specta]

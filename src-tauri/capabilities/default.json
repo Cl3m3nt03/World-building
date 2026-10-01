@@ -21,6 +21,8 @@
     "allow-update-folder",
     "allow-move-folder",
     "allow-delete-folder",
+    "allow-set-document-pinned",
+    "allow-move-pin",
     "allow-mark-document-opened",
     "allow-recent-documents",
     "allow-rename-document",
