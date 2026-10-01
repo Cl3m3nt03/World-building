@@ -1,8 +1,8 @@
 # ADR 0005 — État d'interface d'un monde dans `world.db`
 
-- **Statut** : Proposé (à valider par Clément avec la PR de l'étape 3.9)
+- **Statut** : Accepté (validé par Clément le 2026-10-01)
 - **Date** : 2026-10-01
-- **Décideur** : Claude, sur la demande de l'issue #133 (« emplacement à décider dans la PR »)
+- **Décideur** : Clément, sur proposition de Claude (issue #133)
 
 ## Contexte
 
