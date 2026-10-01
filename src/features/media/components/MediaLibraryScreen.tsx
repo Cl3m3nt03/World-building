@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useAssets } from "../hooks/useAssets";
 import { useFileDrop } from "../hooks/useFileDrop";
 import { useImportAsset, useImportAssetData } from "../hooks/useImportAsset";
+import { useAddToLibrary } from "../hooks/useLibrary";
 import { type PastedImage, usePastedImages } from "../hooks/usePastedImages";
 import { DeleteAssetDialog, RenameAssetDialog } from "./AssetDialogs";
 import { AssetTile } from "./AssetTile";
@@ -36,6 +37,9 @@ export function MediaLibraryScreen() {
   const assets = useAssets({ kind, search: search.trim() || null });
   const importFile = useImportAsset();
   const importData = useImportAssetData();
+  const addToLibrary = useAddToLibrary();
+  // Said after an image is added to the library (a polite live region reads it).
+  const [notice, setNotice] = useState("");
 
   const importPaths = useCallback(
     (paths: string[]) => {
@@ -60,7 +64,7 @@ export function MediaLibraryScreen() {
     else if (typeof picked === "string") importPaths([picked]);
   };
 
-  const error = importFile.error ?? importData.error ?? assets.error;
+  const error = importFile.error ?? importData.error ?? addToLibrary.error ?? assets.error;
   const busy = importFile.isPending || importData.isPending;
 
   return (
@@ -113,6 +117,9 @@ export function MediaLibraryScreen() {
 
       {error && <AppErrorMessage error={error} />}
       {busy && <p className="text-sm text-muted-foreground">{t("media.importing")}</p>}
+      <p aria-live="polite" className="text-sm text-muted-foreground empty:hidden">
+        {notice}
+      </p>
 
       <section
         aria-label={t("media.title")}
@@ -136,6 +143,16 @@ export function MediaLibraryScreen() {
                   asset={asset}
                   onRename={() => setRenaming(asset)}
                   onDelete={() => setDeleting(asset)}
+                  onAddToLibrary={() =>
+                    addToLibrary.mutate([asset.id], {
+                      onSuccess: ([added]) =>
+                        setNotice(
+                          added?.created
+                            ? t("media.addedToLibrary", { name: asset.name })
+                            : t("media.alreadyInLibrary", { name: asset.name }),
+                        ),
+                    })
+                  }
                 />
               </li>
             ))}

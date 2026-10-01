@@ -1,4 +1,4 @@
-import { FileQuestion, MoreHorizontal, Music, Pencil, Trash2 } from "lucide-react";
+import { FileQuestion, Library, MoreHorizontal, Music, Pencil, Trash2 } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -24,13 +24,26 @@ type AssetTileProps = {
   asset: Asset;
   onRename: () => void;
   onDelete: () => void;
+  /** Offers "Add to the library" (a world's images, ADR 0006). */
+  onAddToLibrary?: (() => void) | undefined;
+  /** The asset is in the library shared by the worlds. */
+  library?: boolean;
+  /** Label of the delete action (default "Delete"). */
+  deleteLabel?: string;
 };
 
 /**
  * One file of the media library: preview, name, kind and size. Actions from
  * the "…" button, a right click, or F2 / Delete on the focused "…" button.
  */
-export function AssetTile({ asset, onRename, onDelete }: AssetTileProps) {
+export function AssetTile({
+  asset,
+  onRename,
+  onDelete,
+  onAddToLibrary,
+  library = false,
+  deleteLabel,
+}: AssetTileProps) {
   const { t, i18n } = useTranslation();
   const Icon = asset.kind === "audio" ? Music : FileQuestion;
 
@@ -50,7 +63,12 @@ export function AssetTile({ asset, onRename, onDelete }: AssetTileProps) {
         <figure className="glass relative flex flex-col overflow-hidden rounded-lg">
           <div className="flex aspect-square items-center justify-center overflow-hidden bg-muted">
             {asset.kind === "image" ? (
-              <AssetImage assetId={asset.id} alt={asset.name} className="size-full object-cover" />
+              <AssetImage
+                assetId={asset.id}
+                alt={asset.name}
+                library={library}
+                className="size-full object-cover"
+              />
             ) : (
               <Icon aria-hidden className="size-10 text-muted-foreground" />
             )}
@@ -83,9 +101,15 @@ export function AssetTile({ asset, onRename, onDelete }: AssetTileProps) {
                 {t("media.rename")}
                 <DropdownMenuShortcut>{t("media.renameKey")}</DropdownMenuShortcut>
               </DropdownMenuItem>
+              {onAddToLibrary && asset.kind === "image" && (
+                <DropdownMenuItem onSelect={onAddToLibrary}>
+                  <Library />
+                  {t("media.addToLibrary")}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                 <Trash2 />
-                {t("media.delete")}
+                {deleteLabel ?? t("media.delete")}
                 <DropdownMenuShortcut>{t("media.deleteKey")}</DropdownMenuShortcut>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -98,9 +122,15 @@ export function AssetTile({ asset, onRename, onDelete }: AssetTileProps) {
           {t("media.rename")}
           <ContextMenuShortcut>{t("media.renameKey")}</ContextMenuShortcut>
         </ContextMenuItem>
+        {onAddToLibrary && asset.kind === "image" && (
+          <ContextMenuItem onSelect={onAddToLibrary}>
+            <Library />
+            {t("media.addToLibrary")}
+          </ContextMenuItem>
+        )}
         <ContextMenuItem variant="destructive" onSelect={onDelete}>
           <Trash2 />
-          {t("media.delete")}
+          {deleteLabel ?? t("media.delete")}
           <ContextMenuShortcut>{t("media.deleteKey")}</ContextMenuShortcut>
         </ContextMenuItem>
       </ContextMenuContent>

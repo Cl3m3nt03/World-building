@@ -65,6 +65,10 @@ beforeEach(() => {
     if (command === "import_asset_data") {
       return { asset: IMAGE, created: true };
     }
+    if (command === "add_assets_to_library") {
+      const { ids } = payload as { ids: string[] };
+      return ids.map((id) => ({ asset: assets.find((asset) => asset.id === id), created: true }));
+    }
     return null;
   });
 });
@@ -181,4 +185,21 @@ test("deletes an unused asset without a usage warning", async () => {
   fireEvent.click(confirm);
 
   await waitFor(() => expect(screen.queryByText("Taverne.mp3")).toBeNull());
+});
+
+test('"Add to the library" copies an image of the world into the library', async () => {
+  assets = [IMAGE];
+  renderScreen();
+
+  const actions = await screen.findByRole("button", { name: "Actions pour Carte du monde.png" });
+  await act(async () => {
+    actions.focus();
+    fireEvent.keyDown(actions, { key: "Enter" });
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Ajouter à la bibliothèque" }));
+
+  expect(
+    await screen.findByText("« Carte du monde.png » est dans la bibliothèque BuilderZ."),
+  ).toBeTruthy();
+  expect(calls).toContainEqual({ command: "add_assets_to_library", payload: { ids: [IMAGE.id] } });
 });

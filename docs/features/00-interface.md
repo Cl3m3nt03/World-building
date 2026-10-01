@@ -84,13 +84,19 @@ Le genre d'un monde détermine les **types de cartes proposés par défaut** à 
 
 Ces réglages sont stockés dans le dossier de config de l'app, pas dans un monde. Ils s'ouvrent dans un dialogue **Réglages** (bouton engrenage), accessible depuis la barre du haut d'un monde ouvert et depuis la liste des mondes. Le dialogue contient aussi une section **À propos** (version et dossiers utilisés). Le dossier par défaut des nouveaux mondes est proposé par « Nouveau monde » ; « Par défaut » revient à `Documents\BuilderZ`.
 
+**Bibliothèque BuilderZ (M3, 3.13, ADR 0006)** : une section des réglages montre les images partagées entre les mondes, avec leur nombre et leur taille totale. « Importer » y ajoute des images du PC ; chaque vignette se **renomme** et se **retire** de la bibliothèque (confirmé : les mondes qui l'utilisent gardent leur copie). La bibliothèque vit dans le dossier de configuration de l'app, hors de tout monde.
+
 ## Médiathèque
 
 C'est la galerie de tous les fichiers importés dans le monde (images, sons et autres fichiers), en grille de vignettes avec le nom, le type et la taille. On y accède depuis l'onglet Home (bloc « Gérer »). On importe avec le bouton « Importer » (plusieurs fichiers à la fois), en glissant des fichiers sur la fenêtre, ou en collant une image (`Ctrl+V`, hors champ de saisie ; elle est nommée « Image collée » suivi de la date). On filtre par type (Tout, Images, Sons, Autres) et on recherche par nom. Chaque vignette a un bouton « … » et un menu au clic droit avec **Renommer** et **Supprimer** ; quand le bouton « … » a le focus, `F2` renomme et `Suppr` supprime. Renommer ne change que le nom affiché : le fichier garde son nom sur le disque. La suppression est toujours confirmée, et si le fichier est encore utilisé (par exemple comme image principale du monde), la confirmation indique où avant de proposer « Supprimer quand même ». Tous les sélecteurs d'image de l'app (carte, map, canvas…) passent par la médiathèque.
 
+**Bibliothèque BuilderZ (M3, 3.13)** : le menu d'une image propose aussi « **Ajouter à la bibliothèque** » : elle est copiée, avec son nom, dans la bibliothèque partagée entre les mondes (un message le confirme, ou dit qu'elle y était déjà). Les sons et autres fichiers ne vont pas dans la bibliothèque.
+
 ### Sélecteur d'image
 
 C'est une fenêtre commune à tous les endroits où l'on choisit une image (image principale du monde, puis cartes, maps et canvas). Elle affiche les images de la médiathèque en grille, avec une recherche par nom. On sélectionne d'un clic, puis on valide avec « Choisir » ; un double-clic valide directement. Au clavier, les flèches parcourent la grille, `Début` et `Fin` vont à la première et à la dernière image, et `Entrée` valide. Le bouton « Importer une image » ouvre l'explorateur de fichiers : l'image importée entre dans la médiathèque et est choisie aussitôt. L'image actuelle est présélectionnée à l'ouverture.
+
+Deux onglets (M3, 3.13) : **Ce monde** (la médiathèque du monde, par défaut) et **Bibliothèque BuilderZ** (les images partagées entre les mondes). Choisir une image de la bibliothèque la **copie dans le monde** (sans doublon si elle y est déjà), puis le monde l'utilise comme ses autres médias. Le sélecteur peut aussi servir à choisir **plusieurs images** (galerie d'un bloc image, 3.10) : on coche au clic ou avec Espace, puis « Ajouter N images ».
 
 ## Radio
 

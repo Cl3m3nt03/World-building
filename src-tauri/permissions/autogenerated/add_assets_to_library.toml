@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-assets-to-library"
+description = "Enables the add_assets_to_library command without any pre-configured scope."
+commands.allow = ["add_assets_to_library"]
+
+[[permission]]
+identifier = "deny-add-assets-to-library"
+description = "Denies the add_assets_to_library command without any pre-configured scope."
+commands.deny = ["add_assets_to_library"]

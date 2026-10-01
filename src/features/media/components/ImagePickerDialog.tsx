@@ -12,10 +12,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { openDialog as pickFiles } from "@/lib/dialogs";
 import { cn } from "@/lib/utils";
 import { useAssets } from "../hooks/useAssets";
 import { useImportAsset } from "../hooks/useImportAsset";
+import { useLibraryAssets, usePickFromLibrary } from "../hooks/useLibrary";
 import { AssetImage } from "./AssetImage";
 
 /** Extensions offered by the import dialog (the Rust side detects the kind). */
@@ -43,6 +45,9 @@ type ImagePickerDialogProps = {
     }
 );
 
+/** Where the images come from: the open world, or the library shared by the worlds. */
+type Source = "world" | "library";
+
 /** Number of columns of a CSS grid, from the positions of its items. */
 function columnCount(items: HTMLElement[]): number {
   const top = items[0]?.offsetTop;
@@ -63,10 +68,15 @@ export function ImagePickerDialog(props: ImagePickerDialogProps) {
   // The image under the keyboard cursor, and (several images) those ticked.
   const [selected, setSelected] = useState<string | null>(selectedId);
   const [ticked, setTicked] = useState<string[]>([]);
+  const [source, setSource] = useState<Source>("world");
   const listRef = useRef<HTMLDivElement>(null);
   const searchId = useId();
-  const images = useAssets({ kind: "image", search: search.trim() || null });
+  const filter = { kind: "image" as const, search: search.trim() || null };
+  const worldImages = useAssets(filter);
+  const libraryImages = useLibraryAssets(filter, open && source === "library");
+  const images = source === "world" ? worldImages : libraryImages;
   const importFile = useImportAsset();
+  const fromLibrary = usePickFromLibrary();
   const list = images.data ?? [];
 
   useEffect(() => {
@@ -74,22 +84,43 @@ export function ImagePickerDialog(props: ImagePickerDialogProps) {
       setSelected(selectedId);
       setTicked([]);
       setSearch("");
+      setSource("world");
       importFile.reset();
+      fromLibrary.reset();
     }
-  }, [open, selectedId, importFile.reset]);
+  }, [open, selectedId, importFile.reset, fromLibrary.reset]);
 
-  const pick = (id: string) => {
-    if (props.multiple) props.onPickMany(ticked.length > 0 ? ticked : [id]);
-    else props.onPick(id);
+  const changeSource = (value: string) => {
+    if (value !== "world" && value !== "library") return;
+    setSource(value);
+    setSelected(value === "world" ? selectedId : null);
+    setTicked([]);
+  };
+
+  /**
+   * Hands the chosen images to the caller and closes. Library images are
+   * first copied into the world (ADR 0006): the caller gets world assets.
+   */
+  const finish = async (ids: string[]) => {
+    let chosen = ids;
+    if (source === "library") {
+      chosen = [];
+      try {
+        for (const id of ids) chosen.push((await fromLibrary.mutateAsync(id)).asset.id);
+      } catch {
+        return; // The error shows in the dialog, which stays open.
+      }
+    }
+    const first = chosen[0];
+    if (!first) return;
+    if (props.multiple) props.onPickMany(chosen);
+    else props.onPick(first);
     onOpenChange(false);
   };
+  const pick = (id: string) => void finish(props.multiple && ticked.length > 0 ? ticked : [id]);
   const confirm = () => {
-    if (props.multiple && ticked.length > 0) {
-      props.onPickMany(ticked);
-      onOpenChange(false);
-    } else if (selected) {
-      pick(selected);
-    }
+    if (props.multiple && ticked.length > 0) void finish(ticked);
+    else if (selected) pick(selected);
   };
   const toggle = (id: string) =>
     setTicked((current) =>
@@ -112,6 +143,8 @@ export function ImagePickerDialog(props: ImagePickerDialogProps) {
     });
     const paths = typeof chosen === "string" ? [chosen] : (chosen ?? []);
     if (paths.length === 0) return;
+    // Imported files go to the open world: its tab shows them.
+    if (source === "library") changeSource("world");
     if (!props.multiple) {
       importFile.mutate(paths[0] as string, {
         onSuccess: ({ asset }) => {
@@ -173,6 +206,65 @@ export function ImagePickerDialog(props: ImagePickerDialogProps) {
     items[index]?.focus();
   };
 
+  const gridView = () =>
+    images.data && list.length === 0 ? (
+      <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
+        <ImageUp aria-hidden className="size-10 text-muted-foreground" />
+        <p className="max-w-sm text-sm text-muted-foreground">
+          {search
+            ? t("media.noMatch")
+            : source === "library"
+              ? t("imagePicker.libraryEmpty")
+              : t("imagePicker.empty")}
+        </p>
+      </div>
+    ) : (
+      <div
+        ref={listRef}
+        role="listbox"
+        aria-label={t("imagePicker.listLabel")}
+        aria-multiselectable={props.multiple ? true : undefined}
+        className="grid min-h-0 flex-1 grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3 overflow-y-auto p-1"
+      >
+        {list.map((asset) => (
+          <div
+            key={asset.id}
+            role="option"
+            aria-selected={props.multiple ? ticked.includes(asset.id) : asset.id === selected}
+            tabIndex={asset.id === focusable ? 0 : -1}
+            onClick={() => choose(asset.id)}
+            onDoubleClick={() => (props.multiple ? undefined : pick(asset.id))}
+            onKeyDown={onKeyDown}
+            className={cn(
+              "glass flex cursor-pointer flex-col overflow-hidden rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              (props.multiple ? ticked.includes(asset.id) : asset.id === selected) &&
+                "ring-2 ring-primary",
+            )}
+          >
+            <div className="relative aspect-square overflow-hidden bg-muted">
+              {props.multiple && ticked.includes(asset.id) && (
+                <span
+                  aria-hidden
+                  className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
+                >
+                  {ticked.indexOf(asset.id) + 1}
+                </span>
+              )}
+              <AssetImage
+                assetId={asset.id}
+                alt=""
+                library={source === "library"}
+                className="size-full object-cover"
+              />
+            </div>
+            <span className="truncate p-2 text-xs" title={asset.name}>
+              {asset.name}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
   const focusable = list.some((asset) => asset.id === selected) ? selected : list[0]?.id;
 
   return (
@@ -209,8 +301,8 @@ export function ImagePickerDialog(props: ImagePickerDialogProps) {
           </Button>
         </div>
 
-        {(importFile.error ?? images.error) && (
-          <AppErrorMessage error={importFile.error ?? images.error} />
+        {(importFile.error ?? fromLibrary.error ?? images.error) && (
+          <AppErrorMessage error={importFile.error ?? fromLibrary.error ?? images.error} />
         )}
         {importFile.isSuccess && importFile.data.asset.kind !== "image" && (
           <p role="alert" className="text-sm text-destructive">
@@ -218,54 +310,19 @@ export function ImagePickerDialog(props: ImagePickerDialogProps) {
           </p>
         )}
 
-        {images.data && list.length === 0 ? (
-          <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
-            <ImageUp aria-hidden className="size-10 text-muted-foreground" />
-            <p className="max-w-sm text-sm text-muted-foreground">
-              {search ? t("media.noMatch") : t("imagePicker.empty")}
-            </p>
-          </div>
-        ) : (
-          <div
-            ref={listRef}
-            role="listbox"
-            aria-label={t("imagePicker.listLabel")}
-            aria-multiselectable={props.multiple ? true : undefined}
-            className="grid min-h-0 flex-1 grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3 overflow-y-auto p-1"
-          >
-            {list.map((asset) => (
-              <div
-                key={asset.id}
-                role="option"
-                aria-selected={props.multiple ? ticked.includes(asset.id) : asset.id === selected}
-                tabIndex={asset.id === focusable ? 0 : -1}
-                onClick={() => choose(asset.id)}
-                onDoubleClick={() => (props.multiple ? undefined : pick(asset.id))}
-                onKeyDown={onKeyDown}
-                className={cn(
-                  "glass flex cursor-pointer flex-col overflow-hidden rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                  (props.multiple ? ticked.includes(asset.id) : asset.id === selected) &&
-                    "ring-2 ring-primary",
-                )}
-              >
-                <div className="relative aspect-square overflow-hidden bg-muted">
-                  {props.multiple && ticked.includes(asset.id) && (
-                    <span
-                      aria-hidden
-                      className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
-                    >
-                      {ticked.indexOf(asset.id) + 1}
-                    </span>
-                  )}
-                  <AssetImage assetId={asset.id} alt="" className="size-full object-cover" />
-                </div>
-                <span className="truncate p-2 text-xs" title={asset.name}>
-                  {asset.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <Tabs value={source} onValueChange={changeSource} className="min-h-0 flex-1">
+          <TabsList aria-label={t("imagePicker.sourceLabel")}>
+            <TabsTrigger value="world">{t("imagePicker.sourceWorld")}</TabsTrigger>
+            <TabsTrigger value="library">{t("imagePicker.sourceLibrary")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="world" className="flex min-h-0 flex-col">
+            {gridView()}
+          </TabsContent>
+          <TabsContent value="library" className="flex min-h-0 flex-col gap-2">
+            <p className="text-xs text-muted-foreground">{t("imagePicker.libraryHint")}</p>
+            {gridView()}
+          </TabsContent>
+        </Tabs>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>

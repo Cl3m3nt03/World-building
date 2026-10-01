@@ -254,7 +254,8 @@ pub async fn import_bytes(
     result
 }
 
-async fn import_named(
+/// Imports `source` under `name` (its file name when `None`).
+pub(crate) async fn import_named(
     pool: &SqlitePool,
     assets_dir: &Path,
     source: &Path,

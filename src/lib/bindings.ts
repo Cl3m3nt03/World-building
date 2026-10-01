@@ -28,6 +28,21 @@ export const commands = {
 	deleteAsset: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_asset", { id })),
 	/**  Where an asset is used, to warn before deleting it. */
 	assetUsages: (id: string) => typedError<AssetUsage[], AppError>(__TAURI_INVOKE("asset_usages", { id })),
+	/**  Assets of the library, newest first. */
+	listLibraryAssets: (filter: AssetFilter) => typedError<Asset[], AppError>(__TAURI_INVOKE("list_library_assets", { filter })),
+	/**  Copies a file of the PC into the library. */
+	importLibraryAsset: (path: string) => typedError<ImportedAsset, AppError>(__TAURI_INVOKE("import_library_asset", { path })),
+	/**  Copies assets of the open world into the library, with their names. */
+	addAssetsToLibrary: (ids: string[]) => typedError<ImportedAsset[], AppError>(__TAURI_INVOKE("add_assets_to_library", { ids })),
+	/**  Changes the name of a library asset (the worlds' copies keep theirs). */
+	renameLibraryAsset: (id: string, name: string) => typedError<Asset, AppError>(__TAURI_INVOKE("rename_library_asset", { id, name })),
+	/**  Removes an asset from the library; the worlds keep their copies. */
+	removeLibraryAsset: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("remove_library_asset", { id })),
+	/**
+	 *  Copies a library asset into the open world, which then uses it like its
+	 *  other assets. Returns the world's asset.
+	 */
+	pickLibraryAsset: (id: string) => typedError<ImportedAsset, AppError>(__TAURI_INVOKE("pick_library_asset", { id })),
 	/**  Documents of the open world, live or in the trash, by title. */
 	listDocuments: (filter: DocumentFilter) => typedError<Document[], AppError>(__TAURI_INVOKE("list_documents", { filter })),
 	/**  Records that a document was opened (recent documents on Home). */

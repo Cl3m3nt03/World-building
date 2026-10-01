@@ -1,5 +1,6 @@
 //! `bzasset://` protocol: serves the files of the open world's `assets/`
-//! folder to the WebView, and nothing else.
+//! folder to the WebView, and nothing else. `bzlibrary://` does the same for
+//! the library shared by the worlds (ADR 0006).
 //!
 //! The URL path must be a well-formed asset id (`<sha256>.<ext>`), checked by
 //! `world::assets::resolve` before any disk access. Tauri's generic `asset:`
@@ -10,11 +11,13 @@ use std::path::Path;
 use tauri::http::{Request, Response, StatusCode, header};
 use tauri::{Manager, Runtime, UriSchemeContext, UriSchemeResponder};
 
+use crate::library;
 use crate::state::AppState;
 use crate::thumbnails;
 use crate::world::assets;
 
 pub const SCHEME: &str = "bzasset";
+pub const LIBRARY_SCHEME: &str = "bzlibrary";
 
 pub fn handle<R: Runtime>(
     context: UriSchemeContext<'_, R>,
@@ -39,6 +42,23 @@ async fn serve<R: Runtime>(app: &tauri::AppHandle<R>, id: &str) -> Response<Vec<
         .as_ref()
         .map(|world| world.assets_dir());
     respond(assets_dir.as_deref(), id).await
+}
+
+/// `bzlibrary://<asset id>`: files of the library's `assets/` folder.
+pub fn handle_library<R: Runtime>(
+    context: UriSchemeContext<'_, R>,
+    request: Request<Vec<u8>>,
+    responder: UriSchemeResponder,
+) {
+    let app = context.app_handle().clone();
+    let id = request.uri().path().trim_start_matches('/').to_owned();
+    tauri::async_runtime::spawn(async move {
+        let response = match app.try_state::<AppState>() {
+            Some(state) => respond(Some(&library::assets_dir(&state.config_dir)), &id).await,
+            None => status(StatusCode::SERVICE_UNAVAILABLE),
+        };
+        responder.respond(response);
+    });
 }
 
 /// Response for asset `id`, given the open world's `assets/` folder (if any).

@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { LibrarySection } from "@/features/media/components/LibrarySection";
 import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
 import { openDialog as pickFolder } from "@/lib/dialogs";
 import { useSetDefaultWorldsDir } from "../hooks/useSetDefaultWorldsDir";
@@ -175,7 +176,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t("settings.title")}</DialogTitle>
           <DialogDescription>{t("settings.description")}</DialogDescription>
@@ -184,6 +185,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <AppearanceSection />
           <LanguageSection />
           <WorldsFolderSection />
+          <Section title="library.title">
+            <LibrarySection enabled={open} />
+          </Section>
           <Section title="settings.about">
             <AboutSection enabled={open} />
           </Section>

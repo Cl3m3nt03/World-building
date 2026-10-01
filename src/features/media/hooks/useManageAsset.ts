@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { appKeys } from "@/features/settings";
-import { worldKeys } from "@/features/world";
+import { appKeys } from "@/features/settings/hooks/keys";
+import { worldKeys } from "@/features/world/hooks/keys";
 import { commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { mediaKeys } from "./keys";
