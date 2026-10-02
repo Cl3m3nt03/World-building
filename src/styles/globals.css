@@ -213,3 +213,53 @@
   color: var(--bz-text-muted);
   text-decoration: line-through;
 }
+
+/* Maps (M4): Leaflet markers and shapes drawn by src/features/maps. */
+.bz-map-pin {
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+.bz-map-pin:focus-visible > div > div:first-child {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.bz-map-vertex {
+  background: var(--background);
+  border: 2px solid var(--primary);
+  border-radius: 9999px;
+  cursor: move;
+}
+.leaflet-interactive.bz-map-edge-middle {
+  fill: var(--background);
+  fill-opacity: 1;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  cursor: copy;
+}
+.bz-map-trace {
+  stroke: var(--primary);
+  stroke-width: 2;
+  fill: none;
+}
+.leaflet-interactive.bz-map-trace-start {
+  fill: var(--background);
+  fill-opacity: 1;
+  stroke: var(--primary);
+  stroke-width: 2;
+}
+.leaflet-interactive.bz-map-trace-start.bz-closable.bz-ready {
+  fill: var(--bz-type-green);
+  stroke: var(--bz-type-green);
+  cursor: pointer;
+}
+.leaflet-tooltip.bz-zone-label {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--foreground);
+  text-shadow: 0 0 3px var(--background);
+  padding: 0;
+}
+.leaflet-tooltip.bz-zone-label::before {
+  display: none;
+}
