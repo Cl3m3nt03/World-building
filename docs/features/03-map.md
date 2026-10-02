@@ -70,6 +70,8 @@ La map est **sauvegardée automatiquement** : chaque modification est persistée
 
 **Réalisé en M4 (4.2)** : « Nouvelle map » (bouton en bas de la sidebar, clic droit dans l'arbre, tuile « Map » de l'espace vide) ouvre le sélecteur d'image pour choisir le fond ; la map est créée (« Map sans nom », un calque « Calque 1 ») et s'ouvre. Elle apparaît dans l'arbre avec une icône de map, se filtre (« Map » dans Filtres et tri), se trouve par la recherche, s'épingle et figure dans les documents récents ; ses rétroliens et ses liens ouvrent la map. Le nom se modifie en haut à gauche. Navigation : molette ou pavé tactile pour zoomer, glisser (ou bouton du milieu) pour se déplacer, « Recentrer » pour revenir à la vue d'ensemble ; au clavier, la map prend le focus (Tab), les flèches la déplacent et `+` / `-` zooment. Si l'image de fond a été supprimée de la médiathèque, la map le dit.
 
+**Réalisé en M4 (4.4)** : un panneau **Calques** à droite de la map, le calque du dessus en premier. « Nouveau calque » (+) l'ajoute au-dessus et le nomme aussitôt ; un clic choisit le **calque actif** (celui qui reçoit ce qu'on pose) ; l'œil masque ou affiche ; le menu « … » renomme (aussi double-clic ou `F2`), monte ou descend (aussi `Alt+↑` / `Alt+↓`) et supprime : un calque vide disparaît aussitôt, sinon on choisit de déplacer son contenu vers le calque voisin ou de tout supprimer ; le dernier calque ne se supprime pas. Tout s'enregistre seul, peu après la dernière modification et en quittant la map.
+
 ## Modèle de données (indicatif)
 
 - `maps` : document_id, background_asset_id, width, height, tiles_path

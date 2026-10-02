@@ -643,5 +643,22 @@
   "maps.chooseBackground": "Image de fond de la nouvelle map",
   "maps.untitled": "Map sans nom",
   "maps.defaultLayer": "Calque 1",
-  "sidebar.newMap": "Nouvelle map"
+  "sidebar.newMap": "Nouvelle map",
+  "maps.layers.title": "Calques",
+  "maps.layers.add": "Nouveau calque",
+  "maps.layers.newName": "Calque {{index}}",
+  "maps.layers.hide": "Masquer le calque {{name}}",
+  "maps.layers.show": "Afficher le calque {{name}}",
+  "maps.layers.actions": "Actions du calque {{name}}",
+  "maps.layers.rename": "Renommer",
+  "maps.layers.up": "Monter",
+  "maps.layers.down": "Descendre",
+  "maps.layers.delete": "Supprimer le calque…",
+  "maps.layers.nameLabel": "Nom du calque",
+  "maps.layers.deleteTitle": "Supprimer le calque « {{name}} » ?",
+  "maps.layers.deleteDescription_one": "Il contient {{count}} élément (pin, zone ou texte).",
+  "maps.layers.deleteDescription_other": "Il contient {{count}} éléments (pins, zones ou textes).",
+  "maps.layers.deleteMove": "Déplacer vers « {{name}} »",
+  "maps.layers.deleteAll": "Tout supprimer",
+  "maps.saveError": "Les dernières modifications de la map n'ont pas pu être enregistrées."
 }
