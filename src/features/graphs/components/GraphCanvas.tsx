@@ -19,6 +19,8 @@ type Transform = { tx: number; ty: number; k: number };
 export type GraphCanvasHandle = {
   /** Frames every node. */
   recenter: () => void;
+  /** Moves the view so that the node `id` is at the centre. */
+  centerOn: (id: string) => void;
 };
 
 type Props = {
@@ -28,6 +30,13 @@ type Props = {
   settings: Settings;
   /** Accessible name of the drawing ("Graph X: 12 cards, 20 links"). */
   label: string;
+  /** The selected card: it and its neighbours stand out, the rest fades. */
+  selectedId: string | null;
+  /** Cards to make stand out when none is selected (search results). */
+  highlighted?: ReadonlySet<string> | null;
+  onSelect: (id: string | null) => void;
+  /** Double click, or Enter on the selected node: opens the card. */
+  onOpen: (id: string) => void;
 };
 
 /** Value of a CSS variable of the theme, or `fallback`. */
@@ -48,7 +57,7 @@ function typeFill(type: CardType | undefined): string {
  * (arrows, + and -).
  */
 export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
-  { nodes, edges, typesById, settings, label },
+  { nodes, edges, typesById, settings, label, selectedId, highlighted = null, onSelect, onOpen },
   ref,
 ) {
   const container = useRef<HTMLDivElement>(null);
@@ -71,6 +80,26 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     [edges],
   );
   const indexOf = useMemo(() => new Map(nodes.map((node, index) => [node.id, index])), [nodes]);
+  const neighbours = useMemo(() => {
+    const byId = new Map<string, Set<string>>();
+    for (const edge of edges) {
+      for (const [a, b] of [
+        [edge.source, edge.target],
+        [edge.target, edge.source],
+      ] as const) {
+        const set = byId.get(a) ?? new Set<string>();
+        set.add(b);
+        byId.set(a, set);
+      }
+    }
+    return byId;
+  }, [edges]);
+  // What stands out: the selected card and its neighbours, else the
+  // highlighted cards, else everything.
+  const focus = useMemo<ReadonlySet<string> | null>(() => {
+    if (selectedId) return new Set([selectedId, ...(neighbours.get(selectedId) ?? [])]);
+    return highlighted;
+  }, [selectedId, neighbours, highlighted]);
 
   const draw = () => {
     frame.current = null;
@@ -102,11 +131,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
 
     // Edges, thicker with the number of links.
     context.strokeStyle = cssVar("--muted-foreground", "#888");
-    context.globalAlpha = 0.45;
     for (const edge of edges) {
       const a = at(edge.source);
       const b = at(edge.target);
       if (!a || !b) continue;
+      const lit = !focus || (focus.has(edge.source) && focus.has(edge.target));
+      context.globalAlpha = lit ? 0.45 : 0.06;
       context.lineWidth = (1 + Math.log2(edge.weight)) / k ** 0.5;
       context.beginPath();
       context.moveTo(a[0], a[1]);
@@ -119,10 +149,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     const radius = NODE_RADIUS * settings.nodeSize;
     const background = cssVar("--background", "#fff");
     const foreground = cssVar("--foreground", "#000");
+    const primary = cssVar("--primary", "#b07a2a");
     for (const node of nodes) {
       const p = at(node.id);
       if (!p) continue;
       const [x, y] = p;
+      context.globalAlpha = !focus || focus.has(node.id) ? 1 : 0.18;
       const image = node.imageAssetId ? loadImage(node.imageAssetId) : null;
       context.beginPath();
       context.arc(x, y, radius, 0, Math.PI * 2);
@@ -152,10 +184,14 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
         context.textBaseline = "middle";
         context.fillText(node.title.slice(0, 1).toUpperCase(), x, y + radius * 0.05);
       }
-      context.lineWidth = 1.5 / k;
-      context.strokeStyle = background;
+      const selected = node.id === selectedId;
+      context.lineWidth = (selected ? 3 : 1.5) / k;
+      context.strokeStyle = selected ? primary : background;
+      context.beginPath();
+      context.arc(x, y, radius + (selected ? 1.5 / k : 0), 0, Math.PI * 2);
       context.stroke();
     }
+    context.globalAlpha = 1;
 
     // Names under the nodes, readable at any zoom.
     if (settings.showLabels && k * radius > 6) {
@@ -168,9 +204,11 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
       for (const node of nodes) {
         const p = at(node.id);
         if (!p) continue;
+        context.globalAlpha = !focus || focus.has(node.id) ? 1 : 0.18;
         context.strokeText(node.title, p[0], p[1] + radius + 3 / k);
         context.fillText(node.title, p[0], p[1] + radius + 3 / k);
       }
+      context.globalAlpha = 1;
     }
   };
 
@@ -248,9 +286,43 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     redraw();
   }
 
+  /** Graph coordinates of the screen point (sx, sy), relative to the canvas. */
+  function toGraph(sx: number, sy: number): [number, number] {
+    const { tx, ty, k } = transform.current;
+    return [(sx - tx) / k, (sy - ty) / k];
+  }
+
+  /** The node under the screen point (sx, sy), the one drawn on top first. */
+  function nodeAt(sx: number, sy: number): string | null {
+    const [gx, gy] = toGraph(sx, sy);
+    const positions = simulation.positions.current;
+    const reach = NODE_RADIUS * settings.nodeSize + 3 / transform.current.k;
+    for (let index = nodes.length - 1; index >= 0; index--) {
+      const x = positions[index * 2];
+      const y = positions[index * 2 + 1];
+      if (x === undefined || y === undefined) continue;
+      if (Math.hypot(x - gx, y - gy) <= reach) return nodes[index]?.id ?? null;
+    }
+    return null;
+  }
+
   useImperativeHandle(ref, () => ({
     recenter: () => {
       autoFit.current = true;
+      redraw();
+    },
+    centerOn: (id) => {
+      const index = indexOf.get(id);
+      const element = canvas.current;
+      const positions = simulation.positions.current;
+      if (index === undefined || !element || index * 2 + 1 >= positions.length) return;
+      autoFit.current = false;
+      const k = Math.max(transform.current.k, 0.8);
+      transform.current = {
+        k,
+        tx: element.clientWidth / 2 - (positions[index * 2] as number) * k,
+        ty: element.clientHeight / 2 - (positions[index * 2 + 1] as number) * k,
+      };
       redraw();
     },
   }));
@@ -259,7 +331,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   // biome-ignore lint/correctness/useExhaustiveDependencies: redraw reads the latest values
   useEffect(() => {
     redraw();
-  }, [nodes, edges, settings, typesById]);
+  }, [nodes, edges, settings, typesById, focus, selectedId]);
 
   // The canvas follows the size of its container.
   // biome-ignore lint/correctness/useExhaustiveDependencies: bound once
@@ -288,7 +360,16 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     return () => element.removeEventListener("wheel", onWheel);
   }, []);
 
-  const dragging = useRef<{ x: number; y: number } | null>(null);
+  // What the pointer holds: the view (to move it) or a node (to drag it).
+  const dragging = useRef<
+    | { kind: "view"; x: number; y: number; moved: boolean }
+    | { kind: "node"; id: string; x: number; y: number; moved: boolean }
+    | null
+  >(null);
+  const local = (event: { clientX: number; clientY: number }): [number, number] => {
+    const box = canvas.current?.getBoundingClientRect();
+    return [event.clientX - (box?.left ?? 0), event.clientY - (box?.top ?? 0)];
+  };
 
   return (
     <div ref={container} className="relative size-full overflow-hidden rounded-lg bg-muted">
@@ -300,17 +381,46 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
         className="size-full cursor-grab outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
         onPointerDown={(event) => {
           if (event.button !== 0 && event.button !== 1) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          dragging.current = { x: event.clientX, y: event.clientY };
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+          const [sx, sy] = local(event);
+          const id = event.button === 0 ? nodeAt(sx, sy) : null;
+          dragging.current = id
+            ? { kind: "node", id, x: event.clientX, y: event.clientY, moved: false }
+            : { kind: "view", x: event.clientX, y: event.clientY, moved: false };
         }}
         onPointerMove={(event) => {
-          const start = dragging.current;
-          if (!start) return;
-          panBy(event.clientX - start.x, event.clientY - start.y);
-          dragging.current = { x: event.clientX, y: event.clientY };
+          const held = dragging.current;
+          if (!held) {
+            const [sx, sy] = local(event);
+            event.currentTarget.style.cursor = nodeAt(sx, sy) ? "pointer" : "";
+            return;
+          }
+          const moved =
+            held.moved || Math.hypot(event.clientX - held.x, event.clientY - held.y) > 3;
+          if (!moved) return;
+          if (held.kind === "view") {
+            panBy(event.clientX - held.x, event.clientY - held.y);
+            dragging.current = { ...held, x: event.clientX, y: event.clientY, moved };
+          } else {
+            const [gx, gy] = toGraph(...local(event));
+            simulation.send({ type: "drag", id: held.id, x: gx, y: gy });
+            dragging.current = { ...held, moved };
+          }
         }}
         onPointerUp={() => {
+          const held = dragging.current;
           dragging.current = null;
+          if (!held) return;
+          if (held.kind === "node") {
+            if (held.moved) simulation.send({ type: "drag", id: held.id, x: null, y: null });
+            else onSelect(held.id);
+          } else if (!held.moved) {
+            onSelect(null);
+          }
+        }}
+        onDoubleClick={(event) => {
+          const id = nodeAt(...local(event));
+          if (id) onOpen(id);
         }}
         onKeyDown={(event) => {
           const element = event.currentTarget;
@@ -327,6 +437,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
           } else if (event.key === "+" || event.key === "=") {
             event.preventDefault();
             zoomAt(1.25, element.clientWidth / 2, element.clientHeight / 2);
+          } else if (event.key === "Enter" && selectedId) {
+            event.preventDefault();
+            onOpen(selectedId);
+          } else if (event.key === "Escape" && selectedId) {
+            event.preventDefault();
+            onSelect(null);
           } else if (event.key === "-") {
             event.preventDefault();
             zoomAt(0.8, element.clientWidth / 2, element.clientHeight / 2);
