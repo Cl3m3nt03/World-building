@@ -2,7 +2,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -82,6 +82,7 @@ let tree: DocumentTree;
 let stored: WorldMap | null;
 let slowReload: boolean;
 let slowCards: boolean;
+let createFails: boolean;
 /** Cutting a very large background into tiles takes this long (ms). */
 let tilingDelay: number;
 
@@ -92,6 +93,7 @@ beforeEach(() => {
   stored = null;
   slowReload = false;
   slowCards = false;
+  createFails = false;
   tilingDelay = 0;
   tree = { folders: [], documents: [] };
   mockIPC((command, payload) => {
@@ -111,6 +113,8 @@ beforeEach(() => {
           ? new Promise((resolve) => setTimeout(() => resolve([GONDOR]), 300))
           : [GONDOR];
       case "create_map": {
+        if (createFails)
+          throw { code: "invalid_input", message: "unreadable image: Corrupt deflate stream" };
         const { title } = payload as { title: string };
         stored = map(title);
         return stored;
@@ -192,6 +196,23 @@ test('"New map" chooses a background, creates the map with one layer and opens i
     payload: { title: "Map sans nom", backgroundAssetId: IMAGE.id, layerName: "Calque 1" },
   });
   expect(await screen.findByRole("application", { name: "Map Map sans nom" })).toBeTruthy();
+});
+
+test("a map that cannot be created says so, and shows the reason (#200)", async () => {
+  createFails = true;
+  const router = await renderAt("/world/demo/world");
+
+  fireEvent.click(await screen.findByRole("button", { name: "Nouvelle map" }));
+  fireEvent.click(await screen.findByRole("option", { name: "Terre du Milieu.png" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
+
+  const dialog = await screen.findByRole("dialog", { name: "La map n'a pas pu être créée" });
+  expect(dialog.textContent).toContain("Corrupt deflate stream");
+  expect(router.state.location.pathname).toBe("/world/demo/world");
+  fireEvent.click(within(dialog).getAllByRole("button", { name: "Fermer" }).at(-1) as HTMLElement);
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "La map n'a pas pu être créée" })).toBeNull(),
+  );
 });
 
 test("a map shows its name, renamed as typed, and can be recentered", async () => {
