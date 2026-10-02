@@ -52,6 +52,17 @@ function map(title: string): WorldMap {
   };
 }
 
+const GONDOR = {
+  id: "gondor",
+  title: "Gondor",
+  typeId: null,
+  imageAssetId: null,
+  aliases: [],
+  createdAt: "2026-10-02T10:00:00Z",
+  updatedAt: "2026-10-02T10:00:00Z",
+  trashedAt: null,
+};
+
 let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: WorldMap | null;
@@ -73,6 +84,8 @@ beforeEach(() => {
         return tree;
       case "list_assets":
         return [IMAGE];
+      case "list_cards":
+        return [GONDOR];
       case "create_map": {
         const { title } = payload as { title: string };
         stored = map(title);
@@ -209,4 +222,56 @@ test("layers: added on top and named at once, hidden, moved, deleted, and saved"
       ]),
     { timeout: 3000 },
   );
+});
+
+test("pins: added at the centre, labelled, hidden with their layer, deleted with the keyboard", async () => {
+  stored = map("Arda");
+  await renderAt("/world/demo/world/map/m1");
+
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un pin" }));
+  const marker = await screen.findByRole("button", { name: "Pin Repère" });
+  // The new pin is selected: its properties show.
+  const label = await screen.findByLabelText("Libellé");
+  fireEvent.change(label, { target: { value: "Minas Tirith" } });
+  await waitFor(() => expect(marker.getAttribute("aria-label")).toBe("Pin Minas Tirith"));
+
+  // Hidden with its layer.
+  fireEvent.click(screen.getByRole("button", { name: "Masquer le calque Calque 1" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Pin Minas Tirith" })).toBeNull(),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Afficher le calque Calque 1" }));
+  const shown = await screen.findByRole("button", { name: "Pin Minas Tirith" });
+
+  await waitFor(
+    () =>
+      expect(stored?.content.pins).toEqual([
+        expect.objectContaining({ label: "Minas Tirith", cardId: null, layerId: "l1", x: 0.5 }),
+      ]),
+    { timeout: 3000 },
+  );
+
+  fireEvent.keyDown(shown, { key: "Delete" });
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Pin Minas Tirith" })).toBeNull(),
+  );
+  await waitFor(() => expect(stored?.content.pins).toEqual([]), { timeout: 3000 });
+});
+
+test("a card is put on the map from its search, and its pin opens it", async () => {
+  stored = map("Arda");
+  const router = await renderAt("/world/demo/world/map/m1");
+
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter une carte" }));
+  fireEvent.click(await screen.findByRole("option", { name: /Gondor/ }));
+  const pin = await screen.findByRole("button", { name: "Pin de la carte Gondor" });
+  expect(await screen.findByRole("link", { name: "Ouvrir la carte" })).toBeTruthy();
+  await waitFor(
+    () => expect(stored?.content.pins).toEqual([expect.objectContaining({ cardId: "gondor" })]),
+    { timeout: 3000 },
+  );
+
+  // Selected, Enter opens the card.
+  fireEvent.keyDown(pin, { key: "Enter" });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/gondor"));
 });

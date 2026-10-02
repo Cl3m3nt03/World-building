@@ -1,4 +1,4 @@
-export { typeColor } from "./colors";
+export { colorLabel, TYPE_COLORS, typeColor } from "./colors";
 export { CardTypesDialog } from "./components/CardTypesDialog";
 export { ChoiceTiles } from "./components/ChoiceTiles";
 export { cardTypeKeys } from "./hooks/keys";
