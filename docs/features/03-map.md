@@ -84,6 +84,8 @@ La map est **sauvegardée automatiquement** : chaque modification est persistée
 
 **Réalisé en M4 (4.10)** : le bloc **Map** d'une carte (menu des blocs ou « / ») choisit une map du monde, puis l'affiche en lecture : ses pins, zones et textes (calques visibles), déplacement en la glissant, zoom avec `+` / `-` (la molette fait défiler la carte), « Ouvrir la map » et « Changer ». Sans map dans le monde, le bloc dit comment en créer une.
 
+**Ajouté à la recette M4 (#203)** : « Dupliquer » dans le menu d'une map de la sidebar, comme pour une carte : la copie (« … (copie) ») garde le fond, les calques, les pins, les zones et les textes, et se place juste après.
+
 **Réalisé en M4 (4.3)** : une image de fond de plus de 8 000 px de côté est découpée par le Rust en tuiles JPEG de 256 px (pyramide de niveaux, de la taille réelle jusqu'à une seule tuile), dans `tiles/<map>/` du dossier du monde, à la création de la map et à chaque changement de fond (la création ou le changement attend la fin du découpage ; si l'attente dure, une fenêtre « Préparation de la map… » le signale). La map charge alors seulement les tuiles visibles, à la résolution du zoom. Les tuiles d'une map supprimée pour de bon sont retirées à la réouverture du monde.
 
 ## Modèle de données (indicatif)
