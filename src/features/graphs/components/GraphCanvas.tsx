@@ -20,6 +20,12 @@ const MAX_ZOOM = 8;
 /** Arrows move the view this far, in px. */
 const KEY_PAN = 60;
 const FIT_PADDING = 48;
+/** Side of the cached thumbnails of the cards' images, in px. */
+const THUMBNAIL_SIZE = 96;
+/** Beyond this many nodes, names show only once zoomed in. */
+const LABELS_ALWAYS_UNDER = 300;
+/** Beyond this many nodes in view, no name is drawn (zoom in to read them). */
+const MAX_LABELS = 400;
 
 /** View: a point of the graph (x, y) is drawn at (x * k + tx, y * k + ty). */
 type Transform = { tx: number; ty: number; k: number };
@@ -108,7 +114,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   const autoFit = useRef(initialViewport === null);
   const savedView = useRef(initialViewport);
   const frame = useRef<number | null>(null);
-  const images = useRef(new Map<string, HTMLImageElement | "loading" | "failed">());
+  const images = useRef(new Map<string, HTMLCanvasElement | "loading" | "failed">());
   // Where each node was last drawn: a filter that changes the nodes keeps
   // the others in place instead of laying everything out again.
   const lastPositions = useRef(new Map<string, [number, number]>());
@@ -132,6 +138,16 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     [edges],
   );
   const indexOf = useMemo(() => new Map(nodes.map((node, index) => [node.id, index])), [nodes]);
+  // Each edge as (source index, target index, weight), to draw without lookups.
+  const edgeEnds = useMemo(() => {
+    const ends = new Int32Array(edges.length * 3);
+    edges.forEach((edge, index) => {
+      ends[index * 3] = indexOf.get(edge.source) ?? 2 ** 30;
+      ends[index * 3 + 1] = indexOf.get(edge.target) ?? 2 ** 30;
+      ends[index * 3 + 2] = edge.weight;
+    });
+    return ends;
+  }, [edges, indexOf]);
   const neighbours = useMemo(() => {
     const byId = new Map<string, Set<string>>();
     for (const edge of edges) {
@@ -193,106 +209,194 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     context.clearRect(0, 0, width, height);
     context.setTransform(ratio * k, 0, 0, ratio * k, ratio * tx, ratio * ty);
 
-    const at = (id: string): [number, number] | null => {
-      const index = indexOf.get(id);
-      if (index === undefined || index * 2 + 1 >= positions.length) return null;
-      return [positions[index * 2] as number, positions[index * 2 + 1] as number];
-    };
+    const radius = NODE_RADIUS * settings.nodeSize;
+    // What is in view, in graph coordinates (with a node's margin): the rest
+    // is not drawn.
+    const margin = radius + 40 / k;
+    const left = -tx / k - margin;
+    const top = -ty / k - margin;
+    const right = (width - tx) / k + margin;
+    const bottom = (height - ty) / k + margin;
+    const inView = (x: number, y: number) => x >= left && x <= right && y >= top && y <= bottom;
+    const count = Math.min(nodes.length, positions.length / 2);
+    const lit = (id: string) => !focus || focus.has(id);
 
-    // Edges, thicker with the number of links.
-    context.strokeStyle = cssVar("--muted-foreground", "#888");
-    for (const edge of edges) {
-      const a = at(edge.source);
-      const b = at(edge.target);
-      if (!a || !b) continue;
-      const lit = !focus || (focus.has(edge.source) && focus.has(edge.target));
-      context.globalAlpha = lit ? 0.45 : 0.06;
-      context.lineWidth = (1 + Math.log2(edge.weight)) / k ** 0.5;
+    // Edges, in a few strokes: one per thickness and brightness.
+    const edgeColor = cssVar("--muted-foreground", "#888");
+    const buckets = new Map<string, number[]>();
+    for (let index = 0; index < edgeEnds.length; index += 3) {
+      const a = edgeEnds[index] as number;
+      const b = edgeEnds[index + 1] as number;
+      if (a >= count || b >= count) continue;
+      const ax = positions[a * 2] as number;
+      const ay = positions[a * 2 + 1] as number;
+      const bx = positions[b * 2] as number;
+      const by = positions[b * 2 + 1] as number;
+      // Off screen when both ends are on the same outer side.
+      if ((ax < left && bx < left) || (ax > right && bx > right)) continue;
+      if ((ay < top && by < top) || (ay > bottom && by > bottom)) continue;
+      const edge = edges[index / 3] as GraphEdge;
+      const key = `${Math.min(4, edgeEnds[index + 2] as number)}:${lit(edge.source) && lit(edge.target) ? 1 : 0}`;
+      const list = buckets.get(key) ?? [];
+      list.push(ax, ay, bx, by);
+      buckets.set(key, list);
+    }
+    context.strokeStyle = edgeColor;
+    for (const [key, lines] of buckets) {
+      const [weight, bright] = key.split(":").map(Number) as [number, number];
+      context.globalAlpha = bright ? 0.45 : 0.06;
+      context.lineWidth = (1 + Math.log2(weight)) / k ** 0.5;
       context.beginPath();
-      context.moveTo(a[0], a[1]);
-      context.lineTo(b[0], b[1]);
+      for (let index = 0; index < lines.length; index += 4) {
+        context.moveTo(lines[index] as number, lines[index + 1] as number);
+        context.lineTo(lines[index + 2] as number, lines[index + 3] as number);
+      }
       context.stroke();
     }
     context.globalAlpha = 1;
 
-    // Nodes: the card's image, or its type's colour and initial.
-    const radius = NODE_RADIUS * settings.nodeSize;
+    // Nodes: the card's image, or its type's colour (and its initial when
+    // large enough). Plain nodes are filled per colour, in one path each.
     const background = cssVar("--background", "#fff");
     const foreground = cssVar("--foreground", "#000");
     const primary = cssVar("--primary", "#b07a2a");
-    for (const node of nodes) {
-      const p = at(node.id);
-      if (!p) continue;
-      const [x, y] = p;
-      context.globalAlpha = !focus || focus.has(node.id) ? 1 : 0.18;
-      const image = node.imageAssetId ? loadImage(node.imageAssetId) : null;
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      if (image) {
-        context.save();
-        context.clip();
-        const side = Math.min(image.naturalWidth, image.naturalHeight);
-        context.drawImage(
-          image,
-          (image.naturalWidth - side) / 2,
-          (image.naturalHeight - side) / 2,
-          side,
-          side,
-          x - radius,
-          y - radius,
-          radius * 2,
-          radius * 2,
-        );
-        context.restore();
-      } else {
-        const type = node.typeId ? typesById.get(node.typeId) : undefined;
-        context.fillStyle = typeFill(type);
-        context.fill();
-        context.fillStyle = background;
-        context.font = `600 ${radius}px sans-serif`;
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.fillText(node.title.slice(0, 1).toUpperCase(), x, y + radius * 0.05);
+    const fills = new Map<string, string>();
+    const fillOf = (typeId: string | null) => {
+      const key = typeId ?? "";
+      let fill = fills.get(key);
+      if (!fill) {
+        fill = typeFill(typeId ? typesById.get(typeId) : undefined);
+        fills.set(key, fill);
       }
-      const selected = node.id === selectedId;
-      context.lineWidth = (selected ? 3 : 1.5) / k;
-      context.strokeStyle = selected ? primary : background;
-      context.beginPath();
-      context.arc(x, y, radius + (selected ? 1.5 / k : 0), 0, Math.PI * 2);
-      context.stroke();
-      if (pinned.has(node.id)) {
-        // A pinned node: a dot in the primary colour at its top right.
+      return fill;
+    };
+    const visible: number[] = [];
+    for (let index = 0; index < count; index++) {
+      if (inView(positions[index * 2] as number, positions[index * 2 + 1] as number)) {
+        visible.push(index);
+      }
+    }
+    const initials = k * radius >= 10;
+    for (const bright of [false, true]) {
+      if (bright === false && !focus) continue;
+      context.globalAlpha = bright ? 1 : 0.18;
+      const plain = new Map<string, number[]>();
+      for (const index of visible) {
+        const node = nodes[index] as GraphNode;
+        if (lit(node.id) !== bright) continue;
+        const x = positions[index * 2] as number;
+        const y = positions[index * 2 + 1] as number;
+        const image = node.imageAssetId ? loadImage(node.imageAssetId) : null;
+        if (image) {
+          context.save();
+          context.beginPath();
+          context.arc(x, y, radius, 0, Math.PI * 2);
+          context.clip();
+          context.drawImage(image, x - radius, y - radius, radius * 2, radius * 2);
+          context.restore();
+        } else {
+          const fill = fillOf(node.typeId);
+          const list = plain.get(fill) ?? [];
+          list.push(index);
+          plain.set(fill, list);
+        }
+      }
+      for (const [fill, list] of plain) {
+        context.fillStyle = fill;
         context.beginPath();
-        context.arc(
-          x + radius * 0.75,
-          y - radius * 0.75,
-          Math.max(3 / k, radius * 0.28),
-          0,
-          Math.PI * 2,
-        );
-        context.fillStyle = primary;
+        for (const index of list) {
+          const x = positions[index * 2] as number;
+          const y = positions[index * 2 + 1] as number;
+          context.moveTo(x + radius, y);
+          context.arc(x, y, radius, 0, Math.PI * 2);
+        }
         context.fill();
-        context.lineWidth = 1.5 / k;
-        context.strokeStyle = background;
-        context.stroke();
+        if (initials) {
+          context.fillStyle = background;
+          context.font = `600 ${radius}px sans-serif`;
+          context.textAlign = "center";
+          context.textBaseline = "middle";
+          for (const index of list) {
+            const node = nodes[index] as GraphNode;
+            context.fillText(
+              node.title.slice(0, 1).toUpperCase(),
+              positions[index * 2] as number,
+              (positions[index * 2 + 1] as number) + radius * 0.05,
+            );
+          }
+        }
       }
+      // A thin outline in the background colour, all at once.
+      context.lineWidth = 1.5 / k;
+      context.strokeStyle = background;
+      context.beginPath();
+      for (const index of visible) {
+        if (lit((nodes[index] as GraphNode).id) !== bright) continue;
+        const x = positions[index * 2] as number;
+        const y = positions[index * 2 + 1] as number;
+        context.moveTo(x + radius, y);
+        context.arc(x, y, radius, 0, Math.PI * 2);
+      }
+      context.stroke();
     }
     context.globalAlpha = 1;
 
-    // Names under the nodes, readable at any zoom.
-    if (settings.showLabels && k * radius > 6) {
+    // The selected node's ring and the pinned nodes' dots.
+    const selectedIndex = selectedId ? indexOf.get(selectedId) : undefined;
+    if (selectedIndex !== undefined && selectedIndex < count) {
+      context.lineWidth = 3 / k;
+      context.strokeStyle = primary;
+      context.beginPath();
+      context.arc(
+        positions[selectedIndex * 2] as number,
+        positions[selectedIndex * 2 + 1] as number,
+        radius + 1.5 / k,
+        0,
+        Math.PI * 2,
+      );
+      context.stroke();
+    }
+    for (const id of pinned.keys()) {
+      const index = indexOf.get(id);
+      if (index === undefined || index >= count) continue;
+      const x = positions[index * 2] as number;
+      const y = positions[index * 2 + 1] as number;
+      if (!inView(x, y)) continue;
+      context.globalAlpha = lit(id) ? 1 : 0.18;
+      context.beginPath();
+      context.arc(
+        x + radius * 0.75,
+        y - radius * 0.75,
+        Math.max(3 / k, radius * 0.28),
+        0,
+        Math.PI * 2,
+      );
+      context.fillStyle = primary;
+      context.fill();
+      context.lineWidth = 1.5 / k;
+      context.strokeStyle = background;
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+
+    // Names under the nodes: with many nodes, only once zoomed in enough to
+    // read them and with few enough in view (docs/features/04-graph.md,
+    // « Performance »).
+    const labelZoom = nodes.length > LABELS_ALWAYS_UNDER ? 14 : 6;
+    if (settings.showLabels && k * radius > labelZoom && visible.length <= MAX_LABELS) {
       context.fillStyle = foreground;
       context.font = `${12 / k}px sans-serif`;
       context.textAlign = "center";
       context.textBaseline = "top";
       context.lineWidth = 3 / k;
       context.strokeStyle = background;
-      for (const node of nodes) {
-        const p = at(node.id);
-        if (!p) continue;
-        context.globalAlpha = !focus || focus.has(node.id) ? 1 : 0.18;
-        context.strokeText(node.title, p[0], p[1] + radius + 3 / k);
-        context.fillText(node.title, p[0], p[1] + radius + 3 / k);
+      for (const index of visible) {
+        const node = nodes[index] as GraphNode;
+        const x = positions[index * 2] as number;
+        const y = (positions[index * 2 + 1] as number) + radius + 3 / k;
+        context.globalAlpha = lit(node.id) ? 1 : 0.18;
+        context.strokeText(node.title, x, y);
+        context.fillText(node.title, x, y);
       }
       context.globalAlpha = 1;
     }
@@ -304,14 +408,35 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
 
   const simulation = useSimulation({ nodes: simNodes, links: simLinks, settings, onTick: redraw });
 
-  function loadImage(assetId: string): HTMLImageElement | null {
+  /**
+   * The card's image as a small square thumbnail (cropped at its centre),
+   * made once: drawing thousands of them stays cheap.
+   */
+  function loadImage(assetId: string): HTMLCanvasElement | null {
     const cached = images.current.get(assetId);
-    if (cached instanceof HTMLImageElement) return cached;
+    if (cached instanceof HTMLCanvasElement) return cached;
     if (cached) return null;
     images.current.set(assetId, "loading");
     const image = new Image();
     image.onload = () => {
-      images.current.set(assetId, image);
+      const thumbnail = document.createElement("canvas");
+      thumbnail.width = THUMBNAIL_SIZE;
+      thumbnail.height = THUMBNAIL_SIZE;
+      const side = Math.min(image.naturalWidth, image.naturalHeight);
+      thumbnail
+        .getContext("2d")
+        ?.drawImage(
+          image,
+          (image.naturalWidth - side) / 2,
+          (image.naturalHeight - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          THUMBNAIL_SIZE,
+          THUMBNAIL_SIZE,
+        );
+      images.current.set(assetId, thumbnail);
       redraw();
     };
     image.onerror = () => images.current.set(assetId, "failed");

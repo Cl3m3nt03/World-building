@@ -70,6 +70,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.8)** : la configuration du graph (filtres, réglages, nœuds épinglés avec leur position, cadrage) s'enregistre seule, peu après chaque changement, en quittant le graph et avant la fermeture du monde ou de la fenêtre ; rouvert, même après relance, le graph revient avec la même configuration et le même cadrage (les nœuds libres se replacent d'eux-mêmes). « Recentrer » revient au cadrage qui montre tout. « Enregistrer sous… » (barre du bas) crée un nouveau graph nommé avec la configuration courante, qui s'ouvre et apparaît dans la sidebar (*adaptation locale* : dans vvd, la vue n'existe que si on l'enregistre ; ici rien ne se perd).
 
+**Réalisé en M5 (5.9)** : le dessin ne trace que ce qui est à l'écran, regroupe les arêtes en quelques traits (par épaisseur et par luminosité) et les nœuds sans image par couleur, et garde des vignettes réduites des images des cartes. Au-delà de 300 nœuds, les noms n'apparaissent qu'en zoomant (et jamais plus de 400 à la fois) ; les initiales, à partir d'une taille lisible. Mesuré sur 5 000 cartes et 19 315 liens (app réelle, build de debug) : graph affiché en 1,1 s, 7,6 ms par image en médiane pendant la simulation, le zoom, le déplacement et le glisser d'un nœud (40 ms par image avant), aucune tâche longue sur le fil principal.
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)
