@@ -125,6 +125,8 @@ pub struct GraphNode {
     pub title: String,
     pub type_id: Option<String>,
     pub image_asset_id: Option<String>,
+    /// Other names of the card (the graph's search finds them too).
+    pub aliases: Vec<String>,
 }
 
 /// The links between two cards, whatever their direction, as one edge.
@@ -334,6 +336,7 @@ pub async fn data(pool: &SqlitePool) -> AppResult<GraphData> {
         .await?
         .into_iter()
         .map(|node| GraphNode {
+            aliases: serde_json::from_str(&node.aliases).unwrap_or_default(),
             id: node.id,
             title: node.title,
             type_id: node.type_id,

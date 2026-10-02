@@ -8,6 +8,7 @@ import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { DocumentTree, Graph, GraphData, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
+import { searchNodes } from "./search";
 import { DEFAULT_SETTINGS, resolveSettings } from "./settings";
 import { createSimulationHost, type SimEvent } from "./simulation";
 
@@ -28,9 +29,9 @@ const WORLD = {
 
 const DATA: GraphData = {
   nodes: [
-    { id: "aragorn", title: "Aragorn", typeId: null, imageAssetId: null },
-    { id: "arwen", title: "Arwen", typeId: null, imageAssetId: null },
-    { id: "gimli", title: "Gimli", typeId: null, imageAssetId: null },
+    { id: "aragorn", title: "Aragorn", typeId: null, imageAssetId: null, aliases: ["Grands-Pas"] },
+    { id: "arwen", title: "Arwen", typeId: null, imageAssetId: null, aliases: [] },
+    { id: "gimli", title: "Gimli", typeId: null, imageAssetId: null, aliases: ["Fils de Glóin"] },
   ],
   edges: [{ source: "aragorn", target: "arwen", weight: 2 }],
 };
@@ -234,4 +235,32 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
   fireEvent.click(options()[1] as HTMLElement);
   fireEvent.keyDown(list, { key: "Enter" });
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/arwen"));
+});
+
+test("the search finds cards by name or alias, without accents nor case", () => {
+  const titles = (query: string) => searchNodes(DATA.nodes, query).map((node) => node.title);
+  expect(titles("ar")).toEqual(["Aragorn", "Arwen"]);
+  expect(titles("grands")).toEqual(["Aragorn"]);
+  expect(titles("GLOIN")).toEqual(["Gimli"]);
+  expect(titles("  ")).toEqual([]);
+});
+
+test("the magnifying glass opens a field; the count is announced; Escape closes it", async () => {
+  stored = {
+    id: "g1",
+    title: "Royaume",
+    config: { filters: {}, settings: {}, pinned: [], viewport: null },
+  };
+  await renderAt("/world/demo/world/graph/g1");
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Rechercher dans le graph" }));
+  const field = screen.getByRole("searchbox", { name: "Rechercher une carte dans le graph" });
+  expect(document.activeElement).toBe(field);
+  fireEvent.change(field, { target: { value: "ar" } });
+  expect(within(toolbar).getByText("2 cartes")).toBeTruthy();
+  fireEvent.keyDown(field, { key: "Escape" });
+  expect(screen.queryByRole("searchbox")).toBeNull();
+  expect(document.activeElement).toBe(
+    within(toolbar).getByRole("button", { name: "Rechercher dans le graph" }),
+  );
 });

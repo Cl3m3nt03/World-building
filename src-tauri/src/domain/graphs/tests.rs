@@ -191,6 +191,9 @@ async fn the_data_merges_the_links_between_two_cards_into_one_edge() {
     let gimli = fx.card("Gimli").await;
     let gollum = fx.card("Gollum").await;
     let alone = fx.card("Tom Bombadil").await;
+    cards::set_aliases(fx.pool(), &aragorn, &["Grands-Pas".to_owned()])
+        .await
+        .unwrap();
     // Aragorn cites Arwen in a text, Arwen has Aragorn as a link property:
     // one edge of weight 2. Aragorn also cites Gimli, and a card in the trash.
     fx.link(
@@ -210,6 +213,7 @@ async fn the_data_merges_the_links_between_two_cards_into_one_edge() {
 
     let titles: Vec<&str> = data.nodes.iter().map(|n| n.title.as_str()).collect();
     assert_eq!(titles, ["Aragorn", "Arwen", "Gimli", "Tom Bombadil"]);
+    assert_eq!(data.nodes[0].aliases, ["Grands-Pas"]);
     assert!(
         data.nodes
             .iter()

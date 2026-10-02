@@ -527,6 +527,8 @@ export type GraphNode = {
 	title: string,
 	typeId: string | null,
 	imageAssetId: string | null,
+	/**  Other names of the card (the graph's search finds them too). */
+	aliases: string[],
 };
 
 /**  Display and forces (the `d3-force` settings of the spec). */
