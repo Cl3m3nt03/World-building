@@ -3,6 +3,7 @@ import {
   FilePlus,
   FolderPlus,
   Map as MapIcon,
+  Network,
   PanelLeftClose,
   Plus,
   Share2,
@@ -21,6 +22,7 @@ import {
 import { CreateCardMenu, TrashDialog } from "@/features/cards";
 import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
+import { useCreateTree } from "@/features/trees";
 import { useDocumentTree } from "../hooks/useDocumentTree";
 import { useSidebarState } from "../hooks/useSidebarState";
 import { DEFAULT_VIEW, type TreeView } from "../tree";
@@ -37,12 +39,16 @@ import { ViewMenu } from "./ViewMenu";
  */
 export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   const { t } = useTranslation();
-  const { worldId, cardId, mapId, graphId } = useParams({ strict: false });
-  const currentId = cardId ?? mapId ?? graphId ?? null;
+  const { worldId, cardId, mapId, graphId, treeId } = useParams({ strict: false });
+  const currentId = cardId ?? mapId ?? graphId ?? treeId ?? null;
   const [creatingMap, setCreatingMap] = useState(false);
   const createGraph = useCreateGraph();
   const newGraph = () => {
     if (worldId) createGraph.mutate(worldId);
+  };
+  const createTree = useCreateTree();
+  const newTree = () => {
+    if (worldId) createTree.mutate(worldId);
   };
   const tree = useDocumentTree();
   const [trashOpen, setTrashOpen] = useState(false);
@@ -59,9 +65,11 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   return (
     <aside aria-label={t("sidebar.label")} className="glass flex h-full flex-col rounded-lg">
       <div className="flex min-h-0 flex-1 flex-col">
-        {(tree.error ?? sidebar.error ?? createGraph.error) && (
+        {(tree.error ?? sidebar.error ?? createGraph.error ?? createTree.error) && (
           <div className="p-2">
-            <AppErrorMessage error={tree.error ?? sidebar.error ?? createGraph.error} />
+            <AppErrorMessage
+              error={tree.error ?? sidebar.error ?? createGraph.error ?? createTree.error}
+            />
           </div>
         )}
         <SidebarSearch actions={<ViewMenu view={view} onChange={changeView} />}>
@@ -73,6 +81,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
               currentId={currentId}
               onNewMap={() => setCreatingMap(true)}
               onNewGraph={newGraph}
+              onNewTree={newTree}
               view={view}
               onViewChange={changeView}
               initialExpanded={sidebar.state.expanded ?? []}
@@ -88,7 +97,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             {t("sidebar.newCard")}
           </Button>
         </CreateCardMenu>
-        {/* Maps, graphs (and later canvases and trees): one menu, so the bar does not grow. */}
+        {/* Maps, graphs, trees (and later canvases): one menu, so the bar does not grow. */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -108,6 +117,10 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             <DropdownMenuItem disabled={createGraph.isPending} onSelect={newGraph}>
               <Share2 />
               {t("sidebar.newGraph")}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={createTree.isPending} onSelect={newTree}>
+              <Network />
+              {t("sidebar.newTree")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

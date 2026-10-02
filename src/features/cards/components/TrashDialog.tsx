@@ -1,4 +1,4 @@
-import { Map as MapIcon, RotateCcw, Share2, Trash2 } from "lucide-react";
+import { Map as MapIcon, Network, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -35,7 +35,7 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
   const remove = useDeleteDocumentForever();
   const empty = useEmptyTrash();
   const [confirmEmpty, setConfirmEmpty] = useState(false);
-  // Cards, maps and graphs, by title.
+  // Cards, maps, graphs and trees, by title.
   const items = [
     ...(trashed.data ?? []).map((card) => ({
       id: card.id,
@@ -82,7 +82,9 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
                   ? MapIcon
                   : item.kind === "graph"
                     ? Share2
-                    : typeIcon(type?.icon ?? "shapes");
+                    : item.kind === "tree"
+                      ? Network
+                      : typeIcon(type?.icon ?? "shapes");
               return (
                 <li
                   key={item.id}
