@@ -435,6 +435,8 @@ export function BlockEditor({
   const save = useSaveCardContent(cardId);
   const [blocks, setBlocks] = useState<Block[] | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
+  /** The block just added from the "Add a block" menu, until the menu has closed. */
+  const addedId = useRef<string | null>(null);
   const pending = useRef<Block[] | null>(null);
   // The latest blocks, so that changes made in a row (a line removed, then
   // a block inserted) each apply to the result of the previous one.
@@ -510,6 +512,7 @@ export function BlockEditor({
     const block = newBlock(type);
     setFocusId(block.id);
     update((previous) => [...previous.slice(0, index), block, ...previous.slice(index)], true);
+    return block.id;
   };
   /** A new block right under the line of the block `id`. */
   const insertAfter = (id: string, type: BlockType) => {
@@ -711,7 +714,21 @@ export function BlockEditor({
         {notice}
       </p>
       {save.isError && <AppErrorMessage error={save.error} />}
-      <BlockTypeMenu onPick={(type) => insert(blocks.length, type)}>
+      <BlockTypeMenu
+        // The menu keeps the focus until it is gone, so a new text block
+        // cannot take it before: it does so here. Closed without a choice
+        // (Escape), the focus goes back to the button.
+        onCloseAutoFocus={(event) => {
+          const added = addedId.current;
+          addedId.current = null;
+          if (added === null) return;
+          event.preventDefault();
+          document.querySelector<HTMLElement>(`[data-block="${added}"] [role="textbox"]`)?.focus();
+        }}
+        onPick={(type) => {
+          addedId.current = insert(blocks.length, type);
+        }}
+      >
         <Button variant="ghost" size="sm" className="self-start">
           <Plus />
           {t("blocks.add")}

@@ -128,6 +128,52 @@ test('"Add a block" inserts a text block at the end', async () => {
   expect(lastSaved()[0]).toBe("a");
 });
 
+test('"Add a block" does not take the focus back to its button once a block is added (#185)', async () => {
+  initial = [textBlock("a", "A")];
+  renderEditor();
+  await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  const button = screen.getByRole("button", { name: "Ajouter un bloc" });
+  await openMenu(button);
+  const item = await screen.findByRole("menuitem", { name: "Texte" });
+  // The new block takes the focus as soon as it is mounted; the menu used
+  // to give it back to its trigger right after (the letters typed were lost).
+  const focused: Element[] = [];
+  const focus = HTMLElement.prototype.focus;
+  vi.spyOn(HTMLElement.prototype, "focus").mockImplementation(function (
+    this: HTMLElement,
+    ...args
+  ) {
+    focused.push(this);
+    focus.apply(this, args);
+  });
+  await act(async () => {
+    fireEvent.click(item);
+  });
+  const added = await screen.findByRole("textbox", { name: "Bloc de texte 2" });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+
+  expect(focused).not.toContain(button);
+  expect(focused.at(-1)).toBe(added);
+});
+
+test('"Add a block" closed with Escape gives the focus back to its button', async () => {
+  initial = [textBlock("a", "A")];
+  renderEditor();
+  await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  const button = screen.getByRole("button", { name: "Ajouter un bloc" });
+  await openMenu(button);
+  await screen.findByRole("menuitem", { name: "Texte" });
+  await act(async () => {
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+  });
+
+  await waitFor(() => expect(document.activeElement).toBe(button));
+});
+
 test("move and parseContent helpers", () => {
   expect(move(["a", "b", "c"], 0, 2)).toEqual(["b", "c", "a"]);
   expect(move(["a", "b"], 0, 5)).toEqual(["a", "b"]);
