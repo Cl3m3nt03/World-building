@@ -73,12 +73,15 @@ export function removeNode(content: VariantContent, id: string): VariantContent 
   };
 }
 
-/** Whether a node at (`x`, `y`) would cover one of `content`'s nodes. */
+/**
+ * Whether a node at (`x`, `y`) would cover one of `content`'s nodes, or
+ * come closer to it than half the space left between relatives.
+ */
 function covers(content: VariantContent, x: number, y: number): boolean {
   return content.nodes.some(
     (node) =>
-      Math.abs((node.x ?? 0) - x) < NODE_WIDTH + 16 &&
-      Math.abs((node.y ?? 0) - y) < NODE_HEIGHT + 16,
+      Math.abs((node.x ?? 0) - x) < NODE_WIDTH + RELATIVE_GAP.x / 2 &&
+      Math.abs((node.y ?? 0) - y) < NODE_HEIGHT + RELATIVE_GAP.y / 2,
   );
 }
 
@@ -226,5 +229,86 @@ export function reverseEdge(content: VariantContent, id: string): VariantContent
         ? { ...edge, source: { kind: "node", id: edge.target }, target: edge.source.id }
         : edge,
     ),
+  };
+}
+
+/** The nodes at the ends of link `id`, following junctions up to their link. */
+function linkEnds(content: VariantContent, id: string, seen = new Set<string>()): Set<string> {
+  const edge = content.edges.find((candidate) => candidate.id === id);
+  if (!edge || seen.has(id)) return new Set();
+  seen.add(id);
+  const ends =
+    edge.source.kind === "node"
+      ? new Set([edge.source.id])
+      : linkEnds(content, edge.source.id, seen);
+  ends.add(edge.target);
+  return ends;
+}
+
+/**
+ * Hangs a link from the middle of link `edgeId` to node `targetId` (a
+ * junction: a child from its parents' link), without a type yet. Nothing
+ * changes for a node already at an end of that link, or a junction that
+ * already exists. Returns the content and the new link's id.
+ */
+export function connectFromEdge(
+  content: VariantContent,
+  edgeId: string,
+  targetId: string,
+): { content: VariantContent; edgeId: string | null } {
+  const known =
+    content.nodes.some((node) => node.id === targetId) &&
+    content.edges.some((edge) => edge.id === edgeId);
+  const exists = content.edges.some(
+    (edge) => edge.source.kind === "edge" && edge.source.id === edgeId && edge.target === targetId,
+  );
+  if (!known || exists || linkEnds(content, edgeId).has(targetId)) {
+    return { content, edgeId: null };
+  }
+  const edge: TreeEdge = {
+    id: crypto.randomUUID(),
+    source: { kind: "edge", id: edgeId },
+    target: targetId,
+    relationTypeId: null,
+    lineStyle: "solid",
+  };
+  return { content: { ...content, edges: [...content.edges, edge] }, edgeId: edge.id };
+}
+
+/**
+ * Adds an empty node below `middle` (the middle of link `edgeId`) — on the
+ * row of the link's other children if it has some — hung from that link by
+ * `relationTypeId`: a child of a couple, from the keyboard. It slides along
+ * the row while the place is taken.
+ */
+export function addJunctionRelative(
+  content: VariantContent,
+  edgeId: string,
+  middle: { x: number; y: number },
+  relationTypeId: string | null,
+): { content: VariantContent; nodeId: string | null } {
+  if (!content.edges.some((edge) => edge.id === edgeId)) return { content, nodeId: null };
+  // On the row of the link's other children if it has some, else below it.
+  const sibling = content.edges
+    .filter((edge) => edge.source.kind === "edge" && edge.source.id === edgeId)
+    .map((edge) => content.nodes.find((node) => node.id === edge.target))
+    .find((node) => node !== undefined);
+  const x0 = middle.x - NODE_WIDTH / 2;
+  const y0 = sibling ? (sibling.y ?? 0) : middle.y + RELATIVE_GAP.y;
+  let x = x0;
+  for (let i = 1; i < 200 && covers(content, x, y0); i++) {
+    x = x0 + Math.ceil(i / 2) * (i % 2 === 1 ? 1 : -1) * (NODE_WIDTH + RELATIVE_GAP.x / 2);
+  }
+  const node = newNode(Math.round(x), Math.round(y0));
+  const edge: TreeEdge = {
+    id: crypto.randomUUID(),
+    source: { kind: "edge", id: edgeId },
+    target: node.id,
+    relationTypeId,
+    lineStyle: "solid",
+  };
+  return {
+    content: { ...content, nodes: [...content.nodes, node], edges: [...content.edges, edge] },
+    nodeId: node.id,
   };
 }

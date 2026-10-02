@@ -30,9 +30,11 @@ import { CardPicker } from "@/features/cards";
 import type { Card, CardType, RelationType, VariantContent } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import {
+  addJunctionRelative,
   addNode,
   addRelative,
   connect,
+  connectFromEdge,
   fillNode,
   moveNodes,
   NODE_HEIGHT,
@@ -44,13 +46,27 @@ import {
   reverseEdge,
   updateEdge,
 } from "../content";
+import { JUNCTION_SIZE, linkGeometry, type Point } from "../geometry";
 import { type Direction, naturalDirection, relationName } from "../relations";
+import { JunctionNode, type JunctionNodeType, junctionEdge, junctionId } from "./JunctionNode";
 import { PersonNode, type PersonNodeType } from "./PersonNode";
 import { RelationEdge, type RelationEdgeType } from "./RelationEdge";
 import { RelationMenu } from "./RelationMenu";
 import { type TreeActions, TreeActionsContext } from "./treeActions";
 
-const NODE_TYPES = { person: PersonNode };
+const NODE_TYPES = { person: PersonNode, junction: JunctionNode };
+/** A junction point's attach points: one per side, each covering the point. */
+const JUNCTION_HANDLES = (["top", "right", "bottom", "left"] as const).map((side) => ({
+  id: side,
+  type: "source" as const,
+  position: side as Position,
+  x: 0,
+  y: 0,
+  width: JUNCTION_SIZE,
+  height: JUNCTION_SIZE,
+}));
+/** A node of the view: a person, or the middle of a link (where junctions start). */
+type TreeNodeType = PersonNodeType | JunctionNodeType;
 const EDGE_TYPES = { relation: RelationEdge };
 /** Framing of every node: a small tree is not blown up past its real size. */
 const FIT_VIEW = { padding: 0.2, maxZoom: 1 };
@@ -105,22 +121,6 @@ function toFlowNodes(
 /** A node standing for nothing yet (a lost card is not empty: it can be replaced). */
 function isEmpty(node: PersonNodeType): boolean {
   return !node.data.card && !node.data.missing && node.data.label === "";
-}
-
-/**
- * The sides of two nodes a link between them attaches to: the ones facing
- * each other (above / below, or side by side).
- */
-function facingSides(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-): [Direction, Direction] {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  if (Math.abs(dy) / NODE_HEIGHT >= Math.abs(dx) / NODE_WIDTH) {
-    return dy >= 0 ? ["bottom", "top"] : ["top", "bottom"];
-  }
-  return dx >= 0 ? ["right", "left"] : ["left", "right"];
 }
 
 /** The name a node shows, for labels. */
@@ -178,17 +178,36 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
     () => new Map(relationTypes.map((type) => [type.id, type])),
     [relationTypes],
   );
+  // How each link runs (its sides, its middle), from where the nodes are now.
+  const geometry = useMemo(
+    () => linkGeometry(content, new Map(nodes.map((node) => [node.id, node.position]))),
+    [content, nodes],
+  );
   const edges = useMemo<RelationEdgeType[]>(() => {
     const byId = new Map(nodes.map((node) => [node.id, node]));
+    const edgesById = new Map(content.edges.map((edge) => [edge.id, edge]));
+    // What a link's start is called: a node's name, or « A and B » for a
+    // junction (the ends of the link it hangs from).
+    const startName = (source: (typeof content.edges)[number]["source"], depth = 0): string => {
+      if (source.kind === "node") {
+        const node = byId.get(source.id);
+        return node ? nodeName(node, emptyName) : emptyName;
+      }
+      const parent = edgesById.get(source.id);
+      if (!parent || depth > 20) return emptyName;
+      const end = byId.get(parent.target);
+      return t("trees.edges.pair", {
+        a: startName(parent.source, depth + 1),
+        b: end ? nodeName(end, emptyName) : emptyName,
+      });
+    };
     return content.edges.flatMap((edge) => {
-      // Links from a link (junctions) are drawn from step 6.6.
-      if (edge.source.kind !== "node") return [];
-      const from = byId.get(edge.source.id);
+      const place = geometry.get(edge.id);
       const to = byId.get(edge.target);
-      if (!from || !to) return [];
-      const [sourceHandle, targetHandle] = facingSides(from.position, to.position);
+      if (!place || !to) return [];
+      const junction = edge.source.kind === "edge";
       const relation = edge.relationTypeId ? relationsById.get(edge.relationTypeId) : undefined;
-      const names = { source: nodeName(from, emptyName), target: nodeName(to, emptyName) };
+      const names = { source: startName(edge.source), target: nodeName(to, emptyName) };
       const tooltip = relation
         ? t("trees.edges.tooltip", {
             ...names,
@@ -203,23 +222,51 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
         {
           id: edge.id,
           type: "relation" as const,
-          source: from.id,
+          source: edge.source.kind === "node" ? edge.source.id : junctionId(edge.source.id),
           target: to.id,
-          sourceHandle,
-          targetHandle,
+          sourceHandle: place.sourceSide,
+          targetHandle: place.targetSide,
+          // A junction keeps its start: only its end moves to another node.
+          reconnectable: junction ? ("target" as const) : true,
           ariaLabel: tooltip,
           selected: selectedEdges.has(edge.id),
           data: {
             lineStyle: edge.lineStyle,
             relationTypeId: edge.relationTypeId,
-            junction: false,
+            junction,
             tooltip,
             hovered: hovered === edge.id,
           },
         },
       ];
     });
-  }, [content.edges, nodes, relationsById, emptyName, t, hovered, selectedEdges]);
+  }, [content.edges, nodes, geometry, relationsById, emptyName, t, hovered, selectedEdges]);
+
+  // The middle of each link: where a junction is drawn from.
+  const junctions = useMemo<JunctionNodeType[]>(() => {
+    const hanging = new Set(
+      content.edges.flatMap((edge) => (edge.source.kind === "edge" ? [edge.source.id] : [])),
+    );
+    return [...geometry].map(([edgeId, place]) => ({
+      id: junctionId(edgeId),
+      type: "junction" as const,
+      position: { x: place.middle.x - JUNCTION_SIZE / 2, y: place.middle.y - JUNCTION_SIZE / 2 },
+      width: JUNCTION_SIZE,
+      height: JUNCTION_SIZE,
+      // Its size and attach points are known: React Flow need not measure
+      // them (it only keeps measured attach points of nodes it has sizes for).
+      measured: { width: JUNCTION_SIZE, height: JUNCTION_SIZE },
+      handles: JUNCTION_HANDLES,
+      draggable: false,
+      selectable: false,
+      focusable: false,
+      data: {
+        edgeId,
+        visible: hovered === edgeId || selectedEdges.has(edgeId) || hanging.has(edgeId),
+      },
+    }));
+  }, [content.edges, geometry, hovered, selectedEdges]);
+  const flowNodes = useMemo<TreeNodeType[]>(() => [...nodes, ...junctions], [nodes, junctions]);
 
   const addRelativeTo = useCallback(
     (nodeId: string, direction: Direction, type: RelationType | null) => {
@@ -254,10 +301,25 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
         });
         wrapper.current?.focus();
       },
+      addJunctionRelative: (edgeId, type) => {
+        const middle: Point | undefined = geometry.get(edgeId)?.middle;
+        if (!middle) return;
+        let created: string | null = null;
+        onChange((previous) => {
+          const result = addJunctionRelative(previous, edgeId, middle, type?.id ?? null);
+          created = result.nodeId;
+          return result.content;
+        });
+        if (created) {
+          setSelectedEdges(new Set());
+          toSelect.current = created;
+          setPicking(created);
+        }
+      },
       relationMenuFor,
       setRelationMenuFor,
     }),
-    [relationTypes, addRelativeTo, onChange, relationMenuFor],
+    [relationTypes, addRelativeTo, onChange, relationMenuFor, geometry],
   );
 
   /** Selects only the link `id` (a link just drawn). */
@@ -268,8 +330,15 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
 
   const onConnect = (connection: Connection) => {
     let created: string | null = null;
+    // From a link's middle (or onto it, drawn the other way): a junction.
+    const fromLink = junctionEdge(connection.source);
+    const toLink = junctionEdge(connection.target);
     onChange((previous) => {
-      const result = connect(previous, connection.source, connection.target);
+      const result = fromLink
+        ? connectFromEdge(previous, fromLink, connection.target)
+        : toLink
+          ? connectFromEdge(previous, toLink, connection.source)
+          : connect(previous, connection.source, connection.target);
       created = result.edgeId;
       return result.content;
     });
@@ -387,8 +456,8 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       )}
     >
       <TreeActionsContext.Provider value={actions}>
-        <ReactFlow
-          nodes={nodes}
+        <ReactFlow<TreeNodeType, RelationEdgeType>
+          nodes={flowNodes}
           edges={edges}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
@@ -426,19 +495,31 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           }}
           onEdgeMouseEnter={(_, edge) => setHovered(edge.id)}
           onEdgeMouseLeave={() => setHovered(null)}
-          onNodesChange={(changes: NodeChange<PersonNodeType>[]) =>
-            setNodes((shown) => applyNodeChanges(changes, shown))
-          }
+          // The middle of a link is part of it: hovering it is hovering the link.
+
+          onNodeMouseEnter={(_, node) => {
+            if (node.type === "junction") setHovered(node.data.edgeId);
+          }}
+          onNodeMouseLeave={(_, node) => {
+            if (node.type === "junction") setHovered(null);
+          }}
+          onNodesChange={(changes: NodeChange<TreeNodeType>[]) => {
+            // The junction points follow their links: only the people change.
+            const people = changes.filter(
+              (change) => !("id" in change) || !junctionEdge(change.id),
+            ) as NodeChange<PersonNodeType>[];
+            setNodes((shown) => applyNodeChanges(people, shown));
+          }}
           onNodeDragStop={(_, __, dragged) =>
             onChange((previous) =>
               moveNodes(previous, new Map(dragged.map((node) => [node.id, node.position]))),
             )
           }
           onNodeClick={(_, node) => {
-            if (isEmpty(node)) setPicking(node.id);
+            if (node.type === "person" && isEmpty(node)) setPicking(node.id);
           }}
           onNodeDoubleClick={(_, node) => {
-            if (node.data.card) onOpenCard(node.data.card.id);
+            if (node.type === "person" && node.data.card) onOpenCard(node.data.card.id);
           }}
           onPaneClick={() => setPicking(null)}
           fitView

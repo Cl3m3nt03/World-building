@@ -13,6 +13,8 @@ export type TreeActions = {
   reverseEdge: (id: string) => void;
   /** Removes a link and the junctions hanging from it. */
   removeEdge: (id: string) => void;
+  /** Adds an empty node below link `edgeId`'s middle, hung from it by `type` (a junction). */
+  addJunctionRelative: (edgeId: string, type: RelationType | null) => void;
   /** The link whose relation list is open (a link just drawn opens it). */
   relationMenuFor: string | null;
   setRelationMenuFor: (id: string | null) => void;

@@ -7,7 +7,7 @@ import {
   getSmoothStepPath,
   useStore,
 } from "@xyflow/react";
-import { ArrowLeftRight, Link2, Trash2 } from "lucide-react";
+import { ArrowLeftRight, GitFork, Link2, Trash2 } from "lucide-react";
 import { memo, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -222,6 +222,19 @@ export const RelationEdge = memo(function RelationEdge({
               <Button variant="ghost" size="sm">
                 <RelationIcon />
                 {relation ? relationName(relation, t) : t("trees.edges.setRelation")}
+              </Button>
+            </RelationMenu>
+            <RelationMenu
+              relationTypes={actions.relationTypes}
+              onPick={(type) => actions.addJunctionRelative(id, type)}
+            >
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t("trees.edges.addJunction")}
+                title={t("trees.edges.addJunction")}
+              >
+                <GitFork />
               </Button>
             </RelationMenu>
             <Button

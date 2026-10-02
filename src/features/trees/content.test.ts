@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 import type { TreeEdge, VariantContent } from "@/lib/bindings";
 import {
+  addJunctionRelative,
   addNode,
   addRelative,
   connect,
+  connectFromEdge,
   fillNode,
   moveNodes,
   newNode,
@@ -127,4 +129,38 @@ test("a link's end moves to another node; turning it round swaps its ends", () =
     relationTypeId: "rel-spouse",
   });
   expect(styled.edges[0]).toMatchObject({ lineStyle: "dotted", relationTypeId: "rel-spouse" });
+});
+
+test("a junction hangs from a link, never to a node at its ends", () => {
+  // Eldarion is already Aragorn and Arwen's child, from their link.
+  const { content, edgeId } = connectFromEdge(FAMILY, "couple", "eldarion");
+  expect(content.edges.at(-1)).toEqual({
+    id: edgeId,
+    source: { kind: "edge", id: "couple" },
+    target: "eldarion",
+    relationTypeId: null,
+    lineStyle: "solid",
+  });
+  expect(connectFromEdge(content, "couple", "eldarion").edgeId).toBeNull();
+  // Arathorn and Gilraen are the ends of « couple »; Aragorn hangs from it.
+  expect(connectFromEdge(FAMILY, "couple", "gilraen").edgeId).toBeNull();
+  expect(connectFromEdge(FAMILY, "child", "arathorn").edgeId).toBeNull();
+  expect(connectFromEdge(FAMILY, "nolink", "arwen").edgeId).toBeNull();
+
+  // Eldarion hangs from « couple2 »: a new child goes on his row, beside him.
+  const placed: VariantContent = {
+    ...FAMILY,
+    nodes: FAMILY.nodes.map((node) =>
+      node.id === "eldarion" ? { ...node, x: 150, y: 300 } : node,
+    ),
+  };
+  const added = addJunctionRelative(placed, "couple2", { x: 200, y: 50 }, "rel-child");
+  const child = added.content.nodes.at(-1);
+  expect(child?.y).toBe(300);
+  expect(Math.abs((child?.x ?? 0) - 150)).toBeGreaterThanOrEqual(96);
+  expect(added.content.edges.at(-1)).toMatchObject({
+    source: { kind: "edge", id: "couple2" },
+    target: added.nodeId,
+    relationTypeId: "rel-child",
+  });
 });
