@@ -86,6 +86,18 @@ export function TextBlockEditor({
     ],
     content: doc,
     autofocus: autoFocus ? "end" : false,
+    // TipTap applies `autofocus` a moment later (a timeout, then an
+    // animation frame): letters typed right after the block appeared went
+    // nowhere. The focus is taken as soon as the editor is in the page (its
+    // element is attached right after this event).
+    onMount: ({ editor: mounted }) => {
+      if (!autoFocus) return;
+      queueMicrotask(() => {
+        if (mounted.isDestroyed || !mounted.view.dom.isConnected) return;
+        mounted.commands.focus("end");
+        mounted.view.focus();
+      });
+    },
     editorProps: {
       attributes: {
         "aria-label": label,
