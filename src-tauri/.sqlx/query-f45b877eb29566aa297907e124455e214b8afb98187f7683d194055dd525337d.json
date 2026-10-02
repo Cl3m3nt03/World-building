@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO tree_edges (id, variant_id, source_node_id, source_edge_id, target_node_id,\n                                 relation_type_id, line_style, sort_order)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "f45b877eb29566aa297907e124455e214b8afb98187f7683d194055dd525337d"
+}

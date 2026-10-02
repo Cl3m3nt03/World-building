@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-delete-tree-variant"
+description = "Enables the delete_tree_variant command without any pre-configured scope."
+commands.allow = ["delete_tree_variant"]
+
+[[permission]]
+identifier = "deny-delete-tree-variant"
+description = "Denies the delete_tree_variant command without any pre-configured scope."
+commands.deny = ["delete_tree_variant"]

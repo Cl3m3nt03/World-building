@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-tree-variant"
+description = "Enables the save_tree_variant command without any pre-configured scope."
+commands.allow = ["save_tree_variant"]
+
+[[permission]]
+identifier = "deny-save-tree-variant"
+description = "Denies the save_tree_variant command without any pre-configured scope."
+commands.deny = ["save_tree_variant"]

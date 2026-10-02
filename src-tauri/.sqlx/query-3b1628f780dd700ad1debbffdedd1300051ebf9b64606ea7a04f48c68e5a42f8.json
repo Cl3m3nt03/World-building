@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE relation_types SET name = ?, icon = ?, category = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "3b1628f780dd700ad1debbffdedd1300051ebf9b64606ea7a04f48c68e5a42f8"
+}

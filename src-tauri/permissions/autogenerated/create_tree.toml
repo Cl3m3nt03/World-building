@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-tree"
+description = "Enables the create_tree command without any pre-configured scope."
+commands.allow = ["create_tree"]
+
+[[permission]]
+identifier = "deny-create-tree"
+description = "Denies the create_tree command without any pre-configured scope."
+commands.deny = ["create_tree"]

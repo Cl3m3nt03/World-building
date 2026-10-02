@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", builtin, name, icon, inverse_id, category\n           FROM relation_types WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "relation_types",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "builtin",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "relation_types",
+            "name": "builtin"
+          }
+        }
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "relation_types",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "icon",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "relation_types",
+            "name": "icon"
+          }
+        }
+      },
+      {
+        "name": "inverse_id",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "relation_types",
+            "name": "inverse_id"
+          }
+        }
+      },
+      {
+        "name": "category",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "relation_types",
+            "name": "category"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "3fdbcd4861cede1db9fc8f28a32d1c5a61390ad9d374f828c2f4c388a6b5ecb3"
+}

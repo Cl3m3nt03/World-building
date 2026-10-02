@@ -10,6 +10,7 @@ pub mod maps;
 pub mod properties;
 pub mod search;
 pub mod tree;
+pub mod trees;
 pub mod ui_state;
 
 use std::path::Path;

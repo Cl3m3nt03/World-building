@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", source_node_id, source_edge_id, target_node_id, relation_type_id,\n                  line_style\n           FROM tree_edges WHERE variant_id = ? ORDER BY sort_order",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "source_node_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "source_node_id"
+          }
+        }
+      },
+      {
+        "name": "source_edge_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "source_edge_id"
+          }
+        }
+      },
+      {
+        "name": "target_node_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "target_node_id"
+          }
+        }
+      },
+      {
+        "name": "relation_type_id",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "relation_type_id"
+          }
+        }
+      },
+      {
+        "name": "line_style",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "line_style"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "c1676af3f41b50af4237bf5528cd0d64d55221d572055825cb88ffadaedd91c9"
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-relation-type-uses"
+description = "Enables the relation_type_uses command without any pre-configured scope."
+commands.allow = ["relation_type_uses"]
+
+[[permission]]
+identifier = "deny-relation-type-uses"
+description = "Denies the relation_type_uses command without any pre-configured scope."
+commands.deny = ["relation_type_uses"]

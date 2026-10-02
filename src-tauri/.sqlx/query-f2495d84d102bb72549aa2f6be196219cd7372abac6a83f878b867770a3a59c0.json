@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM tree_edges WHERE variant_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "f2495d84d102bb72549aa2f6be196219cd7372abac6a83f878b867770a3a59c0"
+}

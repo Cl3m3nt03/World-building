@@ -51,6 +51,8 @@ On peut ajouter du **dessin à main levée** et des **textes libres** par-dessus
 
 Les types de relations personnalisés (nom, icône, et relation inverse éventuelle, comme parent ↔ enfant) sont définis **au niveau du monde**, pour être réutilisés dans tous les arbres.
 
+**Réalisé en M6 (6.1)** : le socle de données, sans interface pour l'instant (migration 0012). Un arbre est un document avec des variantes ordonnées ; chacune garde ses nœuds (une carte, un simple nom ou vide, avec leur position), ses liens (depuis un nœud ou depuis un autre lien — jonction —, vers un nœud, avec un type de relation éventuel et un style de trait) et ses annotations (tracés à main levée et textes). Le contenu d'une variante est enregistré en une fois et vérifié par le Rust (liens dans la variante, pas de boucle ni de cycle de jonctions, types connus, tailles bornées). Une variante se crée par copie d'une autre, se renomme, se réordonne et se supprime (pas la dernière). Les types de relations sont ceux du monde : les cinq fournis (parent ↔ enfant, frère / sœur, partenaire, époux·se, traduits par le front) et ceux qu'on crée (nom, icône, catégorie, inverse gardé dans les deux sens) ; supprimer un type rend ses liens « sans type ». L'arbre suit la corbeille, la duplication et la suppression des documents.
+
 ## Modèle de données (indicatif)
 
 - `relation_types` : id, name, icon, inverse_id, category (famille / couple / autre / custom)
