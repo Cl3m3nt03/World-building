@@ -62,6 +62,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.4)** : la barre du bas du graph porte la loupe. Elle ouvre un champ (« Nom ou alias… ») : les cartes dont le nom ou un alias contient ce qui est tapé, sans accent ni casse, restent nettes et le reste s'estompe ; le nombre de cartes trouvées est annoncé. `Entrée` centre la vue sur la première (par ordre alphabétique), `Échap` ou la croix referme le champ et rend le focus à la loupe.
 
+**Réalisé en M5 (5.5)** : le bouton « Filtrer par type » de la barre du bas ouvre la liste des types et sous-types, à cocher à la souris ou au clavier (le menu reste ouvert) ; un type inclut ses sous-types. Seules les cartes des types cochés et les liens entre elles restent ; les autres cartes gardent leur place pour quand on les réaffiche. Le bouton signale un filtre actif ; « Tout afficher » l'enlève. Quand plus aucune carte ne correspond, le graph le dit (la barre reste là pour changer les filtres).
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)
