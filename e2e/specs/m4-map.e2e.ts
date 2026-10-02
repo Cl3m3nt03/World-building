@@ -204,7 +204,7 @@ describe("M4: the map", () => {
 
     await openCard("Gondor");
     const backlink = await $(
-      '//section[@aria-label="Rétroliens"]//a[contains(., "Arda des Valar")]',
+      '//section[@aria-label="Cité dans"]//a[contains(., "Arda des Valar")]',
     );
     await backlink.waitForDisplayed({ timeoutMsg: "the map is not in Gondor's backlinks" });
     await backlink.click();
