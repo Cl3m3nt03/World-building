@@ -47,3 +47,24 @@ export function useRenameMap(id: string) {
       ]),
   });
 }
+
+/** Puts another image under the map; what is on it keeps its place. */
+export function useSetMapBackground(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (assetId: string) => unwrap(commands.setMapBackground(id, assetId)),
+    onSuccess: (map) => {
+      // Only the background and size: the editor owns the content.
+      queryClient.setQueryData<typeof map>(mapKeys.detail(id), (old) =>
+        old
+          ? {
+              ...old,
+              backgroundAssetId: map.backgroundAssetId,
+              width: map.width,
+              height: map.height,
+            }
+          : map,
+      );
+    },
+  });
+}

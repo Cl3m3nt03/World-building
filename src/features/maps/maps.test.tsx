@@ -25,6 +25,17 @@ const WORLD = {
   lastOpenedAt: "2026-10-02T10:00:00Z",
 } satisfies WorldInfo;
 
+const OTHER: Asset = {
+  id: `${"b".repeat(64)}.png`,
+  name: "Arda remaniée.png",
+  kind: "image",
+  mime: "image/png",
+  size: 4096,
+  width: 4000,
+  height: 3000,
+  createdAt: "2026-10-02T10:00:00Z",
+};
+
 const IMAGE: Asset = {
   id: `${"a".repeat(64)}.png`,
   name: "Terre du Milieu.png",
@@ -83,7 +94,7 @@ beforeEach(() => {
       case "document_tree":
         return tree;
       case "list_assets":
-        return [IMAGE];
+        return [IMAGE, OTHER];
       case "list_cards":
         return [GONDOR];
       case "create_map": {
@@ -93,6 +104,11 @@ beforeEach(() => {
       }
       case "get_map":
         return stored;
+      case "set_map_background": {
+        const { assetId } = payload as { assetId: string };
+        if (stored) stored = { ...stored, backgroundAssetId: assetId, width: 4000, height: 3000 };
+        return stored;
+      }
       case "save_map": {
         const { content } = payload as { content: WorldMap["content"] };
         if (stored) stored = { ...stored, content };
@@ -358,4 +374,42 @@ test("a text is selected and bent, its tool waits for a click and Escape gives u
   expect(screen.getByText(/Cliquez sur la map pour poser le texte/)).toBeTruthy();
   fireEvent.keyDown(window, { key: "Escape" });
   await waitFor(() => expect(tool.getAttribute("aria-pressed")).toBe("false"));
+});
+
+test("a new background keeps the pins, zones and texts", async () => {
+  stored = {
+    ...map("Arda"),
+    content: {
+      ...map("Arda").content,
+      pins: [
+        {
+          id: "p1",
+          layerId: "l1",
+          cardId: null,
+          x: 0.3,
+          y: 0.4,
+          icon: "castle",
+          color: "red",
+          label: "Minas Tirith",
+          size: 1,
+        },
+      ],
+    },
+  };
+  await renderAt("/world/demo/world/map/m1");
+  await screen.findByRole("button", { name: "Pin Minas Tirith" });
+
+  fireEvent.click(screen.getByRole("button", { name: "Fond" }));
+  fireEvent.click(await screen.findByRole("option", { name: "Arda remaniée.png" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
+
+  await waitFor(() =>
+    expect(calls).toContainEqual({
+      command: "set_map_background",
+      payload: { id: "m1", assetId: OTHER.id },
+    }),
+  );
+  // Still there, at the same relative place, and nothing was saved over it.
+  expect(await screen.findByRole("button", { name: "Pin Minas Tirith" })).toBeTruthy();
+  expect(stored?.content.pins).toEqual([expect.objectContaining({ id: "p1", x: 0.3, y: 0.4 })]);
 });
