@@ -64,6 +64,11 @@ type MapViewProps = {
   onTraceClick?: (x: number, y: number) => void;
   /** The first vertex clicked again: the shape closes. */
   onTraceClose?: () => void;
+  /**
+   * Shown in a card (M4 4.10): nothing moves, the wheel scrolls the page
+   * (zoom with + / -).
+   */
+  readOnly?: boolean;
 };
 
 /** Bounds of an image of `width` × `height` px: y goes down, as on screen. */
@@ -105,6 +110,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     trace = null,
     onTraceClick,
     onTraceClose,
+    readOnly = false,
   },
   ref,
 ) {
@@ -173,6 +179,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       attributionControl: false,
       zoomControl: false,
       keyboardPanDelta: 120,
+      scrollWheelZoom: !readOnly,
     });
     map.current = created;
     zoneLayers.current = new ZoneLayers(
@@ -268,9 +275,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       }
       const marker = L.marker(position, {
         icon: L.divIcon({ className: "bz-map-pin", html: "", iconSize: undefined }),
-        draggable: true,
-        keyboard: true,
-        autoPan: true,
+        draggable: !readOnly,
+        keyboard: !readOnly,
+        autoPan: !readOnly,
       }).addTo(current);
       const id = item.id;
       marker.on("dragend", () => {

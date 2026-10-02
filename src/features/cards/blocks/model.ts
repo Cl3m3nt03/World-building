@@ -47,7 +47,9 @@ export type Stats5eBlock = BlockPlace & {
   skills: Skill[];
   actions: StatAction[];
 };
-export type Block = TextBlock | ImageBlock | Stats5eBlock;
+/** A map of the world shown in the card (M4 step 4.10); `mapId` is null until one is chosen. */
+export type MapBlock = BlockPlace & { id: string; type: "map"; mapId: string | null };
+export type Block = TextBlock | ImageBlock | Stats5eBlock | MapBlock;
 export type BlockType = Block["type"];
 
 export function newId(): string {
@@ -85,6 +87,8 @@ export function newBlock(type: BlockType): Block {
       return emptyImageBlock();
     case "stats5e":
       return emptyStats5eBlock();
+    case "map":
+      return { id: newId(), type: "map", mapId: null };
   }
 }
 
@@ -178,6 +182,13 @@ function readBlockContent(value: unknown): Block | null {
     return block;
   }
   if (value.type === "stats5e") return readStats5e(value.id, value);
+  if (value.type === "map") {
+    return {
+      id: value.id,
+      type: "map",
+      mapId: typeof value.mapId === "string" && value.mapId !== "" ? value.mapId : null,
+    };
+  }
   if (value.type === "image") return readImageBlock(value.id, value);
   return null;
 }

@@ -720,5 +720,12 @@
   "maps.background.button": "Background",
   "maps.background.pickerTitle": "New background image of the map",
   "maps.history.undo": "Undo (Ctrl+Z)",
-  "maps.history.redo": "Redo (Ctrl+Y)"
+  "maps.history.redo": "Redo (Ctrl+Y)",
+  "blocks.mapLabel": "Map block {{index}}",
+  "blocks.map.choose": "Map to show",
+  "blocks.map.placeholder": "Choose a map…",
+  "blocks.map.none": "This world has no map yet. Create one from the sidebar (“New map”).",
+  "blocks.map.open": "Open the map",
+  "blocks.map.change": "Change",
+  "blocks.map.missing": "This map no longer exists."
 }

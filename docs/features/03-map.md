@@ -82,6 +82,8 @@ La map est **sauvegardée automatiquement** : chaque modification est persistée
 
 **Réalisé en M4 (4.9)** : tout s'enregistre seul, peu après la dernière modification et en quittant la map (depuis 4.4). **Annuler** et **Rétablir** (boutons, `Ctrl+Z`, `Ctrl+Y` ou `Ctrl+Maj+Z`) parcourent les 100 dernières étapes ; des changements rapprochés (taper un libellé, glisser un curseur) font une seule étape ; dans un champ de texte, `Ctrl+Z` reste celui du champ. Une étape annulée ou rétablie est enregistrée comme les autres.
 
+**Réalisé en M4 (4.10)** : le bloc **Map** d'une carte (menu des blocs ou « / ») choisit une map du monde, puis l'affiche en lecture : ses pins, zones et textes (calques visibles), déplacement en la glissant, zoom avec `+` / `-` (la molette fait défiler la carte), « Ouvrir la map » et « Changer ». Sans map dans le monde, le bloc dit comment en créer une.
+
 ## Modèle de données (indicatif)
 
 - `maps` : document_id, background_asset_id, width, height, tiles_path
