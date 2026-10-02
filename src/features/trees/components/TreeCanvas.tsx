@@ -17,6 +17,8 @@ import { ExternalLink, GitBranchPlus, Replace, Trash2, UserRoundPlus } from "luc
 import {
   forwardRef,
   type KeyboardEvent,
+  type ReactNode,
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -29,6 +31,16 @@ import { Button } from "@/components/ui/button";
 import { CardPicker } from "@/features/cards";
 import type { Card, CardType, RelationType, VariantContent } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
+import {
+  addAnnotation,
+  extendStroke,
+  moveAnnotation,
+  newDrawing,
+  newText,
+  removeAnnotation,
+  updateDrawing,
+  updateText,
+} from "../annotations";
 import {
   addJunctionRelative,
   addNode,
@@ -48,10 +60,12 @@ import {
 } from "../content";
 import { JUNCTION_SIZE, linkGeometry, type Point } from "../geometry";
 import { type Direction, naturalDirection, relationName } from "../relations";
+import { AnnotationLayer, type Tool } from "./AnnotationLayer";
 import { JunctionNode, type JunctionNodeType, junctionEdge, junctionId } from "./JunctionNode";
 import { PersonNode, type PersonNodeType } from "./PersonNode";
 import { RelationEdge, type RelationEdgeType } from "./RelationEdge";
 import { RelationMenu } from "./RelationMenu";
+import { type PenStyle, type TextStyle, TreeTools } from "./TreeTools";
 import { type TreeActions, TreeActionsContext } from "./treeActions";
 
 const NODE_TYPES = { person: PersonNode, junction: JunctionNode };
@@ -95,6 +109,8 @@ type Props = {
   /** Applies a change to the variant's content (it is then saved). */
   onChange: (change: (previous: VariantContent) => VariantContent) => void;
   onOpenCard: (cardId: string) => void;
+  /** More tools for the bottom bar (the variants). */
+  tools?: ReactNode;
 };
 
 function toFlowNodes(
@@ -138,7 +154,7 @@ function nodeName(node: PersonNodeType, empty: string): string {
  * opens its picker and Delete removes it.
  */
 const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
-  { content, cardsById, typesById, relationTypes, label, onChange, onOpenCard },
+  { content, cardsById, typesById, relationTypes, label, onChange, onOpenCard, tools },
   ref,
 ) {
   const { t } = useTranslation();
@@ -368,27 +384,30 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       (node ?? wrapper.current)?.focus();
     }, 50);
 
+  /** Adds an empty node in the middle of the view, selected, its picker open. */
+  function addNodeInView() {
+    const box = wrapper.current?.getBoundingClientRect();
+    const middle = box
+      ? flow.screenToFlowPosition({ x: box.left + box.width / 2, y: box.top + box.height / 2 })
+      : { x: 0, y: 0 };
+    let x = middle.x - NODE_WIDTH / 2;
+    const y = middle.y - NODE_HEIGHT / 2;
+    const covers = () =>
+      content.nodes.some(
+        (node) =>
+          Math.abs((node.x ?? 0) - x) < NODE_WIDTH + 16 &&
+          Math.abs((node.y ?? 0) - y) < NODE_HEIGHT + 16,
+      );
+    for (let tries = 0; tries < 200 && covers(); tries++) x += NEW_NODE_STEP;
+    const node = newNode(Math.round(x), Math.round(y));
+    toSelect.current = node.id;
+    onChange((previous) => addNode(previous, node));
+    setPicking(node.id);
+  }
+
   useImperativeHandle(ref, () => ({
     recenter: () => void flow.fitView({ ...FIT_VIEW, duration: 200 }),
-    addNode: () => {
-      const box = wrapper.current?.getBoundingClientRect();
-      const middle = box
-        ? flow.screenToFlowPosition({ x: box.left + box.width / 2, y: box.top + box.height / 2 })
-        : { x: 0, y: 0 };
-      let x = middle.x - NODE_WIDTH / 2;
-      const y = middle.y - NODE_HEIGHT / 2;
-      const covers = () =>
-        content.nodes.some(
-          (node) =>
-            Math.abs((node.x ?? 0) - x) < NODE_WIDTH + 16 &&
-            Math.abs((node.y ?? 0) - y) < NODE_HEIGHT + 16,
-        );
-      for (let tries = 0; tries < 200 && covers(); tries++) x += NEW_NODE_STEP;
-      const node = newNode(Math.round(x), Math.round(y));
-      toSelect.current = node.id;
-      onChange((previous) => addNode(previous, node));
-      setPicking(node.id);
-    },
+    addNode: () => addNodeInView(),
   }));
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -417,6 +436,10 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       }
       return;
     }
+    if (event.key === "Escape" && tool !== "select") {
+      changeTool("select");
+      return;
+    }
     // Only on the view itself, not while a field or a button has the focus.
     if (event.target !== event.currentTarget) return;
     const steps: Record<string, [number, number]> = {
@@ -441,6 +464,67 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
 
   const empty = current ? isEmpty(current) : false;
 
+  // Tools (as on the board): select, pan, draw (or erase), write.
+  const [tool, setTool] = useState<Tool>("select");
+  const [pen, setPen] = useState<PenStyle>({ color: "ink", width: 4 });
+  const [textStyle, setTextStyle] = useState<TextStyle>({ color: "ink", size: 20 });
+  const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null);
+  const [editingAnnotation, setEditingAnnotation] = useState<string | null>(null);
+  const [draft, setDraft] = useState<[number, number][] | null>(null);
+  const annotation = content.annotations.find((a) => a.id === selectedAnnotation);
+  const changeTool = (next: Tool) => {
+    setTool(next);
+    setSelectedAnnotation(null);
+    setPicking(null);
+    if (next !== "select") {
+      setNodes((shown) =>
+        shown.map((node) => (node.selected ? { ...node, selected: false } : node)),
+      );
+      setSelectedEdges(new Set());
+    }
+  };
+
+  /**
+   * Drawing and writing take the pointer before React Flow: a stroke starts
+   * (or a text is placed) anywhere on the tree, nodes included, but not on
+   * the tools, an open field or a menu.
+   */
+  const onPointerDownCapture = (event: ReactPointerEvent) => {
+    if (event.button !== 0 || (tool !== "draw" && tool !== "text")) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("[role=toolbar], input, [role=menu], [role=dialog]")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    if (tool === "text") {
+      const text = newText(Math.round(at.x), Math.round(at.y), textStyle.color, textStyle.size);
+      onChange((previous) => addAnnotation(previous, text));
+      setEditingAnnotation(text.id);
+      return;
+    }
+    let points: [number, number][] = [[at.x, at.y]];
+    setDraft(points);
+    const move = (moved: PointerEvent) => {
+      const p = flow.screenToFlowPosition({ x: moved.clientX, y: moved.clientY });
+      const next = extendStroke(points, p.x, p.y);
+      if (next !== points) {
+        points = next;
+        setDraft(points);
+      }
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      setDraft(null);
+      const rounded = points.map(
+        ([x, y]) => [Math.round(x * 10) / 10, Math.round(y * 10) / 10] as [number, number],
+      );
+      onChange((previous) => addAnnotation(previous, newDrawing(rounded, pen.color, pen.width)));
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
   return (
     <div
       ref={wrapper}
@@ -449,8 +533,12 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       // biome-ignore lint/a11y/noNoninteractiveTabindex: the view takes the keyboard to move
       tabIndex={0}
       onKeyDown={onKeyDown}
+      onPointerDownCapture={onPointerDownCapture}
       className={cn(
-        "bz-tree size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        "bz-tree relative size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        tool === "draw" && "cursor-crosshair",
+        tool === "text" && "cursor-text",
+        tool === "erase" && "bz-tree-erasing",
         // A selected link's ends are dragged: the attach points let them through.
         edges.some((edge) => edge.selected) && "bz-tree-edge-selected",
       )}
@@ -465,7 +553,11 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           connectionLineType={ConnectionLineType.SmoothStep}
           connectionRadius={32}
           onConnect={onConnect}
-          edgesReconnectable
+          nodesDraggable={tool === "select"}
+          nodesConnectable={tool === "select"}
+          elementsSelectable={tool === "select"}
+          panOnDrag={tool === "select" || tool === "pan"}
+          edgesReconnectable={tool === "select"}
           reconnectRadius={14}
           onReconnectStart={(_, __, fixedEnd) => {
             // React Flow gives the end that stays: the dragged one is the other.
@@ -521,7 +613,10 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           onNodeDoubleClick={(_, node) => {
             if (node.type === "person" && node.data.card) onOpenCard(node.data.card.id);
           }}
-          onPaneClick={() => setPicking(null)}
+          onPaneClick={() => {
+            setPicking(null);
+            setSelectedAnnotation(null);
+          }}
           fitView
           fitViewOptions={FIT_VIEW}
           minZoom={0.1}
@@ -531,6 +626,24 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           zoomOnDoubleClick={false}
         >
           <Background gap={24} size={1} />
+          <AnnotationLayer
+            annotations={content.annotations}
+            tool={tool}
+            draft={draft ? { points: draft, color: pen.color, width: pen.width } : null}
+            selectedId={selectedAnnotation}
+            editingId={editingAnnotation}
+            onSelect={setSelectedAnnotation}
+            onEdit={setEditingAnnotation}
+            onMove={(id, dx, dy) => onChange((previous) => moveAnnotation(previous, id, dx, dy))}
+            onRemove={(id) => {
+              onChange((previous) => removeAnnotation(previous, id));
+              setSelectedAnnotation((selected) => (selected === id ? null : selected));
+            }}
+            onText={(id, text) => {
+              onChange((previous) => updateText(previous, id, { text }));
+              setEditingAnnotation(null);
+            }}
+          />
           {current && (
             <NodeToolbar
               nodeId={current.id}
@@ -604,6 +717,41 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           )}
         </ReactFlow>
       </TreeActionsContext.Provider>
+      <TreeTools
+        tool={tool}
+        onTool={changeTool}
+        pen={pen}
+        onPen={setPen}
+        text={textStyle}
+        onText={setTextStyle}
+        selected={annotation}
+        onSelectedStyle={({ color, size, width }) => {
+          if (!annotation) return;
+          onChange((previous) =>
+            annotation.kind === "text"
+              ? updateText(previous, annotation.id, {
+                  ...(color ? { color } : {}),
+                  ...(size ? { size } : {}),
+                })
+              : updateDrawing(previous, annotation.id, {
+                  ...(color ? { color } : {}),
+                  ...(width ? { width } : {}),
+                }),
+          );
+        }}
+        onSelectedRemove={() => {
+          if (!annotation) return;
+          onChange((previous) => removeAnnotation(previous, annotation.id));
+          setSelectedAnnotation(null);
+        }}
+        onAddNode={() => {
+          changeTool("select");
+          addNodeInView();
+        }}
+        onRecenter={() => void flow.fitView({ ...FIT_VIEW, duration: 200 })}
+      >
+        {tools}
+      </TreeTools>
     </div>
   );
 });
