@@ -5,6 +5,7 @@ pub mod cards;
 pub mod content;
 pub mod documents;
 pub mod links;
+pub mod maps;
 pub mod media;
 pub mod properties;
 pub mod search;

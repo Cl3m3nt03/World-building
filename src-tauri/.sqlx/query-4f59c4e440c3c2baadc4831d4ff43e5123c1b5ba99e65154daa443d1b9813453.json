@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO maps (document_id, background_asset_id, width, height) VALUES (?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "4f59c4e440c3c2baadc4831d4ff43e5123c1b5ba99e65154daa443d1b9813453"
+}

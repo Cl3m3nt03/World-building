@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", layer_id, card_id, x, y, icon, color, label, size\n           FROM map_pins WHERE map_id = ? ORDER BY sort_order",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "layer_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "layer_id"
+          }
+        }
+      },
+      {
+        "name": "card_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "card_id"
+          }
+        }
+      },
+      {
+        "name": "x",
+        "ordinal": 3,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "x"
+          }
+        }
+      },
+      {
+        "name": "y",
+        "ordinal": 4,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "y"
+          }
+        }
+      },
+      {
+        "name": "icon",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "icon"
+          }
+        }
+      },
+      {
+        "name": "color",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "name": "label",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "label"
+          }
+        }
+      },
+      {
+        "name": "size",
+        "ordinal": 8,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "map_pins",
+            "name": "size"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "507ddf274ff6f31fa2a85b1e7dd3eb17a14411cb491e67314cd247a8a5bbe91a"
+}

@@ -121,6 +121,18 @@ export const commands = {
 { kind: "cards"; value: string[] } | null) => typedError<CardProperty[], AppError>(__TAURI_INVOKE("set_property_value", { cardId, propertyId, value })),
 	/**  Documents citing a card ("cited in"), with how they cite it. */
 	cardBacklinks: (cardId: string) => typedError<Backlink[], AppError>(__TAURI_INVOKE("card_backlinks", { cardId })),
+	/**
+	 *  Creates a map on an image of the media library, with one layer named
+	 *  `layer_name` (translated by the front).
+	 */
+	createMap: (title: string, backgroundAssetId: string, layerName: string) => typedError<Map, AppError>(__TAURI_INVOKE("create_map", { title, backgroundAssetId, layerName })),
+	getMap: (id: string) => typedError<Map, AppError>(__TAURI_INVOKE("get_map", { id })),
+	/**  Replaces the map's layers, pins, zones and texts with `content`. */
+	saveMap: (id: string, content: MapContent) => typedError<null, AppError>(__TAURI_INVOKE("save_map", { id, content })),
+	/**  Puts another image under the map, keeping what is on it. */
+	setMapBackground: (id: string, assetId: string) => typedError<Map, AppError>(__TAURI_INVOKE("set_map_background", { id, assetId })),
+	/**  Duplicates a map as `title` (translated by the front), right after it. */
+	duplicateMap: (id: string, title: string) => typedError<Map, AppError>(__TAURI_INVOKE("duplicate_map", { id, title })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -323,7 +335,9 @@ export type AssetUsage =
 /**  The image of a card. */
 { kind: "cardImage"; cardId: string; cardTitle: string; inTrash: boolean } | 
 /**  In an image block of a card. */
-{ kind: "cardBlock"; cardId: string; cardTitle: string; inTrash: boolean };
+{ kind: "cardBlock"; cardId: string; cardTitle: string; inTrash: boolean } | 
+/**  The background of a map (M4). */
+{ kind: "mapBackground"; mapId: string; mapTitle: string; inTrash: boolean };
 
 /**  A document that cites a card, and how ("cited in" at the bottom of a card). */
 export type Backlink = {
@@ -463,6 +477,11 @@ export type ImportedAsset = {
 	created: boolean,
 };
 
+export type LabelStyle = {
+	font: string,
+	size: number | null,
+};
+
 export type Language = "fr" | "en";
 
 export type LinkKind = 
@@ -472,6 +491,67 @@ export type LinkKind =
 "property" | 
 /**  The card is pinned on a map. */
 "mapPin";
+
+/**  A map as seen by the front. */
+export type Map = {
+	id: string,
+	title: string,
+	/**  `null` once the background image was deleted from the media library. */
+	backgroundAssetId: string | null,
+	width: number,
+	height: number,
+	content: MapContent,
+};
+
+/**  What is drawn on a map, in display order (layers bottom to top). */
+export type MapContent = {
+	layers: MapLayer[],
+	pins: MapPin[],
+	zones: MapZone[],
+	texts: MapText[],
+};
+
+export type MapLayer = {
+	id: string,
+	name: string,
+	visible: boolean,
+};
+
+export type MapPin = {
+	id: string,
+	layerId: string,
+	/**  The card the pin stands for; `null` for a plain marker. */
+	cardId: string | null,
+	x: number | null,
+	y: number | null,
+	icon: string,
+	color: string,
+	label: string,
+	/**  Scale of the pin (1 is the default size). */
+	size: number | null,
+};
+
+export type MapText = {
+	id: string,
+	layerId: string,
+	x: number | null,
+	y: number | null,
+	text: string,
+	style: TextStyle,
+};
+
+export type MapZone = {
+	id: string,
+	layerId: string,
+	/**  Vertices `[x, y]`, at least 3. */
+	points: ([(number | null), (number | null)])[],
+	label: string,
+	labelStyle: LabelStyle,
+	cardId: string | null,
+	fillColor: string,
+	opacity: number | null,
+	pattern: ZonePattern,
+};
 
 export type NewCardType = {
 	/**  The type to create a subtype of, or `null` for a type. */
@@ -634,6 +714,17 @@ export type TextPart = {
 	matched: boolean,
 };
 
+export type TextStyle = {
+	font: string,
+	size: number | null,
+	/**  Letter spacing, in em. */
+	spacing: number | null,
+	/**  Bend of the text: 0 straight, positive arches up, negative down. */
+	arc: number | null,
+	/**  The text grows and shrinks with the zoom. */
+	scaleWithZoom: boolean,
+};
+
 export type Theme = "light" | "dark" | "system";
 
 /**  A live document as the sidebar shows it. */
@@ -716,6 +807,8 @@ export type WorldTheme =
 background: string | null; 
 /**  Accent color, `#rrggbb` in lower case. */
 accent: string };
+
+export type ZonePattern = "solid" | "hatch" | "dots" | "cross";
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-map"
+description = "Enables the create_map command without any pre-configured scope."
+commands.allow = ["create_map"]
+
+[[permission]]
+identifier = "deny-create-map"
+description = "Denies the create_map command without any pre-configured scope."
+commands.deny = ["create_map"]

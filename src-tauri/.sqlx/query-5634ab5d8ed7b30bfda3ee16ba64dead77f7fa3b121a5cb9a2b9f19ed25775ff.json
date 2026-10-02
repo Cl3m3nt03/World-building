@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO map_pins (id, map_id, layer_id, card_id, x, y, icon, color, label, size,\n                               sort_order)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": []
+  },
+  "hash": "5634ab5d8ed7b30bfda3ee16ba64dead77f7fa3b121a5cb9a2b9f19ed25775ff"
+}

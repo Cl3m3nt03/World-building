@@ -472,6 +472,7 @@
   "blocks.image.cancelled": "Moving cancelled: the image stays at position {{index}} of {{count}}.",
   "media.usage.cardImage": "image of the card \"{{name}}\"",
   "media.usage.cardBlock": "image block of the card \"{{name}}\"",
+  "media.usage.mapBackground": "background of the map \"{{name}}\"",
   "media.usage.inTrash": "{{where}} (in the trash)",
   "templates.use": "Use the \"{{type}}\" template",
   "templates.apply": "Apply the \"{{type}}\" template",

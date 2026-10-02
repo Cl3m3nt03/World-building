@@ -9,6 +9,7 @@ pub mod cards;
 pub mod documents;
 pub mod library;
 pub mod links;
+pub mod maps;
 pub mod properties;
 pub mod settings;
 pub mod tree;

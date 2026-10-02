@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE maps SET background_asset_id = NULL, tiles_path = NULL\n         WHERE background_asset_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "1fe4b042068719e3c60d453e8baa36c411305589aa8eba20619fbd6f09c21e8d"
+}

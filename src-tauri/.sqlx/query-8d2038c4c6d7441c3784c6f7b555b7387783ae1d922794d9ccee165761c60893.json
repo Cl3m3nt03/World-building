@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO map_texts (id, map_id, layer_id, x, y, text, style, sort_order)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "8d2038c4c6d7441c3784c6f7b555b7387783ae1d922794d9ccee165761c60893"
+}

@@ -66,6 +66,8 @@ La map est **sauvegardée automatiquement** : chaque modification est persistée
 - Une map peut être intégrée comme bloc dans une carte (`01`) ou posée sur un canvas (`06`).
 - Les pins liés à une carte créent des liens `map_pin`, visibles dans les rétroliens de la carte.
 
+**Réalisé en M4 (4.1)** : le socle de données (tables ci-dessous, enregistrement du contenu en une fois, liens `map_pin` vers les cartes, fond remplaçable, duplication, corbeille), sans interface pour l'instant.
+
 ## Modèle de données (indicatif)
 
 - `maps` : document_id, background_asset_id, width, height, tiles_path

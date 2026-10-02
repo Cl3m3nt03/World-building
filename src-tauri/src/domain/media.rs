@@ -114,12 +114,26 @@ pub enum AssetUsage {
         card_title: String,
         in_trash: bool,
     },
+    /// The background of a map (M4).
+    #[serde(rename_all = "camelCase")]
+    MapBackground {
+        map_id: String,
+        map_title: String,
+        in_trash: bool,
+    },
 }
 
 /// Where cards use an asset: as their image, in image blocks (a card using
 /// it both ways is listed twice).
 pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsage>> {
     let mut usages = Vec::new();
+    for row in crate::db::maps::using_asset(pool, id).await? {
+        usages.push(AssetUsage::MapBackground {
+            map_id: row.id,
+            map_title: row.title,
+            in_trash: row.in_trash,
+        });
+    }
     for row in crate::db::cards::using_asset(pool, id).await? {
         if row.as_image {
             usages.push(AssetUsage::CardImage {
@@ -344,6 +358,7 @@ pub async fn delete(pool: &SqlitePool, assets_dir: &Path, id: &str) -> AppResult
         return Err(AppError::InvalidInput(format!("asset not found: {id}")));
     }
     crate::db::cards::clear_image(pool, id).await?;
+    crate::db::maps::clear_background(pool, id).await?;
     match std::fs::remove_file(&path) {
         Ok(()) => {}
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}

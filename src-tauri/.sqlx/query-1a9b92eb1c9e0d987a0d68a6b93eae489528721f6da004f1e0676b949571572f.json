@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO map_layers (id, map_id, name, visible, sort_order) VALUES (?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "1a9b92eb1c9e0d987a0d68a6b93eae489528721f6da004f1e0676b949571572f"
+}

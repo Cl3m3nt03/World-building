@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM map_layers WHERE map_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "273662527c383c608d666d2ee3070577b37a007496ee2c5778e9cd84c1527273"
+}
