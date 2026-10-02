@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.0](https://github.com/Cl3m3nt03/World-building/compare/v0.4.0...v0.5.0) (2026-10-02)
+
+
+### Fonctionnalités
+
+* **graph:** adjust the labels, isolated cards, node size and forces ([#228](https://github.com/Cl3m3nt03/World-building/issues/228)) ([8676349](https://github.com/Cl3m3nt03/World-building/commit/8676349401b273a82204a59f9c29d1400017ad05)), closes [#214](https://github.com/Cl3m3nt03/World-building/issues/214)
+* **graph:** create, open and browse a graph of the world's cards ([#223](https://github.com/Cl3m3nt03/World-building/issues/223)) ([071025d](https://github.com/Cl3m3nt03/World-building/commit/071025dd51917ec29a38724d1bfff9ed3ad1030b)), closes [#210](https://github.com/Cl3m3nt03/World-building/issues/210)
+* **graph:** filter the graph by card types and subtypes ([#227](https://github.com/Cl3m3nt03/World-building/issues/227)) ([209673c](https://github.com/Cl3m3nt03/World-building/commit/209673c7c86168cbf3473f67e1cdd024027e384c)), closes [#213](https://github.com/Cl3m3nt03/World-building/issues/213)
+* **graph:** keep each graph's configuration and save it under a new name ([#230](https://github.com/Cl3m3nt03/World-building/issues/230)) ([961931d](https://github.com/Cl3m3nt03/World-building/commit/961931ddce415cfbc222c922340c0245f3377356)), closes [#216](https://github.com/Cl3m3nt03/World-building/issues/216)
+* **graph:** pin nodes so that they stay in place ([#229](https://github.com/Cl3m3nt03/World-building/issues/229)) ([b577084](https://github.com/Cl3m3nt03/World-building/commit/b5770847bd353ca2a1944afbb6d4c1a5a5e1dd45)), closes [#215](https://github.com/Cl3m3nt03/World-building/issues/215)
+* **graph:** search the graph's cards by name or alias ([#225](https://github.com/Cl3m3nt03/World-building/issues/225)) ([521ee45](https://github.com/Cl3m3nt03/World-building/commit/521ee456416a616ac9f968fab956f55b48367e68)), closes [#212](https://github.com/Cl3m3nt03/World-building/issues/212)
+* **graph:** select a card, see its neighbours, open it, drag it ([#226](https://github.com/Cl3m3nt03/World-building/issues/226)) ([f91d24b](https://github.com/Cl3m3nt03/World-building/commit/f91d24b2fcec9314221f9ae606696183d8841044)), closes [#211](https://github.com/Cl3m3nt03/World-building/issues/211)
+* **graph:** store graphs with their configuration and serve the cards' links ([#221](https://github.com/Cl3m3nt03/World-building/issues/221)) ([8e720b2](https://github.com/Cl3m3nt03/World-building/commit/8e720b2f7ac3254ae8ea1d324418d8bcaf4c4259)), closes [#209](https://github.com/Cl3m3nt03/World-building/issues/209)
+* **home:** show the world's graph on Home ([#234](https://github.com/Cl3m3nt03/World-building/issues/234)) ([ae931ab](https://github.com/Cl3m3nt03/World-building/commit/ae931abe2e4cefbd3b31c633c9f381ca69f8d582)), closes [#233](https://github.com/Cl3m3nt03/World-building/issues/233)
+
+
+### Performances
+
+* **graph:** stay fluid with 5,000 cards and 20,000 links ([#231](https://github.com/Cl3m3nt03/World-building/issues/231)) ([2983d23](https://github.com/Cl3m3nt03/World-building/commit/2983d2326f1997bc66550551a33c42c216bf0a05)), closes [#217](https://github.com/Cl3m3nt03/World-building/issues/217)
+
 ## [0.4.0](https://github.com/Cl3m3nt03/World-building/compare/v0.3.0...v0.4.0) (2026-10-02)
 
 
