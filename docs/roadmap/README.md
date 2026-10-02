@@ -8,7 +8,7 @@ L'ordre suit les dépendances : le Graph a besoin des liens entre cartes, le Can
 | **M1 Mondes & interface** | Liste des mondes, création, réglages du monde et de l'app, onglet Home, médiathèque | `M1-mondes-et-interface.md` |
 | **M2 Cartes & types** | Types et sous-types, propriétés, blocs, templates guidés, alias | `M2-cartes-et-types.md` |
 | **M3 Organisation** | Sidebar, dossiers, parent/enfant, épingles, tri, filtres, recherche, et les retours #110 à #113 | `M3-organisation.md` |
-| **M4 Map** | Pins, zones, calques, texte, fond | `features/03-map.md` |
+| **M4 Map** | Pins, zones, calques, texte, fond | `M4-map.md` |
 | **M5 Graph** | Graphe de forces, filtres, réglages, configurations sauvegardées | `features/04-graph.md` |
 | **M6 Relation Tree** | Nœuds, relations, jonctions, variantes | `features/05-relation-tree.md` |
 | **M7 Canvas** | Tableau blanc et intégration des autres modules | `features/06-canvas.md` |
