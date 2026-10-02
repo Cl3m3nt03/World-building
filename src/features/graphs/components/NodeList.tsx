@@ -1,5 +1,7 @@
+import { Pin, PinOff } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 import { typeColor, typeIcon } from "@/features/card-types";
 import type { CardType, GraphEdge, GraphNode } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
@@ -11,6 +13,8 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onOpen: (id: string) => void;
+  pinned: ReadonlyMap<string, unknown>;
+  onTogglePin: (id: string) => void;
 };
 
 /**
@@ -19,7 +23,16 @@ type Props = {
  * drawing follows), Enter opens the card; under it, the selected card's
  * neighbours.
  */
-export function NodeList({ nodes, edges, typesById, selectedId, onSelect, onOpen }: Props) {
+export function NodeList({
+  nodes,
+  edges,
+  typesById,
+  selectedId,
+  onSelect,
+  onOpen,
+  pinned,
+  onTogglePin,
+}: Props) {
   const { t } = useTranslation();
   const list = useRef<HTMLDivElement>(null);
   const sorted = useMemo(() => [...nodes].sort((a, b) => a.title.localeCompare(b.title)), [nodes]);
@@ -104,10 +117,29 @@ export function NodeList({ nodes, edges, typesById, selectedId, onSelect, onOpen
                 style={{ color: typeColor(type?.color ?? "slate") }}
               />
               <span className="truncate">{node.title}</span>
+              {pinned.has(node.id) && (
+                <>
+                  <Pin aria-hidden className="ml-auto size-3.5 shrink-0 text-primary" />
+                  <span className="sr-only">{t("graphs.pins.pinnedMark")}</span>
+                </>
+              )}
             </div>
           );
         })}
       </div>
+      {selected && (
+        <Button
+          variant="secondary"
+          size="sm"
+          aria-pressed={pinned.has(selected.id)}
+          onClick={() => onTogglePin(selected.id)}
+        >
+          {pinned.has(selected.id) ? <PinOff /> : <Pin />}
+          {pinned.has(selected.id)
+            ? t("graphs.pins.unpinNamed", { name: selected.title })
+            : t("graphs.pins.pinNamed", { name: selected.title })}
+        </Button>
+      )}
       {selected && (
         <section aria-label={t("graphs.list.neighbours", { name: selected.title })}>
           <h3 className="text-xs font-medium text-muted-foreground">

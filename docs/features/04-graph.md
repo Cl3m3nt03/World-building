@@ -66,6 +66,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.6)** : le bouton « Réglages du graph » ouvre le panneau : afficher les noms, masquer les cartes sans lien, et les curseurs taille des nœuds, distance et force des liens, répulsion, collision, gravité X et Y (bornes du Rust). Chaque changement relance la simulation en douceur ; « Revenir aux réglages par défaut » remet tout.
 
+**Réalisé en M5 (5.7)** : clic droit sur un nœud : « Épingler » / « Désépingler » et « Ouvrir la carte » ; au clavier, le bouton « Épingler … » sous la liste agit sur la carte sélectionnée. Un nœud épinglé porte un point de la couleur principale (et « épinglée » dans la liste) ; il ne bouge plus, quels que soient les réglages ou les déplacements de la vue. Le glisser le déplace : il reste épinglé là où on le lâche.
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)

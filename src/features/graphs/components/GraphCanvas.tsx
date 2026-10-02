@@ -1,4 +1,12 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { ArrowUpRight, Pin, PinOff } from "lucide-react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { assetUrl } from "@/lib/assets";
 import type { CardType, GraphEdge, GraphNode } from "@/lib/bindings";
 import type { Settings } from "../settings";
@@ -21,6 +29,8 @@ export type GraphCanvasHandle = {
   recenter: () => void;
   /** Moves the view so that the node `id` is at the centre. */
   centerOn: (id: string) => void;
+  /** Where the node `id` is now, in graph coordinates. */
+  positionOf: (id: string) => [number, number] | null;
 };
 
 type Props = {
@@ -37,6 +47,12 @@ type Props = {
   onSelect: (id: string | null) => void;
   /** Double click, or Enter on the selected node: opens the card. */
   onOpen: (id: string) => void;
+  /** Pinned nodes and where they stay. */
+  pinned: ReadonlyMap<string, readonly [number, number]>;
+  /** Right click › Pin / Unpin. */
+  onTogglePin: (id: string) => void;
+  /** A pinned node dropped elsewhere: it stays pinned there. */
+  onPinnedMove: (id: string, x: number, y: number) => void;
 };
 
 /** Value of a CSS variable of the theme, or `fallback`. */
@@ -57,9 +73,27 @@ function typeFill(type: CardType | undefined): string {
  * (arrows, + and -).
  */
 export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
-  { nodes, edges, typesById, settings, label, selectedId, highlighted = null, onSelect, onOpen },
+  {
+    nodes,
+    edges,
+    typesById,
+    settings,
+    label,
+    selectedId,
+    highlighted = null,
+    onSelect,
+    onOpen,
+    pinned,
+    onTogglePin,
+    onPinnedMove,
+  },
   ref,
 ) {
+  const { t } = useTranslation();
+  // The node a right click was made on (its menu).
+  const [menuNode, setMenuNode] = useState<string | null>(null);
+  const pinnedRef = useRef(pinned);
+  pinnedRef.current = pinned;
   const container = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const transform = useRef<Transform>({ tx: 0, ty: 0, k: 1 });
@@ -75,10 +109,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     () =>
       nodes.map((node) => {
         const last = lastPositions.current.get(node.id);
+        const fixed = pinnedRef.current.get(node.id);
         return {
           id: node.id,
           radius: NODE_RADIUS,
           ...(last ? { x: last[0], y: last[1] } : {}),
+          ...(fixed ? { fx: fixed[0], fy: fixed[1] } : {}),
         };
       }),
     [nodes],
@@ -206,6 +242,22 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
       context.beginPath();
       context.arc(x, y, radius + (selected ? 1.5 / k : 0), 0, Math.PI * 2);
       context.stroke();
+      if (pinned.has(node.id)) {
+        // A pinned node: a dot in the primary colour at its top right.
+        context.beginPath();
+        context.arc(
+          x + radius * 0.75,
+          y - radius * 0.75,
+          Math.max(3 / k, radius * 0.28),
+          0,
+          Math.PI * 2,
+        );
+        context.fillStyle = primary;
+        context.fill();
+        context.lineWidth = 1.5 / k;
+        context.strokeStyle = background;
+        context.stroke();
+      }
     }
     context.globalAlpha = 1;
 
@@ -327,6 +379,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
       autoFit.current = true;
       redraw();
     },
+    positionOf: (id) => {
+      const index = indexOf.get(id);
+      const positions = simulation.positions.current;
+      if (index === undefined || index * 2 + 1 >= positions.length) return null;
+      return [positions[index * 2] as number, positions[index * 2 + 1] as number];
+    },
     centerOn: (id) => {
       const index = indexOf.get(id);
       const element = canvas.current;
@@ -347,7 +405,22 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   // biome-ignore lint/correctness/useExhaustiveDependencies: redraw reads the latest values
   useEffect(() => {
     redraw();
-  }, [nodes, edges, settings, typesById, focus, selectedId]);
+  }, [nodes, edges, settings, typesById, focus, selectedId, pinned]);
+
+  // Pinned or freed from the menu or the list: the simulation follows.
+  const sentPins = useRef(pinned);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: simulation.send reads a ref
+  useEffect(() => {
+    const before = sentPins.current;
+    sentPins.current = pinned;
+    for (const [id, [x, y]] of pinned) {
+      const old = before.get(id);
+      if (!old || old[0] !== x || old[1] !== y) simulation.send({ type: "fix", id, x, y });
+    }
+    for (const id of before.keys()) {
+      if (!pinned.has(id)) simulation.send({ type: "fix", id, x: null, y: null });
+    }
+  }, [pinned]);
 
   // The canvas follows the size of its container.
   // biome-ignore lint/correctness/useExhaustiveDependencies: bound once
@@ -379,7 +452,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   // What the pointer holds: the view (to move it) or a node (to drag it).
   const dragging = useRef<
     | { kind: "view"; x: number; y: number; moved: boolean }
-    | { kind: "node"; id: string; x: number; y: number; moved: boolean }
+    | { kind: "node"; id: string; x: number; y: number; moved: boolean; at?: [number, number] }
     | null
   >(null);
   const local = (event: { clientX: number; clientY: number }): [number, number] => {
@@ -389,82 +462,109 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
 
   return (
     <div ref={container} className="relative size-full overflow-hidden rounded-lg bg-muted">
-      <canvas
-        ref={canvas}
-        role="img"
-        aria-label={label}
-        tabIndex={0}
-        className="size-full cursor-grab outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
-        onPointerDown={(event) => {
-          if (event.button !== 0 && event.button !== 1) return;
-          event.currentTarget.setPointerCapture?.(event.pointerId);
-          const [sx, sy] = local(event);
-          const id = event.button === 0 ? nodeAt(sx, sy) : null;
-          dragging.current = id
-            ? { kind: "node", id, x: event.clientX, y: event.clientY, moved: false }
-            : { kind: "view", x: event.clientX, y: event.clientY, moved: false };
-        }}
-        onPointerMove={(event) => {
-          const held = dragging.current;
-          if (!held) {
-            const [sx, sy] = local(event);
-            event.currentTarget.style.cursor = nodeAt(sx, sy) ? "pointer" : "";
-            return;
-          }
-          const moved =
-            held.moved || Math.hypot(event.clientX - held.x, event.clientY - held.y) > 3;
-          if (!moved) return;
-          if (held.kind === "view") {
-            panBy(event.clientX - held.x, event.clientY - held.y);
-            dragging.current = { ...held, x: event.clientX, y: event.clientY, moved };
-          } else {
-            const [gx, gy] = toGraph(...local(event));
-            simulation.send({ type: "drag", id: held.id, x: gx, y: gy });
-            dragging.current = { ...held, moved };
-          }
-        }}
-        onPointerUp={() => {
-          const held = dragging.current;
-          dragging.current = null;
-          if (!held) return;
-          if (held.kind === "node") {
-            if (held.moved) simulation.send({ type: "drag", id: held.id, x: null, y: null });
-            else onSelect(held.id);
-          } else if (!held.moved) {
-            onSelect(null);
-          }
-        }}
-        onDoubleClick={(event) => {
-          const id = nodeAt(...local(event));
-          if (id) onOpen(id);
-        }}
-        onKeyDown={(event) => {
-          const element = event.currentTarget;
-          const steps: Record<string, [number, number]> = {
-            ArrowLeft: [KEY_PAN, 0],
-            ArrowRight: [-KEY_PAN, 0],
-            ArrowUp: [0, KEY_PAN],
-            ArrowDown: [0, -KEY_PAN],
-          };
-          const step = steps[event.key];
-          if (step) {
-            event.preventDefault();
-            panBy(step[0], step[1]);
-          } else if (event.key === "+" || event.key === "=") {
-            event.preventDefault();
-            zoomAt(1.25, element.clientWidth / 2, element.clientHeight / 2);
-          } else if (event.key === "Enter" && selectedId) {
-            event.preventDefault();
-            onOpen(selectedId);
-          } else if (event.key === "Escape" && selectedId) {
-            event.preventDefault();
-            onSelect(null);
-          } else if (event.key === "-") {
-            event.preventDefault();
-            zoomAt(0.8, element.clientWidth / 2, element.clientHeight / 2);
-          }
-        }}
-      />
+      <ContextMenu onOpenChange={(open) => !open && setMenuNode(null)}>
+        <ContextMenuTrigger asChild>
+          <canvas
+            ref={canvas}
+            onContextMenu={(event) => {
+              // A menu only on a node.
+              const id = nodeAt(...local(event));
+              if (!id) {
+                event.preventDefault();
+                return;
+              }
+              setMenuNode(id);
+            }}
+            role="img"
+            aria-label={label}
+            tabIndex={0}
+            className="size-full cursor-grab outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
+            onPointerDown={(event) => {
+              if (event.button !== 0 && event.button !== 1) return;
+              event.currentTarget.setPointerCapture?.(event.pointerId);
+              const [sx, sy] = local(event);
+              const id = event.button === 0 ? nodeAt(sx, sy) : null;
+              dragging.current = id
+                ? { kind: "node", id, x: event.clientX, y: event.clientY, moved: false }
+                : { kind: "view", x: event.clientX, y: event.clientY, moved: false };
+            }}
+            onPointerMove={(event) => {
+              const held = dragging.current;
+              if (!held) {
+                const [sx, sy] = local(event);
+                event.currentTarget.style.cursor = nodeAt(sx, sy) ? "pointer" : "";
+                return;
+              }
+              const moved =
+                held.moved || Math.hypot(event.clientX - held.x, event.clientY - held.y) > 3;
+              if (!moved) return;
+              if (held.kind === "view") {
+                panBy(event.clientX - held.x, event.clientY - held.y);
+                dragging.current = { ...held, x: event.clientX, y: event.clientY, moved };
+              } else {
+                const [gx, gy] = toGraph(...local(event));
+                simulation.send({ type: "drag", id: held.id, x: gx, y: gy });
+                dragging.current = { ...held, moved, at: [gx, gy] };
+              }
+            }}
+            onPointerUp={() => {
+              const held = dragging.current;
+              dragging.current = null;
+              if (!held) return;
+              if (held.kind === "node") {
+                if (!held.moved) onSelect(held.id);
+                else if (held.at && pinned.has(held.id))
+                  onPinnedMove(held.id, held.at[0], held.at[1]);
+                else simulation.send({ type: "drag", id: held.id, x: null, y: null });
+              } else if (!held.moved) {
+                onSelect(null);
+              }
+            }}
+            onDoubleClick={(event) => {
+              const id = nodeAt(...local(event));
+              if (id) onOpen(id);
+            }}
+            onKeyDown={(event) => {
+              const element = event.currentTarget;
+              const steps: Record<string, [number, number]> = {
+                ArrowLeft: [KEY_PAN, 0],
+                ArrowRight: [-KEY_PAN, 0],
+                ArrowUp: [0, KEY_PAN],
+                ArrowDown: [0, -KEY_PAN],
+              };
+              const step = steps[event.key];
+              if (step) {
+                event.preventDefault();
+                panBy(step[0], step[1]);
+              } else if (event.key === "+" || event.key === "=") {
+                event.preventDefault();
+                zoomAt(1.25, element.clientWidth / 2, element.clientHeight / 2);
+              } else if (event.key === "Enter" && selectedId) {
+                event.preventDefault();
+                onOpen(selectedId);
+              } else if (event.key === "Escape" && selectedId) {
+                event.preventDefault();
+                onSelect(null);
+              } else if (event.key === "-") {
+                event.preventDefault();
+                zoomAt(0.8, element.clientWidth / 2, element.clientHeight / 2);
+              }
+            }}
+          />
+        </ContextMenuTrigger>
+        {menuNode && (
+          <ContextMenuContent>
+            <ContextMenuItem onSelect={() => onTogglePin(menuNode)}>
+              {pinned.has(menuNode) ? <PinOff /> : <Pin />}
+              {pinned.has(menuNode) ? t("graphs.pins.unpin") : t("graphs.pins.pin")}
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={() => onOpen(menuNode)}>
+              <ArrowUpRight />
+              {t("graphs.pins.open")}
+            </ContextMenuItem>
+          </ContextMenuContent>
+        )}
+      </ContextMenu>
     </div>
   );
 });
