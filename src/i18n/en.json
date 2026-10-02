@@ -706,5 +706,15 @@
   "maps.fonts.serif": "Serif",
   "maps.fonts.sans": "Sans serif",
   "maps.fonts.mono": "Typewriter",
-  "maps.fonts.cursive": "Handwritten"
+  "maps.fonts.cursive": "Handwritten",
+  "maps.texts.tool": "Add a text",
+  "maps.texts.placing": "Click on the map to place the text. Escape or the button to cancel.",
+  "maps.texts.new": "Text",
+  "maps.texts.title": "Text",
+  "maps.texts.text": "Text",
+  "maps.texts.scaleWithZoom": "Follows the zoom",
+  "maps.texts.spacing": "Letter spacing: {{value}}",
+  "maps.texts.arc": "Bend: {{value}} %",
+  "maps.texts.delete": "Delete the text",
+  "maps.texts.ariaLabel": "Text {{text}}"
 }

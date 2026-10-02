@@ -76,6 +76,8 @@ La map est **sauvegardée automatiquement** : chaque modification est persistée
 
 **Réalisé en M4 (4.6)** : **zones**. « Tracer une zone » active l'outil (le bouton reste enfoncé, un message rappelle les gestes) : chaque clic pose un sommet, une ligne pointillée suit la souris, le premier sommet s'allume en vert au survol dès 3 sommets et un clic dessus ferme la forme (`Entrée` aussi) ; `Retour arrière` retire le dernier sommet, `Échap` annule. La zone fermée est sélectionnée : son panneau donne le label (texte, police, taille), la carte liée (recherche, ouvrir, délier), la couleur, l'opacité, le motif (plein, hachures, points, croisillons, en SVG) et le calque, et « Supprimer la zone ». Sur la map, la zone sélectionnée montre ses sommets (à glisser ; clic droit pour en retirer un, 3 au minimum) et le milieu de chaque bord (un clic y ajoute un sommet). Le label s'affiche au centre de la zone. Les zones d'un calque masqué sont cachées ; une zone liée à une carte crée un lien `map_pin`. Le tracé se fait à la souris ; les propriétés sont accessibles au clavier.
 
+**Réalisé en M4 (4.7)** : **textes**. « Ajouter un texte » attend un clic sur la map (`Échap` ou le bouton pour renoncer) et y pose « Texte », sélectionné, son champ prêt à être tapé. Son panneau règle le texte, la police, la taille, « Suit le zoom » (sinon il garde sa taille à l'écran), l'espacement des lettres, la courbure (de -100 % vers le bas à +100 % vers le haut, en SVG `textPath`) et le calque. Un texte se déplace en le glissant ou aux flèches (Maj pour aller plus vite), `Suppr` le supprime ; ceux d'un calque masqué sont cachés. Les textes sont sous les pins.
+
 ## Modèle de données (indicatif)
 
 - `maps` : document_id, background_asset_id, width, height, tiles_path

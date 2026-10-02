@@ -323,3 +323,39 @@ test("a zone is selected, styled, linked to a card and its tool toggles tracing"
   fireEvent.keyDown(window, { key: "Escape" });
   await waitFor(() => expect(tool.getAttribute("aria-pressed")).toBe("false"));
 });
+
+test("a text is selected and bent, its tool waits for a click and Escape gives up", async () => {
+  stored = {
+    ...map("Arda"),
+    content: {
+      ...map("Arda").content,
+      texts: [
+        {
+          id: "t1",
+          layerId: "l1",
+          x: 0.5,
+          y: 0.2,
+          text: "Terre du Milieu",
+          style: { font: "serif", size: 28, spacing: 0, arc: 0, scaleWithZoom: true },
+        },
+      ],
+    },
+  };
+  await renderAt("/world/demo/world/map/m1");
+
+  fireEvent.click(await screen.findByRole("button", { name: "Texte Terre du Milieu" }));
+  fireEvent.change(await screen.findByLabelText(/Courbure/), { target: { value: "-0.5" } });
+  fireEvent.click(screen.getByRole("switch", { name: "Suit le zoom" }));
+  await waitFor(
+    () =>
+      expect(stored?.content.texts[0]?.style).toMatchObject({ arc: -0.5, scaleWithZoom: false }),
+    { timeout: 3000 },
+  );
+
+  const tool = screen.getByRole("button", { name: "Ajouter un texte" });
+  fireEvent.click(tool);
+  expect(tool.getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByText(/Cliquez sur la map pour poser le texte/)).toBeTruthy();
+  fireEvent.keyDown(window, { key: "Escape" });
+  await waitFor(() => expect(tool.getAttribute("aria-pressed")).toBe("false"));
+});
