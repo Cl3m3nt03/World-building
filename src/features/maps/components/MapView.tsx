@@ -10,7 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { assetUrl } from "@/lib/assets";
-import type { MapPin, MapZone } from "@/lib/bindings";
+import type { MapZone } from "@/lib/bindings";
 import { CARD_DROP_EVENT, type CardDropDetail } from "@/lib/cardDrop";
 import type { Point } from "../zones";
 import { type ZoneHandlers, ZoneLayers, ZoneTrace } from "./zoneLayers";
@@ -22,6 +22,9 @@ export type MapViewHandle = {
   center: () => { x: number; y: number };
 };
 
+/** Something shown at a point of the map: a pin or a text (M4 4.5, 4.7). */
+export type MapMarker = { id: string; x: number | null; y: number | null };
+
 /** A point of the image (relative, 0 to 1) and where it is on the screen. */
 export type MapPoint = { x: number; y: number; clientX: number; clientY: number };
 
@@ -32,17 +35,22 @@ type MapViewProps = {
   height: number;
   /** Accessible name of the map area. */
   label: string;
-  /** Pins to show (those of visible layers). */
-  pins?: MapPin[];
-  /** What a pin looks like, rendered into its marker. */
-  renderPin?: (pin: MapPin) => ReactNode;
-  /** Accessible name of a pin. */
-  pinLabel?: (pin: MapPin) => string;
-  onPinMove?: (id: string, x: number, y: number) => void;
-  onPinClick?: (id: string) => void;
-  onPinOpen?: (id: string) => void;
-  /** A key pressed on a focused pin (arrows, Enter, Delete…). */
-  onPinKey?: (id: string, event: KeyboardEvent) => void;
+  /** Pins and texts to show (those of visible layers), drawn in this order. */
+  markers?: MapMarker[];
+  /**
+   * What a marker looks like, rendered into it; `zoomScale` is 1 at the
+   * zoom that fits the image, ×2 one level in.
+   */
+  renderMarker?: (id: string, zoomScale: number) => ReactNode;
+  /** Accessible name of a marker. */
+  markerLabel?: (id: string) => string;
+  onMarkerMove?: (id: string, x: number, y: number) => void;
+  onMarkerClick?: (id: string) => void;
+  onMarkerOpen?: (id: string) => void;
+  /** A key pressed on a focused marker (arrows, Enter, Delete…). */
+  onMarkerKey?: (id: string, event: KeyboardEvent) => void;
+  /** A click on the map places something (Text tool): where. */
+  onPlace?: ((x: number, y: number) => void) | null;
   onContextMenu?: (point: MapPoint) => void;
   onCardDrop?: (cardId: string, x: number, y: number) => void;
   /** Zones to show (those of visible layers), the selected one with its handles. */
@@ -80,13 +88,14 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     width,
     height,
     label,
-    pins = [],
-    renderPin,
-    pinLabel,
-    onPinMove,
-    onPinClick,
-    onPinOpen,
-    onPinKey,
+    markers: items = [],
+    renderMarker,
+    markerLabel,
+    onMarkerMove,
+    onMarkerClick,
+    onMarkerOpen,
+    onMarkerKey,
+    onPlace = null,
     onContextMenu,
     onCardDrop,
     zones = [],
@@ -103,14 +112,18 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   const map = useRef<L.Map | null>(null);
   const overlay = useRef<L.ImageOverlay | null>(null);
   const markers = useRef(new Map<string, L.Marker>());
-  // Elements of the markers, where React renders each pin.
-  const [pinElements, setPinElements] = useState<ReadonlyMap<string, HTMLElement>>(new Map());
+  // Elements of the markers, where React renders each pin or text.
+  const [markerElements, setMarkerElements] = useState<ReadonlyMap<string, HTMLElement>>(new Map());
+  // Zoom relative to the zoom fitting the image, for texts that follow it.
+  const [zoomScale, setZoomScale] = useState(1);
+  const fitZoom = useRef(0);
   // The latest callbacks and size, for the Leaflet handlers bound once.
   const latest = {
-    onPinMove,
-    onPinClick,
-    onPinOpen,
-    onPinKey,
+    onMarkerMove,
+    onMarkerClick,
+    onMarkerOpen,
+    onMarkerKey,
+    onPlace,
     onContextMenu,
     onCardDrop,
     zoneHandlers,
@@ -169,10 +182,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       () => handlers.current.zoneHandlers,
     );
     created.on("click", (event: L.LeafletMouseEvent) => {
-      if (!tracing.current) return;
       const point = toRelative(event.latlng);
-      if (onImage(point)) handlers.current.onTraceClick?.(point.x, point.y);
+      if (!onImage(point)) return;
+      if (tracing.current) handlers.current.onTraceClick?.(point.x, point.y);
+      else handlers.current.onPlace?.(point.x, point.y);
     });
+    created.on("zoomend", () => setZoomScale(2 ** (created.getZoom() - fitZoom.current)));
     created.on("mousemove", (event: L.LeafletMouseEvent) => {
       pointer.current = event.latlng;
       if (tracing.current) zoneTrace.current?.update(tracing.current, event.latlng);
@@ -230,23 +245,25 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       : null;
     current.setMaxBounds(L.latLngBounds(bounds as L.LatLngBoundsLiteral).pad(0.5));
     current.fitBounds(bounds);
+    fitZoom.current = current.getZoom();
+    setZoomScale(1);
     current.setMinZoom(current.getZoom() - 1);
     current.setMaxZoom(current.getZoom() + 6);
   }, [backgroundAssetId, width, height]);
 
-  // One Leaflet marker per pin, kept in step with the pins.
+  // One Leaflet marker per pin or text, kept in step with them.
   // biome-ignore lint/correctness/useExhaustiveDependencies: toLatLng reads the size through a ref
   useEffect(() => {
     const current = map.current;
     if (!current) return;
     const known = markers.current;
     let changed = false;
-    for (const pin of pins) {
-      const position = toLatLng(pin.x ?? 0, pin.y ?? 0);
-      const existing = known.get(pin.id);
+    for (const item of items) {
+      const position = toLatLng(item.x ?? 0, item.y ?? 0);
+      const existing = known.get(item.id);
       if (existing) {
         if (!existing.getLatLng().equals(position)) existing.setLatLng(position);
-        if (pinLabel) existing.getElement()?.setAttribute("aria-label", pinLabel(pin));
+        if (markerLabel) existing.getElement()?.setAttribute("aria-label", markerLabel(item.id));
         continue;
       }
       const marker = L.marker(position, {
@@ -255,22 +272,23 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
         keyboard: true,
         autoPan: true,
       }).addTo(current);
+      const id = item.id;
       marker.on("dragend", () => {
         const point = toRelative(marker.getLatLng());
-        handlers.current.onPinMove?.(pin.id, point.x, point.y);
+        handlers.current.onMarkerMove?.(id, point.x, point.y);
       });
-      marker.on("click", () => handlers.current.onPinClick?.(pin.id));
-      marker.on("dblclick", () => handlers.current.onPinOpen?.(pin.id));
-      if (pinLabel) marker.getElement()?.setAttribute("aria-label", pinLabel(pin));
+      marker.on("click", () => handlers.current.onMarkerClick?.(id));
+      marker.on("dblclick", () => handlers.current.onMarkerOpen?.(id));
+      if (markerLabel) marker.getElement()?.setAttribute("aria-label", markerLabel(id));
       marker.getElement()?.addEventListener("keydown", (event) => {
         // The map's own arrow keys must not move the view meanwhile.
         event.stopPropagation();
-        handlers.current.onPinKey?.(pin.id, event);
+        handlers.current.onMarkerKey?.(id, event);
       });
-      known.set(pin.id, marker);
+      known.set(id, marker);
       changed = true;
     }
-    const ids = new Set(pins.map((pin) => pin.id));
+    const ids = new Set(items.map((item) => item.id));
     for (const [id, marker] of known) {
       if (!ids.has(id)) {
         marker.remove();
@@ -279,7 +297,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       }
     }
     if (changed) {
-      setPinElements(
+      setMarkerElements(
         new Map(
           [...known].flatMap(([id, marker]) => {
             const element = marker.getElement();
@@ -288,7 +306,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
         ),
       );
     }
-  }, [pins]);
+  }, [items]);
 
   // The zones, kept in step.
   useEffect(() => {
@@ -311,6 +329,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     current.getContainer().style.cursor = "crosshair";
   }, [trace]);
 
+  // A crosshair while a click places something.
+  useEffect(() => {
+    const current = map.current;
+    if (current && !trace) current.getContainer().style.cursor = onPlace ? "crosshair" : "";
+  }, [onPlace, trace]);
+
   // Leaflet measures its container: tell it when the layout changes.
   useEffect(() => {
     if (!container.current || typeof ResizeObserver === "undefined") return;
@@ -327,10 +351,10 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
         aria-label={label}
         className="size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       />
-      {renderPin &&
-        pins.map((pin) => {
-          const element = pinElements.get(pin.id);
-          return element ? createPortal(renderPin(pin), element, pin.id) : null;
+      {renderMarker &&
+        items.map((item) => {
+          const element = markerElements.get(item.id);
+          return element ? createPortal(renderMarker(item.id, zoomScale), element, item.id) : null;
         })}
     </>
   );

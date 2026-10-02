@@ -1,5 +1,12 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ImageOff, MapPinPlus, Maximize, Pentagon, SquareUser } from "lucide-react";
+import {
+  ImageOff,
+  MapPinPlus,
+  Maximize,
+  Pentagon,
+  SquareUser,
+  Type as TypeIcon,
+} from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -19,7 +26,8 @@ import { usePendingSave } from "@/lib/pendingSaves";
 import { useMapEditor } from "../hooks/useMapEditor";
 import { useMap, useRenameMap } from "../hooks/useMaps";
 import { hiddenLayers } from "../layers";
-import { addPin, newPin, nudgePin, removePin, updatePin } from "../pins";
+import { addPin, KEYBOARD_STEP, newPin, nudgePin, removePin, updatePin } from "../pins";
+import { addText, newText, removeText, updateText } from "../texts";
 import {
   addZone,
   insertVertex,
@@ -32,9 +40,11 @@ import {
   updateZone,
 } from "../zones";
 import { LayersPanel } from "./LayersPanel";
+import { MapTextView } from "./MapTextView";
 import { type MapPoint, MapView, type MapViewHandle } from "./MapView";
 import { PinMarker } from "./PinMarker";
 import { PinPanel } from "./PinPanel";
+import { TextPanel } from "./TextPanel";
 import { ZonePanel } from "./ZonePanel";
 
 /** Delay before a typed title is saved. */
@@ -120,13 +130,25 @@ function MapEditor({ map }: { map: WorldMap }) {
   const [selectedZoneId, setSelectedZone] = useState<string | null>(null);
   // The zone being traced with the Zone tool (its vertices), or null.
   const [trace, setTrace] = useState<Point[] | null>(null);
+  const [selectedTextId, setSelectedText] = useState<string | null>(null);
+  // The Text tool: the next click on the map places a text.
+  const [placingText, setPlacingText] = useState(false);
+  // A text just placed: its field takes the focus.
+  const [newTextId, setNewTextId] = useState<string | null>(null);
   const setSelectedId = (id: string | null) => {
     setSelectedPin(id);
     setSelectedZone(null);
+    setSelectedText(null);
   };
   const selectZone = (id: string | null) => {
     setSelectedZone(id);
     setSelectedPin(null);
+    setSelectedText(null);
+  };
+  const selectText = (id: string | null) => {
+    setSelectedText(id);
+    setSelectedPin(null);
+    setSelectedZone(null);
   };
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
   const [pickingCard, setPickingCard] = useState(false);
@@ -146,6 +168,60 @@ function MapEditor({ map }: { map: WorldMap }) {
     [content.pins, hidden],
   );
   const selected = content.pins.find((pin) => pin.id === selectedId);
+  const visibleTexts = useMemo(
+    () => content.texts.filter((text) => !hidden.has(text.layerId)),
+    [content.texts, hidden],
+  );
+  const selectedText = content.texts.find((text) => text.id === selectedTextId);
+  // Texts under the pins.
+  const markers = useMemo(() => [...visibleTexts, ...visiblePins], [visibleTexts, visiblePins]);
+  const textOf = (id: string) => content.texts.find((text) => text.id === id);
+  const placeText = (x: number, y: number) => {
+    const text = newText(activeLayerId, x, y, t("maps.texts.new"));
+    update((previous) => addText(previous, text));
+    setPlacingText(false);
+    selectText(text.id);
+    setNewTextId(text.id);
+  };
+  // Escape gives up placing a text.
+  useEffect(() => {
+    if (!placingText) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setPlacingText(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [placingText]);
+  const onTextKey = (id: string, event: KeyboardEvent) => {
+    const steps: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const step = steps[event.key];
+    const text = textOf(id);
+    if (step && text) {
+      event.preventDefault();
+      const factor = (event.shiftKey ? 5 : 1) * KEYBOARD_STEP;
+      update((previous) =>
+        updateText(previous, id, {
+          x: (text.x ?? 0) + step[0] * factor,
+          y: (text.y ?? 0) + step[1] * factor,
+        }),
+      );
+      selectText(id);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      selectText(id);
+    } else if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      update((previous) => removeText(previous, id));
+      selectText(null);
+    } else if (event.key === "Escape") {
+      selectText(null);
+    }
+  };
   const visibleZones = useMemo(
     () => content.zones.filter((zone) => !hidden.has(zone.layerId)),
     [content.zones, hidden],
@@ -280,9 +356,22 @@ function MapEditor({ map }: { map: WorldMap }) {
         <Button
           variant="secondary"
           size="sm"
+          aria-pressed={placingText}
+          onClick={() => {
+            setPlacingText((current) => !current);
+            setTrace(null);
+          }}
+        >
+          <TypeIcon />
+          {t("maps.texts.tool")}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           aria-pressed={trace !== null}
           onClick={() => {
             setTrace((current) => (current === null ? [] : null));
+            setPlacingText(false);
             setSelectedId(null);
           }}
         >
@@ -298,6 +387,11 @@ function MapEditor({ map }: { map: WorldMap }) {
         <p role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
           <ImageOff aria-hidden className="size-4" />
           {t("maps.noBackground")}
+        </p>
+      )}
+      {placingText && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t("maps.texts.placing")}
         </p>
       )}
       {trace !== null && (
@@ -318,9 +412,22 @@ function MapEditor({ map }: { map: WorldMap }) {
             width={data.width}
             height={data.height}
             label={t("maps.viewLabel", { name: data.title })}
-            pins={visiblePins}
-            pinLabel={pinLabel}
-            renderPin={(pin) => {
+            markers={markers}
+            markerLabel={(id) => {
+              const pin = content.pins.find((other) => other.id === id);
+              if (pin) return pinLabel(pin);
+              const text = textOf(id);
+              return text ? t("maps.texts.ariaLabel", { text: text.text }) : "";
+            }}
+            renderMarker={(id, zoomScale) => {
+              const text = textOf(id);
+              if (text) {
+                return (
+                  <MapTextView text={text} zoomScale={zoomScale} selected={id === selectedTextId} />
+                );
+              }
+              const pin = content.pins.find((other) => other.id === id);
+              if (!pin) return null;
               const card = cardOf(pin);
               return (
                 <PinMarker
@@ -331,13 +438,19 @@ function MapEditor({ map }: { map: WorldMap }) {
                 />
               );
             }}
-            onPinMove={(id, x, y) => {
+            onPlace={placingText ? placeText : null}
+            onMarkerMove={(id, x, y) => {
+              if (textOf(id)) {
+                update((previous) => updateText(previous, id, { x, y }));
+                selectText(id);
+                return;
+              }
               update((previous) => updatePin(previous, id, { x, y }));
               setSelectedId(id);
             }}
-            onPinClick={setSelectedId}
-            onPinOpen={(id) => openCard(content.pins.find((pin) => pin.id === id))}
-            onPinKey={onPinKey}
+            onMarkerClick={(id) => (textOf(id) ? selectText(id) : setSelectedId(id))}
+            onMarkerOpen={(id) => openCard(content.pins.find((pin) => pin.id === id))}
+            onMarkerKey={(id, event) => (textOf(id) ? onTextKey(id, event) : onPinKey(id, event))}
             onContextMenu={(point) => setMenu({ ...point, pickCard: false })}
             onCardDrop={(cardId, x, y) => place(x, y, cardId)}
             zones={visibleZones}
@@ -365,6 +478,21 @@ function MapEditor({ map }: { map: WorldMap }) {
             activeLayerId={activeLayerId}
             onActiveLayerChange={editor.setActiveLayerId}
           />
+          {selectedText && (
+            <TextPanel
+              key={selectedText.id}
+              text={selectedText}
+              layers={content.layers}
+              autoFocus={selectedText.id === newTextId}
+              onChange={(patch) =>
+                update((previous) => updateText(previous, selectedText.id, patch))
+              }
+              onDelete={() => {
+                update((previous) => removeText(previous, selectedText.id));
+                selectText(null);
+              }}
+            />
+          )}
           {selectedZone && (
             <ZonePanel
               key={selectedZone.id}
