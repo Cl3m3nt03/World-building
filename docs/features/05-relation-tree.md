@@ -61,6 +61,8 @@ Les types de relations personnalisés (nom, icône, et relation inverse éventue
 
 **Sens d'un lien** : un lien va de la source vers la cible ; son type dit ce qu'est la cible pour la source (Aragorn → Gilraen, « parent » : Gilraen est le parent d'Aragorn). Les types fournis (migration 0013) suivent la liste du board, avec époux·se en plus ; chacun a son inverse (parent ↔ enfant, enfant adopté·e ↔ parent adoptif, beau-parent ↔ bel-enfant) ou est symétrique.
 
+**Réalisé en M6 (6.5)** : chaque nœud a un point d'accroche par côté, visible au survol et sur le nœud sélectionné. On tire une ligne depuis l'un d'eux ; elle s'aimante au point le plus proche d'un autre nœud (jusqu'à une trentaine de pixels) et, une fois relâchée, crée un lien sans type dont la liste des relations s'ouvre aussitôt. Un clic sur un lien le sélectionne : ses deux extrémités deviennent des poignées qu'on glisse vers un autre nœud pour le rebrancher, et sa barre (comme sur le board) donne sa relation (à changer), « Inverser le sens du lien », le style du trait (plein, tirets, pointillés) et « Supprimer le lien » (avec les jonctions qui en partent). La barre se place au-dessus du milieu du lien, sinon en dessous ou à droite, pour ne jamais cacher ses extrémités. Au clavier : Tab jusqu'à un lien, Entrée le sélectionne (sa barre apparaît), Suppr le supprime.
+
 ## Modèle de données (indicatif)
 
 - `relation_types` : id, name, icon, inverse_id, category (famille / couple / autre / custom)

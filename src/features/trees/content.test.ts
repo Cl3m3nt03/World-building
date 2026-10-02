@@ -1,6 +1,18 @@
 import { expect, test } from "vitest";
 import type { TreeEdge, VariantContent } from "@/lib/bindings";
-import { addNode, addRelative, fillNode, moveNodes, newNode, removeNode } from "./content";
+import {
+  addNode,
+  addRelative,
+  connect,
+  fillNode,
+  moveNodes,
+  newNode,
+  reconnectEdge,
+  removeEdge,
+  removeNode,
+  reverseEdge,
+  updateEdge,
+} from "./content";
 
 function edge(id: string, source: TreeEdge["source"], target: string): TreeEdge {
   return { id, source, target, relationTypeId: null, lineStyle: "solid" };
@@ -72,4 +84,47 @@ test("a relative goes on its side, sliding along it while the place is taken", (
   expect(Math.abs((other?.x ?? 0) - (child?.x ?? 0)) >= 96).toBe(true);
   // An unknown node changes nothing.
   expect(addRelative(one, "nobody", "top", null)).toEqual({ content: one, nodeId: null });
+});
+
+test("removing a link takes the junctions hanging from it, not the nodes", () => {
+  const after = removeEdge(FAMILY, "couple");
+  expect(after.edges.map((e) => e.id)).toEqual(["couple2", "child2"]);
+  expect(after.nodes).toHaveLength(5);
+});
+
+test("connecting two nodes adds a link without a type, once, never a loop", () => {
+  const { content, edgeId } = connect(FAMILY, "gilraen", "arwen");
+  expect(content.edges.at(-1)).toEqual({
+    id: edgeId,
+    source: { kind: "node", id: "gilraen" },
+    target: "arwen",
+    relationTypeId: null,
+    lineStyle: "solid",
+  });
+  expect(connect(content, "gilraen", "arwen").edgeId).toBeNull();
+  expect(connect(FAMILY, "arwen", "arwen").edgeId).toBeNull();
+  expect(connect(FAMILY, "arwen", "nobody").edgeId).toBeNull();
+});
+
+test("a link's end moves to another node; turning it round swaps its ends", () => {
+  const moved = reconnectEdge(FAMILY, "couple", "target", "arwen");
+  expect(moved.edges[0]).toMatchObject({ source: { id: "arathorn" }, target: "arwen" });
+  const start = reconnectEdge(FAMILY, "couple", "source", "eldarion");
+  expect(start.edges[0]).toMatchObject({ source: { id: "eldarion" }, target: "gilraen" });
+  // Never onto its own other end; a junction keeps the link it starts from.
+  expect(reconnectEdge(FAMILY, "couple", "target", "arathorn")).toEqual(FAMILY);
+  expect(reconnectEdge(FAMILY, "child", "source", "arwen").edges[1]).toEqual(FAMILY.edges[1]);
+
+  const reversed = reverseEdge(FAMILY, "couple");
+  expect(reversed.edges[0]).toMatchObject({
+    source: { kind: "node", id: "gilraen" },
+    target: "arathorn",
+  });
+  expect(reverseEdge(FAMILY, "child")).toEqual(FAMILY);
+
+  const styled = updateEdge(FAMILY, "couple", {
+    lineStyle: "dotted",
+    relationTypeId: "rel-spouse",
+  });
+  expect(styled.edges[0]).toMatchObject({ lineStyle: "dotted", relationTypeId: "rel-spouse" });
 });
