@@ -253,6 +253,39 @@ test("layers: added on top and named at once, hidden, moved, deleted, and saved"
   );
 });
 
+test("layers: « Rename » in the menu leaves the focus to the name field (#189)", async () => {
+  stored = map("Arda");
+  await renderAt("/world/demo/world/map/m1");
+
+  const actions = await screen.findByRole("button", { name: "Actions du calque Calque 1" });
+  await act(async () => {
+    actions.focus();
+    fireEvent.keyDown(actions, { key: "Enter" });
+  });
+  const item = await screen.findByRole("menuitem", { name: "Renommer" });
+  // The menu used to give the focus back to its button, which blurred the
+  // field and ended the rename with the old name.
+  const focused: Element[] = [];
+  const focus = HTMLElement.prototype.focus;
+  vi.spyOn(HTMLElement.prototype, "focus").mockImplementation(function (
+    this: HTMLElement,
+    ...args
+  ) {
+    focused.push(this);
+    focus.apply(this, args);
+  });
+  await act(async () => {
+    fireEvent.click(item);
+  });
+  const field = await screen.findByLabelText("Nom du calque");
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+
+  expect(focused).not.toContain(actions);
+  expect(focused.at(-1)).toBe(field);
+});
+
 test("pins: added at the centre, labelled, hidden with their layer, deleted with the keyboard", async () => {
   stored = map("Arda");
   await renderAt("/world/demo/world/map/m1");
