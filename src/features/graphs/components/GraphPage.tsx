@@ -16,6 +16,7 @@ import { resolveSettings } from "../settings";
 import { GraphCanvas, type GraphCanvasHandle } from "./GraphCanvas";
 import { GraphFilters } from "./GraphFilters";
 import { GraphSearch } from "./GraphSearch";
+import { GraphSettingsPanel } from "./GraphSettingsPanel";
 import { NodeList } from "./NodeList";
 
 function TitleField({ graph }: { graph: Graph }) {
@@ -135,6 +136,15 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
                 typeIds={typeIds}
                 onChange={(next) =>
                   setConfig((current) => ({ ...current, filters: { typeIds: next } }))
+                }
+              />
+              <GraphSettingsPanel
+                settings={settings}
+                onChange={(change) =>
+                  setConfig((current) => ({
+                    ...current,
+                    settings: { ...resolveSettings(current.settings), ...change },
+                  }))
                 }
               />
             </div>

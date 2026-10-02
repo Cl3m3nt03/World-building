@@ -18,7 +18,7 @@ import type { Settings } from "./settings";
  * (tests). Both speak the messages below.
  */
 
-/** A node as the simulation sees it: an id, a radius, maybe a fixed place. */
+/** A node as the simulation sees it: an id, a radius (at size 1), maybe a fixed place. */
 export type SimNodeInput = {
   id: string;
   radius: number;
@@ -83,7 +83,7 @@ function applySettings(simulation: Simulation<Node, Link>, links: Link[], settin
     .force("charge", forceManyBody<Node>().strength(-settings.repulsion).theta(0.9))
     .force(
       "collide",
-      forceCollide<Node>((node) => node.radius * settings.collision),
+      forceCollide<Node>((node) => node.radius * settings.nodeSize * settings.collision),
     )
     .force("x", forceX<Node>(0).strength(settings.gravityX))
     .force("y", forceY<Node>(0).strength(settings.gravityY));

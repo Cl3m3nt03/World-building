@@ -64,6 +64,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.5)** : le bouton « Filtrer par type » de la barre du bas ouvre la liste des types et sous-types, à cocher à la souris ou au clavier (le menu reste ouvert) ; un type inclut ses sous-types. Seules les cartes des types cochés et les liens entre elles restent ; les autres cartes gardent leur place pour quand on les réaffiche. Le bouton signale un filtre actif ; « Tout afficher » l'enlève. Quand plus aucune carte ne correspond, le graph le dit (la barre reste là pour changer les filtres).
 
+**Réalisé en M5 (5.6)** : le bouton « Réglages du graph » ouvre le panneau : afficher les noms, masquer les cartes sans lien, et les curseurs taille des nœuds, distance et force des liens, répulsion, collision, gravité X et Y (bornes du Rust). Chaque changement relance la simulation en douceur ; « Revenir aux réglages par défaut » remet tout.
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)
