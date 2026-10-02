@@ -10,8 +10,10 @@ import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import type { Graph } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { useGraph, useGraphData, useRenameGraph } from "../hooks/useGraphs";
+import { searchNodes } from "../search";
 import { resolveSettings } from "../settings";
 import { GraphCanvas, type GraphCanvasHandle } from "./GraphCanvas";
+import { GraphSearch } from "./GraphSearch";
 import { NodeList } from "./NodeList";
 
 function TitleField({ graph }: { graph: Graph }) {
@@ -26,6 +28,8 @@ export function GraphPage() {
   const { worldId, graphId } = useParams({ from: "/world/$worldId/world/graph/$graphId" });
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState("");
   const graph = useGraph(graphId);
   const data = useGraphData();
   const types = useCardTypes();
@@ -35,6 +39,13 @@ export function GraphPage() {
   const typesById = useMemo(
     () => new Map((types.data ?? []).map((type) => [type.id, type])),
     [types.data],
+  );
+
+  const allNodes = data.data?.nodes;
+  const found = useMemo(() => searchNodes(allNodes ?? [], query), [allNodes, query]);
+  const highlighted = useMemo(
+    () => (query.trim() === "" ? null : new Set(found.map((node) => node.id))),
+    [found, query],
   );
 
   const savedSettings = graph.data?.config.settings;
@@ -84,9 +95,31 @@ export function GraphPage() {
                   links: edges.length,
                 })}
                 selectedId={selectedId}
+                highlighted={highlighted}
                 onSelect={setSelectedId}
                 onOpen={open}
               />
+              <div
+                role="toolbar"
+                aria-label={t("graphs.toolbar")}
+                className="glass absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-lg p-1"
+              >
+                <GraphSearch
+                  open={searching}
+                  onOpenChange={setSearching}
+                  query={query}
+                  onQueryChange={(next) => {
+                    setQuery(next);
+                    // A search shows its results: a selection would hide them.
+                    if (next.trim() !== "") setSelectedId(null);
+                  }}
+                  count={found.length}
+                  onSubmit={() => {
+                    const first = found[0];
+                    if (first) view.current?.centerOn(first.id);
+                  }}
+                />
+              </div>
             </div>
             <aside className="flex w-60 shrink-0 flex-col overflow-hidden">
               <NodeList

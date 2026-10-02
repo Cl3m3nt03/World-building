@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT d.id AS \"id!\", d.title, c.type_id, c.image_asset_id\n           FROM cards c JOIN documents d ON d.id = c.document_id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.title COLLATE NOCASE, d.created_at",
+  "query": "SELECT d.id AS \"id!\", d.title, c.type_id, c.image_asset_id, c.aliases\n           FROM cards c JOIN documents d ON d.id = c.document_id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.title COLLATE NOCASE, d.created_at",
   "describe": {
     "columns": [
       {
@@ -46,6 +46,17 @@
             "name": "image_asset_id"
           }
         }
+      },
+      {
+        "name": "aliases",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "aliases"
+          }
+        }
       }
     ],
     "parameters": {
@@ -55,8 +66,9 @@
       false,
       false,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "0d20edb7a2b7793cb5ef4760d0d2e10c34cf3442e859298241ab932d0599b05e"
+  "hash": "0aaa9f303b359d36f7d00e03676e37d2caafe1614d8c818dbd3e9f216395caa5"
 }

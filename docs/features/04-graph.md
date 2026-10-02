@@ -60,6 +60,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.3)** : un clic sur un nœud sélectionne la carte : elle est entourée, ses voisins et leurs liens restent nets et le reste s'estompe ; un clic dans le vide ou `Échap` désélectionne. Un double-clic (ou `Entrée` sur le graph) ouvre la carte. Glisser un nœud le déplace et la simulation réagit. À côté du dessin, la liste des cartes affichées (« 6 cartes ») sert au clavier et aux lecteurs d'écran : flèches, `Début` / `Fin` pour sélectionner (la vue se centre sur la carte), `Entrée` pour l'ouvrir ; dessous, « Cartes liées à … » donne ses voisins, cliquables.
 
+**Réalisé en M5 (5.4)** : la barre du bas du graph porte la loupe. Elle ouvre un champ (« Nom ou alias… ») : les cartes dont le nom ou un alias contient ce qui est tapé, sans accent ni casse, restent nettes et le reste s'estompe ; le nombre de cartes trouvées est annoncé. `Entrée` centre la vue sur la première (par ordre alphabétique), `Échap` ou la croix referme le champ et rend le focus à la loupe.
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)

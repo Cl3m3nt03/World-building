@@ -24,6 +24,8 @@ pub struct NodeRow {
     pub title: String,
     pub type_id: Option<String>,
     pub image_asset_id: Option<String>,
+    /// JSON list of the card's other names.
+    pub aliases: String,
 }
 
 pub struct EdgeRow {
@@ -118,7 +120,7 @@ pub async fn insert_pinned(
 pub async fn nodes(pool: &SqlitePool) -> AppResult<Vec<NodeRow>> {
     Ok(sqlx::query_as!(
         NodeRow,
-        r#"SELECT d.id AS "id!", d.title, c.type_id, c.image_asset_id
+        r#"SELECT d.id AS "id!", d.title, c.type_id, c.image_asset_id, c.aliases
            FROM cards c JOIN documents d ON d.id = c.document_id
            WHERE d.trashed_at IS NULL
            ORDER BY d.title COLLATE NOCASE, d.created_at"#
