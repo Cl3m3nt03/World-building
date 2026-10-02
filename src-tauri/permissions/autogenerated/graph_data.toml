@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-graph-data"
+description = "Enables the graph_data command without any pre-configured scope."
+commands.allow = ["graph_data"]
+
+[[permission]]
+identifier = "deny-graph-data"
+description = "Denies the graph_data command without any pre-configured scope."
+commands.deny = ["graph_data"]

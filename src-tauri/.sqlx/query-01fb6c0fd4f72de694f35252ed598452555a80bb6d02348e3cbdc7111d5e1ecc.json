@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO graph_pinned_nodes (graph_id, card_id, x, y) VALUES (?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "01fb6c0fd4f72de694f35252ed598452555a80bb6d02348e3cbdc7111d5e1ecc"
+}

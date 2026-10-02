@@ -133,6 +133,18 @@ export const commands = {
 	setMapBackground: (id: string, assetId: string) => typedError<Map, AppError>(__TAURI_INVOKE("set_map_background", { id, assetId })),
 	/**  Duplicates a map as `title` (translated by the front), right after it. */
 	duplicateMap: (id: string, title: string) => typedError<Map, AppError>(__TAURI_INVOKE("duplicate_map", { id, title })),
+	/**  Creates a graph named `title` (translated by the front), showing every card. */
+	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
+	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
+	/**  Replaces the graph's configuration: filters, settings, pinned nodes, framing. */
+	saveGraph: (id: string, config: GraphConfig) => typedError<null, AppError>(__TAURI_INVOKE("save_graph", { id, config })),
+	/**  Duplicates a graph as `title` (translated by the front), right after it. */
+	duplicateGraph: (id: string, title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("duplicate_graph", { id, title })),
+	/**
+	 *  The live cards and their links (mentions, link properties), one edge per
+	 *  pair of cards.
+	 */
+	graphData: () => typedError<GraphData, AppError>(__TAURI_INVOKE("graph_data")),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -470,6 +482,79 @@ export type FolderPatch = {
 /**  Genre of a world. It decides the card types proposed by default (M2). */
 export type Genre = "fantasy" | "scienceFiction" | "romance" | "cyberpunk" | "contemporary" | "other";
 
+/**  A graph as seen by the front. */
+export type Graph = {
+	id: string,
+	title: string,
+	config: GraphConfig,
+};
+
+/**  What a graph document keeps. */
+export type GraphConfig = {
+	filters: GraphFilters,
+	settings: GraphSettings,
+	pinned: PinnedNode[],
+	/**  `null` until the graph was framed (it then fits every node). */
+	viewport: GraphViewport | null,
+};
+
+/**  Everything a graph can draw: the live cards and their links. */
+export type GraphData = {
+	nodes: GraphNode[],
+	edges: GraphEdge[],
+};
+
+/**  The links between two cards, whatever their direction, as one edge. */
+export type GraphEdge = {
+	source: string,
+	target: string,
+	/**  Number of links between the two cards (the edge's thickness). */
+	weight: number,
+};
+
+/**  Which cards the graph shows. No type: every card. */
+export type GraphFilters = {
+	/**
+	 *  Types (or subtypes) shown; a type includes its subtypes (the front
+	 *  expands them).
+	 */
+	typeIds?: string[],
+};
+
+/**  A card drawn as a node. */
+export type GraphNode = {
+	id: string,
+	title: string,
+	typeId: string | null,
+	imageAssetId: string | null,
+};
+
+/**  Display and forces (the `d3-force` settings of the spec). */
+export type GraphSettings = {
+	showLabels?: boolean,
+	hideIsolated?: boolean,
+	/**  Scale of the nodes' images (1 is the default size). */
+	nodeSize?: number | null,
+	/**  Rest length of the edges (`forceLink.distance`). */
+	linkDistance?: number | null,
+	/**  Stiffness of the edges (`forceLink.strength`). */
+	linkStrength?: number | null,
+	/**  Repulsion between nodes (`forceManyBody`, as a positive number). */
+	repulsion?: number | null,
+	/**  Collision radius, as a share of a node's radius (`forceCollide`). */
+	collision?: number | null,
+	/**  Pull towards the vertical and horizontal axes (`forceX`, `forceY`). */
+	gravityX?: number | null,
+	gravityY?: number | null,
+};
+
+/**  Framing of the view: the point at the centre and the zoom. */
+export type GraphViewport = {
+	x: number | null,
+	y: number | null,
+	zoom: number | null,
+};
+
 /**  Result of an import: the asset, and whether it is new to the world. */
 export type ImportedAsset = {
 	asset: Asset,
@@ -565,6 +650,13 @@ export type NewCardType = {
 
 /**  Shape of the card's image. */
 export type Orientation = "portrait" | "landscape";
+
+/**  A node kept in place, whatever the forces and the moves of the view. */
+export type PinnedNode = {
+	cardId: string,
+	x: number | null,
+	y: number | null,
+};
 
 /**  Where a document or a folder is. */
 export type Place = { kind: "root" } | { kind: "folder"; id: string } | 

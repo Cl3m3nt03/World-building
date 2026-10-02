@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM graph_pinned_nodes WHERE graph_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "dc4964c200799d78eb0584e6d5bff8f42685db3acb059a6c837327823c969881"
+}

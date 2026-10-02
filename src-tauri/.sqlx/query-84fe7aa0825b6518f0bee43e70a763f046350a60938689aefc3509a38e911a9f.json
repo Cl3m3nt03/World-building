@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO graphs (document_id, filters, settings, viewport) VALUES (?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "84fe7aa0825b6518f0bee43e70a763f046350a60938689aefc3509a38e911a9f"
+}

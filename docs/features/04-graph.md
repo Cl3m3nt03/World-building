@@ -54,6 +54,8 @@ On enregistre la configuration courante (filtres, réglages, nœuds épinglés e
 
 L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu passe par Canvas 2D ou WebGL, jamais par un nœud DOM par élément. Au-delà d'un certain nombre de nœuds, les labels ne s'affichent qu'à partir d'un seuil de zoom.
 
+**Réalisé en M5 (5.1)** : le socle de données, sans interface pour l'instant. Un graph est un document (`graphs`, migration 0011) qui garde sa configuration : filtres (types), réglages (labels, nœuds isolés, taille des nœuds, distance et force des liens, répulsion, collision, gravité X et Y, bornés), nœuds épinglés avec leur position, cadrage. Les réglages se lisent avec tolérance (un champ inconnu ou absent prend sa valeur par défaut). Les nœuds et arêtes ne sont pas stockés : `graph_data` renvoie les cartes vivantes et une arête par paire de cartes, toutes directions confondues, pondérée par le nombre de liens `mention` et `property` (les pins de map n'en sont pas). Le graph suit la corbeille, la duplication (« Enregistrer sous… » s'appuiera dessus) et la suppression des documents.
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)
