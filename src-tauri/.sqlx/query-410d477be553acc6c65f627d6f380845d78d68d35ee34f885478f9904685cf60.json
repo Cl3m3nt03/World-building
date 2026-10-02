@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", layer_id, points, label, label_style, card_id, fill_color,\n                  opacity, pattern\n           FROM map_zones WHERE map_id = ? ORDER BY sort_order",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "layer_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "layer_id"
+          }
+        }
+      },
+      {
+        "name": "points",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "points"
+          }
+        }
+      },
+      {
+        "name": "label",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "label"
+          }
+        }
+      },
+      {
+        "name": "label_style",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "label_style"
+          }
+        }
+      },
+      {
+        "name": "card_id",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "card_id"
+          }
+        }
+      },
+      {
+        "name": "fill_color",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "fill_color"
+          }
+        }
+      },
+      {
+        "name": "opacity",
+        "ordinal": 7,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "opacity"
+          }
+        }
+      },
+      {
+        "name": "pattern",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_zones",
+            "name": "pattern"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "410d477be553acc6c65f627d6f380845d78d68d35ee34f885478f9904685cf60"
+}

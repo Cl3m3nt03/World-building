@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", layer_id, x, y, text, style\n           FROM map_texts WHERE map_id = ? ORDER BY sort_order",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_texts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "layer_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_texts",
+            "name": "layer_id"
+          }
+        }
+      },
+      {
+        "name": "x",
+        "ordinal": 2,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "map_texts",
+            "name": "x"
+          }
+        }
+      },
+      {
+        "name": "y",
+        "ordinal": 3,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "map_texts",
+            "name": "y"
+          }
+        }
+      },
+      {
+        "name": "text",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_texts",
+            "name": "text"
+          }
+        }
+      },
+      {
+        "name": "style",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "map_texts",
+            "name": "style"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "dba36a9f90920aefffb41bede875b05c2ddc9e2df1aa05d116581a43d93d65fc"
+}

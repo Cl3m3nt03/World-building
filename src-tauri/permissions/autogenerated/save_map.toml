@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-map"
+description = "Enables the save_map command without any pre-configured scope."
+commands.allow = ["save_map"]
+
+[[permission]]
+identifier = "deny-save-map"
+description = "Denies the save_map command without any pre-configured scope."
+commands.deny = ["save_map"]

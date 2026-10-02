@@ -95,9 +95,11 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
       return t("media.usage.worldTheme", { name: usage.worldName });
     }
     const where =
-      usage.kind === "cardImage"
-        ? t("media.usage.cardImage", { name: usage.cardTitle })
-        : t("media.usage.cardBlock", { name: usage.cardTitle });
+      usage.kind === "mapBackground"
+        ? t("media.usage.mapBackground", { name: usage.mapTitle })
+        : usage.kind === "cardImage"
+          ? t("media.usage.cardImage", { name: usage.cardTitle })
+          : t("media.usage.cardBlock", { name: usage.cardTitle });
     return usage.inTrash ? t("media.usage.inTrash", { where }) : where;
   };
 
@@ -128,7 +130,9 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
                   key={
                     usage.kind === "worldMainImage" || usage.kind === "worldTheme"
                       ? usage.kind
-                      : `${usage.kind}-${usage.cardId}`
+                      : usage.kind === "mapBackground"
+                        ? `${usage.kind}-${usage.mapId}`
+                        : `${usage.kind}-${usage.cardId}`
                   }
                 >
                   {describeUsage(usage)}

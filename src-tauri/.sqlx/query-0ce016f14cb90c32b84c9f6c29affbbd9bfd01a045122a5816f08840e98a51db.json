@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO map_zones (id, map_id, layer_id, points, label, label_style, card_id,\n                                fill_color, opacity, pattern, sort_order)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": []
+  },
+  "hash": "0ce016f14cb90c32b84c9f6c29affbbd9bfd01a045122a5816f08840e98a51db"
+}
