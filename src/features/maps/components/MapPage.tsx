@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import type { Map as WorldMap } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
+import { useMapEditor } from "../hooks/useMapEditor";
 import { useMap, useRenameMap } from "../hooks/useMaps";
+import { LayersPanel } from "./LayersPanel";
 import { MapView, type MapViewHandle } from "./MapView";
 
 /** Delay before a typed title is saved. */
@@ -62,11 +64,9 @@ function TitleField({ map }: { map: WorldMap }) {
 
 /** A map, opened in the World tab: its name and the map itself (M4). */
 export function MapPage() {
-  const { t } = useTranslation();
   const { mapId } = useParams({ from: "/world/$worldId/world/map/$mapId" });
   const map = useMap(mapId);
   useMarkOpened(mapId);
-  const view = useRef<MapViewHandle>(null);
 
   if (map.isError) {
     return (
@@ -76,33 +76,54 @@ export function MapPage() {
     );
   }
   if (!map.data) return null;
+  // Remounted for another map: the editor starts from that map's content.
+  return <MapEditor key={map.data.id} map={map.data} />;
+}
+
+function MapEditor({ map }: { map: WorldMap }) {
+  const { t } = useTranslation();
+  const view = useRef<MapViewHandle>(null);
+  const editor = useMapEditor(map);
+  const data = map;
 
   return (
-    <article
-      aria-label={map.data.title}
-      className="glass flex h-full flex-col gap-3 rounded-lg p-3"
-    >
+    <article aria-label={data.title} className="glass flex h-full flex-col gap-3 rounded-lg p-3">
       <header className="flex items-center gap-2">
-        <TitleField map={map.data} />
+        <TitleField map={data} />
         <Button variant="secondary" size="sm" onClick={() => view.current?.recenter()}>
           <Maximize />
           {t("maps.recenter")}
         </Button>
       </header>
-      {map.data.backgroundAssetId === null && (
+      {data.backgroundAssetId === null && (
         <p role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
           <ImageOff aria-hidden className="size-4" />
           {t("maps.noBackground")}
         </p>
       )}
-      <div className="min-h-0 flex-1">
-        <MapView
-          ref={view}
-          backgroundAssetId={map.data.backgroundAssetId}
-          width={map.data.width}
-          height={map.data.height}
-          label={t("maps.viewLabel", { name: map.data.title })}
-        />
+      {editor.saveError && (
+        <p role="alert" className="text-sm text-destructive">
+          {t("maps.saveError")}
+        </p>
+      )}
+      <div className="flex min-h-0 flex-1 gap-3">
+        <div className="min-w-0 flex-1">
+          <MapView
+            ref={view}
+            backgroundAssetId={data.backgroundAssetId}
+            width={data.width}
+            height={data.height}
+            label={t("maps.viewLabel", { name: data.title })}
+          />
+        </div>
+        <aside className="w-56 shrink-0 overflow-y-auto">
+          <LayersPanel
+            content={editor.content}
+            update={editor.update}
+            activeLayerId={editor.activeLayerId}
+            onActiveLayerChange={editor.setActiveLayerId}
+          />
+        </aside>
       </div>
       <p className="text-xs text-muted-foreground">{t("maps.navigationHint")}</p>
     </article>

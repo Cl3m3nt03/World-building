@@ -643,5 +643,22 @@
   "maps.chooseBackground": "Background image of the new map",
   "maps.untitled": "Untitled map",
   "maps.defaultLayer": "Layer 1",
-  "sidebar.newMap": "New map"
+  "sidebar.newMap": "New map",
+  "maps.layers.title": "Layers",
+  "maps.layers.add": "New layer",
+  "maps.layers.newName": "Layer {{index}}",
+  "maps.layers.hide": "Hide the layer {{name}}",
+  "maps.layers.show": "Show the layer {{name}}",
+  "maps.layers.actions": "Actions of the layer {{name}}",
+  "maps.layers.rename": "Rename",
+  "maps.layers.up": "Move up",
+  "maps.layers.down": "Move down",
+  "maps.layers.delete": "Delete the layer…",
+  "maps.layers.nameLabel": "Layer name",
+  "maps.layers.deleteTitle": "Delete the layer “{{name}}”?",
+  "maps.layers.deleteDescription_one": "It holds {{count}} item (pin, zone or text).",
+  "maps.layers.deleteDescription_other": "It holds {{count}} items (pins, zones or texts).",
+  "maps.layers.deleteMove": "Move to “{{name}}”",
+  "maps.layers.deleteAll": "Delete everything",
+  "maps.saveError": "The latest changes of the map could not be saved."
 }

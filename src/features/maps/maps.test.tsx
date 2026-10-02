@@ -80,6 +80,11 @@ beforeEach(() => {
       }
       case "get_map":
         return stored;
+      case "save_map": {
+        const { content } = payload as { content: WorldMap["content"] };
+        if (stored) stored = { ...stored, content };
+        return null;
+      }
       case "rename_document": {
         const { title } = payload as { title: string };
         if (stored) stored = { ...stored, title };
@@ -167,4 +172,41 @@ test("a map whose background was deleted says so", async () => {
   expect(
     await screen.findByText("L'image de fond de cette map n'est plus dans la médiathèque."),
   ).toBeTruthy();
+});
+
+test("layers: added on top and named at once, hidden, moved, deleted, and saved", async () => {
+  stored = map("Arda");
+  await renderAt("/world/demo/world/map/m1");
+
+  fireEvent.click(await screen.findByRole("button", { name: "Nouveau calque" }));
+  const name = await screen.findByLabelText("Nom du calque");
+  fireEvent.change(name, { target: { value: "Villes" } });
+  fireEvent.keyDown(name, { key: "Enter" });
+
+  const list = screen.getByRole("list", { name: "Calques" });
+  const rows = () => [...list.querySelectorAll("li")].map((li) => li.textContent);
+  expect(rows()).toEqual(["Villes", "Calque 1"]);
+  // The new layer is the active one.
+  expect(screen.getByRole("button", { name: "Villes" }).getAttribute("aria-current")).toBe("true");
+
+  fireEvent.click(screen.getByRole("button", { name: "Masquer le calque Villes" }));
+  expect(
+    screen.getByRole("button", { name: "Afficher le calque Villes" }).getAttribute("aria-pressed"),
+  ).toBe("true");
+
+  // Alt+↓ moves the focused layer one step down.
+  fireEvent.keyDown(screen.getByRole("button", { name: "Villes" }), {
+    key: "ArrowDown",
+    altKey: true,
+  });
+  expect(rows()).toEqual(["Calque 1", "Villes"]);
+
+  await waitFor(
+    () =>
+      expect(stored?.content.layers).toEqual([
+        { id: expect.any(String), name: "Villes", visible: false },
+        { id: "l1", name: "Calque 1", visible: true },
+      ]),
+    { timeout: 3000 },
+  );
 });
