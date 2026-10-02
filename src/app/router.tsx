@@ -18,6 +18,7 @@ import { HomeScreen } from "@/features/home";
 import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
 import { sidebarStateQuery } from "@/features/sidebar";
+import { TreePage } from "@/features/trees";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -30,6 +31,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *     /card/$cardId            a card, in the workspace
  *     /map/$mapId              a map, in the workspace (M4)
  *     /graph/$graphId          a graph, in the workspace (M5)
+ *     /tree/$treeId            a relation tree, in the workspace (M6)
  *   /world/$worldId/wiki       Wiki tab
  *   /world/$worldId/quill      Quill tab
  *   /world/$worldId/media      Media library (reached from Home)
@@ -115,6 +117,12 @@ const graphRoute = createRoute({
   component: GraphPage,
 });
 
+const treeRoute = createRoute({
+  getParentRoute: () => worldTabRoute,
+  path: "tree/$treeId",
+  component: TreePage,
+});
+
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
@@ -142,7 +150,7 @@ export const routeTree = rootRoute.addChildren([
   worldRoute.addChildren([
     worldIndexRoute,
     homeRoute,
-    worldTabRoute.addChildren([worldTabIndexRoute, cardRoute, mapRoute, graphRoute]),
+    worldTabRoute.addChildren([worldTabIndexRoute, cardRoute, mapRoute, graphRoute, treeRoute]),
     wikiRoute,
     quillRoute,
     mediaRoute,

@@ -15,5 +15,11 @@ export function documentRoute(worldId: string, kind: DocumentKind, id: string) {
       params: { worldId, graphId: id },
     } as const;
   }
+  if (kind === "tree") {
+    return {
+      to: "/world/$worldId/world/tree/$treeId",
+      params: { worldId, treeId: id },
+    } as const;
+  }
   return { to: "/world/$worldId/world/card/$cardId", params: { worldId, cardId: id } } as const;
 }

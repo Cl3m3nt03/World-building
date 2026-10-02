@@ -3,6 +3,7 @@ import {
   LayoutGrid,
   type LucideIcon,
   Map as MapIcon,
+  Network,
   PanelLeftOpen,
   Share2,
   SquareUser,
@@ -19,6 +20,7 @@ import { CreateCardMenu } from "@/features/cards";
 import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
+import { useCreateTree } from "@/features/trees";
 import type { TranslationKey } from "@/i18n";
 
 /** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
@@ -39,9 +41,11 @@ export function StartWith() {
   const [creatingMap, setCreatingMap] = useState(false);
   const { worldId } = useParams({ strict: false });
   const createGraph = useCreateGraph();
+  const createTree = useCreateTree();
+  const createError = createGraph.error ?? createTree.error;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
-      {createGraph.isError && <AppErrorMessage error={createGraph.error} />}
+      {createError && <AppErrorMessage error={createError} />}
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
       <div className="flex gap-3">
         <div className="flex flex-col items-center gap-1.5">
@@ -79,6 +83,18 @@ export function StartWith() {
             <Share2 />
           </Button>
           <span className="text-xs text-muted-foreground">{t("workspace.create.graph")}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <Button
+            variant="secondary"
+            aria-label={t("workspace.create.tree")}
+            className={TILE_CLASS}
+            disabled={createTree.isPending}
+            onClick={() => worldId && createTree.mutate(worldId)}
+          >
+            <Network />
+          </Button>
+          <span className="text-xs text-muted-foreground">{t("workspace.create.tree")}</span>
         </div>
         {SOON_TILES.map(({ icon: Icon, label, milestone }) => (
           <div key={label} className="flex flex-col items-center gap-1.5">

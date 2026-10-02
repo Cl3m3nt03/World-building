@@ -22,6 +22,7 @@ import {
   Globe,
   type LucideIcon,
   Map as MapIcon,
+  Network,
   Pencil,
   Pin,
   PinOff,
@@ -112,6 +113,8 @@ type Props = {
   /** "New map" from the right click (M4). */
   onNewMap: () => void;
   onNewGraph: () => void;
+  /** "New tree" from the right click (M6). */
+  onNewTree: () => void;
   ref?: Ref<DocumentTreeHandle>;
 };
 
@@ -141,6 +144,7 @@ export function DocumentTreeView({
   onExpandedChange,
   onNewMap,
   onNewGraph,
+  onNewTree,
   ref,
 }: Props) {
   const { t } = useTranslation();
@@ -523,6 +527,10 @@ export function DocumentTreeView({
         <Share2 />
         {t("sidebar.newGraph")}
       </ContextMenuItem>
+      <ContextMenuItem onSelect={onNewTree}>
+        <Network />
+        {t("sidebar.newTree")}
+      </ContextMenuItem>
     </>
   );
 
@@ -843,7 +851,7 @@ function DocumentMenu({
         {pinned ? <PinOff /> : <Pin />}
         {pinned ? t("sidebar.pins.unpin") : t("sidebar.pins.pin")}
       </ContextMenuItem>
-      {node.document.kind !== "canvas" && node.document.kind !== "tree" && (
+      {node.document.kind !== "canvas" && (
         <ContextMenuItem onSelect={onDuplicate}>
           <Copy />
           {t("sidebar.document.duplicate")}
@@ -886,6 +894,7 @@ function nodeVisual(
   }
   if (node.document.kind === "map") return { Icon: MapIcon, label: node.document.title };
   if (node.document.kind === "graph") return { Icon: Share2, label: node.document.title };
+  if (node.document.kind === "tree") return { Icon: Network, label: node.document.title };
   const type = node.document.typeId ? typesById.get(node.document.typeId) : undefined;
   return {
     Icon: typeIcon(type?.icon ?? "shapes"),
