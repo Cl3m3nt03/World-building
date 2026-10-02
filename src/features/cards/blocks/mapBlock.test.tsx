@@ -112,3 +112,14 @@ test("a chosen map shows with its pins, and opens", async () => {
     { id: "b", type: "map", mapId: null },
   ]);
 });
+
+test("« Changer » then the same map, or Escape, shows the map again", async () => {
+  const onChange = vi.fn();
+  await renderBlock({ id: "b", type: "map", mapId: "m1" }, onChange);
+  fireEvent.click(await screen.findByRole("button", { name: "Changer" }));
+  fireEvent.click(await screen.findByRole("combobox", { name: "Map à afficher" }));
+  fireEvent.click(await screen.findByRole("option", { name: "Arda" }));
+
+  expect(await screen.findByRole("application", { name: "Map Arda" })).toBeTruthy();
+  expect(onChange).not.toHaveBeenCalled();
+});

@@ -60,6 +60,10 @@ export function MapBlockView({
             onChange({ ...block, mapId });
             setChoosing(false);
           }}
+          // Closed on the same map (no change), or with Escape: back to it.
+          onOpenChange={(open) => {
+            if (!open && block.mapId !== null) setChoosing(false);
+          }}
         >
           <SelectTrigger id={selectId} size="sm">
             <SelectValue placeholder={t("blocks.map.placeholder")} />
