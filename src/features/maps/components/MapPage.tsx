@@ -5,8 +5,10 @@ import {
   MapPinPlus,
   Maximize,
   Pentagon,
+  Redo2,
   SquareUser,
   Type as TypeIcon,
+  Undo2,
 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -116,6 +118,14 @@ export function MapPage() {
   return <MapEditor key={map.data.id} map={map.data} />;
 }
 
+/**
+ * Undo group of a change made in a properties panel: the same field of the
+ * same item (typing, dragging a slider) makes one step.
+ */
+function fieldGroup(id: string, patch: object): string {
+  return `${id}:${Object.keys(patch).sort().join(",")}`;
+}
+
 /** The map's right-click menu, at the point clicked. */
 type ContextMenuState = MapPoint & { pickCard: boolean };
 
@@ -187,6 +197,33 @@ function MapEditor({ map }: { map: WorldMap }) {
     selectText(text.id);
     setNewTextId(text.id);
   };
+  // Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) in the map; text fields keep their own.
+  const historyKeys = useRef({ undo: editor.undo, redo: editor.redo });
+  historyKeys.current = { undo: editor.undo, redo: editor.redo };
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        historyKeys.current.undo();
+      } else if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        historyKeys.current.redo();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Escape gives up placing a text.
   useEffect(() => {
     if (!placingText) return;
@@ -382,6 +419,28 @@ function MapEditor({ map }: { map: WorldMap }) {
           <Pentagon />
           {t("maps.zones.tool")}
         </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("maps.history.undo")}
+          aria-keyshortcuts="Control+Z"
+          title={t("maps.history.undo")}
+          disabled={!editor.canUndo}
+          onClick={editor.undo}
+        >
+          <Undo2 />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("maps.history.redo")}
+          aria-keyshortcuts="Control+Y"
+          title={t("maps.history.redo")}
+          disabled={!editor.canRedo}
+          onClick={editor.redo}
+        >
+          <Redo2 />
+        </Button>
         <Button variant="secondary" size="sm" onClick={() => setPickingBackground(true)}>
           <ImageIcon />
           {t("maps.background.button")}
@@ -501,7 +560,10 @@ function MapEditor({ map }: { map: WorldMap }) {
               layers={content.layers}
               autoFocus={selectedText.id === newTextId}
               onChange={(patch) =>
-                update((previous) => updateText(previous, selectedText.id, patch))
+                update(
+                  (previous) => updateText(previous, selectedText.id, patch),
+                  fieldGroup(selectedText.id, patch),
+                )
               }
               onDelete={() => {
                 update((previous) => removeText(previous, selectedText.id));
@@ -516,7 +578,10 @@ function MapEditor({ map }: { map: WorldMap }) {
               card={selectedZone.cardId ? cardsById.get(selectedZone.cardId) : undefined}
               layers={content.layers}
               onChange={(patch) =>
-                update((previous) => updateZone(previous, selectedZone.id, patch))
+                update(
+                  (previous) => updateZone(previous, selectedZone.id, patch),
+                  fieldGroup(selectedZone.id, patch),
+                )
               }
               onDelete={() => {
                 update((previous) => removeZone(previous, selectedZone.id));
@@ -530,7 +595,12 @@ function MapEditor({ map }: { map: WorldMap }) {
               pin={selected}
               card={cardOf(selected)}
               layers={content.layers}
-              onChange={(patch) => update((previous) => updatePin(previous, selected.id, patch))}
+              onChange={(patch) =>
+                update(
+                  (previous) => updatePin(previous, selected.id, patch),
+                  fieldGroup(selected.id, patch),
+                )
+              }
               onDelete={() => remove(selected.id)}
             />
           )}
