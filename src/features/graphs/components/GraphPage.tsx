@@ -69,6 +69,26 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
     () => (query.trim() === "" ? null : new Set(found.map((node) => node.id))),
     [found, query],
   );
+  const pinned = useMemo(
+    () => new Map(config.pinned.map((node) => [node.cardId, [node.x ?? 0, node.y ?? 0] as const])),
+    [config.pinned],
+  );
+  /** Pins the card where it is now, or frees it. */
+  const togglePin = (id: string) => {
+    if (pinned.has(id)) {
+      setConfig((current) => ({
+        ...current,
+        pinned: current.pinned.filter((node) => node.cardId !== id),
+      }));
+      return;
+    }
+    const at = view.current?.positionOf(id);
+    if (!at) return;
+    setConfig((current) => ({
+      ...current,
+      pinned: [...current.pinned, { cardId: id, x: at[0], y: at[1] }],
+    }));
+  };
   // A card hidden by the filters is no longer selected.
   const selected = selectedId && nodes.some((node) => node.id === selectedId) ? selectedId : null;
   const open = (id: string) => void navigate(documentRoute(worldId, "card", id));
@@ -109,6 +129,16 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
                 highlighted={highlighted}
                 onSelect={setSelectedId}
                 onOpen={open}
+                pinned={pinned}
+                onTogglePin={togglePin}
+                onPinnedMove={(id, x, y) =>
+                  setConfig((current) => ({
+                    ...current,
+                    pinned: current.pinned.map((node) =>
+                      node.cardId === id ? { cardId: id, x, y } : node,
+                    ),
+                  }))
+                }
               />
             )}
             <div
@@ -160,6 +190,8 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
                 view.current?.centerOn(id);
               }}
               onOpen={open}
+              pinned={pinned}
+              onTogglePin={togglePin}
             />
           </aside>
         </div>

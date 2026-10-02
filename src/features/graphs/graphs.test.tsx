@@ -378,3 +378,28 @@ test("the settings: hiding the cards without links, a force slider, back to the 
   expect(within(dialog).getByText("120")).toBeTruthy();
   expect(screen.getByRole("listbox", { name: "3 cartes", hidden: true })).toBeTruthy();
 });
+
+test("the selected card is pinned and unpinned from the list; the list marks it", async () => {
+  stored = {
+    id: "g1",
+    title: "Royaume",
+    config: { filters: {}, settings: {}, pinned: [], viewport: null },
+  };
+  await renderAt("/world/demo/world/graph/g1");
+  const list = await screen.findByRole("listbox", { name: "3 cartes" });
+  // The simulation has given the nodes a place.
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+  fireEvent.click(within(list).getByRole("option", { name: "Aragorn" }));
+  fireEvent.click(screen.getByRole("button", { name: "Épingler Aragorn" }));
+  const pin = screen.getByRole("button", { name: "Désépingler Aragorn" });
+  expect(pin.getAttribute("aria-pressed")).toBe("true");
+  expect(
+    within(list)
+      .getAllByRole("option")
+      .map((o) => o.textContent),
+  ).toContain("Aragorn (épinglée)");
+  fireEvent.click(pin);
+  expect(within(list).getByRole("option", { name: "Aragorn" })).toBeTruthy();
+});
