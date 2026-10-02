@@ -121,7 +121,7 @@ beforeEach(() => {
         };
       case "list_documents":
         // A map in the trash.
-        return args.filter && (args.filter as { kind?: string; trashed?: boolean }).kind === "map"
+        return args.filter && (args.filter as { kind?: string; trashed?: boolean }).trashed === true
           ? [
               {
                 id: "arda",

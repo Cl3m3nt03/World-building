@@ -137,7 +137,8 @@ describe("M4: the map", () => {
     await openTab("World");
     await createCard("Lieu", "Gondor");
 
-    await $("aria/Nouvelle map").click();
+    await $("aria/Nouveau document (map, graph…)").click();
+    await $('//*[@role="menuitem"][normalize-space()="Nouvelle map"]').click();
     await $('[role="dialog"]').waitForDisplayed();
     await pickNext(image("arda.png"));
     await $("button=Importer une image").click();
