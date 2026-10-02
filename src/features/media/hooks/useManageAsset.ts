@@ -1,6 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { appKeys } from "@/features/settings/hooks/keys";
-import { worldKeys } from "@/features/world/hooks/keys";
 import { commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { mediaKeys } from "./keys";
@@ -20,11 +18,9 @@ export function useDeleteAsset() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => unwrap(commands.deleteAsset(id)),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: mediaKeys.all() });
-      void queryClient.invalidateQueries({ queryKey: worldKeys.current() });
-      void queryClient.invalidateQueries({ queryKey: appKeys.settings() });
-    },
+    // The file can be shown anywhere (main image of the world, cards, blocks,
+    // map backgrounds): everything loaded is fetched again.
+    onSuccess: () => queryClient.invalidateQueries(),
   });
 }
 
