@@ -145,6 +145,31 @@ export const commands = {
 	 *  pair of cards.
 	 */
 	graphData: () => typedError<GraphData, AppError>(__TAURI_INVOKE("graph_data")),
+	/**
+	 *  Creates a tree named `title` with one variant named `variant_name`
+	 *  (both translated by the front) holding one empty node.
+	 */
+	createTree: (title: string, variantName: string) => typedError<RelationTree, AppError>(__TAURI_INVOKE("create_tree", { title, variantName })),
+	/**  A tree with its variants, in order, and their content. */
+	getTree: (id: string) => typedError<RelationTree, AppError>(__TAURI_INVOKE("get_tree", { id })),
+	/**  Replaces the content of one variant (nodes, edges, annotations). */
+	saveTreeVariant: (variantId: string, content: VariantContent) => typedError<null, AppError>(__TAURI_INVOKE("save_tree_variant", { variantId, content })),
+	/**  A new variant named `name`, a copy of `copy_of`, right after it. */
+	addTreeVariant: (copyOf: string, name: string) => typedError<RelationTree, AppError>(__TAURI_INVOKE("add_tree_variant", { copyOf, name })),
+	renameTreeVariant: (id: string, name: string) => typedError<null, AppError>(__TAURI_INVOKE("rename_tree_variant", { id, name })),
+	moveTreeVariant: (id: string, index: number) => typedError<null, AppError>(__TAURI_INVOKE("move_tree_variant", { id, index })),
+	/**  Deletes a variant; the last one of a tree cannot be deleted. */
+	deleteTreeVariant: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_tree_variant", { id })),
+	/**  Duplicates a tree as `title` (translated by the front), right after it. */
+	duplicateTree: (id: string, title: string) => typedError<RelationTree, AppError>(__TAURI_INVOKE("duplicate_tree", { id, title })),
+	/**  The relation types of the world, provided ones first. */
+	listRelationTypes: () => typedError<RelationType[], AppError>(__TAURI_INVOKE("list_relation_types")),
+	createRelationType: (input: RelationTypeInput) => typedError<RelationType, AppError>(__TAURI_INVOKE("create_relation_type", { input })),
+	updateRelationType: (id: string, input: RelationTypeInput) => typedError<RelationType, AppError>(__TAURI_INVOKE("update_relation_type", { id, input })),
+	/**  How many tree links use the relation type (before deleting it). */
+	relationTypeUses: (id: string) => typedError<number, AppError>(__TAURI_INVOKE("relation_type_uses", { id })),
+	/**  Deletes a relation type of the world; its links become « without type ». */
+	deleteRelationType: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_relation_type", { id })),
 	/**  App settings: preferences and recent worlds. */
 	getSettings: () => typedError<AppSettings, AppError>(__TAURI_INVOKE("get_settings")),
 	/**  Saves new preferences and returns the updated settings. */
@@ -457,6 +482,9 @@ export type DocumentTree = {
 	documents: TreeDocument[],
 };
 
+/**  Where an edge starts: a node, or another edge (a junction). */
+export type EdgeSource = { kind: "node"; id: string } | { kind: "edge"; id: string };
+
 export type Folder = {
 	id: string,
 	/**  Enclosing folder; `None` at the root. */
@@ -570,6 +598,8 @@ export type LabelStyle = {
 };
 
 export type Language = "fr" | "en";
+
+export type LineStyle = "solid" | "dashed" | "dotted";
 
 export type LinkKind = 
 /**  The card is cited in a text. */
@@ -743,6 +773,42 @@ export type RecentWorld = {
 	lastOpenedAt: string,
 };
 
+export type RelationCategory = "family" | "couple" | "other" | "custom";
+
+/**  A tree as seen by the front: its variants in order, with their content. */
+export type RelationTree = {
+	id: string,
+	title: string,
+	variants: TreeVariant[],
+};
+
+/**  A kind of relation, shared by the world's trees. */
+export type RelationType = {
+	id: string,
+	/**
+	 *  Key of a provided type ("parent", "child", "sibling", "partner",
+	 *  "spouse"), translated by the front; `null` for a type of the world.
+	 */
+	builtin: string | null,
+	/**  Name of a type of the world (empty for a provided one). */
+	name: string,
+	icon: string,
+	/**  The relation the other way round; itself when symmetric. */
+	inverseId: string | null,
+	category: RelationCategory,
+};
+
+/**  A new or changed type of the world. */
+export type RelationTypeInput = {
+	name: string,
+	icon: string,
+	category: RelationCategory,
+	/**  The relation the other way round (kept both ways); `None`: none. */
+	inverseId: string | null,
+	/**  The relation is its own inverse (siblings, friends). */
+	symmetric: boolean,
+};
+
 export type SearchHit = {
 	id: string,
 	kind: DocumentKind,
@@ -823,6 +889,13 @@ export type TextStyle = {
 
 export type Theme = "light" | "dark" | "system";
 
+/**  Something drawn over the tree. */
+export type TreeAnnotation = 
+/**  A free-hand stroke. */
+{ kind: "drawing"; id: string; points: ([(number | null), (number | null)])[]; color: string; width: number | null } | 
+/**  A free text. */
+{ kind: "text"; id: string; x: number | null; y: number | null; text: string; color: string; size: number | null };
+
 /**  A live document as the sidebar shows it. */
 export type TreeDocument = {
 	id: string,
@@ -841,10 +914,42 @@ export type TreeDocument = {
 	imageAssetId: string | null,
 };
 
+export type TreeEdge = {
+	id: string,
+	source: EdgeSource,
+	target: string,
+	/**  `null`: a link without a type yet (« skip for now »). */
+	relationTypeId: string | null,
+	lineStyle: LineStyle,
+};
+
+export type TreeNode = {
+	id: string,
+	/**  The card the node stands for; `null` for a plain name or an empty node. */
+	cardId: string | null,
+	/**  The plain name (empty for a card or an empty node). */
+	label: string,
+	x: number | null,
+	y: number | null,
+};
+
+export type TreeVariant = {
+	id: string,
+	name: string,
+	content: VariantContent,
+};
+
 /**  How many live cards a type (or subtype) has. */
 export type TypeCount = {
 	typeId: string,
 	count: number,
+};
+
+/**  What a variant holds. */
+export type VariantContent = {
+	nodes: TreeNode[],
+	edges: TreeEdge[],
+	annotations: TreeAnnotation[],
 };
 
 /**  A world as seen by the front. */

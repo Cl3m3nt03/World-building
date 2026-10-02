@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE relation_types SET inverse_id = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "664133f742190f62c4ec5a156bb25ca4350c09d637cbbd81ad7826c9561aa173"
+}

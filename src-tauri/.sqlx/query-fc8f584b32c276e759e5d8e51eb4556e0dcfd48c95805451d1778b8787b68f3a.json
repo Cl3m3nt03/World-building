@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO relation_types (id, builtin, name, icon, inverse_id, category, sort_order)\n         VALUES (?, NULL, ?, ?, NULL, ?,\n                 (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM relation_types))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "fc8f584b32c276e759e5d8e51eb4556e0dcfd48c95805451d1778b8787b68f3a"
+}

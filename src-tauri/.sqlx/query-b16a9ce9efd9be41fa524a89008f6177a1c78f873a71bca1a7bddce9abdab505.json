@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO tree_nodes (id, variant_id, card_id, label, x, y, sort_order)\n         VALUES (?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "b16a9ce9efd9be41fa524a89008f6177a1c78f873a71bca1a7bddce9abdab505"
+}

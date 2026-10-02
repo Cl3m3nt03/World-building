@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.title FROM trees t JOIN documents d ON d.id = t.document_id\n           WHERE t.document_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "title",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c55f40fd04956909ee6601ef51360be655f042b89eed85a2be28644bbe6afebb"
+}

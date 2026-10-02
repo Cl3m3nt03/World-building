@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-relation-type"
+description = "Enables the create_relation_type command without any pre-configured scope."
+commands.allow = ["create_relation_type"]
+
+[[permission]]
+identifier = "deny-create-relation-type"
+description = "Denies the create_relation_type command without any pre-configured scope."
+commands.deny = ["create_relation_type"]

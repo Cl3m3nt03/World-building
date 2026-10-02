@@ -12,6 +12,7 @@ pub mod library;
 pub mod links;
 pub mod maps;
 pub mod properties;
+pub mod relation_trees;
 pub mod settings;
 pub mod tree;
 pub mod world;

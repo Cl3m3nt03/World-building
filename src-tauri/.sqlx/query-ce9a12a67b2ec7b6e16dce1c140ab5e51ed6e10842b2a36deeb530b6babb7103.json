@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM tree_variants WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ce9a12a67b2ec7b6e16dce1c140ab5e51ed6e10842b2a36deeb530b6babb7103"
+}

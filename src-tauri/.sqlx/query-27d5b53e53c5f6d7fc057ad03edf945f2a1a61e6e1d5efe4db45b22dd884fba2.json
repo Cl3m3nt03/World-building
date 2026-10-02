@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO tree_annotations (id, variant_id, data, sort_order) VALUES (?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "27d5b53e53c5f6d7fc057ad03edf945f2a1a61e6e1d5efe4db45b22dd884fba2"
+}

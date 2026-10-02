@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM relation_types WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "079c9e58e18126dfc669cf64f9726b0a7abc804b904d0e3463f7ec828c250ff2"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT tree_id AS \"tree_id!\" FROM tree_variants WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "tree_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_variants",
+            "name": "tree_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8d56e3c9abe8518743865eb80cfd2aecc4c98f8041e692653c2ed20c5fb93615"
+}
