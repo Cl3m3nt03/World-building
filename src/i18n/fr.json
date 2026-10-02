@@ -716,5 +716,7 @@
   "maps.texts.spacing": "Espacement des lettres : {{value}}",
   "maps.texts.arc": "Courbure : {{value}} %",
   "maps.texts.delete": "Supprimer le texte",
-  "maps.texts.ariaLabel": "Texte {{text}}"
+  "maps.texts.ariaLabel": "Texte {{text}}",
+  "maps.background.button": "Fond",
+  "maps.background.pickerTitle": "Nouvelle image de fond de la map"
 }

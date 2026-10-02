@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
+  Image as ImageIcon,
   ImageOff,
   MapPinPlus,
   Maximize,
@@ -21,10 +22,11 @@ import { Input } from "@/components/ui/input";
 import { useCardTypes } from "@/features/card-types";
 import { CardPicker, useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
+import { ImagePickerDialog } from "@/features/media";
 import type { MapPin, MapZone, Map as WorldMap } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { useMapEditor } from "../hooks/useMapEditor";
-import { useMap, useRenameMap } from "../hooks/useMaps";
+import { useMap, useRenameMap, useSetMapBackground } from "../hooks/useMaps";
 import { hiddenLayers } from "../layers";
 import { addPin, KEYBOARD_STEP, newPin, nudgePin, removePin, updatePin } from "../pins";
 import { addText, newText, removeText, updateText } from "../texts";
@@ -152,6 +154,8 @@ function MapEditor({ map }: { map: WorldMap }) {
   };
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
   const [pickingCard, setPickingCard] = useState(false);
+  const [pickingBackground, setPickingBackground] = useState(false);
+  const setBackground = useSetMapBackground(map.id);
   const data = map;
 
   const cardsById = useMemo(
@@ -378,6 +382,10 @@ function MapEditor({ map }: { map: WorldMap }) {
           <Pentagon />
           {t("maps.zones.tool")}
         </Button>
+        <Button variant="secondary" size="sm" onClick={() => setPickingBackground(true)}>
+          <ImageIcon />
+          {t("maps.background.button")}
+        </Button>
         <Button variant="secondary" size="sm" onClick={() => view.current?.recenter()}>
           <Maximize />
           {t("maps.recenter")}
@@ -399,6 +407,14 @@ function MapEditor({ map }: { map: WorldMap }) {
           {t("maps.zones.tracing", { count: trace.length })}
         </p>
       )}
+      {setBackground.isError && <AppErrorMessage error={setBackground.error} />}
+      <ImagePickerDialog
+        open={pickingBackground}
+        onOpenChange={setPickingBackground}
+        title={t("maps.background.pickerTitle")}
+        selectedId={data.backgroundAssetId}
+        onPick={(assetId) => setBackground.mutate(assetId)}
+      />
       {editor.saveError && (
         <p role="alert" className="text-sm text-destructive">
           {t("maps.saveError")}

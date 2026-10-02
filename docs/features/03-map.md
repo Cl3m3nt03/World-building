@@ -78,6 +78,8 @@ La map est **sauvegardée automatiquement** : chaque modification est persistée
 
 **Réalisé en M4 (4.7)** : **textes**. « Ajouter un texte » attend un clic sur la map (`Échap` ou le bouton pour renoncer) et y pose « Texte », sélectionné, son champ prêt à être tapé. Son panneau règle le texte, la police, la taille, « Suit le zoom » (sinon il garde sa taille à l'écran), l'espacement des lettres, la courbure (de -100 % vers le bas à +100 % vers le haut, en SVG `textPath`) et le calque. Un texte se déplace en le glissant ou aux flèches (Maj pour aller plus vite), `Suppr` le supprime ; ceux d'un calque masqué sont cachés. Les textes sont sous les pins.
 
+**Réalisé en M4 (4.8)** : le bouton « Fond » ouvre le sélecteur d'image (médiathèque du monde ou bibliothèque BuilderZ, l'image actuelle présélectionnée) ; la nouvelle image remplace le fond et la vue se recadre, pins, zones et textes gardent leur place relative.
+
 ## Modèle de données (indicatif)
 
 - `maps` : document_id, background_asset_id, width, height, tiles_path
