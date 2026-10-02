@@ -634,5 +634,14 @@
   "worldSettings.preferences.autoMentionLinks": "Liens automatiques des mentions",
   "worldSettings.preferences.autoMentionLinksHelp": "Transformer en mention le nom ou l'alias d'une carte dès qu'on le tape. Retour arrière juste après garde le texte. Désactivez pour lier les cartes vous-même, avec @.",
   "worldSettings.preferences.animateNewLinks": "Animer les nouveaux liens",
-  "worldSettings.preferences.animateNewLinksHelp": "Faire apparaître avec une courte animation une mention créée automatiquement. Jamais si Windows demande de réduire les animations."
+  "worldSettings.preferences.animateNewLinksHelp": "Faire apparaître avec une courte animation une mention créée automatiquement. Jamais si Windows demande de réduire les animations.",
+  "maps.title": "Nom de la map",
+  "maps.recenter": "Recentrer",
+  "maps.noBackground": "L'image de fond de cette map n'est plus dans la médiathèque.",
+  "maps.viewLabel": "Map {{name}}",
+  "maps.navigationHint": "Molette ou pavé tactile pour zoomer, glisser pour se déplacer. Au clavier, sur la map : flèches pour se déplacer, + et - pour zoomer.",
+  "maps.chooseBackground": "Image de fond de la nouvelle map",
+  "maps.untitled": "Map sans nom",
+  "maps.defaultLayer": "Calque 1",
+  "sidebar.newMap": "Nouvelle map"
 }

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { type BacklinkVia, commands } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
 
@@ -44,8 +45,7 @@ export function Backlinks({ cardId }: { cardId: string }) {
             return (
               <li key={backlink.sourceId}>
                 <Link
-                  to="/world/$worldId/world/card/$cardId"
-                  params={{ worldId, cardId: backlink.sourceId }}
+                  {...documentRoute(worldId, backlink.sourceKind, backlink.sourceId)}
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <Icon

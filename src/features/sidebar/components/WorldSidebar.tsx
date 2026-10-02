@@ -1,10 +1,11 @@
 import { useParams } from "@tanstack/react-router";
-import { FolderPlus, PanelLeftClose, Plus, Trash2 } from "lucide-react";
+import { FolderPlus, Map as MapIcon, PanelLeftClose, Plus, Trash2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { CreateCardMenu, TrashDialog } from "@/features/cards";
+import { CreateMapDialog } from "@/features/maps";
 import { useDocumentTree } from "../hooks/useDocumentTree";
 import { useSidebarState } from "../hooks/useSidebarState";
 import { DEFAULT_VIEW, type TreeView } from "../tree";
@@ -21,7 +22,9 @@ import { ViewMenu } from "./ViewMenu";
  */
 export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   const { t } = useTranslation();
-  const { cardId } = useParams({ strict: false });
+  const { cardId, mapId } = useParams({ strict: false });
+  const currentId = cardId ?? mapId ?? null;
+  const [creatingMap, setCreatingMap] = useState(false);
   const tree = useDocumentTree();
   const [trashOpen, setTrashOpen] = useState(false);
   const treeView = useRef<DocumentTreeHandle>(null);
@@ -43,12 +46,13 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
           </div>
         )}
         <SidebarSearch actions={<ViewMenu view={view} onChange={changeView} />}>
-          {tree.data && <PinnedSection tree={tree.data} currentId={cardId ?? null} />}
+          {tree.data && <PinnedSection tree={tree.data} currentId={currentId} />}
           {tree.data && sidebar.state && (
             <DocumentTreeView
               ref={treeView}
               tree={tree.data}
-              currentId={cardId ?? null}
+              currentId={currentId}
+              onNewMap={() => setCreatingMap(true)}
               view={view}
               onViewChange={changeView}
               initialExpanded={sidebar.state.expanded ?? []}
@@ -64,6 +68,15 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             {t("sidebar.newCard")}
           </Button>
         </CreateCardMenu>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("sidebar.newMap")}
+          title={t("sidebar.newMap")}
+          onClick={() => setCreatingMap(true)}
+        >
+          <MapIcon />
+        </Button>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -94,6 +107,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
         </Button>
       </div>
       <TrashDialog open={trashOpen} onOpenChange={setTrashOpen} />
+      <CreateMapDialog open={creatingMap} onOpenChange={setCreatingMap} />
     </aside>
   );
 }

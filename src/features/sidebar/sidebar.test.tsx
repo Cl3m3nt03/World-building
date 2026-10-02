@@ -447,7 +447,7 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
   await act(async () => {
     fireEvent.contextMenu(item("Arya"));
   });
-  // A document's own actions, then card creation in a submenu, then New folder.
+  // A document's own actions, then card creation in a submenu, New folder, New map.
   expect(names()).toEqual([
     "OuvrirEntrée",
     "RenommerF2",
@@ -458,6 +458,7 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
     "Mettre à la corbeilleSuppr",
     "Nouvelle carte",
     "Nouveau dossier",
+    "Nouvelle map",
   ]);
   await act(async () => {
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
@@ -467,7 +468,7 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
     fireEvent.contextMenu(screen.getByRole("tree"), { clientY: 600 });
   });
   expect(names()).toContain("Personnage");
-  expect(names().at(-1)).toBe("Nouveau dossier");
+  expect(names().slice(-2)).toEqual(["Nouveau dossier", "Nouvelle map"]);
 });
 
 test("Change icon saves the chosen icon", async () => {

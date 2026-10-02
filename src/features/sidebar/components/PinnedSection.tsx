@@ -30,6 +30,7 @@ import {
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage } from "@/features/media";
 import type { DocumentTree, TreeDocument } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import { useMovePin, useSetPinned } from "../hooks/useDocumentTree";
 import { pinnedDocuments } from "../tree";
 
@@ -156,8 +157,7 @@ function PinTile({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <Link
-            to="/world/$worldId/world/card/$cardId"
-            params={{ worldId, cardId: document.id }}
+            {...documentRoute(worldId, document.kind, document.id)}
             {...sortable.listeners}
             // Of dnd-kit's attributes, only the instructions: the link keeps its role.
             aria-describedby={sortable.attributes["aria-describedby"]}

@@ -22,7 +22,7 @@ import { DEFAULT_VIEW, isFiltered, type TreeView } from "../tree";
 /** Kinds of document, and the milestone bringing those not made yet. */
 const KINDS: { kind: DocumentKind; label: TranslationKey; milestone?: string }[] = [
   { kind: "card", label: "sidebar.view.kind.card" },
-  { kind: "map", label: "sidebar.view.kind.map", milestone: "M4" },
+  { kind: "map", label: "sidebar.view.kind.map" },
   { kind: "graph", label: "sidebar.view.kind.graph", milestone: "M5" },
   { kind: "tree", label: "sidebar.view.kind.tree", milestone: "M6" },
   { kind: "canvas", label: "sidebar.view.kind.canvas", milestone: "M7" },

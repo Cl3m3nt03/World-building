@@ -6,6 +6,7 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardMenu, useRecentDocuments } from "@/features/cards";
 import { AssetImage } from "@/features/media";
 import type { CardType, RecentDocument } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import { formatRelative } from "@/lib/format";
 
 /** How many recent documents Home shows. */
@@ -52,8 +53,7 @@ export function RecentDocuments({ worldId }: { worldId: string }) {
             {t("home.resume")}
             <Button asChild variant="secondary" size="sm" className="rounded-full">
               <Link
-                to="/world/$worldId/world/card/$cardId"
-                params={{ worldId, cardId: last.id }}
+                {...documentRoute(worldId, last.kind, last.id)}
                 aria-label={t("home.resumeCard", { name: last.title })}
               >
                 <DocumentIcon document={last} types={all} />
@@ -81,8 +81,7 @@ export function RecentDocuments({ worldId }: { worldId: string }) {
           {documents.map((document) => (
             <li key={document.id}>
               <Link
-                to="/world/$worldId/world/card/$cardId"
-                params={{ worldId, cardId: document.id }}
+                {...documentRoute(worldId, document.kind, document.id)}
                 className="group flex flex-col overflow-hidden rounded-lg border border-border outline-none hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-muted">
