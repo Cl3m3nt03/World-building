@@ -11,7 +11,7 @@
 
 import { createCard, createWorld, currentWorldButton, openCard, openTab } from "../helpers";
 
-const WORLD = "Beleriand";
+const WORLD = "Doriath";
 
 /** Accessible name of the drawing: « Graph <name> : N cartes, M liens ». */
 const drawing = () => $('//canvas[@role="img"]');
