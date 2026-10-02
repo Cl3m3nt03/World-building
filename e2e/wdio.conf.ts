@@ -9,13 +9,23 @@
  * real settings, logs or Documents folder (see src-tauri/src/paths.rs).
  */
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
 const application = path.join(root, "src-tauri", "target", "debug", "builderz.exe");
 const msedgedriver = path.join(root, "e2e", ".bin", "msedgedriver.exe");
+// Failed tests, written by the workers and reported by the main process as
+// GitHub annotations (readable without downloading the CI logs).
+const failures = path.join(os.tmpdir(), "builderz-e2e-failures.txt");
 const tauriDriverBin = process.env.TAURI_DRIVER ?? "tauri-driver";
 
 // Created once by the launcher; the workers inherit it through the environment.
@@ -71,6 +81,7 @@ export const config: WebdriverIO.Config = {
   mochaOpts: { ui: "bdd", timeout: 120_000 },
 
   onPrepare() {
+    rmSync(failures, { force: true });
     run("powershell", [
       "-NoProfile",
       "-ExecutionPolicy",
@@ -102,7 +113,21 @@ export const config: WebdriverIO.Config = {
     tauriDriver?.kill();
   },
 
+  afterTest(test, _context, { passed, error }) {
+    if (passed) return;
+    const message = `${test.parent} › ${test.title}: ${error?.message ?? "failed"}`;
+    appendFileSync(failures, `${message.replace(/\r?\n/g, " ")}\n`);
+  },
+
   onComplete() {
+    if (existsSync(failures)) {
+      if (process.env.GITHUB_ACTIONS === "true") {
+        for (const line of readFileSync(failures, "utf8").split("\n").filter(Boolean)) {
+          console.log(`::error title=e2e::${line.replaceAll("%", "%25")}`);
+        }
+      }
+      rmSync(failures, { force: true });
+    }
     if (process.env.E2E_KEEP_HOME !== "1") {
       rmSync(home, { recursive: true, force: true });
     }
