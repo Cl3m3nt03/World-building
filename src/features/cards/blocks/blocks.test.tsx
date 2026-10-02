@@ -150,12 +150,13 @@ test('"Add a block" does not take the focus back to its button once a block is a
   await act(async () => {
     fireEvent.click(item);
   });
-  await screen.findByRole("textbox", { name: "Bloc de texte 2" });
+  const added = await screen.findByRole("textbox", { name: "Bloc de texte 2" });
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
   expect(focused).not.toContain(button);
+  expect(focused.at(-1)).toBe(added);
 });
 
 test('"Add a block" closed with Escape gives the focus back to its button', async () => {
