@@ -14,7 +14,7 @@ import { createCard, createWorld, currentWorldButton, openCard, openTab } from "
  * - everything kept after reopening the world, and the card's backlink.
  */
 
-const WORLD = "Arda";
+const WORLD = "Beleriand";
 
 function builderzHome(): string {
   const home = process.env.BUILDERZ_HOME;
