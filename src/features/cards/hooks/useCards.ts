@@ -90,6 +90,14 @@ export function useCardList(trashed: boolean) {
   });
 }
 
+/** Maps of the world's trash (the trash lists them next to the cards). */
+export function useTrashedMaps() {
+  return useQuery({
+    queryKey: [...documentKeys.all(), "trashed", "map"],
+    queryFn: () => unwrap(commands.listDocuments({ kind: "map", trashed: true })),
+  });
+}
+
 function useDocumentsChanged() {
   const queryClient = useQueryClient();
   return () =>

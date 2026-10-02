@@ -119,6 +119,21 @@ beforeEach(() => {
               imageAssetId: null,
             })),
         };
+      case "list_documents":
+        // A map in the trash.
+        return args.filter && (args.filter as { kind?: string; trashed?: boolean }).kind === "map"
+          ? [
+              {
+                id: "arda",
+                kind: "map",
+                title: "Arda",
+                createdAt: "x",
+                updatedAt: "x",
+                openedAt: null,
+                trashedAt: "x",
+              },
+            ]
+          : [];
       case "list_cards":
         return [...cards.values()].filter((card) => (card.trashedAt !== null) === args.trashed);
       case "create_card": {
@@ -332,9 +347,12 @@ test("the trash restores, deletes for good and empties after confirmation", asyn
 
   await screen.findByRole("button", { name: "Restaurer Smaug" });
   await waitFor(() => expect(screen.queryByText("Saroumane")).toBeNull());
+  // A trashed map is listed too, and restored like a card (#195).
+  fireEvent.click(screen.getByRole("button", { name: "Restaurer Arda" }));
+  await waitFor(() => expect(callsOf("restore_document")[1]?.payload).toEqual({ id: "arda" }));
   fireEvent.click(screen.getByRole("button", { name: "Vider la corbeille" }));
   expect((await screen.findByRole("alert")).textContent).toBe(
-    "Supprimer définitivement la carte de la corbeille ?",
+    "Supprimer définitivement les 2 éléments de la corbeille ?",
   );
   fireEvent.click(screen.getByRole("button", { name: "Vider définitivement" }));
   await waitFor(() => expect(callsOf("empty_trash")).toHaveLength(1));
