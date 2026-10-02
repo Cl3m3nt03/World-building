@@ -70,6 +70,19 @@ test("an empty card invites to write, and the first click adds a text block", as
   expect(parseContent(saved.at(-1) as string)[0]?.type).toBe("text");
 });
 
+test("the block added by the first click has the focus at once, for the letters typed next", async () => {
+  renderEditor();
+  const empty = await screen.findByRole("button", { name: /Commencez à écrire/ });
+
+  await act(async () => {
+    fireEvent.click(empty);
+  });
+
+  // No timer has run yet: TipTap's own autofocus comes a moment later.
+  const block = screen.getByRole("textbox", { name: "Bloc de texte 1" });
+  expect(block.contains(document.activeElement)).toBe(true);
+});
+
 test("shows the saved blocks with their text", async () => {
   initial = [textBlock("a", "Il était une fois"), textBlock("b", "La fin")];
   renderEditor();
