@@ -132,7 +132,7 @@ test("skills are listed alphabetically in the app language", () => {
   expect(names.slice(0, 4)).toEqual(["Acrobaties", "Arcanes", "Athlétisme", "Discrétion"]);
 });
 
-test("the block menu offers the 5e sheet and shows Map as coming with M4", async () => {
+test("the block menu offers the 5e sheet and the map (available since M4)", async () => {
   render(
     <QueryClientProvider client={createQueryClient()}>
       <TooltipProvider>
@@ -147,7 +147,6 @@ test("the block menu offers the 5e sheet and shows Map as coming with M4", async
   });
 
   expect(await screen.findByRole("menuitem", { name: "Fiche de stats 5e" })).toBeTruthy();
-  const map = screen.getByRole("menuitem", { name: /Map/ });
-  expect(map.getAttribute("aria-disabled")).toBe("true");
-  expect(map.textContent).toContain("arrive avec M4");
+  const map = screen.getByRole("menuitem", { name: "Map" });
+  expect(map.getAttribute("aria-disabled")).toBeNull();
 });

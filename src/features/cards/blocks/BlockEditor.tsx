@@ -75,6 +75,7 @@ import {
   rows,
   WIDTH_STEP,
 } from "./layout";
+import { MapBlockView } from "./MapBlockView";
 import { type Block, type BlockType, newBlock } from "./model";
 import { Stats5eBlockView } from "./stats/Stats5eBlockView";
 import { TextBlockEditor } from "./TextBlockEditor";
@@ -88,10 +89,11 @@ const SAVE_DELAY_MS = 600;
 const BLOCK_CHOICES: {
   type: BlockType;
   icon: typeof Type;
-  label: "blocks.types.text" | "blocks.types.image" | "blocks.types.stats5e";
+  label: "blocks.types.text" | "blocks.types.image" | "blocks.types.stats5e" | "blocks.types.map";
 }[] = [
   { type: "text", icon: Type, label: "blocks.types.text" },
   { type: "image", icon: ImageIcon, label: "blocks.types.image" },
+  { type: "map", icon: MapIcon, label: "blocks.types.map" },
   { type: "stats5e", icon: Swords, label: "blocks.types.stats5e" },
 ];
 
@@ -108,6 +110,7 @@ const BLOCK_LABELS = {
   text: "blocks.textLabel",
   image: "blocks.imageLabel",
   stats5e: "blocks.stats5eLabel",
+  map: "blocks.mapLabel",
 } as const satisfies Record<BlockType, string>;
 
 /** Menu of block types; `children` is the trigger, or the menu is controlled. */
@@ -144,12 +147,6 @@ function BlockTypeMenu({
             {t(label)}
           </DropdownMenuItem>
         ))}
-        {/* Maps come with M4: shown, but not available yet. */}
-        <DropdownMenuItem disabled>
-          <MapIcon />
-          {t("blocks.types.map")}
-          <span className="ml-auto text-xs">{t("placeholder.comingIn", { milestone: "M4" })}</span>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -379,6 +376,8 @@ function SortableBlock({
           />
         ) : block.type === "image" ? (
           <ImageBlockView block={block} label={label} pickOnMount={focus} onChange={onChange} />
+        ) : block.type === "map" ? (
+          <MapBlockView block={block} label={label} onChange={onChange} />
         ) : (
           <Stats5eBlockView block={block} label={label} onChange={onChange} />
         )}
