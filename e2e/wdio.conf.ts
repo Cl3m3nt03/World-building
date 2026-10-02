@@ -1,6 +1,8 @@
 /**
  * End-to-end tests: WebdriverIO drives the real app through tauri-driver,
- * which relays WebDriver commands to msedgedriver (WebView2).
+ * which relays WebDriver commands to msedgedriver (WebView2) on Windows, or
+ * to WebKitWebDriver (WebKitGTK) on Linux, e.g. in a cloud session without
+ * Windows (install `webkit2gtk-driver`, run under `xvfb-run`).
  *
  * Prerequisites (see README): `cargo install tauri-driver@2.0.6 --locked`,
  * then `pnpm test:e2e` installs the matching msedgedriver and builds the app.
@@ -14,7 +16,14 @@ import os from "node:os";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
-const application = path.join(root, "src-tauri", "target", "debug", "builderz.exe");
+const windows = process.platform === "win32";
+const application = path.join(
+  root,
+  "src-tauri",
+  "target",
+  "debug",
+  windows ? "builderz.exe" : "builderz",
+);
 const msedgedriver = path.join(root, "e2e", ".bin", "msedgedriver.exe");
 const tauriDriverBin = process.env.TAURI_DRIVER ?? "tauri-driver";
 
@@ -30,6 +39,11 @@ let tauriDriver: ChildProcess | undefined;
  * has no option for it); used by CI to diagnose session failures.
  */
 function nativeDriver(): string {
+  if (!windows) {
+    // tauri-driver needs an absolute path.
+    const found = spawnSync("which", ["WebKitWebDriver"], { encoding: "utf8" }).stdout.trim();
+    return process.env.WEBKIT_DRIVER ?? (found || "/usr/bin/WebKitWebDriver");
+  }
   const log = process.env.E2E_DRIVER_LOG;
   if (!log) return msedgedriver;
   const wrapper = path.join(root, "e2e", ".bin", "msedgedriver-verbose.cmd");
@@ -59,7 +73,7 @@ export const config: WebdriverIO.Config = {
         // in its temp dir, which is C:\Windows\SystemTemp on the CI runner:
         // WebView2 cannot use it, starts with another profile, and msedgedriver
         // waits forever for DevToolsActivePort ("session not created").
-        webviewOptions: { userDataFolder: path.join(home, "webview2") },
+        ...(windows ? { webviewOptions: { userDataFolder: path.join(home, "webview2") } } : {}),
       },
     },
   ],
@@ -71,13 +85,14 @@ export const config: WebdriverIO.Config = {
   mochaOpts: { ui: "bdd", timeout: 120_000 },
 
   onPrepare() {
-    run("powershell", [
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-File",
-      path.join("scripts", "install-msedgedriver.ps1"),
-    ]);
+    if (windows)
+      run("powershell", [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        path.join("scripts", "install-msedgedriver.ps1"),
+      ]);
     if (process.env.E2E_SKIP_BUILD !== "1") {
       // Front built with the e2e hooks (src/lib/dialogs.ts): WebDriver cannot
       // drive native file dialogs, the tests queue their answers instead.
