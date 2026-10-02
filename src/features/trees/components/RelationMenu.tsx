@@ -34,6 +34,9 @@ type MenuProps = {
   /** A relation was picked (`null`: « skip for now », a link without a type). */
   onPick: (type: RelationType | null) => void;
   side?: "top" | "right" | "bottom" | "left";
+  /** Opened from outside (a link just drawn); the menu stays usable alone. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const SECTIONS = [
@@ -47,7 +50,14 @@ const SECTIONS = [
  * family, couple, the world's own types, « Skip for now » and « Custom
  * relation… », which names a new type with its icon.
  */
-export function RelationMenu({ children, relationTypes, onPick, side = "bottom" }: MenuProps) {
+export function RelationMenu({
+  children,
+  relationTypes,
+  onPick,
+  side = "bottom",
+  open,
+  onOpenChange,
+}: MenuProps) {
   const { t } = useTranslation();
   const [creating, setCreating] = useState(false);
   // Once a relation is picked, the focus goes to the new node's search, not
@@ -64,7 +74,11 @@ export function RelationMenu({ children, relationTypes, onPick, side = "bottom" 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: only stops events from bubbling
     <span className="contents" onClick={stop} onDoubleClick={stop} onKeyDown={stop}>
-      <DropdownMenu modal={false}>
+      <DropdownMenu
+        modal={false}
+        {...(open === undefined ? {} : { open })}
+        {...(onOpenChange ? { onOpenChange } : {})}
+      >
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent
           side={side}

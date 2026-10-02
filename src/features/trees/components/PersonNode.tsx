@@ -1,6 +1,6 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { Plus, UserRound } from "lucide-react";
-import { memo } from "react";
+import { Fragment, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { typeColor, typeIcon } from "@/features/card-types";
 import { AssetImage } from "@/features/media";
@@ -92,14 +92,25 @@ export const PersonNode = memo(function PersonNode({
         {name}
       </span>
       {SIDES.map(({ direction, position }) => (
-        <Handle
-          key={direction}
-          id={direction}
-          type="source"
-          position={position}
-          isConnectable={false}
-          className="opacity-0"
-        />
+        <Fragment key={direction}>
+          <Handle
+            id={direction}
+            type="source"
+            position={position}
+            className="bz-tree-handle"
+            // Below the name's badge, so a link leaving down does not cross it.
+            style={direction === "bottom" ? { bottom: -14 } : undefined}
+          />
+          {/* Its twin as a target: dragging a link's start end looks for one. Links are only drawn from the source. */}
+          <Handle
+            id={direction}
+            type="target"
+            position={position}
+            isConnectableStart={false}
+            className="bz-tree-handle pointer-events-none"
+            style={direction === "bottom" ? { bottom: -14 } : undefined}
+          />
+        </Fragment>
       ))}
       {selected &&
         actions &&

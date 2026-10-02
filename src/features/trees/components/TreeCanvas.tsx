@@ -2,6 +2,8 @@ import "@xyflow/react/dist/style.css";
 import {
   applyNodeChanges,
   Background,
+  type Connection,
+  ConnectionLineType,
   ConnectionMode,
   type EdgeChange,
   type NodeChange,
@@ -26,15 +28,21 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { CardPicker } from "@/features/cards";
 import type { Card, CardType, RelationType, VariantContent } from "@/lib/bindings";
+import { cn } from "@/lib/utils";
 import {
   addNode,
   addRelative,
+  connect,
   fillNode,
   moveNodes,
   NODE_HEIGHT,
   NODE_WIDTH,
   newNode,
+  reconnectEdge,
+  removeEdge,
   removeNode,
+  reverseEdge,
+  updateEdge,
 } from "../content";
 import { type Direction, naturalDirection, relationName } from "../relations";
 import { PersonNode, type PersonNodeType } from "./PersonNode";
@@ -201,7 +209,13 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           targetHandle,
           ariaLabel: tooltip,
           selected: selectedEdges.has(edge.id),
-          data: { lineStyle: edge.lineStyle, tooltip, hovered: hovered === edge.id },
+          data: {
+            lineStyle: edge.lineStyle,
+            relationTypeId: edge.relationTypeId,
+            junction: false,
+            tooltip,
+            hovered: hovered === edge.id,
+          },
         },
       ];
     });
@@ -223,10 +237,50 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
     },
     [onChange],
   );
+  // The link whose relation list is open: a link just drawn asks for its relation.
+  const [relationMenuFor, setRelationMenuFor] = useState<string | null>(null);
   const actions = useMemo<TreeActions>(
-    () => ({ relationTypes, addRelative: addRelativeTo }),
-    [relationTypes, addRelativeTo],
+    () => ({
+      relationTypes,
+      addRelative: addRelativeTo,
+      editEdge: (id, patch) => onChange((previous) => updateEdge(previous, id, patch)),
+      reverseEdge: (id) => onChange((previous) => reverseEdge(previous, id)),
+      removeEdge: (id) => {
+        onChange((previous) => removeEdge(previous, id));
+        setSelectedEdges((previous) => {
+          const next = new Set(previous);
+          next.delete(id);
+          return next;
+        });
+        wrapper.current?.focus();
+      },
+      relationMenuFor,
+      setRelationMenuFor,
+    }),
+    [relationTypes, addRelativeTo, onChange, relationMenuFor],
   );
+
+  /** Selects only the link `id` (a link just drawn). */
+  const selectEdge = (id: string) => {
+    setNodes((shown) => shown.map((node) => (node.selected ? { ...node, selected: false } : node)));
+    setSelectedEdges(new Set([id]));
+  };
+
+  const onConnect = (connection: Connection) => {
+    let created: string | null = null;
+    onChange((previous) => {
+      const result = connect(previous, connection.source, connection.target);
+      created = result.edgeId;
+      return result.content;
+    });
+    if (created) {
+      selectEdge(created);
+      setRelationMenuFor(created);
+    }
+  };
+
+  // Which end of a link is being dragged to another node.
+  const reconnecting = useRef<"source" | "target">("target");
 
   const remove = (id: string) => {
     onChange((previous) => removeNode(previous, id));
@@ -274,6 +328,15 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
     const nodeId = target.classList.contains("react-flow__node")
       ? target.getAttribute("data-id")
       : null;
+    // A focused link: Delete removes it (Enter selects it: React Flow).
+    const edgeId = target.classList.contains("react-flow__edge")
+      ? target.getAttribute("data-id")
+      : null;
+    if (edgeId && (event.key === "Delete" || event.key === "Backspace")) {
+      event.preventDefault();
+      actions.removeEdge(edgeId);
+      return;
+    }
     if (nodeId) {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -317,7 +380,11 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       // biome-ignore lint/a11y/noNoninteractiveTabindex: the view takes the keyboard to move
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="bz-tree size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className={cn(
+        "bz-tree size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        // A selected link's ends are dragged: the attach points let them through.
+        edges.some((edge) => edge.selected) && "bz-tree-edge-selected",
+      )}
     >
       <TreeActionsContext.Provider value={actions}>
         <ReactFlow
@@ -326,18 +393,37 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
           connectionMode={ConnectionMode.Loose}
-          nodesConnectable={false}
-          onEdgesChange={(changes: EdgeChange<RelationEdgeType>[]) =>
+          connectionLineType={ConnectionLineType.SmoothStep}
+          connectionRadius={32}
+          onConnect={onConnect}
+          edgesReconnectable
+          reconnectRadius={14}
+          onReconnectStart={(_, __, fixedEnd) => {
+            // React Flow gives the end that stays: the dragged one is the other.
+            reconnecting.current = fixedEnd === "target" ? "source" : "target";
+          }}
+          onReconnect={(old, connection) => {
+            const end = reconnecting.current;
+            // The end that did not move stays; the other goes to the new node.
+            const fixed = end === "target" ? old.source : old.target;
+            const nodeId = connection.source === fixed ? connection.target : connection.source;
+            onChange((previous) => reconnectEdge(previous, old.id, end, nodeId));
+          }}
+          onEdgesChange={(changes: EdgeChange<RelationEdgeType>[]) => {
+            const selects = changes.filter((change) => change.type === "select");
+            if (selects.length === 0) return;
             setSelectedEdges((previous) => {
               const next = new Set(previous);
-              for (const change of changes) {
-                if (change.type !== "select") continue;
+              for (const change of selects) {
                 if (change.selected) next.add(change.id);
                 else next.delete(change.id);
               }
               return next;
-            })
-          }
+            });
+            // A link left: its relation list must not come back with it.
+            const left = new Set(selects.filter((c) => !c.selected).map((c) => c.id));
+            setRelationMenuFor((open) => (open && left.has(open) ? null : open));
+          }}
           onEdgeMouseEnter={(_, edge) => setHovered(edge.id)}
           onEdgeMouseLeave={() => setHovered(null)}
           onNodesChange={(changes: NodeChange<PersonNodeType>[]) =>

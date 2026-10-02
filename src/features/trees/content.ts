@@ -130,3 +130,101 @@ export function addRelative(
     nodeId: node.id,
   };
 }
+
+/** Links removed with link `id`: it and the junctions hanging from it, however deep. */
+function withJunctions(content: VariantContent, id: string): Set<string> {
+  const removed = new Set([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const edge of content.edges) {
+      if (!removed.has(edge.id) && edge.source.kind === "edge" && removed.has(edge.source.id)) {
+        removed.add(edge.id);
+        grew = true;
+      }
+    }
+  }
+  return removed;
+}
+
+/** Removes a link and the junctions hanging from it. */
+export function removeEdge(content: VariantContent, id: string): VariantContent {
+  const removed = withJunctions(content, id);
+  return { ...content, edges: content.edges.filter((edge) => !removed.has(edge.id)) };
+}
+
+/** Changes a link's relation type or line style. */
+export function updateEdge(
+  content: VariantContent,
+  id: string,
+  patch: Partial<Pick<TreeEdge, "relationTypeId" | "lineStyle">>,
+): VariantContent {
+  return {
+    ...content,
+    edges: content.edges.map((edge) => (edge.id === id ? { ...edge, ...patch } : edge)),
+  };
+}
+
+/**
+ * Links node `sourceId` to node `targetId` (no type yet). Nothing changes
+ * for a node to itself or a link that already joins them that way. Returns
+ * the content and the new link's id.
+ */
+export function connect(
+  content: VariantContent,
+  sourceId: string,
+  targetId: string,
+): { content: VariantContent; edgeId: string | null } {
+  const known = new Set(content.nodes.map((node) => node.id));
+  const exists = content.edges.some(
+    (edge) =>
+      edge.source.kind === "node" && edge.source.id === sourceId && edge.target === targetId,
+  );
+  if (sourceId === targetId || !known.has(sourceId) || !known.has(targetId) || exists) {
+    return { content, edgeId: null };
+  }
+  const edge: TreeEdge = {
+    id: crypto.randomUUID(),
+    source: { kind: "node", id: sourceId },
+    target: targetId,
+    relationTypeId: null,
+    lineStyle: "solid",
+  };
+  return { content: { ...content, edges: [...content.edges, edge] }, edgeId: edge.id };
+}
+
+/**
+ * Moves one end of a link to node `nodeId`; the other end stays. A link
+ * from a link (a junction) keeps its start. Nothing changes for a loop.
+ */
+export function reconnectEdge(
+  content: VariantContent,
+  id: string,
+  end: "source" | "target",
+  nodeId: string,
+): VariantContent {
+  return {
+    ...content,
+    edges: content.edges.map((edge) => {
+      if (edge.id !== id) return edge;
+      if (end === "target") {
+        const loop = edge.source.kind === "node" && edge.source.id === nodeId;
+        return loop ? edge : { ...edge, target: nodeId };
+      }
+      if (edge.source.kind !== "node" || edge.target === nodeId) return edge;
+      return { ...edge, source: { kind: "node", id: nodeId } };
+    }),
+  };
+}
+
+/** Turns a link round (its relation then reads the other way). Not a junction. */
+export function reverseEdge(content: VariantContent, id: string): VariantContent {
+  return {
+    ...content,
+    edges: content.edges.map((edge) =>
+      edge.id === id && edge.source.kind === "node"
+        ? { ...edge, source: { kind: "node", id: edge.target }, target: edge.source.id }
+        : edge,
+    ),
+  };
+}

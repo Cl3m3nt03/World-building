@@ -284,6 +284,34 @@ div.leaflet-container {
   --xy-controls-button-border-color: var(--border);
 }
 
+/* Attach points: shown on a hovered or selected node, and while a link is drawn. */
+.bz-tree .react-flow__handle.bz-tree-handle {
+  width: 9px;
+  height: 9px;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.bz-tree .react-flow__node:hover .bz-tree-handle,
+.bz-tree .react-flow__node.selected .bz-tree-handle,
+.bz-tree .react-flow.connecting .bz-tree-handle,
+.bz-tree .bz-tree-handle.connectingto {
+  opacity: 1;
+}
+
+/* The ends of a selected link can be dragged to another node: the attach
+   points over them let the pointer through. */
+.bz-tree.bz-tree-edge-selected .react-flow__node .react-flow__handle.bz-tree-handle {
+  pointer-events: none;
+}
+
+.bz-tree .react-flow__edge.selected .react-flow__edgeupdater {
+  fill: var(--background);
+  stroke: var(--primary);
+  stroke-width: 2;
+  r: 5px;
+}
+
 /* Nodes draw their own frame (PersonNode). */
 .bz-tree .react-flow__node-person {
   border-radius: var(--radius);
