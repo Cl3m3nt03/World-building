@@ -413,3 +413,24 @@ test("a new background keeps the pins, zones and texts", async () => {
   expect(await screen.findByRole("button", { name: "Pin Minas Tirith" })).toBeTruthy();
   expect(stored?.content.pins).toEqual([expect.objectContaining({ id: "p1", x: 0.3, y: 0.4 })]);
 });
+
+test("undo and redo, with the buttons and Ctrl+Z / Ctrl+Y, are saved too", async () => {
+  stored = map("Arda");
+  await renderAt("/world/demo/world/map/m1");
+  const undo = await screen.findByRole("button", { name: "Annuler (Ctrl+Z)" });
+  expect((undo as HTMLButtonElement).disabled).toBe(true);
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter un pin" }));
+  await screen.findByRole("button", { name: "Pin Repère" });
+  fireEvent.click(undo);
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Pin Repère" })).toBeNull());
+
+  fireEvent.keyDown(document.body, { key: "y", ctrlKey: true });
+  expect(await screen.findByRole("button", { name: "Pin Repère" })).toBeTruthy();
+  fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Pin Repère" })).toBeNull());
+  await waitFor(() => expect(calls.some((call) => call.command === "save_map")).toBe(true), {
+    timeout: 3000,
+  });
+  expect(stored?.content.pins).toEqual([]);
+});

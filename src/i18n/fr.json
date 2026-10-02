@@ -718,5 +718,7 @@
   "maps.texts.delete": "Supprimer le texte",
   "maps.texts.ariaLabel": "Texte {{text}}",
   "maps.background.button": "Fond",
-  "maps.background.pickerTitle": "Nouvelle image de fond de la map"
+  "maps.background.pickerTitle": "Nouvelle image de fond de la map",
+  "maps.history.undo": "Annuler (Ctrl+Z)",
+  "maps.history.redo": "Rétablir (Ctrl+Y)"
 }
