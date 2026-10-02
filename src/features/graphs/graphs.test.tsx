@@ -353,3 +353,28 @@ test("the filters menu checks types; with no card left, it says so and can show 
   fireEvent.click(screen.getByRole("menuitem", { name: "Tout afficher" }));
   expect(await screen.findByRole("listbox", { name: "1 carte" })).toBeTruthy();
 });
+
+test("the settings: hiding the cards without links, a force slider, back to the defaults", async () => {
+  stored = {
+    id: "g1",
+    title: "Royaume",
+    config: { filters: {}, settings: {}, pinned: [], viewport: null },
+  };
+  await renderAt("/world/demo/world/graph/g1");
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Réglages du graph" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(screen.getByRole("listbox", { name: "3 cartes", hidden: true })).toBeTruthy();
+
+  fireEvent.click(within(dialog).getByRole("switch", { name: "Masquer les cartes sans lien" }));
+  // Gimli has no link.
+  expect(screen.getByRole("listbox", { name: "2 cartes", hidden: true })).toBeTruthy();
+
+  const repulsion = within(dialog).getByLabelText(/Répulsion/);
+  fireEvent.change(repulsion, { target: { value: "900" } });
+  expect(within(dialog).getByText("900")).toBeTruthy();
+
+  fireEvent.click(within(dialog).getByRole("button", { name: "Revenir aux réglages par défaut" }));
+  expect(within(dialog).getByText("120")).toBeTruthy();
+  expect(screen.getByRole("listbox", { name: "3 cartes", hidden: true })).toBeTruthy();
+});

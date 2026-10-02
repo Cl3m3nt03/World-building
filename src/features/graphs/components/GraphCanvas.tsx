@@ -71,16 +71,13 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   // the others in place instead of laying everything out again.
   const lastPositions = useRef(new Map<string, [number, number]>());
 
-  // The collision radius follows the size setting when the layout starts
-  // again; a size change alone does not restart it.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: see above
   const simNodes = useMemo<SimNodeInput[]>(
     () =>
       nodes.map((node) => {
         const last = lastPositions.current.get(node.id);
         return {
           id: node.id,
-          radius: NODE_RADIUS * settings.nodeSize,
+          radius: NODE_RADIUS,
           ...(last ? { x: last[0], y: last[1] } : {}),
         };
       }),
