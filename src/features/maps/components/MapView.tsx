@@ -10,8 +10,10 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { assetUrl } from "@/lib/assets";
-import type { MapPin } from "@/lib/bindings";
+import type { MapPin, MapZone } from "@/lib/bindings";
 import { CARD_DROP_EVENT, type CardDropDetail } from "@/lib/cardDrop";
+import type { Point } from "../zones";
+import { type ZoneHandlers, ZoneLayers, ZoneTrace } from "./zoneLayers";
 
 export type MapViewHandle = {
   /** Fits the whole image in the view. */
@@ -43,6 +45,17 @@ type MapViewProps = {
   onPinKey?: (id: string, event: KeyboardEvent) => void;
   onContextMenu?: (point: MapPoint) => void;
   onCardDrop?: (cardId: string, x: number, y: number) => void;
+  /** Zones to show (those of visible layers), the selected one with its handles. */
+  zones?: MapZone[];
+  selectedZoneId?: string | null;
+  zoneLabel?: (zone: MapZone) => string;
+  zoneHandlers?: ZoneHandlers;
+  /** The zone being traced (Zone tool), or null. */
+  trace?: Point[] | null;
+  /** A click on the map while tracing: a new vertex. */
+  onTraceClick?: (x: number, y: number) => void;
+  /** The first vertex clicked again: the shape closes. */
+  onTraceClose?: () => void;
 };
 
 /** Bounds of an image of `width` × `height` px: y goes down, as on screen. */
@@ -76,6 +89,13 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     onPinKey,
     onContextMenu,
     onCardDrop,
+    zones = [],
+    selectedZoneId = null,
+    zoneLabel = (zone) => zone.label,
+    zoneHandlers = {},
+    trace = null,
+    onTraceClick,
+    onTraceClose,
   },
   ref,
 ) {
@@ -86,15 +106,24 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   // Elements of the markers, where React renders each pin.
   const [pinElements, setPinElements] = useState<ReadonlyMap<string, HTMLElement>>(new Map());
   // The latest callbacks and size, for the Leaflet handlers bound once.
-  const handlers = useRef({
+  const latest = {
     onPinMove,
     onPinClick,
     onPinOpen,
     onPinKey,
     onContextMenu,
     onCardDrop,
-  });
-  handlers.current = { onPinMove, onPinClick, onPinOpen, onPinKey, onContextMenu, onCardDrop };
+    zoneHandlers,
+    onTraceClick,
+    onTraceClose,
+  };
+  const handlers = useRef(latest);
+  handlers.current = latest;
+  const zoneLayers = useRef<ZoneLayers | null>(null);
+  const zoneTrace = useRef<ZoneTrace | null>(null);
+  const tracing = useRef(trace);
+  tracing.current = trace;
+  const pointer = useRef<L.LatLng | null>(null);
   const size = useRef({ width, height });
   size.current = { width, height };
 
@@ -133,6 +162,21 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       keyboardPanDelta: 120,
     });
     map.current = created;
+    zoneLayers.current = new ZoneLayers(
+      created,
+      toLatLng,
+      toRelative,
+      () => handlers.current.zoneHandlers,
+    );
+    created.on("click", (event: L.LeafletMouseEvent) => {
+      if (!tracing.current) return;
+      const point = toRelative(event.latlng);
+      if (onImage(point)) handlers.current.onTraceClick?.(point.x, point.y);
+    });
+    created.on("mousemove", (event: L.LeafletMouseEvent) => {
+      pointer.current = event.latlng;
+      if (tracing.current) zoneTrace.current?.update(tracing.current, event.latlng);
+    });
     created.on("contextmenu", (event: L.LeafletMouseEvent) => {
       const point = toRelative(event.latlng);
       if (!onImage(point)) return;
@@ -165,6 +209,10 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       window.removeEventListener(CARD_DROP_EVENT, onDrop);
       element.removeEventListener("mousedown", onMiddleDown);
       ownMarkers.clear();
+      zoneLayers.current?.remove();
+      zoneLayers.current = null;
+      zoneTrace.current?.remove();
+      zoneTrace.current = null;
       created.remove();
       map.current = null;
       overlay.current = null;
@@ -241,6 +289,27 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       );
     }
   }, [pins]);
+
+  // The zones, kept in step.
+  useEffect(() => {
+    zoneLayers.current?.sync(zones, selectedZoneId, zoneLabel);
+  }, [zones, selectedZoneId, zoneLabel]);
+
+  // The zone being traced, with its line to the pointer.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: toLatLng reads the size through a ref
+  useEffect(() => {
+    const current = map.current;
+    if (!current) return;
+    if (!trace) {
+      zoneTrace.current?.remove();
+      zoneTrace.current = null;
+      current.getContainer().style.cursor = "";
+      return;
+    }
+    zoneTrace.current ??= new ZoneTrace(current, toLatLng, () => handlers.current.onTraceClose?.());
+    zoneTrace.current.update(trace, pointer.current);
+    current.getContainer().style.cursor = "crosshair";
+  }, [trace]);
 
   // Leaflet measures its container: tell it when the layout changes.
   useEffect(() => {

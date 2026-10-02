@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ImageOff, MapPinPlus, Maximize, SquareUser } from "lucide-react";
+import { ImageOff, MapPinPlus, Maximize, Pentagon, SquareUser } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -14,16 +14,28 @@ import { Input } from "@/components/ui/input";
 import { useCardTypes } from "@/features/card-types";
 import { CardPicker, useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
-import type { MapPin, Map as WorldMap } from "@/lib/bindings";
+import type { MapPin, MapZone, Map as WorldMap } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { useMapEditor } from "../hooks/useMapEditor";
 import { useMap, useRenameMap } from "../hooks/useMaps";
 import { hiddenLayers } from "../layers";
 import { addPin, newPin, nudgePin, removePin, updatePin } from "../pins";
+import {
+  addZone,
+  insertVertex,
+  MIN_VERTICES,
+  moveVertex,
+  newZone,
+  type Point,
+  removeVertex,
+  removeZone,
+  updateZone,
+} from "../zones";
 import { LayersPanel } from "./LayersPanel";
 import { type MapPoint, MapView, type MapViewHandle } from "./MapView";
 import { PinMarker } from "./PinMarker";
 import { PinPanel } from "./PinPanel";
+import { ZonePanel } from "./ZonePanel";
 
 /** Delay before a typed title is saved. */
 const SAVE_DELAY_MS = 500;
@@ -104,7 +116,18 @@ function MapEditor({ map }: { map: WorldMap }) {
   const { content, update, activeLayerId } = editor;
   const cards = useCardList(false);
   const types = useCardTypes();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedPin] = useState<string | null>(null);
+  const [selectedZoneId, setSelectedZone] = useState<string | null>(null);
+  // The zone being traced with the Zone tool (its vertices), or null.
+  const [trace, setTrace] = useState<Point[] | null>(null);
+  const setSelectedId = (id: string | null) => {
+    setSelectedPin(id);
+    setSelectedZone(null);
+  };
+  const selectZone = (id: string | null) => {
+    setSelectedZone(id);
+    setSelectedPin(null);
+  };
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
   const [pickingCard, setPickingCard] = useState(false);
   const data = map;
@@ -123,6 +146,56 @@ function MapEditor({ map }: { map: WorldMap }) {
     [content.pins, hidden],
   );
   const selected = content.pins.find((pin) => pin.id === selectedId);
+  const visibleZones = useMemo(
+    () => content.zones.filter((zone) => !hidden.has(zone.layerId)),
+    [content.zones, hidden],
+  );
+  const selectedZone = content.zones.find((zone) => zone.id === selectedZoneId);
+  const closeTrace = () => {
+    if (!trace || trace.length < MIN_VERTICES) return;
+    const zone = newZone(activeLayerId, trace);
+    update((previous) => addZone(previous, zone));
+    setTrace(null);
+    selectZone(zone.id);
+  };
+  const closeTraceRef = useRef(closeTrace);
+  closeTraceRef.current = closeTrace;
+  const tracingNow = trace !== null;
+  // While tracing: Escape cancels, Backspace removes the last vertex, Enter closes.
+  useEffect(() => {
+    if (!tracingNow) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setTrace(null);
+      } else if (event.key === "Backspace") {
+        event.preventDefault();
+        setTrace((points) => (points ? points.slice(0, -1) : points));
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        closeTraceRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tracingNow]);
+  const zoneHandlers = useMemo(
+    () => ({
+      onZoneClick: (id: string) => {
+        setSelectedZone(id);
+        setSelectedPin(null);
+      },
+      onVertexMove: (id: string, index: number, x: number, y: number) =>
+        update((previous) => moveVertex(previous, id, index, [x, y])),
+      onVertexInsert: (id: string, index: number, x: number, y: number) =>
+        update((previous) => insertVertex(previous, id, index, [x, y])),
+      onVertexRemove: (id: string, index: number) =>
+        update((previous) => removeVertex(previous, id, index)),
+    }),
+    [update],
+  );
+  const zoneLabel = (zone: MapZone) =>
+    t("maps.zones.ariaLabel", { name: zone.label || t("maps.pins.unnamed") });
   const cardOf = (pin: MapPin) => (pin.cardId ? cardsById.get(pin.cardId) : undefined);
 
   const place = (x: number, y: number, cardId: string | null) => {
@@ -204,6 +277,18 @@ function MapEditor({ map }: { map: WorldMap }) {
             {t("maps.pins.addCard")}
           </Button>
         </CardPicker>
+        <Button
+          variant="secondary"
+          size="sm"
+          aria-pressed={trace !== null}
+          onClick={() => {
+            setTrace((current) => (current === null ? [] : null));
+            setSelectedId(null);
+          }}
+        >
+          <Pentagon />
+          {t("maps.zones.tool")}
+        </Button>
         <Button variant="secondary" size="sm" onClick={() => view.current?.recenter()}>
           <Maximize />
           {t("maps.recenter")}
@@ -213,6 +298,11 @@ function MapEditor({ map }: { map: WorldMap }) {
         <p role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
           <ImageOff aria-hidden className="size-4" />
           {t("maps.noBackground")}
+        </p>
+      )}
+      {trace !== null && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t("maps.zones.tracing", { count: trace.length })}
         </p>
       )}
       {editor.saveError && (
@@ -250,6 +340,13 @@ function MapEditor({ map }: { map: WorldMap }) {
             onPinKey={onPinKey}
             onContextMenu={(point) => setMenu({ ...point, pickCard: false })}
             onCardDrop={(cardId, x, y) => place(x, y, cardId)}
+            zones={visibleZones}
+            selectedZoneId={selectedZoneId}
+            zoneLabel={zoneLabel}
+            zoneHandlers={zoneHandlers}
+            trace={trace}
+            onTraceClick={(x, y) => setTrace((points) => [...(points ?? []), [x, y]])}
+            onTraceClose={() => closeTraceRef.current()}
           />
           <PointMenu
             menu={menu}
@@ -268,6 +365,21 @@ function MapEditor({ map }: { map: WorldMap }) {
             activeLayerId={activeLayerId}
             onActiveLayerChange={editor.setActiveLayerId}
           />
+          {selectedZone && (
+            <ZonePanel
+              key={selectedZone.id}
+              zone={selectedZone}
+              card={selectedZone.cardId ? cardsById.get(selectedZone.cardId) : undefined}
+              layers={content.layers}
+              onChange={(patch) =>
+                update((previous) => updateZone(previous, selectedZone.id, patch))
+              }
+              onDelete={() => {
+                update((previous) => removeZone(previous, selectedZone.id));
+                selectZone(null);
+              }}
+            />
+          )}
           {selected && (
             <PinPanel
               key={selected.id}

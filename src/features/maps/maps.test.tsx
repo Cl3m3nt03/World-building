@@ -275,3 +275,51 @@ test("a card is put on the map from its search, and its pin opens it", async () 
   fireEvent.keyDown(pin, { key: "Enter" });
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/gondor"));
 });
+
+test("a zone is selected, styled, linked to a card and its tool toggles tracing", async () => {
+  stored = {
+    ...map("Arda"),
+    content: {
+      ...map("Arda").content,
+      zones: [
+        {
+          id: "z1",
+          layerId: "l1",
+          points: [
+            [0.2, 0.2],
+            [0.6, 0.2],
+            [0.4, 0.6],
+          ],
+          label: "Mordor",
+          labelStyle: { font: "serif", size: 18 },
+          cardId: null,
+          fillColor: "red",
+          opacity: 0.4,
+          pattern: "solid",
+        },
+      ],
+    },
+  };
+  await renderAt("/world/demo/world/map/m1");
+
+  const zone = await waitFor(() => {
+    const path = document.querySelector('[aria-label="Zone Mordor"]');
+    if (!path) throw new Error("zone not drawn");
+    return path;
+  });
+  fireEvent.click(zone);
+  fireEvent.click(await screen.findByRole("radio", { name: "Hachures" }));
+  fireEvent.click(screen.getByRole("button", { name: "Lier à une carte" }));
+  fireEvent.click(await screen.findByRole("option", { name: /Gondor/ }));
+  await waitFor(
+    () => expect(stored?.content.zones[0]).toMatchObject({ pattern: "hatch", cardId: "gondor" }),
+    { timeout: 3000 },
+  );
+
+  const tool = screen.getByRole("button", { name: "Tracer une zone" });
+  fireEvent.click(tool);
+  expect(tool.getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByText(/Tracé d'une zone : 0 sommet\./)).toBeTruthy();
+  fireEvent.keyDown(window, { key: "Escape" });
+  await waitFor(() => expect(tool.getAttribute("aria-pressed")).toBe("false"));
+});
