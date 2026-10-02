@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cardKeys, documentKeys } from "@/features/cards";
-import { commands, type DocumentTree, type FolderDeletion, type FolderPatch } from "@/lib/bindings";
+import {
+  commands,
+  type DocumentKind,
+  type DocumentTree,
+  type FolderDeletion,
+  type FolderPatch,
+} from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { applyMove, applyPinMove, applyPinned, type Move } from "../tree";
 
@@ -141,12 +147,14 @@ export function useTrashDocument() {
   });
 }
 
-/** Duplicates a card as `title`, right after it. */
-export function useDuplicateCard() {
+/** Duplicates a card or a map as `title`, right after it; gives the copy's id. */
+export function useDuplicateDocument() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, title }: { id: string; title: string }) =>
-      unwrap(commands.duplicateCard(id, title)),
+    mutationFn: async ({ id, kind, title }: { id: string; kind: DocumentKind; title: string }) =>
+      kind === "map"
+        ? (await unwrap(commands.duplicateMap(id, title))).id
+        : (await unwrap(commands.duplicateCard(id, title))).id,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
   });
 }

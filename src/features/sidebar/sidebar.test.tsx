@@ -179,7 +179,8 @@ beforeEach(() => {
       case "trash_document":
         tree = { ...tree, documents: tree.documents.filter((d) => d.id !== args.id) };
         return {};
-      case "duplicate_card": {
+      case "duplicate_card":
+      case "duplicate_map": {
         const original = tree.documents.find((d) => d.id === args.id);
         const copy = { ...(original as TreeDocument), id: "copy", title: args.title as string };
         tree = { ...tree, documents: [...tree.documents, copy] };
@@ -641,6 +642,20 @@ test("Duplicate makes a copy named after the card", async () => {
   await menuAction("Arya", "Dupliquer");
   expect(callsOf("duplicate_card")[0]?.args).toEqual({ id: "Arya", title: "Arya (copie)" });
   await waitFor(() => expect(item("Arya (copie)")).toBeTruthy());
+});
+
+test("Duplicate makes a copy of a map too", async () => {
+  tree = {
+    ...tree,
+    documents: [...tree.documents, { ...doc("Arda", 2), kind: "map", typeId: null }],
+  };
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arda")).toBeTruthy());
+
+  await menuAction("Arda", "Dupliquer");
+  expect(callsOf("duplicate_map")[0]?.args).toEqual({ id: "Arda", title: "Arda (copie)" });
+  expect(callsOf("duplicate_card")).toHaveLength(0);
+  await waitFor(() => expect(item("Arda (copie)")).toBeTruthy());
 });
 
 test("Move to… picks a destination with the keyboard, never the document itself", async () => {

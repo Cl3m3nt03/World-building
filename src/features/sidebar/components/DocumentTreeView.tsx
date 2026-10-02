@@ -55,7 +55,7 @@ import { dropCard } from "@/lib/cardDrop";
 import { documentRoute } from "@/lib/documentRoute";
 import {
   useCreateFolder,
-  useDuplicateCard,
+  useDuplicateDocument,
   useMoveInTree,
   useRenameDocument,
   useSetPinned,
@@ -447,7 +447,7 @@ export function DocumentTreeView({
   // --- Documents ---------------------------------------------------------------
 
   const setPinned = useSetPinned();
-  const duplicate = useDuplicateCard();
+  const duplicate = useDuplicateDocument();
   const trash = useTrashDocument();
   // The document whose "Move to…" dialog is open.
   const [moveKey, setMoveKey] = useState<string | null>(null);
@@ -489,12 +489,13 @@ export function DocumentTreeView({
         duplicate.mutate(
           {
             id: menuDocumentNode.document.id,
+            kind: menuDocumentNode.document.kind,
             title: t("sidebar.document.copyTitle", { title: menuDocumentNode.document.title }),
           },
           {
-            onSuccess: (card) => {
-              pendingFocus.current = documentKey(card.id);
-              setRevealKey(documentKey(card.id));
+            onSuccess: (copyId) => {
+              pendingFocus.current = documentKey(copyId);
+              setRevealKey(documentKey(copyId));
             },
           },
         )
@@ -835,7 +836,7 @@ function DocumentMenu({
         {pinned ? <PinOff /> : <Pin />}
         {pinned ? t("sidebar.pins.unpin") : t("sidebar.pins.pin")}
       </ContextMenuItem>
-      {node.document.kind === "card" && (
+      {(node.document.kind === "card" || node.document.kind === "map") && (
         <ContextMenuItem onSelect={onDuplicate}>
           <Copy />
           {t("sidebar.document.duplicate")}
