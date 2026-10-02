@@ -118,6 +118,14 @@ export function MapPage() {
   return <MapEditor key={map.data.id} map={map.data} />;
 }
 
+/**
+ * Undo group of a change made in a properties panel: the same field of the
+ * same item (typing, dragging a slider) makes one step.
+ */
+function fieldGroup(id: string, patch: object): string {
+  return `${id}:${Object.keys(patch).sort().join(",")}`;
+}
+
 /** The map's right-click menu, at the point clicked. */
 type ContextMenuState = MapPoint & { pickCard: boolean };
 
@@ -552,7 +560,10 @@ function MapEditor({ map }: { map: WorldMap }) {
               layers={content.layers}
               autoFocus={selectedText.id === newTextId}
               onChange={(patch) =>
-                update((previous) => updateText(previous, selectedText.id, patch))
+                update(
+                  (previous) => updateText(previous, selectedText.id, patch),
+                  fieldGroup(selectedText.id, patch),
+                )
               }
               onDelete={() => {
                 update((previous) => removeText(previous, selectedText.id));
@@ -567,7 +578,10 @@ function MapEditor({ map }: { map: WorldMap }) {
               card={selectedZone.cardId ? cardsById.get(selectedZone.cardId) : undefined}
               layers={content.layers}
               onChange={(patch) =>
-                update((previous) => updateZone(previous, selectedZone.id, patch))
+                update(
+                  (previous) => updateZone(previous, selectedZone.id, patch),
+                  fieldGroup(selectedZone.id, patch),
+                )
               }
               onDelete={() => {
                 update((previous) => removeZone(previous, selectedZone.id));
@@ -581,7 +595,12 @@ function MapEditor({ map }: { map: WorldMap }) {
               pin={selected}
               card={cardOf(selected)}
               layers={content.layers}
-              onChange={(patch) => update((previous) => updatePin(previous, selected.id, patch))}
+              onChange={(patch) =>
+                update(
+                  (previous) => updatePin(previous, selected.id, patch),
+                  fieldGroup(selected.id, patch),
+                )
+              }
               onDelete={() => remove(selected.id)}
             />
           )}

@@ -60,12 +60,16 @@ export function useMapEditor(map: WorldMap) {
     else timer.current = setTimeout(() => void flushRef.current(), SAVE_DELAY_MS);
   }, []);
 
+  /**
+   * Applies `change`. Changes of the same `group` (a field being typed or
+   * a slider being dragged) close together make one undo step.
+   */
   const update = useCallback(
-    (change: (previous: MapContent) => MapContent, immediately = false) => {
+    (change: (previous: MapContent) => MapContent, group: string | null = null) => {
       const next = change(current.current);
       if (next === current.current) return;
-      history.current = record(history.current, next, Date.now());
-      show(next, immediately);
+      history.current = record(history.current, next, Date.now(), group);
+      show(next, false);
     },
     [show],
   );
