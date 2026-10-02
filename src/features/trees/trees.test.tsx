@@ -6,7 +6,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { Card, DocumentTree, RelationTree, VariantContent, WorldInfo } from "@/lib/bindings";
+import type {
+  Card,
+  DocumentTree,
+  RelationTree,
+  RelationType,
+  VariantContent,
+  WorldInfo,
+} from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const WORLD = {
@@ -35,6 +42,16 @@ const ARAGORN = {
 /** The nodes saved for the first variant. */
 const savedNodes = () => stored?.variants[0]?.content.nodes ?? [];
 
+function relation(
+  id: string,
+  builtin: string | null,
+  category: RelationType["category"],
+  name = "",
+): RelationType {
+  return { id, builtin, name, icon: "heart", inverseId: null, category };
+}
+
+let relationTypes: RelationType[];
 let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: RelationTree | null;
@@ -62,6 +79,12 @@ beforeEach(() => {
   mockConvertFileSrc("windows");
   calls = [];
   stored = null;
+  relationTypes = [
+    relation("rel-parent", "parent", "family"),
+    relation("rel-child", "child", "family"),
+    relation("rel-partner", "partner", "couple"),
+    relation("rel-mentor", null, "custom", "Mentor"),
+  ];
   tree = { folders: [], documents: [] };
   mockIPC((command, payload) => {
     calls.push({ command, payload });
@@ -112,6 +135,14 @@ beforeEach(() => {
         return [ARAGORN];
       case "list_card_types":
         return [];
+      case "list_relation_types":
+        return relationTypes;
+      case "create_relation_type": {
+        const { input } = payload as { input: { name: string; icon: string } };
+        const created = relation("rel-new", null, "custom", input.name);
+        relationTypes = [...relationTypes, created];
+        return created;
+      }
       default:
         return null;
     }
@@ -242,4 +273,105 @@ test("a node whose card is gone says so", async () => {
   if (content) content.nodes = [{ id: "n1", cardId: "gone", label: "", x: 0, y: 0 }];
   await renderAt("/world/demo/world/tree/t1");
   expect(await screen.findByText("Carte introuvable")).toBeTruthy();
+});
+
+/** The saved content of the first variant. */
+const savedContent = () => stored?.variants[0]?.content;
+
+/** Opens the relation list of the « + » `side` of the selected node, and picks `entry`. */
+async function plus(side: string, entry: string) {
+  // Nodes stay hidden in jsdom (React Flow cannot measure them), and so
+  // without an accessible name: their « + » are found by their title.
+  const button = await screen.findByTitle(new RegExp(`^Ajouter une relation ${side}`));
+  await act(async () => {
+    button.focus();
+    fireEvent.keyDown(button, { key: "Enter" });
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: entry }));
+}
+
+test("a « + » adds an empty relative on its side, linked by the picked relation", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  const content = stored.variants[0]?.content;
+  if (content) content.nodes = [{ id: "n1", cardId: null, label: "Aragorn", x: 0, y: 0 }];
+  await renderAt("/world/demo/world/tree/t1");
+  fireEvent.click(await screen.findByText("Aragorn"));
+
+  // The four « + » show around the selected node.
+  for (const side of ["au-dessus de", "à droite de", "en dessous de", "à gauche de"]) {
+    expect(await screen.findByTitle(`Ajouter une relation ${side} Aragorn`)).toBeTruthy();
+  }
+  await plus("au-dessus de", "Parent");
+  // The new node is selected, its search open, and already linked.
+  expect(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" })).toBeTruthy();
+  await waitFor(() => expect(savedContent()?.nodes).toHaveLength(2));
+  const [aragorn, parent] = savedContent()?.nodes ?? [];
+  expect((parent?.y ?? 0) < (aragorn?.y ?? 0)).toBe(true);
+  expect(savedContent()?.edges).toEqual([
+    {
+      id: expect.any(String),
+      source: { kind: "node", id: "n1" },
+      target: parent?.id,
+      relationTypeId: "rel-parent",
+      lineStyle: "solid",
+    },
+  ]);
+});
+
+test("« Skip for now » links without a type; « Custom relation… » names a new one", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  const content = stored.variants[0]?.content;
+  if (content) content.nodes = [{ id: "n1", cardId: null, label: "Aragorn", x: 0, y: 0 }];
+  await renderAt("/world/demo/world/tree/t1");
+  fireEvent.click(await screen.findByText("Aragorn"));
+
+  await plus("à droite de", "Passer pour l'instant");
+  await waitFor(() => expect(savedContent()?.edges[0]?.relationTypeId).toBeNull());
+  const [, right] = savedContent()?.nodes ?? [];
+  expect((right?.x ?? 0) > 0).toBe(true);
+
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Carte ou nom du nœud" }), {
+    key: "Escape",
+  });
+  fireEvent.click(await screen.findByText("Aragorn"));
+  await plus("à gauche de", "Relation personnalisée…");
+  fireEvent.change(await screen.findByLabelText("Nom de la relation"), {
+    target: { value: "Rival" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+  await waitFor(() => expect(savedContent()?.edges).toHaveLength(2));
+  expect(calls).toContainEqual({
+    command: "create_relation_type",
+    payload: {
+      input: { name: "Rival", icon: "link", category: "custom", inverseId: null, symmetric: false },
+    },
+  });
+  expect(savedContent()?.edges[1]?.relationTypeId).toBe("rel-new");
+});
+
+test("the world's own relations are offered next to the provided ones", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  await renderAt("/world/demo/world/tree/t1");
+  fireEvent.click(await screen.findByText("Nouveau personnage"));
+  fireEvent.keyDown(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" }), {
+    key: "Escape",
+  });
+  const button = await screen.findByRole("button", { name: "Ajouter une relation" });
+  await act(async () => {
+    button.focus();
+    fireEvent.keyDown(button, { key: "Enter" });
+  });
+  const items = (await screen.findAllByRole("menuitem")).map((item) => item.textContent);
+  expect(items).toEqual([
+    "Parent",
+    "Enfant",
+    "Partenaire",
+    "Mentor",
+    "Relation personnalisée…",
+    "Passer pour l'instant",
+  ]);
+  // From the bar, a parent goes above (no « + » was picked).
+  fireEvent.click(screen.getByRole("menuitem", { name: "Parent" }));
+  await waitFor(() => expect(savedContent()?.nodes).toHaveLength(2));
+  expect((savedContent()?.nodes[1]?.y ?? 0) < 0).toBe(true);
 });

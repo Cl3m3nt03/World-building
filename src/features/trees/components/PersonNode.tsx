@@ -1,11 +1,15 @@
-import type { Node, NodeProps } from "@xyflow/react";
-import { UserRound } from "lucide-react";
+import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
+import { Plus, UserRound } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { typeColor, typeIcon } from "@/features/card-types";
 import { AssetImage } from "@/features/media";
 import type { Card, CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
+import { NODE_HEIGHT, NODE_WIDTH } from "../content";
+import type { Direction } from "../relations";
+import { RelationMenu } from "./RelationMenu";
+import { useTreeActions } from "./treeActions";
 
 /** What a node of the tree shows: a card, a plain name, or nothing yet. */
 export type PersonData = {
@@ -19,17 +23,34 @@ export type PersonData = {
 
 export type PersonNodeType = Node<PersonData, "person">;
 
-/** Width and height of a node, in tree units. */
-export const NODE_WIDTH = 96;
-export const NODE_HEIGHT = 120;
+/** Where the links attach (one per side); a link takes the sides facing each other. */
+const SIDES: { direction: Direction; position: Position; plus: string }[] = [
+  { direction: "top", position: Position.Top, plus: "-top-9 left-1/2 -translate-x-1/2" },
+  { direction: "right", position: Position.Right, plus: "top-1/2 -right-9 -translate-y-1/2" },
+  { direction: "bottom", position: Position.Bottom, plus: "-bottom-12 left-1/2 -translate-x-1/2" },
+  { direction: "left", position: Position.Left, plus: "top-1/2 -left-9 -translate-y-1/2" },
+];
+
+const PLUS_LABELS = {
+  top: "trees.relations.addTop",
+  right: "trees.relations.addRight",
+  bottom: "trees.relations.addBottom",
+  left: "trees.relations.addLeft",
+} as const;
 
 /**
  * A node of a relation tree (docs/features/05-relation-tree.md): the card's
  * image (or its type's icon) and name, a plain name, or an empty « New
- * character » waiting to be filled.
+ * character » waiting to be filled. Selected, it has a « + » on each side
+ * to add a relative there.
  */
-export const PersonNode = memo(function PersonNode({ data, selected }: NodeProps<PersonNodeType>) {
+export const PersonNode = memo(function PersonNode({
+  id,
+  data,
+  selected,
+}: NodeProps<PersonNodeType>) {
   const { t } = useTranslation();
+  const actions = useTreeActions();
   const { card, type, label, missing } = data;
   const empty = !card && !missing && label === "";
   const name = card
@@ -70,6 +91,38 @@ export const PersonNode = memo(function PersonNode({ data, selected }: NodeProps
       >
         {name}
       </span>
+      {SIDES.map(({ direction, position }) => (
+        <Handle
+          key={direction}
+          id={direction}
+          type="source"
+          position={position}
+          isConnectable={false}
+          className="opacity-0"
+        />
+      ))}
+      {selected &&
+        actions &&
+        SIDES.map(({ direction, plus }) => (
+          <RelationMenu
+            key={direction}
+            side={direction}
+            relationTypes={actions.relationTypes}
+            onPick={(type) => actions.addRelative(id, direction, type)}
+          >
+            <button
+              type="button"
+              aria-label={t(PLUS_LABELS[direction], { name })}
+              title={t(PLUS_LABELS[direction], { name })}
+              className={cn(
+                "nodrag nopan glass absolute flex size-6 items-center justify-center rounded-full border border-border text-muted-foreground shadow-sm outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+                plus,
+              )}
+            >
+              <Plus aria-hidden className="size-3.5" />
+            </button>
+          </RelationMenu>
+        ))}
     </div>
   );
 });

@@ -2,6 +2,8 @@ import "@xyflow/react/dist/style.css";
 import {
   applyNodeChanges,
   Background,
+  ConnectionMode,
+  type EdgeChange,
   type NodeChange,
   NodeToolbar,
   Position,
@@ -9,10 +11,11 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
-import { ExternalLink, Replace, Trash2, UserRoundPlus } from "lucide-react";
+import { ExternalLink, GitBranchPlus, Replace, Trash2, UserRoundPlus } from "lucide-react";
 import {
   forwardRef,
   type KeyboardEvent,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -22,13 +25,29 @@ import {
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { CardPicker } from "@/features/cards";
-import type { Card, CardType, VariantContent } from "@/lib/bindings";
-import { addNode, fillNode, moveNodes, newNode, removeNode } from "../content";
-import { NODE_HEIGHT, NODE_WIDTH, PersonNode, type PersonNodeType } from "./PersonNode";
+import type { Card, CardType, RelationType, VariantContent } from "@/lib/bindings";
+import {
+  addNode,
+  addRelative,
+  fillNode,
+  moveNodes,
+  NODE_HEIGHT,
+  NODE_WIDTH,
+  newNode,
+  removeNode,
+} from "../content";
+import { type Direction, naturalDirection, relationName } from "../relations";
+import { PersonNode, type PersonNodeType } from "./PersonNode";
+import { RelationEdge, type RelationEdgeType } from "./RelationEdge";
+import { RelationMenu } from "./RelationMenu";
+import { type TreeActions, TreeActionsContext } from "./treeActions";
 
 const NODE_TYPES = { person: PersonNode };
+const EDGE_TYPES = { relation: RelationEdge };
 /** Framing of every node: a small tree is not blown up past its real size. */
 const FIT_VIEW = { padding: 0.2, maxZoom: 1 };
+/** Space between a node and its bar: room for the « + » above it (as on the board). */
+const TOOLBAR_OFFSET = 44;
 /** Arrows move the view this far, in px. */
 const KEY_PAN = 60;
 /** A new node is moved right by this much while it would cover another one. */
@@ -45,6 +64,8 @@ type Props = {
   content: VariantContent;
   cardsById: ReadonlyMap<string, Card>;
   typesById: ReadonlyMap<string, CardType>;
+  /** The world's relation types, provided ones first. */
+  relationTypes: RelationType[];
   /** Accessible name of the view. */
   label: string;
   /** Applies a change to the variant's content (it is then saved). */
@@ -78,6 +99,22 @@ function isEmpty(node: PersonNodeType): boolean {
   return !node.data.card && !node.data.missing && node.data.label === "";
 }
 
+/**
+ * The sides of two nodes a link between them attaches to: the ones facing
+ * each other (above / below, or side by side).
+ */
+function facingSides(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): [Direction, Direction] {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (Math.abs(dy) / NODE_HEIGHT >= Math.abs(dx) / NODE_WIDTH) {
+    return dy >= 0 ? ["bottom", "top"] : ["top", "bottom"];
+  }
+  return dx >= 0 ? ["right", "left"] : ["left", "right"];
+}
+
 /** The name a node shows, for labels. */
 function nodeName(node: PersonNodeType, empty: string): string {
   return node.data.card?.title ?? (node.data.label || empty);
@@ -93,7 +130,7 @@ function nodeName(node: PersonNodeType, empty: string): string {
  * opens its picker and Delete removes it.
  */
 const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
-  { content, cardsById, typesById, label, onChange, onOpenCard },
+  { content, cardsById, typesById, relationTypes, label, onChange, onOpenCard },
   ref,
 ) {
   const { t } = useTranslation();
@@ -125,6 +162,71 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
   const selected = nodes.filter((node) => node.selected);
   const current = selected.length === 1 ? selected[0] : undefined;
   const emptyName = t("trees.nodes.empty");
+
+  // Links, drawn between the nodes as they are now (also while dragged).
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [selectedEdges, setSelectedEdges] = useState<ReadonlySet<string>>(new Set());
+  const relationsById = useMemo(
+    () => new Map(relationTypes.map((type) => [type.id, type])),
+    [relationTypes],
+  );
+  const edges = useMemo<RelationEdgeType[]>(() => {
+    const byId = new Map(nodes.map((node) => [node.id, node]));
+    return content.edges.flatMap((edge) => {
+      // Links from a link (junctions) are drawn from step 6.6.
+      if (edge.source.kind !== "node") return [];
+      const from = byId.get(edge.source.id);
+      const to = byId.get(edge.target);
+      if (!from || !to) return [];
+      const [sourceHandle, targetHandle] = facingSides(from.position, to.position);
+      const relation = edge.relationTypeId ? relationsById.get(edge.relationTypeId) : undefined;
+      const names = { source: nodeName(from, emptyName), target: nodeName(to, emptyName) };
+      const tooltip = relation
+        ? t("trees.edges.tooltip", {
+            ...names,
+            // Inside a sentence: a provided relation reads in lower case, a
+            // world's own keeps the case it was named with.
+            relation: relation.builtin
+              ? relationName(relation, t).toLocaleLowerCase()
+              : relationName(relation, t),
+          })
+        : t("trees.edges.untyped", names);
+      return [
+        {
+          id: edge.id,
+          type: "relation" as const,
+          source: from.id,
+          target: to.id,
+          sourceHandle,
+          targetHandle,
+          ariaLabel: tooltip,
+          selected: selectedEdges.has(edge.id),
+          data: { lineStyle: edge.lineStyle, tooltip, hovered: hovered === edge.id },
+        },
+      ];
+    });
+  }, [content.edges, nodes, relationsById, emptyName, t, hovered, selectedEdges]);
+
+  const addRelativeTo = useCallback(
+    (nodeId: string, direction: Direction, type: RelationType | null) => {
+      let created: string | null = null;
+      // The change runs at once (useTreeEditor): the new node's id is known here.
+      onChange((previous) => {
+        const result = addRelative(previous, nodeId, direction, type?.id ?? null);
+        created = result.nodeId;
+        return result.content;
+      });
+      if (created) {
+        toSelect.current = created;
+        setPicking(created);
+      }
+    },
+    [onChange],
+  );
+  const actions = useMemo<TreeActions>(
+    () => ({ relationTypes, addRelative: addRelativeTo }),
+    [relationTypes, addRelativeTo],
+  );
 
   const remove = (id: string) => {
     onChange((previous) => removeNode(previous, id));
@@ -217,88 +319,124 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       onKeyDown={onKeyDown}
       className="bz-tree size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
-      <ReactFlow
-        nodes={nodes}
-        edges={[]}
-        nodeTypes={NODE_TYPES}
-        onNodesChange={(changes: NodeChange<PersonNodeType>[]) =>
-          setNodes((shown) => applyNodeChanges(changes, shown))
-        }
-        onNodeDragStop={(_, __, dragged) =>
-          onChange((previous) =>
-            moveNodes(previous, new Map(dragged.map((node) => [node.id, node.position]))),
-          )
-        }
-        onNodeClick={(_, node) => {
-          if (isEmpty(node)) setPicking(node.id);
-        }}
-        onNodeDoubleClick={(_, node) => {
-          if (node.data.card) onOpenCard(node.data.card.id);
-        }}
-        onPaneClick={() => setPicking(null)}
-        fitView
-        fitViewOptions={FIT_VIEW}
-        minZoom={0.1}
-        maxZoom={3}
-        proOptions={{ hideAttribution: true }}
-        deleteKeyCode={null}
-        zoomOnDoubleClick={false}
-      >
-        <Background gap={24} size={1} />
-        {current && (
-          <NodeToolbar nodeId={current.id} position={Position.Top} isVisible>
-            <div
-              role="toolbar"
-              aria-label={t("trees.nodes.toolbar", { name: nodeName(current, emptyName) })}
-              className="glass flex items-center gap-1 rounded-lg p-1"
+      <TreeActionsContext.Provider value={actions}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
+          connectionMode={ConnectionMode.Loose}
+          nodesConnectable={false}
+          onEdgesChange={(changes: EdgeChange<RelationEdgeType>[]) =>
+            setSelectedEdges((previous) => {
+              const next = new Set(previous);
+              for (const change of changes) {
+                if (change.type !== "select") continue;
+                if (change.selected) next.add(change.id);
+                else next.delete(change.id);
+              }
+              return next;
+            })
+          }
+          onEdgeMouseEnter={(_, edge) => setHovered(edge.id)}
+          onEdgeMouseLeave={() => setHovered(null)}
+          onNodesChange={(changes: NodeChange<PersonNodeType>[]) =>
+            setNodes((shown) => applyNodeChanges(changes, shown))
+          }
+          onNodeDragStop={(_, __, dragged) =>
+            onChange((previous) =>
+              moveNodes(previous, new Map(dragged.map((node) => [node.id, node.position]))),
+            )
+          }
+          onNodeClick={(_, node) => {
+            if (isEmpty(node)) setPicking(node.id);
+          }}
+          onNodeDoubleClick={(_, node) => {
+            if (node.data.card) onOpenCard(node.data.card.id);
+          }}
+          onPaneClick={() => setPicking(null)}
+          fitView
+          fitViewOptions={FIT_VIEW}
+          minZoom={0.1}
+          maxZoom={3}
+          proOptions={{ hideAttribution: true }}
+          deleteKeyCode={null}
+          zoomOnDoubleClick={false}
+        >
+          <Background gap={24} size={1} />
+          {current && (
+            <NodeToolbar
+              nodeId={current.id}
+              position={Position.Top}
+              offset={TOOLBAR_OFFSET}
+              isVisible
             >
-              <CardPicker
-                label={t("trees.nodes.searchOrName")}
-                placeholder={t("trees.nodes.pickerPlaceholder")}
-                // Above the bar: the node itself stays visible.
-                side="top"
-                allowedTypeIds={[]}
-                open={picking === current.id}
-                onOpenChange={(open) => {
-                  setPicking(open ? current.id : null);
-                  if (!open) refocus(current.id);
-                }}
-                onPick={(cardId) =>
-                  onChange((previous) => fillNode(previous, current.id, { cardId }))
-                }
-                onPickName={(name) =>
-                  onChange((previous) => fillNode(previous, current.id, { label: name }))
-                }
+              <div
+                role="toolbar"
+                aria-label={t("trees.nodes.toolbar", { name: nodeName(current, emptyName) })}
+                className="glass flex items-center gap-1 rounded-lg p-1"
               >
-                <Button variant="ghost" size="sm">
-                  {empty ? <UserRoundPlus /> : <Replace />}
-                  {empty ? t("trees.nodes.fill") : t("trees.nodes.replace")}
-                </Button>
-              </CardPicker>
-              {current.data.card && (
+                <CardPicker
+                  label={t("trees.nodes.searchOrName")}
+                  placeholder={t("trees.nodes.pickerPlaceholder")}
+                  // Above the bar: the node itself stays visible.
+                  side="top"
+                  allowedTypeIds={[]}
+                  open={picking === current.id}
+                  onOpenChange={(open) => {
+                    setPicking(open ? current.id : null);
+                    if (!open) refocus(current.id);
+                  }}
+                  onPick={(cardId) =>
+                    onChange((previous) => fillNode(previous, current.id, { cardId }))
+                  }
+                  onPickName={(name) =>
+                    onChange((previous) => fillNode(previous, current.id, { label: name }))
+                  }
+                >
+                  <Button variant="ghost" size="sm">
+                    {empty ? <UserRoundPlus /> : <Replace />}
+                    {empty ? t("trees.nodes.fill") : t("trees.nodes.replace")}
+                  </Button>
+                </CardPicker>
+                <RelationMenu
+                  relationTypes={relationTypes}
+                  onPick={(type) => addRelativeTo(current.id, naturalDirection(type), type)}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={t("trees.relations.add")}
+                    title={t("trees.relations.add")}
+                  >
+                    <GitBranchPlus />
+                  </Button>
+                </RelationMenu>
+                {current.data.card && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => current.data.card && onOpenCard(current.data.card.id)}
+                  >
+                    <ExternalLink />
+                    {t("trees.nodes.openCard")}
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={() => current.data.card && onOpenCard(current.data.card.id)}
+                  size="icon-sm"
+                  aria-label={t("trees.nodes.delete")}
+                  title={t("trees.nodes.delete")}
+                  className="text-destructive"
+                  onClick={() => remove(current.id)}
                 >
-                  <ExternalLink />
-                  {t("trees.nodes.openCard")}
+                  <Trash2 />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t("trees.nodes.delete")}
-                title={t("trees.nodes.delete")}
-                className="text-destructive"
-                onClick={() => remove(current.id)}
-              >
-                <Trash2 />
-              </Button>
-            </div>
-          </NodeToolbar>
-        )}
-      </ReactFlow>
+              </div>
+            </NodeToolbar>
+          )}
+        </ReactFlow>
+      </TreeActionsContext.Provider>
     </div>
   );
 });

@@ -252,9 +252,38 @@ async fn relation_types_provided_and_of_the_world() {
         .iter()
         .filter_map(|t| t.builtin.as_deref())
         .collect();
-    assert_eq!(keys, ["parent", "child", "sibling", "partner", "spouse"]);
-    let parent = provided.iter().find(|t| t.id == "rel-parent").unwrap();
-    assert_eq!(parent.inverse_id.as_deref(), Some("rel-child"));
+    assert_eq!(
+        keys,
+        [
+            "parent",
+            "child",
+            "sibling",
+            "half-sibling",
+            "adopted",
+            "adoptive-parent",
+            "step-parent",
+            "step-child",
+            "partner",
+            "spouse",
+            "ex"
+        ]
+    );
+    let inverse = |id: &str| {
+        provided
+            .iter()
+            .find(|t| t.id == id)
+            .and_then(|t| t.inverse_id.clone())
+    };
+    assert_eq!(inverse("rel-parent").as_deref(), Some("rel-child"));
+    assert_eq!(
+        inverse("rel-step-child").as_deref(),
+        Some("rel-step-parent")
+    );
+    assert_eq!(
+        inverse("rel-adopted").as_deref(),
+        Some("rel-adoptive-parent")
+    );
+    assert_eq!(inverse("rel-ex").as_deref(), Some("rel-ex"));
 
     let mentor = create_relation_type(
         fx.pool(),

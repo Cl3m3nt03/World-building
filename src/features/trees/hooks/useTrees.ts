@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { documentKeys } from "@/features/cards/hooks/keys";
-import { commands } from "@/lib/bindings";
+import { commands, type RelationTypeInput } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 
 /** Query keys of the relation trees (see the conventions in src/lib/query.ts). */
@@ -56,5 +56,14 @@ export function useRenameTree(id: string) {
         queryClient.invalidateQueries({ queryKey: treeKeys.detail(id) }),
         queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
       ]),
+  });
+}
+
+/** Creates a relation type of the world (a custom one, from a tree). */
+export function useCreateRelationType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RelationTypeInput) => unwrap(commands.createRelationType(input)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: treeKeys.relationTypes() }),
   });
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { TreeEdge, VariantContent } from "@/lib/bindings";
-import { addNode, fillNode, moveNodes, newNode, removeNode } from "./content";
+import { addNode, addRelative, fillNode, moveNodes, newNode, removeNode } from "./content";
 
 function edge(id: string, source: TreeEdge["source"], target: string): TreeEdge {
   return { id, source, target, relationTypeId: null, lineStyle: "solid" };
@@ -48,4 +48,28 @@ test("a new node is empty and added last; moving keeps the others in place", () 
   const moved = moveNodes(after, new Map([[node.id, { x: 5, y: 6 }]]));
   expect(moved.nodes.at(-1)).toMatchObject({ x: 5, y: 6 });
   expect(moved.nodes[0]).toBe(after.nodes[0]);
+});
+
+test("a relative goes on its side, sliding along it while the place is taken", () => {
+  const one: VariantContent = {
+    nodes: [{ id: "a", cardId: null, label: "A", x: 0, y: 0 }],
+    edges: [],
+    annotations: [],
+  };
+  const first = addRelative(one, "a", "bottom", "rel-child");
+  const child = first.content.nodes[1];
+  expect(child?.x).toBe(0);
+  expect((child?.y ?? 0) > 120).toBe(true);
+  expect(first.content.edges[0]).toMatchObject({
+    source: { kind: "node", id: "a" },
+    target: first.nodeId,
+    relationTypeId: "rel-child",
+  });
+  // A second child does not cover the first: it slides along the row.
+  const second = addRelative(first.content, "a", "bottom", "rel-child");
+  const other = second.content.nodes[2];
+  expect(other?.y).toBe(child?.y);
+  expect(Math.abs((other?.x ?? 0) - (child?.x ?? 0)) >= 96).toBe(true);
+  // An unknown node changes nothing.
+  expect(addRelative(one, "nobody", "top", null)).toEqual({ content: one, nodeId: null });
 });
