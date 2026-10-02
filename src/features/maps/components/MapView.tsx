@@ -140,6 +140,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   // Zoom relative to the zoom fitting the image, for texts that follow it.
   const [zoomScale, setZoomScale] = useState(1);
   const fitZoom = useRef(0);
+  // Whether the person moved or zoomed the view since it was last fitted to the image.
+  const viewMoved = useRef(false);
+  const fitting = useRef(false);
   // The latest callbacks and size, for the Leaflet handlers bound once.
   const latest = {
     onMarkerMove,
@@ -173,7 +176,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
 
   useImperativeHandle(ref, () => ({
-    recenter: () => map.current?.fitBounds(imageBounds(width, height), { animate: true }),
+    recenter: () => {
+      fitting.current = true;
+      map.current?.fitBounds(imageBounds(width, height), { animate: true });
+      fitting.current = false;
+      viewMoved.current = false;
+    },
     center: () => {
       const center = map.current?.getCenter();
       if (!center) return { x: 0.5, y: 0.5 };
@@ -212,6 +220,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       else handlers.current.onPlace?.(point.x, point.y);
     });
     created.on("zoomend", () => setZoomScale(2 ** (created.getZoom() - fitZoom.current)));
+    created.on("movestart zoomstart", () => {
+      if (!fitting.current) viewMoved.current = true;
+    });
     created.on("mousemove", (event: L.LeafletMouseEvent) => {
       pointer.current = event.latlng;
       if (tracing.current) zoneTrace.current?.update(tracing.current, event.latlng);
@@ -258,6 +269,24 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     };
   }, []);
 
+  /** Shows the whole image, and bounds the zoom around that view. */
+  const fitView = () => {
+    const current = map.current;
+    if (!current) return;
+    fitting.current = true;
+    current.setMinZoom(-32);
+    current.setMaxZoom(32);
+    current.fitBounds(imageBounds(size.current.width, size.current.height), { animate: false });
+    fitting.current = false;
+    viewMoved.current = false;
+    fitZoom.current = current.getZoom();
+    setZoomScale(1);
+    current.setMinZoom(current.getZoom() - 1);
+    current.setMaxZoom(current.getZoom() + 6);
+  };
+  const fitViewRef = useRef(fitView);
+  fitViewRef.current = fitView;
+
   const tilesMapId = tiles?.mapId ?? null;
   // The image and the bounds follow the background.
   useEffect(() => {
@@ -279,11 +308,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
           }).addTo(current)
         : L.imageOverlay(assetUrl(backgroundAssetId), bounds).addTo(current);
     current.setMaxBounds(L.latLngBounds(bounds as L.LatLngBoundsLiteral).pad(0.5));
-    current.fitBounds(bounds);
-    fitZoom.current = current.getZoom();
-    setZoomScale(1);
-    current.setMinZoom(current.getZoom() - 1);
-    current.setMaxZoom(current.getZoom() + 6);
+    fitViewRef.current();
   }, [backgroundAssetId, width, height, tilesMapId]);
 
   // One Leaflet marker per pin or text, kept in step with them.
@@ -373,7 +398,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   // Leaflet measures its container: tell it when the layout changes.
   useEffect(() => {
     if (!container.current || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => map.current?.invalidateSize());
+    const observer = new ResizeObserver(() => {
+      map.current?.invalidateSize();
+      // The first measure can be taken before the layout is final: until the
+      // view is moved, it keeps showing the whole image.
+      if (!viewMoved.current) fitViewRef.current();
+    });
     observer.observe(container.current);
     return () => observer.disconnect();
   }, []);

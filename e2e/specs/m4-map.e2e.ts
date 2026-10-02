@@ -89,6 +89,22 @@ describe("M4: the map", () => {
     await pickNext(image("arda.png"));
     await $("button=Importer une image").click();
     await mapArea().waitForDisplayed({ timeoutMsg: "the new map did not open" });
+    // The map opens on its overview: the image fills the area on one axis and
+    // does not go beyond it on the other (#187).
+    await browser.waitUntil(
+      async () =>
+        browser.execute(() => {
+          const image = document.querySelector(".leaflet-image-layer")?.getBoundingClientRect();
+          const area = document
+            .querySelector('[role="application"][aria-label^="Map "]')
+            ?.getBoundingClientRect();
+          if (!image || !area) return false;
+          const fits = image.width <= area.width + 1 && image.height <= area.height + 1;
+          const fills = image.width >= area.width * 0.9 || image.height >= area.height * 0.9;
+          return fits && fills;
+        }),
+      { timeoutMsg: "the new map does not open on the whole image" },
+    );
     await typeOver("aria/Nom de la map", "Arda des Valar");
     await browser.keys("Enter");
     await browser.waitUntil(
