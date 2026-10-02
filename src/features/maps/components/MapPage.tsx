@@ -61,7 +61,12 @@ function TitleField({ map }: { map: WorldMap }) {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const id = useId();
 
-  useEffect(() => setTitle(map.title), [map.title]);
+  // While the field is being edited, the title saved a moment ago coming
+  // back from the Rust side must not replace what has been typed since.
+  const editing = useRef(false);
+  useEffect(() => {
+    if (!editing.current) setTitle(map.title);
+  }, [map.title]);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const save = (value: string) => {
@@ -89,7 +94,13 @@ function TitleField({ map }: { map: WorldMap }) {
           clearTimeout(timer.current);
           timer.current = setTimeout(() => save(value), SAVE_DELAY_MS);
         }}
-        onBlur={() => void save(title)}
+        onFocus={() => {
+          editing.current = true;
+        }}
+        onBlur={() => {
+          editing.current = false;
+          void save(title);
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter") void save(title);
         }}

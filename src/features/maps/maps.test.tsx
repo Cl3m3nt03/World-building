@@ -77,12 +77,14 @@ const GONDOR = {
 let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: WorldMap | null;
+let slowReload: boolean;
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mockConvertFileSrc("windows");
   calls = [];
   stored = null;
+  slowReload = false;
   tree = { folders: [], documents: [] };
   mockIPC((command, payload) => {
     calls.push({ command, payload });
@@ -103,7 +105,10 @@ beforeEach(() => {
         return stored;
       }
       case "get_map":
-        return stored;
+        // A slow disk: the map comes back a moment later.
+        return slowReload
+          ? new Promise((resolve) => setTimeout(() => resolve(stored), 200))
+          : stored;
       case "set_map_background": {
         const { assetId } = payload as { assetId: string };
         if (stored) stored = { ...stored, backgroundAssetId: assetId, width: 4000, height: 3000 };
@@ -433,4 +438,25 @@ test("undo and redo, with the buttons and Ctrl+Z / Ctrl+Y, are saved too", async
     timeout: 3000,
   });
   expect(stored?.content.pins).toEqual([]);
+});
+
+test("a pause while typing the name loses no letter when the save comes back", async () => {
+  stored = map("Arda");
+  await renderAt("/world/demo/world/map/m1");
+  const title = (await screen.findByLabelText("Nom de la map")) as HTMLInputElement;
+  fireEvent.focus(title);
+  slowReload = true;
+
+  fireEvent.change(title, { target: { value: "Ter" } });
+  // The pause: "Ter" is saved, and while the map comes back, "re" is typed.
+  await waitFor(() =>
+    expect(calls).toContainEqual({
+      command: "rename_document",
+      payload: { id: "m1", title: "Ter" },
+    }),
+  );
+  fireEvent.change(title, { target: { value: "Terre" } });
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  expect(stored?.title).toBe("Ter");
+  expect(title.value).toBe("Terre");
 });
