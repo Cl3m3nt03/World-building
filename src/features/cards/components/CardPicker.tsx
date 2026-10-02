@@ -1,3 +1,4 @@
+import { TextCursorInput } from "lucide-react";
 import { type ReactNode, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,8 @@ function matches(card: Card, query: string): boolean {
 
 /**
  * Picks a card with a search on names and aliases: arrow keys move, Enter
- * picks, Escape closes. `children` is the trigger.
+ * picks, Escape closes. `children` is the trigger. With `onPickName`, the
+ * text typed can also be kept as a plain name (last option).
  */
 export function CardPicker({
   children,
@@ -35,6 +37,9 @@ export function CardPicker({
   allowedTypeIds,
   excludeIds = [],
   onPick,
+  onPickName,
+  placeholder,
+  side = "bottom",
   open: openProp,
   onOpenChange,
 }: {
@@ -44,6 +49,12 @@ export function CardPicker({
   allowedTypeIds: string[];
   excludeIds?: string[];
   onPick: (cardId: string) => void;
+  /** Side of the trigger where the picker opens (default: below). */
+  side?: "top" | "bottom";
+  /** Placeholder of the search field (default: a card search). */
+  placeholder?: string;
+  /** Keeps the typed text as a plain name instead of a card. */
+  onPickName?: (name: string) => void;
   /** Opened from outside (e.g. a context menu); the picker stays usable alone. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -73,11 +84,24 @@ export function CardPicker({
     [cards.data, excludeIds, allowedTypeIds, all, query],
   );
 
+  const name = search.trim();
+  const nameOption = onPickName !== undefined && name !== "";
+  const count = results.length + (nameOption ? 1 : 0);
+
   const pick = (card: Card | undefined) => {
     if (!card) return;
     onPick(card.id);
     setOpen(false);
   };
+  const pickName = () => {
+    onPickName?.(name);
+    setOpen(false);
+  };
+  const pickActive = () => {
+    if (nameOption && active === results.length) pickName();
+    else pick(results[active]);
+  };
+  const nameId = `${listId}-name`;
 
   return (
     <Popover
@@ -91,15 +115,21 @@ export function CardPicker({
       }}
     >
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent align="start" className="glass flex w-80 flex-col gap-2 p-2">
+      <PopoverContent align="start" side={side} className="glass flex w-80 flex-col gap-2 p-2">
         <Input
           type="search"
           role="combobox"
           aria-label={label}
           aria-expanded
           aria-controls={listId}
-          aria-activedescendant={results[active] ? `${listId}-${results[active].id}` : undefined}
-          placeholder={t("cards.pickerSearch")}
+          aria-activedescendant={
+            results[active]
+              ? `${listId}-${results[active].id}`
+              : nameOption && active === results.length
+                ? nameId
+                : undefined
+          }
+          placeholder={placeholder ?? t("cards.pickerSearch")}
           value={search}
           autoFocus
           onChange={(event) => {
@@ -109,13 +139,13 @@ export function CardPicker({
           onKeyDown={(event) => {
             if (event.key === "ArrowDown") {
               event.preventDefault();
-              setActive((index) => Math.min(index + 1, results.length - 1));
+              setActive((index) => Math.min(index + 1, count - 1));
             } else if (event.key === "ArrowUp") {
               event.preventDefault();
               setActive((index) => Math.max(index - 1, 0));
             } else if (event.key === "Enter") {
               event.preventDefault();
-              pick(results[active]);
+              pickActive();
             }
           }}
         />
@@ -150,8 +180,29 @@ export function CardPicker({
               </div>
             );
           })}
+          {nameOption && (
+            <div
+              id={nameId}
+              role="option"
+              tabIndex={-1}
+              aria-selected={active === results.length}
+              onMouseEnter={() => setActive(results.length)}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={pickName}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") pickName();
+              }}
+              className={cn(
+                "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+                active === results.length && "bg-accent",
+              )}
+            >
+              <TextCursorInput aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+              <span className="truncate">{t("cards.pickerUseName", { name })}</span>
+            </div>
+          )}
         </div>
-        {cards.data && results.length === 0 && (
+        {cards.data && count === 0 && (
           <p className="px-2 py-3 text-center text-sm text-muted-foreground">
             {t("cards.pickerNone")}
           </p>

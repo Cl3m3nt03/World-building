@@ -6,7 +6,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { Card, DocumentTree, RelationTree, WorldInfo } from "@/lib/bindings";
+import type { Card, DocumentTree, RelationTree, VariantContent, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const WORLD = {
@@ -27,9 +27,13 @@ const WORLD = {
 const ARAGORN = {
   id: "aragorn",
   title: "Aragorn",
+  aliases: ["Grands-Pas"],
   typeId: null,
   imageAssetId: null,
 } as unknown as Card;
+
+/** The nodes saved for the first variant. */
+const savedNodes = () => stored?.variants[0]?.content.nodes ?? [];
 
 let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
@@ -92,6 +96,18 @@ beforeEach(() => {
       }
       case "get_tree":
         return stored;
+      case "save_tree_variant": {
+        const { variantId, content } = payload as { variantId: string; content: VariantContent };
+        if (stored) {
+          stored = {
+            ...stored,
+            variants: stored.variants.map((variant) =>
+              variant.id === variantId ? { ...variant, content } : variant,
+            ),
+          };
+        }
+        return null;
+      }
       case "list_cards":
         return [ARAGORN];
       case "list_card_types":
@@ -168,4 +184,62 @@ test("a node shows its card's name, or its plain name", async () => {
   expect(await screen.findByText("Aragorn")).toBeTruthy();
   expect(screen.getByText("Gilraen")).toBeTruthy();
   expect(screen.queryByText("Nouveau personnage")).toBeNull();
+});
+
+test("clicking the empty node fills it with a card found by an alias, or with a plain name", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  await renderAt("/world/demo/world/tree/t1");
+
+  fireEvent.click(await screen.findByText("Nouveau personnage"));
+  const search = await screen.findByRole("combobox", { name: "Carte ou nom du nœud" });
+  fireEvent.change(search, { target: { value: "grands" } });
+  fireEvent.keyDown(search, { key: "Enter" });
+  expect(await screen.findByText("Aragorn")).toBeTruthy();
+  await waitFor(() => expect(savedNodes()[0]).toMatchObject({ cardId: "aragorn", label: "" }));
+
+  // The selected node's bar replaces it with a plain name.
+  fireEvent.click(screen.getByRole("button", { name: "Remplacer" }));
+  const again = await screen.findByRole("combobox", { name: "Carte ou nom du nœud" });
+  fireEvent.change(again, { target: { value: "Gilraen" } });
+  fireEvent.click(await screen.findByRole("option", { name: "Utiliser le nom « Gilraen »" }));
+  expect(await screen.findByText("Gilraen")).toBeTruthy();
+  await waitFor(() => expect(savedNodes()[0]).toMatchObject({ cardId: null, label: "Gilraen" }));
+});
+
+test("« Ajouter un nœud » adds an empty node ready to fill; the bar deletes it", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  await renderAt("/world/demo/world/tree/t1");
+  await screen.findByText("Nouveau personnage");
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter un nœud" }));
+  expect(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" })).toBeTruthy();
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(2));
+  await waitFor(() => expect(savedNodes()).toHaveLength(2));
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Carte ou nom du nœud" }), {
+    key: "Escape",
+  });
+
+  fireEvent.click(await screen.findByRole("button", { name: "Supprimer le nœud et ses liens" }));
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(1));
+  await waitFor(() => expect(savedNodes()).toHaveLength(1));
+});
+
+test("a card's node opens the card from its bar and on double click", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  const content = stored.variants[0]?.content;
+  if (content) content.nodes = [{ id: "n1", cardId: "aragorn", label: "", x: 0, y: 0 }];
+  const router = await renderAt("/world/demo/world/tree/t1");
+
+  fireEvent.doubleClick(await screen.findByText("Aragorn"));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/world/demo/world/card/aragorn"),
+  );
+});
+
+test("a node whose card is gone says so", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  const content = stored.variants[0]?.content;
+  if (content) content.nodes = [{ id: "n1", cardId: "gone", label: "", x: 0, y: 0 }];
+  await renderAt("/world/demo/world/tree/t1");
+  expect(await screen.findByText("Carte introuvable")).toBeTruthy();
 });
