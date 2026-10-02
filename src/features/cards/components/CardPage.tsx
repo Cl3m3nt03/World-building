@@ -50,7 +50,12 @@ function TitleField({ card }: { card: Card }) {
   const setFocusTitle = useUiStore((state) => state.setFocusCardTitle);
   const id = useId();
 
-  useEffect(() => setTitle(card.title), [card.title]);
+  // While the field is being edited, the title saved a moment ago coming
+  // back from the Rust side must not replace what has been typed since.
+  const editing = useRef(false);
+  useEffect(() => {
+    if (!editing.current) setTitle(card.title);
+  }, [card.title]);
 
   // A card that was just created opens with its title selected. One frame
   // later: the creation menu is still closing and would move the caret.
@@ -93,7 +98,13 @@ function TitleField({ card }: { card: Card }) {
           clearTimeout(timer.current);
           timer.current = setTimeout(() => save(value), SAVE_DELAY_MS);
         }}
-        onBlur={() => void save(title)}
+        onFocus={() => {
+          editing.current = true;
+        }}
+        onBlur={() => {
+          editing.current = false;
+          void save(title);
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter") void save(title);
         }}
