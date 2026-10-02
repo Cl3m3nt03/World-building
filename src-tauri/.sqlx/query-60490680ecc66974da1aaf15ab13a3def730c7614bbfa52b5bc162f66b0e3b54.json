@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT g.document_id AS \"document_id!\", d.title, g.filters, g.settings, g.viewport\n           FROM graphs g JOIN documents d ON d.id = g.document_id\n           WHERE g.document_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "document_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "graphs",
+            "name": "document_id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "filters",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "graphs",
+            "name": "filters"
+          }
+        }
+      },
+      {
+        "name": "settings",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "graphs",
+            "name": "settings"
+          }
+        }
+      },
+      {
+        "name": "viewport",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "graphs",
+            "name": "viewport"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "60490680ecc66974da1aaf15ab13a3def730c7614bbfa52b5bc162f66b0e3b54"
+}

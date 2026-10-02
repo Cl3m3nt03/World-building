@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-graph"
+description = "Enables the save_graph command without any pre-configured scope."
+commands.allow = ["save_graph"]
+
+[[permission]]
+identifier = "deny-save-graph"
+description = "Denies the save_graph command without any pre-configured scope."
+commands.deny = ["save_graph"]

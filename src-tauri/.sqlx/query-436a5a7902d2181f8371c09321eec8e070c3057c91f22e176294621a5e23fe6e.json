@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT card_id AS \"card_id!\", x, y FROM graph_pinned_nodes\n           WHERE graph_id = ? ORDER BY card_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "card_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "graph_pinned_nodes",
+            "name": "card_id"
+          }
+        }
+      },
+      {
+        "name": "x",
+        "ordinal": 1,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "graph_pinned_nodes",
+            "name": "x"
+          }
+        }
+      },
+      {
+        "name": "y",
+        "ordinal": 2,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "graph_pinned_nodes",
+            "name": "y"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "436a5a7902d2181f8371c09321eec8e070c3057c91f22e176294621a5e23fe6e"
+}

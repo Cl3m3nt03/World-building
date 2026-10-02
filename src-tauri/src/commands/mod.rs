@@ -7,6 +7,7 @@ pub mod assets;
 pub mod card_types;
 pub mod cards;
 pub mod documents;
+pub mod graphs;
 pub mod library;
 pub mod links;
 pub mod maps;

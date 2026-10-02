@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE graphs SET filters = ?, settings = ?, viewport = ? WHERE document_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "b5d17e1fc3769b0444b8c8069458a0cf4a7f914f8f57cd993c4f88a6ac51b73c"
+}
