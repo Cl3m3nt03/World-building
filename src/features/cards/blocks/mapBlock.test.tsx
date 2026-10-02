@@ -22,6 +22,7 @@ const ARDA = {
   backgroundAssetId: `${"a".repeat(64)}.png`,
   width: 2000,
   height: 1500,
+  tiled: false,
   content: {
     layers: [{ id: "l1", name: "Calque 1", visible: true }],
     pins: [

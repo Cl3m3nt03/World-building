@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE maps SET tiles_path = ? WHERE document_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "0f3c62bc7fbeacdd876c1f40dffc318c29103c6670a4a77d05b938a404f57e85"
+}

@@ -6,9 +6,11 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { tilesUrlTemplate } from "@/lib/assets";
 import type { Asset, DocumentTree, WorldInfo, Map as WorldMap } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { createQueryClient } from "@/lib/query";
+import { levelsBelow } from "./components/MapView";
 
 const WORLD = {
   id: "demo",
@@ -54,6 +56,7 @@ function map(title: string): WorldMap {
     backgroundAssetId: IMAGE.id,
     width: 2000,
     height: 1500,
+    tiled: false,
     content: {
       layers: [{ id: "l1", name: "Calque 1", visible: true }],
       pins: [],
@@ -459,4 +462,11 @@ test("a pause while typing the name loses no letter when the save comes back", a
   await new Promise((resolve) => setTimeout(resolve, 350));
   expect(stored?.title).toBe("Ter");
   expect(title.value).toBe("Terre");
+});
+
+test("tiles: levels as the Rust side cuts them, and their URL template", () => {
+  expect(levelsBelow(256, 100)).toBe(0);
+  expect(levelsBelow(257, 100)).toBe(1);
+  expect(levelsBelow(16_000, 16_000)).toBe(6);
+  expect(tilesUrlTemplate("m1")).toBe("http://bztiles.localhost/m1/{z}/{x}/{y}.jpg");
 });

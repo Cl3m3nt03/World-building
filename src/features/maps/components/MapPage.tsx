@@ -495,6 +495,7 @@ function MapEditor({ map }: { map: WorldMap }) {
           <MapView
             ref={view}
             backgroundAssetId={data.backgroundAssetId}
+            tiles={data.tiled ? { mapId: data.id } : null}
             width={data.width}
             height={data.height}
             label={t("maps.viewLabel", { name: data.title })}

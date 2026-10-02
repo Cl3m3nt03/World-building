@@ -39,6 +39,15 @@ pub async fn open_world(state: State<'_, AppState>, path: String) -> AppResult<W
     if let Err(error) = media::sync(&world.pool, &world.assets_dir()).await {
         tracing::warn!(%error, "cannot sync the media library");
     }
+    // Tiles of maps deleted for good (M4 4.3) are left behind: swept here.
+    match db::maps::ids(&world.pool).await {
+        Ok(ids) => {
+            if let Err(error) = crate::world::tiles::sweep(world.root(), &ids) {
+                tracing::warn!(%error, "cannot sweep the map tiles");
+            }
+        }
+        Err(error) => tracing::warn!(%error, "cannot list the maps"),
+    }
     // A world made before M2 gets the default types of its genre, once.
     ensure_card_types(&state, &world).await;
     Ok(activate(&state, world).await)
