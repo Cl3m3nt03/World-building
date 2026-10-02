@@ -81,6 +81,7 @@ let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: WorldMap | null;
 let slowReload: boolean;
+let slowCards: boolean;
 /** Cutting a very large background into tiles takes this long (ms). */
 let tilingDelay: number;
 
@@ -90,6 +91,7 @@ beforeEach(() => {
   calls = [];
   stored = null;
   slowReload = false;
+  slowCards = false;
   tilingDelay = 0;
   tree = { folders: [], documents: [] };
   mockIPC((command, payload) => {
@@ -104,7 +106,10 @@ beforeEach(() => {
       case "list_assets":
         return [IMAGE, OTHER];
       case "list_cards":
-        return [GONDOR];
+        // The cards come back after the map and its pins.
+        return slowCards
+          ? new Promise((resolve) => setTimeout(() => resolve([GONDOR]), 300))
+          : [GONDOR];
       case "create_map": {
         const { title } = payload as { title: string };
         stored = map(title);
@@ -284,6 +289,35 @@ test("layers: « Rename » in the menu leaves the focus to the name field (#189)
 
   expect(focused).not.toContain(actions);
   expect(focused.at(-1)).toBe(field);
+});
+
+test("a card's pin gets its name when the cards arrive after the map (#191)", async () => {
+  stored = {
+    ...map("Arda"),
+    content: {
+      layers: [{ id: "l1", name: "Calque 1", visible: true }],
+      pins: [
+        {
+          id: "p1",
+          layerId: "l1",
+          cardId: "gondor",
+          x: 0.4,
+          y: 0.4,
+          icon: "",
+          color: "",
+          label: "",
+          size: null,
+        },
+      ],
+      zones: [],
+      texts: [],
+    },
+  };
+  slowCards = true;
+  await renderAt("/world/demo/world/map/m1");
+
+  await screen.findByRole("button", { name: "Pin sans libellé" });
+  expect(await screen.findByRole("button", { name: "Pin de la carte Gondor" })).toBeTruthy();
 });
 
 test("pins: added at the centre, labelled, hidden with their layer, deleted with the keyboard", async () => {

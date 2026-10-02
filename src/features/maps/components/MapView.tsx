@@ -368,6 +368,15 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     }
   }, [items]);
 
+  // The names of the cards can arrive after the pins are drawn: the labels of
+  // the markers follow every render.
+  useEffect(() => {
+    if (!markerLabel) return;
+    for (const [id, marker] of markers.current) {
+      marker.getElement()?.setAttribute("aria-label", markerLabel(id));
+    }
+  });
+
   // The zones, kept in step.
   useEffect(() => {
     zoneLayers.current?.sync(zones, selectedZoneId, zoneLabel);
