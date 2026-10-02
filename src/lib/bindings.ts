@@ -500,6 +500,8 @@ export type Map = {
 	backgroundAssetId: string | null,
 	width: number,
 	height: number,
+	/**  The background is cut into tiles (very large images, 4.3). */
+	tiled: boolean,
 	content: MapContent,
 };
 

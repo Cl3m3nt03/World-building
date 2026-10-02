@@ -128,6 +128,7 @@ pub fn run() -> tauri::Result<()> {
             protocol::LIBRARY_SCHEME,
             protocol::handle_library,
         )
+        .register_asynchronous_uri_scheme_protocol(protocol::TILES_SCHEME, protocol::handle_tiles)
         .manage(closing::Closing::default())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

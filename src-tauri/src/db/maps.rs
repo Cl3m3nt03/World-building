@@ -11,6 +11,7 @@ pub struct MapRow {
     pub background_asset_id: Option<String>,
     pub width: i64,
     pub height: i64,
+    pub tiles_path: Option<String>,
 }
 
 pub struct LayerRow {
@@ -75,7 +76,7 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Option<MapRow>> {
     Ok(sqlx::query_as!(
         MapRow,
         r#"SELECT m.document_id AS "document_id!", d.title, m.background_asset_id,
-                  m.width, m.height
+                  m.width, m.height, m.tiles_path
            FROM maps m JOIN documents d ON d.id = m.document_id
            WHERE m.document_id = ?"#,
         id
@@ -102,6 +103,27 @@ pub async fn set_background(
     .execute(pool)
     .await?;
     Ok(done.rows_affected() > 0)
+}
+
+/// Records where the map's tiles are (relative to the world), or none.
+pub async fn set_tiles(pool: &SqlitePool, id: &str, tiles_path: Option<&str>) -> AppResult<()> {
+    sqlx::query!(
+        "UPDATE maps SET tiles_path = ? WHERE document_id = ?",
+        tiles_path,
+        id
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Ids of every map, trash included.
+pub async fn ids(pool: &SqlitePool) -> AppResult<Vec<String>> {
+    Ok(
+        sqlx::query_scalar!(r#"SELECT document_id AS "id!" FROM maps"#)
+            .fetch_all(pool)
+            .await?,
+    )
 }
 
 pub async fn layers(pool: &SqlitePool, map_id: &str) -> AppResult<Vec<LayerRow>> {

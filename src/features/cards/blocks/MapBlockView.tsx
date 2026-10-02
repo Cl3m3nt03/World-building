@@ -142,6 +142,7 @@ function MapPreview({ mapId, onChange }: { mapId: string; onChange: () => void }
           ref={view}
           readOnly
           backgroundAssetId={map.data.backgroundAssetId}
+          tiles={map.data.tiled ? { mapId: map.data.id } : null}
           width={map.data.width}
           height={map.data.height}
           label={t("maps.viewLabel", { name: map.data.title })}

@@ -27,6 +27,7 @@ pub mod assets;
 pub mod preferences;
 pub mod storage;
 pub mod theme;
+pub mod tiles;
 
 pub use preferences::WorldPreferences;
 pub use theme::WorldTheme;

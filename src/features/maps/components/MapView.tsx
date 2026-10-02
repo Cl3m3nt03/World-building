@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { assetUrl } from "@/lib/assets";
+import { assetUrl, tilesUrlTemplate } from "@/lib/assets";
 import type { MapZone } from "@/lib/bindings";
 import { CARD_DROP_EVENT, type CardDropDetail } from "@/lib/cardDrop";
 import type { Point } from "../zones";
@@ -31,6 +31,8 @@ export type MapPoint = { x: number; y: number; clientX: number; clientY: number 
 type MapViewProps = {
   /** Background image, or null when it was deleted from the media library. */
   backgroundAssetId: string | null;
+  /** The background is cut into tiles (very large images, 4.3): shown from them. */
+  tiles?: { mapId: string } | null;
   width: number;
   height: number;
   /** Accessible name of the map area. */
@@ -71,6 +73,20 @@ type MapViewProps = {
   readOnly?: boolean;
 };
 
+/** Side of a tile, as cut by the Rust side (src-tauri/src/world/tiles.rs). */
+const TILE_SIZE = 256;
+
+/** Levels of tiles under the full size, as the Rust side cuts them. */
+export function levelsBelow(width: number, height: number): number {
+  let side = Math.max(width, height);
+  let levels = 0;
+  while (side > TILE_SIZE) {
+    side = Math.ceil(side / 2);
+    levels += 1;
+  }
+  return levels;
+}
+
 /** Bounds of an image of `width` × `height` px: y goes down, as on screen. */
 export function imageBounds(width: number, height: number): L.LatLngBoundsExpression {
   return [
@@ -90,6 +106,7 @@ export function imageBounds(width: number, height: number): L.LatLngBoundsExpres
 export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   {
     backgroundAssetId,
+    tiles = null,
     width,
     height,
     label,
@@ -116,7 +133,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
 ) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
-  const overlay = useRef<L.ImageOverlay | null>(null);
+  const overlay = useRef<L.Layer | null>(null);
   const markers = useRef(new Map<string, L.Marker>());
   // Elements of the markers, where React renders each pin or text.
   const [markerElements, setMarkerElements] = useState<ReadonlyMap<string, HTMLElement>>(new Map());
@@ -241,22 +258,33 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     };
   }, []);
 
+  const tilesMapId = tiles?.mapId ?? null;
   // The image and the bounds follow the background.
   useEffect(() => {
     const current = map.current;
     if (!current) return;
     const bounds = imageBounds(width, height);
     overlay.current?.remove();
-    overlay.current = backgroundAssetId
-      ? L.imageOverlay(assetUrl(backgroundAssetId), bounds).addTo(current)
-      : null;
+    overlay.current = !backgroundAssetId
+      ? null
+      : tilesMapId
+        ? L.tileLayer(tilesUrlTemplate(tilesMapId), {
+            bounds: L.latLngBounds(bounds as L.LatLngBoundsLiteral),
+            tileSize: TILE_SIZE,
+            minNativeZoom: -levelsBelow(width, height),
+            maxNativeZoom: 0,
+            minZoom: -32,
+            maxZoom: 32,
+            noWrap: true,
+          }).addTo(current)
+        : L.imageOverlay(assetUrl(backgroundAssetId), bounds).addTo(current);
     current.setMaxBounds(L.latLngBounds(bounds as L.LatLngBoundsLiteral).pad(0.5));
     current.fitBounds(bounds);
     fitZoom.current = current.getZoom();
     setZoomScale(1);
     current.setMinZoom(current.getZoom() - 1);
     current.setMaxZoom(current.getZoom() + 6);
-  }, [backgroundAssetId, width, height]);
+  }, [backgroundAssetId, width, height, tilesMapId]);
 
   // One Leaflet marker per pin or text, kept in step with them.
   // biome-ignore lint/correctness/useExhaustiveDependencies: toLatLng reads the size through a ref

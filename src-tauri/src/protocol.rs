@@ -18,6 +18,7 @@ use crate::world::assets;
 
 pub const SCHEME: &str = "bzasset";
 pub const LIBRARY_SCHEME: &str = "bzlibrary";
+pub const TILES_SCHEME: &str = "bztiles";
 
 pub fn handle<R: Runtime>(
     context: UriSchemeContext<'_, R>,
@@ -59,6 +60,62 @@ pub fn handle_library<R: Runtime>(
         };
         responder.respond(response);
     });
+}
+
+/// `bztiles://<map id>/<z>/<x>/<y>.jpg`: tiles of a very large map
+/// background of the open world (M4 4.3), checked strictly by
+/// `tiles::resolve`.
+pub fn handle_tiles<R: Runtime>(
+    context: UriSchemeContext<'_, R>,
+    request: Request<Vec<u8>>,
+    responder: UriSchemeResponder,
+) {
+    let app = context.app_handle().clone();
+    let path = request.uri().path().trim_start_matches('/').to_owned();
+    tauri::async_runtime::spawn(async move {
+        let Some(state) = app.try_state::<AppState>() else {
+            responder.respond(status(StatusCode::SERVICE_UNAVAILABLE));
+            return;
+        };
+        let root = state
+            .world
+            .lock()
+            .await
+            .as_ref()
+            .map(|world| world.root().to_path_buf());
+        responder.respond(respond_tile(root.as_deref(), &path).await);
+    });
+}
+
+async fn respond_tile(world_root: Option<&Path>, path: &str) -> Response<Vec<u8>> {
+    let Some(root) = world_root else {
+        return status(StatusCode::NOT_FOUND);
+    };
+    let Some((map_id, tile)) = path.split_once('/') else {
+        return status(StatusCode::BAD_REQUEST);
+    };
+    let file = match crate::world::tiles::resolve(root, map_id, tile) {
+        Ok(file) => file,
+        Err(error) => {
+            tracing::warn!(%error, "refused tile request");
+            return status(StatusCode::BAD_REQUEST);
+        }
+    };
+    match tokio::fs::read(&file).await {
+        Ok(bytes) => Response::builder()
+            .status(StatusCode::OK)
+            .header(header::CONTENT_TYPE, "image/jpeg")
+            .header(header::X_CONTENT_TYPE_OPTIONS, "nosniff")
+            // Redone in place when the background changes: no long cache.
+            .header(header::CACHE_CONTROL, "no-cache")
+            .body(bytes)
+            .unwrap_or_else(|_| status(StatusCode::INTERNAL_SERVER_ERROR)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => status(StatusCode::NOT_FOUND),
+        Err(error) => {
+            tracing::warn!(%error, "cannot read tile");
+            status(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }
 
 /// Response for asset `id`, given the open world's `assets/` folder (if any).
@@ -207,6 +264,36 @@ mod tests {
         );
         assert_eq!(
             respond_thumbnail(dir.path(), "6f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11")
+                .await
+                .status(),
+            StatusCode::NOT_FOUND
+        );
+    }
+
+    #[tokio::test]
+    async fn tiles_are_served_from_the_map_folder_only() {
+        let dir = tempfile::tempdir().unwrap();
+        let id = "5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11";
+        let tile = dir.path().join("tiles").join(id).join("-1").join("0");
+        std::fs::create_dir_all(&tile).unwrap();
+        std::fs::write(tile.join("2.jpg"), "jpeg").unwrap();
+
+        let ok = respond_tile(Some(dir.path()), &format!("{id}/-1/0/2.jpg")).await;
+        assert_eq!(ok.status(), StatusCode::OK);
+        assert_eq!(ok.headers()[header::CONTENT_TYPE], "image/jpeg");
+        for bad in [
+            format!("{id}/../../world.db"),
+            "x/0/0/0.jpg".into(),
+            id.into(),
+        ] {
+            assert_eq!(
+                respond_tile(Some(dir.path()), &bad).await.status(),
+                StatusCode::BAD_REQUEST,
+                "{bad}"
+            );
+        }
+        assert_eq!(
+            respond_tile(None, &format!("{id}/0/0/0.jpg"))
                 .await
                 .status(),
             StatusCode::NOT_FOUND

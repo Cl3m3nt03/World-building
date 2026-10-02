@@ -6,9 +6,11 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { tilesUrlTemplate } from "@/lib/assets";
 import type { Asset, DocumentTree, WorldInfo, Map as WorldMap } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { createQueryClient } from "@/lib/query";
+import { levelsBelow } from "./components/MapView";
 
 const WORLD = {
   id: "demo",
@@ -54,6 +56,7 @@ function map(title: string): WorldMap {
     backgroundAssetId: IMAGE.id,
     width: 2000,
     height: 1500,
+    tiled: false,
     content: {
       layers: [{ id: "l1", name: "Calque 1", visible: true }],
       pins: [],
@@ -78,6 +81,8 @@ let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: WorldMap | null;
 let slowReload: boolean;
+/** Cutting a very large background into tiles takes this long (ms). */
+let tilingDelay: number;
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -85,6 +90,7 @@ beforeEach(() => {
   calls = [];
   stored = null;
   slowReload = false;
+  tilingDelay = 0;
   tree = { folders: [], documents: [] };
   mockIPC((command, payload) => {
     calls.push({ command, payload });
@@ -112,7 +118,9 @@ beforeEach(() => {
       case "set_map_background": {
         const { assetId } = payload as { assetId: string };
         if (stored) stored = { ...stored, backgroundAssetId: assetId, width: 4000, height: 3000 };
-        return stored;
+        return tilingDelay > 0
+          ? new Promise((resolve) => setTimeout(() => resolve(stored), tilingDelay))
+          : stored;
       }
       case "save_map": {
         const { content } = payload as { content: WorldMap["content"] };
@@ -459,4 +467,28 @@ test("a pause while typing the name loses no letter when the save comes back", a
   await new Promise((resolve) => setTimeout(resolve, 350));
   expect(stored?.title).toBe("Ter");
   expect(title.value).toBe("Terre");
+});
+
+test("tiles: levels as the Rust side cuts them, and their URL template", () => {
+  expect(levelsBelow(256, 100)).toBe(0);
+  expect(levelsBelow(257, 100)).toBe(1);
+  expect(levelsBelow(16_000, 16_000)).toBe(6);
+  expect(tilesUrlTemplate("m1")).toBe("http://bztiles.localhost/m1/{z}/{x}/{y}.jpg");
+});
+
+test("a long background change shows that the map is being prepared", async () => {
+  stored = map("Arda");
+  tilingDelay = 900;
+  await renderAt("/world/demo/world/map/m1");
+  await screen.findByRole("button", { name: "Fond" });
+
+  fireEvent.click(screen.getByRole("button", { name: "Fond" }));
+  fireEvent.click(await screen.findByRole("option", { name: "Arda remaniée.png" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
+
+  expect(await screen.findByRole("dialog", { name: "Préparation de la map…" })).toBeTruthy();
+  await waitFor(
+    () => expect(screen.queryByRole("dialog", { name: "Préparation de la map…" })).toBeNull(),
+    { timeout: 2000 },
+  );
 });

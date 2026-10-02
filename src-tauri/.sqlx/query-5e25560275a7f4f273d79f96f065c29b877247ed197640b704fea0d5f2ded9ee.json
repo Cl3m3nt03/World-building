@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT document_id AS \"id!\" FROM maps",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "maps",
+            "name": "document_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5e25560275a7f4f273d79f96f065c29b877247ed197640b704fea0d5f2ded9ee"
+}

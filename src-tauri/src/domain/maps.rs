@@ -145,6 +145,8 @@ pub struct Map {
     pub background_asset_id: Option<String>,
     pub width: u32,
     pub height: u32,
+    /// The background is cut into tiles (very large images, 4.3).
+    pub tiled: bool,
     pub content: MapContent,
 }
 
@@ -365,6 +367,7 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Map> {
         background_asset_id: row.background_asset_id,
         width: u32::try_from(row.width).unwrap_or(1),
         height: u32::try_from(row.height).unwrap_or(1),
+        tiled: row.tiles_path.is_some(),
         content: MapContent {
             layers,
             pins,

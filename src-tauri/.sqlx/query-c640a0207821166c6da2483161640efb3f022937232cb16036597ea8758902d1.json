@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT m.document_id AS \"document_id!\", d.title, m.background_asset_id,\n                  m.width, m.height\n           FROM maps m JOIN documents d ON d.id = m.document_id\n           WHERE m.document_id = ?",
+  "query": "SELECT m.document_id AS \"document_id!\", d.title, m.background_asset_id,\n                  m.width, m.height, m.tiles_path\n           FROM maps m JOIN documents d ON d.id = m.document_id\n           WHERE m.document_id = ?",
   "describe": {
     "columns": [
       {
@@ -57,6 +57,17 @@
             "name": "height"
           }
         }
+      },
+      {
+        "name": "tiles_path",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "maps",
+            "name": "tiles_path"
+          }
+        }
       }
     ],
     "parameters": {
@@ -67,8 +78,9 @@
       false,
       true,
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "e6f50ae7f422cd63fdd7f3dcf75a443ac3bdeadd03f96005f17d0acd935687b7"
+  "hash": "c640a0207821166c6da2483161640efb3f022937232cb16036597ea8758902d1"
 }

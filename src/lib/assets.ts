@@ -21,3 +21,13 @@ export const LIBRARY_SCHEME = "bzlibrary";
 export function libraryAssetUrl(assetId: string): string {
   return convertFileSrc(assetId, LIBRARY_SCHEME);
 }
+
+/** Custom protocol serving the tiles of very large map backgrounds (M4 4.3). */
+export const TILES_SCHEME = "bztiles";
+
+/** Leaflet URL template of a map's tiles: `<map id>/{z}/{x}/{y}.jpg`. */
+export function tilesUrlTemplate(mapId: string): string {
+  // The base for this platform (http://bztiles.localhost/ on Windows),
+  // then the path unencoded so that Leaflet can fill in {z}, {x} and {y}.
+  return `${convertFileSrc("", TILES_SCHEME)}${mapId}/{z}/{x}/{y}.jpg`;
+}

@@ -641,6 +641,8 @@
   "maps.viewLabel": "Map {{name}}",
   "maps.navigationHint": "Molette ou pavé tactile pour zoomer, glisser pour se déplacer. Au clavier, sur la map : flèches pour se déplacer, + et - pour zoomer.",
   "maps.chooseBackground": "Image de fond de la nouvelle map",
+  "maps.preparing.title": "Préparation de la map…",
+  "maps.preparing.description": "Une très grande image est découpée en tuiles pour rester fluide. Cela peut prendre quelques secondes.",
   "maps.untitled": "Map sans nom",
   "maps.defaultLayer": "Calque 1",
   "sidebar.newMap": "Nouvelle map",
