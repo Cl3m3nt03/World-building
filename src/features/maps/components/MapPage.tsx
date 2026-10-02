@@ -10,9 +10,10 @@ import {
   Type as TypeIcon,
   Undo2,
 } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { DocumentTitleField } from "@/components/DocumentTitleField";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,13 +21,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useCardTypes } from "@/features/card-types";
 import { CardPicker, useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import { ImagePickerDialog } from "@/features/media";
 import type { MapPin, MapZone, Map as WorldMap } from "@/lib/bindings";
-import { usePendingSave } from "@/lib/pendingSaves";
 import { useMapEditor } from "../hooks/useMapEditor";
 import { useMap, useRenameMap, useSetMapBackground } from "../hooks/useMaps";
 import { hiddenLayers } from "../layers";
@@ -53,63 +52,10 @@ import { TextPanel } from "./TextPanel";
 import { ZonePanel } from "./ZonePanel";
 
 /** Delay before a typed title is saved. */
-const SAVE_DELAY_MS = 500;
-
 function TitleField({ map }: { map: WorldMap }) {
   const { t } = useTranslation();
   const rename = useRenameMap(map.id);
-  const [title, setTitle] = useState(map.title);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const id = useId();
-
-  // While the field is being edited, the title saved a moment ago coming
-  // back from the Rust side must not replace what has been typed since.
-  const editing = useRef(false);
-  useEffect(() => {
-    if (!editing.current) setTitle(map.title);
-  }, [map.title]);
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const save = (value: string) => {
-    clearTimeout(timer.current);
-    const trimmed = value.trim();
-    if (trimmed === "" || trimmed === map.title) return undefined;
-    // A failure is shown under the title (`rename.error`).
-    return rename.mutateAsync(trimmed).catch(() => {});
-  };
-  usePendingSave(() => save(title));
-
-  return (
-    <div className="flex min-w-48 flex-1 flex-col gap-1">
-      <label htmlFor={id} className="sr-only">
-        {t("maps.title")}
-      </label>
-      <Input
-        id={id}
-        value={title}
-        maxLength={200}
-        aria-invalid={title.trim() === ""}
-        onChange={(event) => {
-          const value = event.target.value;
-          setTitle(value);
-          clearTimeout(timer.current);
-          timer.current = setTimeout(() => save(value), SAVE_DELAY_MS);
-        }}
-        onFocus={() => {
-          editing.current = true;
-        }}
-        onBlur={() => {
-          editing.current = false;
-          void save(title);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") void save(title);
-        }}
-        className="h-auto border-transparent bg-transparent px-1 py-0.5 font-heading text-xl font-bold shadow-none hover:border-border focus-visible:border-ring md:text-xl dark:bg-transparent"
-      />
-      {rename.isError && <AppErrorMessage error={rename.error} />}
-    </div>
-  );
+  return <DocumentTitleField title={map.title} label={t("maps.title")} rename={rename} />;
 }
 
 /** A map, opened in the World tab: its name and the map itself (M4). */

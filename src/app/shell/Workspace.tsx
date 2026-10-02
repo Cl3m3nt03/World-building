@@ -1,4 +1,4 @@
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useParams } from "@tanstack/react-router";
 import {
   LayoutGrid,
   type LucideIcon,
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CreateCardMenu } from "@/features/cards";
+import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import type { TranslationKey } from "@/i18n";
@@ -23,7 +24,6 @@ import type { TranslationKey } from "@/i18n";
 /** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
 const SOON_TILES: { icon: LucideIcon; label: TranslationKey; milestone: string }[] = [
   { icon: LayoutGrid, label: "workspace.create.canvas", milestone: "M7" },
-  { icon: Share2, label: "workspace.create.graph", milestone: "M5" },
 ];
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
@@ -37,8 +37,11 @@ const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-
 export function StartWith() {
   const { t } = useTranslation();
   const [creatingMap, setCreatingMap] = useState(false);
+  const { worldId } = useParams({ strict: false });
+  const createGraph = useCreateGraph();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
+      {createGraph.isError && <AppErrorMessage error={createGraph.error} />}
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
       <div className="flex gap-3">
         <div className="flex flex-col items-center gap-1.5">
@@ -64,6 +67,18 @@ export function StartWith() {
           </Button>
           <span className="text-xs text-muted-foreground">{t("workspace.create.map")}</span>
           <CreateMapDialog open={creatingMap} onOpenChange={setCreatingMap} />
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <Button
+            variant="secondary"
+            aria-label={t("workspace.create.graph")}
+            className={TILE_CLASS}
+            disabled={createGraph.isPending}
+            onClick={() => worldId && createGraph.mutate(worldId)}
+          >
+            <Share2 />
+          </Button>
+          <span className="text-xs text-muted-foreground">{t("workspace.create.graph")}</span>
         </div>
         {SOON_TILES.map(({ icon: Icon, label, milestone }) => (
           <div key={label} className="flex flex-col items-center gap-1.5">

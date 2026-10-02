@@ -153,6 +153,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/** Picks `entry` in the sidebar's « New document » menu. */
+async function newDocument(entry: string) {
+  const trigger = await screen.findByRole("button", { name: "Nouveau document (map, graph…)" });
+  await act(async () => {
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: "Enter" });
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: entry }));
+}
+
 async function renderAt(path: string) {
   const queryClient = createQueryClient();
   const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }));
@@ -183,7 +193,7 @@ test("documents open on the page of their kind", () => {
 test('"New map" chooses a background, creates the map with one layer and opens it', async () => {
   const router = await renderAt("/world/demo/world");
 
-  fireEvent.click(await screen.findByRole("button", { name: "Nouvelle map" }));
+  await newDocument("Nouvelle map");
   expect(
     await screen.findByRole("dialog", { name: "Image de fond de la nouvelle map" }),
   ).toBeTruthy();
@@ -202,7 +212,7 @@ test("a map that cannot be created says so, and shows the reason (#200)", async 
   createFails = true;
   const router = await renderAt("/world/demo/world");
 
-  fireEvent.click(await screen.findByRole("button", { name: "Nouvelle map" }));
+  await newDocument("Nouvelle map");
   fireEvent.click(await screen.findByRole("option", { name: "Terre du Milieu.png" }));
   fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
 

@@ -1,10 +1,25 @@
 import { useParams } from "@tanstack/react-router";
-import { FolderPlus, Map as MapIcon, PanelLeftClose, Plus, Trash2 } from "lucide-react";
+import {
+  FilePlus,
+  FolderPlus,
+  Map as MapIcon,
+  PanelLeftClose,
+  Plus,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CreateCardMenu, TrashDialog } from "@/features/cards";
+import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
 import { useDocumentTree } from "../hooks/useDocumentTree";
 import { useSidebarState } from "../hooks/useSidebarState";
@@ -22,9 +37,13 @@ import { ViewMenu } from "./ViewMenu";
  */
 export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   const { t } = useTranslation();
-  const { cardId, mapId } = useParams({ strict: false });
-  const currentId = cardId ?? mapId ?? null;
+  const { worldId, cardId, mapId, graphId } = useParams({ strict: false });
+  const currentId = cardId ?? mapId ?? graphId ?? null;
   const [creatingMap, setCreatingMap] = useState(false);
+  const createGraph = useCreateGraph();
+  const newGraph = () => {
+    if (worldId) createGraph.mutate(worldId);
+  };
   const tree = useDocumentTree();
   const [trashOpen, setTrashOpen] = useState(false);
   const treeView = useRef<DocumentTreeHandle>(null);
@@ -40,9 +59,9 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   return (
     <aside aria-label={t("sidebar.label")} className="glass flex h-full flex-col rounded-lg">
       <div className="flex min-h-0 flex-1 flex-col">
-        {(tree.error ?? sidebar.error) && (
+        {(tree.error ?? sidebar.error ?? createGraph.error) && (
           <div className="p-2">
-            <AppErrorMessage error={tree.error ?? sidebar.error} />
+            <AppErrorMessage error={tree.error ?? sidebar.error ?? createGraph.error} />
           </div>
         )}
         <SidebarSearch actions={<ViewMenu view={view} onChange={changeView} />}>
@@ -53,6 +72,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
               tree={tree.data}
               currentId={currentId}
               onNewMap={() => setCreatingMap(true)}
+              onNewGraph={newGraph}
               view={view}
               onViewChange={changeView}
               initialExpanded={sidebar.state.expanded ?? []}
@@ -68,15 +88,29 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             {t("sidebar.newCard")}
           </Button>
         </CreateCardMenu>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t("sidebar.newMap")}
-          title={t("sidebar.newMap")}
-          onClick={() => setCreatingMap(true)}
-        >
-          <MapIcon />
-        </Button>
+        {/* Maps, graphs (and later canvases and trees): one menu, so the bar does not grow. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("sidebar.newDocument")}
+              title={t("sidebar.newDocument")}
+            >
+              <FilePlus />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" side="top">
+            <DropdownMenuItem onSelect={() => setCreatingMap(true)}>
+              <MapIcon />
+              {t("sidebar.newMap")}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={createGraph.isPending} onSelect={newGraph}>
+              <Share2 />
+              {t("sidebar.newGraph")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="ghost"
           size="icon-sm"

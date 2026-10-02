@@ -1,4 +1,4 @@
-import { Map as MapIcon, RotateCcw, Trash2 } from "lucide-react";
+import { Map as MapIcon, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -35,14 +35,20 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
   const remove = useDeleteDocumentForever();
   const empty = useEmptyTrash();
   const [confirmEmpty, setConfirmEmpty] = useState(false);
-  // Cards and maps, by title.
+  // Cards, maps and graphs, by title.
   const items = [
     ...(trashed.data ?? []).map((card) => ({
       id: card.id,
       title: card.title,
       typeId: card.typeId,
+      kind: "card",
     })),
-    ...(trashedMaps.data ?? []).map((map) => ({ id: map.id, title: map.title, typeId: null })),
+    ...(trashedMaps.data ?? []).map((document) => ({
+      id: document.id,
+      title: document.title,
+      typeId: null,
+      kind: document.kind,
+    })),
   ].sort((a, b) => a.title.localeCompare(b.title));
   const error = restore.error ?? remove.error ?? empty.error ?? trashed.error ?? trashedMaps.error;
 
@@ -71,7 +77,12 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
           >
             {items.map((item) => {
               const type = types.data?.find((candidate) => candidate.id === item.typeId);
-              const Icon = item.typeId === null ? MapIcon : typeIcon(type?.icon ?? "shapes");
+              const Icon =
+                item.kind === "map"
+                  ? MapIcon
+                  : item.kind === "graph"
+                    ? Share2
+                    : typeIcon(type?.icon ?? "shapes");
               return (
                 <li
                   key={item.id}

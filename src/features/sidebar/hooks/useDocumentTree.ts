@@ -154,7 +154,9 @@ export function useDuplicateDocument() {
     mutationFn: async ({ id, kind, title }: { id: string; kind: DocumentKind; title: string }) =>
       kind === "map"
         ? (await unwrap(commands.duplicateMap(id, title))).id
-        : (await unwrap(commands.duplicateCard(id, title))).id,
+        : kind === "graph"
+          ? (await unwrap(commands.duplicateGraph(id, title))).id
+          : (await unwrap(commands.duplicateCard(id, title))).id,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
   });
 }

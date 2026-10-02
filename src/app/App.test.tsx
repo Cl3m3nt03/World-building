@@ -129,16 +129,17 @@ describe("routing", () => {
 
   test("creation tiles not available yet say so instead of doing nothing", async () => {
     const router = await renderAt("/world/demo/world");
-    const graph = screen.getByRole("button", { name: "Graph" });
-    expect(graph.getAttribute("aria-disabled")).toBe("true");
-    expect(document.getElementById(graph.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
-      "Bientôt disponible : arrive avec M5",
-    );
-    fireEvent.click(graph);
+    const canvas = screen.getByRole("button", { name: "Canvas" });
+    expect(canvas.getAttribute("aria-disabled")).toBe("true");
+    expect(
+      document.getElementById(canvas.getAttribute("aria-describedby") ?? "")?.textContent,
+    ).toBe("Bientôt disponible : arrive avec M7");
+    fireEvent.click(canvas);
     expect(router.state.location.pathname).toBe("/world/demo/world");
-    // Cards (M2) and maps (M4) exist: their tiles are real buttons.
-    expect(screen.getByRole("button", { name: "Carte" }).getAttribute("aria-disabled")).toBeNull();
-    expect(screen.getByRole("button", { name: "Map" }).getAttribute("aria-disabled")).toBeNull();
+    // Cards (M2), maps (M4) and graphs (M5) exist: their tiles are real buttons.
+    for (const name of ["Carte", "Map", "Graph"]) {
+      expect(screen.getByRole("button", { name }).getAttribute("aria-disabled")).toBeNull();
+    }
   });
 
   test("the Wiki and Quill tabs explain what is coming", async () => {
