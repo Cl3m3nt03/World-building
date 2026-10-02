@@ -64,8 +64,10 @@ impl RelationCategory {
 #[serde(rename_all = "camelCase")]
 pub struct RelationType {
     pub id: String,
-    /// Key of a provided type ("parent", "child", "sibling", "partner",
-    /// "spouse"), translated by the front; `null` for a type of the world.
+    /// Key of a provided type ("parent", "child", "sibling",
+    /// "half-sibling", "adopted", "adoptive-parent", "step-parent",
+    /// "step-child", "partner", "spouse", "ex"), translated by the front;
+    /// `null` for a type of the world.
     pub builtin: Option<String>,
     /// Name of a type of the world (empty for a provided one).
     pub name: String,

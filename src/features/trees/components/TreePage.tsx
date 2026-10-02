@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { useCardTypes } from "@/features/card-types";
 import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
-import type { Card, CardType, RelationTree } from "@/lib/bindings";
+import type { Card, CardType, RelationTree, RelationType } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { useTreeEditor } from "../hooks/useTreeEditor";
-import { useRenameTree, useTree } from "../hooks/useTrees";
+import { useRelationTypes, useRenameTree, useTree } from "../hooks/useTrees";
 import { TreeCanvas, type TreeCanvasHandle } from "./TreeCanvas";
 
 function TitleField({ tree }: { tree: RelationTree }) {
@@ -26,9 +26,10 @@ export function TreePage() {
   const tree = useTree(treeId);
   const cards = useCardList(false);
   const types = useCardTypes();
+  const relationTypes = useRelationTypes();
   useMarkOpened(treeId);
 
-  const error = tree.error ?? cards.error ?? types.error;
+  const error = tree.error ?? cards.error ?? types.error ?? relationTypes.error;
   if (error) {
     return (
       <div className="p-6">
@@ -36,7 +37,7 @@ export function TreePage() {
       </div>
     );
   }
-  if (!tree.data || !cards.data || !types.data) return null;
+  if (!tree.data || !cards.data || !types.data || !relationTypes.data) return null;
   // Remounted for another tree: the editor starts from that tree's variants.
   return (
     <TreeEditor
@@ -45,6 +46,7 @@ export function TreePage() {
       tree={tree.data}
       cards={cards.data}
       types={types.data}
+      relationTypes={relationTypes.data}
     />
   );
 }
@@ -54,11 +56,13 @@ function TreeEditor({
   tree,
   cards,
   types,
+  relationTypes,
 }: {
   worldId: string;
   tree: RelationTree;
   cards: Card[];
   types: CardType[];
+  relationTypes: RelationType[];
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -82,6 +86,7 @@ function TreeEditor({
             content={content}
             cardsById={cardsById}
             typesById={typesById}
+            relationTypes={relationTypes}
             label={t("trees.viewLabel", { name: tree.title })}
             onChange={(change) => editor.update(variantId, change)}
             onOpenCard={(cardId) => void navigate(documentRoute(worldId, "card", cardId))}
