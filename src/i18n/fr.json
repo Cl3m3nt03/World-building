@@ -707,6 +707,8 @@
   "trees.edges.dashed": "Tirets",
   "trees.edges.dotted": "Pointillés",
   "trees.edges.delete": "Supprimer le lien",
+  "trees.edges.pair": "{{a}} et {{b}}",
+  "trees.edges.addJunction": "Rattacher un nœud à ce lien",
   "trees.viewLabel": "Arbre {{name}}",
   "trees.navigationHint": "Molette ou pavé tactile pour zoomer, glisser le fond pour se déplacer, glisser une carte pour la placer. Au clavier, sur l'arbre : flèches pour se déplacer, + et - pour zoomer.",
   "graphs.untitled": "Graph sans nom",

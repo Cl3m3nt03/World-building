@@ -707,6 +707,8 @@
   "trees.edges.dashed": "Dashed",
   "trees.edges.dotted": "Dotted",
   "trees.edges.delete": "Delete the link",
+  "trees.edges.pair": "{{a}} and {{b}}",
+  "trees.edges.addJunction": "Hang a node from this link",
   "trees.viewLabel": "Tree {{name}}",
   "trees.navigationHint": "Wheel or touchpad to zoom, drag the background to move, drag a card to place it. With the keyboard, on the tree: arrows to move, + and - to zoom.",
   "graphs.untitled": "Untitled graph",
