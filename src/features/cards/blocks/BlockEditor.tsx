@@ -435,6 +435,8 @@ export function BlockEditor({
   const save = useSaveCardContent(cardId);
   const [blocks, setBlocks] = useState<Block[] | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
+  /** Whether the "Add a block" menu closed because a type was picked. */
+  const addPicked = useRef(false);
   const pending = useRef<Block[] | null>(null);
   // The latest blocks, so that changes made in a row (a line removed, then
   // a block inserted) each apply to the result of the previous one.
@@ -711,7 +713,18 @@ export function BlockEditor({
         {notice}
       </p>
       {save.isError && <AppErrorMessage error={save.error} />}
-      <BlockTypeMenu onPick={(type) => insert(blocks.length, type)}>
+      <BlockTypeMenu
+        // A new block takes the focus itself; closed without a choice
+        // (Escape), the focus goes back to the button.
+        onCloseAutoFocus={(event) => {
+          if (addPicked.current) event.preventDefault();
+          addPicked.current = false;
+        }}
+        onPick={(type) => {
+          addPicked.current = true;
+          insert(blocks.length, type);
+        }}
+      >
         <Button variant="ghost" size="sm" className="self-start">
           <Plus />
           {t("blocks.add")}
