@@ -51,6 +51,7 @@ import {
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
 import type { CardType, DocumentTree } from "@/lib/bindings";
+import { dropCard } from "@/lib/cardDrop";
 import { documentRoute } from "@/lib/documentRoute";
 import {
   useCreateFolder,
@@ -523,6 +524,9 @@ export function DocumentTreeView({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const [drop, setDrop] = useState<Drop | null>(null);
   const pointerY = useRef(0);
+  // Where the pointer is across the window: a card dropped outside the tree
+  // goes to what is there (a map, M4).
+  const pointerX = useRef(0);
   const hoverTimer = useRef<{ key: string; timer: number } | null>(null);
   // The click that ends a drag must not open the dropped row.
   const justDropped = useRef(false);
@@ -535,6 +539,7 @@ export function DocumentTreeView({
     if (dragKey === null) return;
     const track = (event: PointerEvent) => {
       pointerY.current = event.clientY;
+      pointerX.current = event.clientX;
     };
     window.addEventListener("pointermove", track);
     return () => window.removeEventListener("pointermove", track);
@@ -554,6 +559,7 @@ export function DocumentTreeView({
     const start = event.activatorEvent;
     if (start instanceof PointerEvent || start instanceof globalThis.MouseEvent) {
       pointerY.current = start.clientY;
+      pointerX.current = start.clientX;
     }
   };
 
@@ -605,6 +611,12 @@ export function DocumentTreeView({
     clearHover();
   };
 
+  const dragged = dragKey ? nodeOf.get(dragKey) : undefined;
+
+  /** Whether the pointer is over the tree (a drop there files the row). */
+  const overTree = () =>
+    document.elementFromPoint(pointerX.current, pointerY.current)?.closest("aside") !== null;
+
   const onDragEnd = () => {
     justDropped.current = true;
     window.setTimeout(() => {
@@ -614,11 +626,16 @@ export function DocumentTreeView({
       // Filed inside: open it, so the dropped row stays in sight.
       if (drop.position === "inside") setOpen(drop.key, true);
       move.mutate(drop.move);
+    } else if (dragged?.kind === "document" && dragged.document.kind === "card" && !overTree()) {
+      dropCard({
+        cardId: dragged.document.id,
+        clientX: pointerX.current,
+        clientY: pointerY.current,
+      });
     }
     endDrag();
   };
 
-  const dragged = dragKey ? nodeOf.get(dragKey) : undefined;
   const error =
     move.error ??
     createFolder.error ??

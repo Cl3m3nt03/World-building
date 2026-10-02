@@ -35,6 +35,8 @@ export function CardPicker({
   allowedTypeIds,
   excludeIds = [],
   onPick,
+  open: openProp,
+  onOpenChange,
 }: {
   children: ReactNode;
   /** Accessible name of the search field. */
@@ -42,11 +44,19 @@ export function CardPicker({
   allowedTypeIds: string[];
   excludeIds?: string[];
   onPick: (cardId: string) => void;
+  /** Opened from outside (e.g. a context menu); the picker stays usable alone. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
   const cards = useCardList(false);
   const types = useCardTypes();
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = openProp ?? ownOpen;
+  const setOpen = (next: boolean) => {
+    setOwnOpen(next);
+    onOpenChange?.(next);
+  };
   const [search, setSearch] = useState("");
   const [active, setActive] = useState(0);
   const listId = useId();
