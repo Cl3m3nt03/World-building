@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { documentKeys } from "@/features/cards/hooks/keys";
 import { commands, type MapContent, type Map as WorldMap } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
@@ -29,10 +30,13 @@ export function useMapEditor(map: WorldMap) {
   const saving = useRef<Promise<unknown> | undefined>(undefined);
   const save = useMutation({
     mutationFn: (next: MapContent) => unwrap(commands.saveMap(map.id, next)),
-    onSuccess: (_, next) =>
+    onSuccess: (_, next) => {
       queryClient.setQueryData<WorldMap>(mapKeys.detail(map.id), (old) =>
         old ? { ...old, content: next } : old,
-      ),
+      );
+      // Pins and zones tied to a card are cited in its "Cité dans".
+      void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
+    },
   });
 
   const flush = useCallback(() => {
