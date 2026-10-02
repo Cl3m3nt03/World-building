@@ -80,7 +80,7 @@ function TitleField({ map }: { map: WorldMap }) {
   usePendingSave(() => save(title));
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1">
+    <div className="flex min-w-48 flex-1 flex-col gap-1">
       <label htmlFor={id} className="sr-only">
         {t("maps.title")}
       </label>
@@ -560,7 +560,7 @@ function MapEditor({ map }: { map: WorldMap }) {
             }
           />
         </div>
-        <aside className="flex w-60 shrink-0 flex-col gap-3 overflow-y-auto">
+        <aside className="flex w-60 shrink-0 flex-col gap-3 overflow-x-hidden overflow-y-auto">
           <LayersPanel
             content={content}
             update={update}

@@ -229,6 +229,10 @@
   border-radius: 9999px;
   cursor: move;
 }
+/* leaflet.css paints the container light grey: the theme's colour instead. */
+div.leaflet-container {
+  background: var(--muted);
+}
 .leaflet-interactive.bz-map-edge-middle {
   fill: var(--background);
   fill-opacity: 1;
