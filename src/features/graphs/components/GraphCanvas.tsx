@@ -8,7 +8,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { assetUrl } from "@/lib/assets";
-import type { CardType, GraphEdge, GraphNode } from "@/lib/bindings";
+import type { CardType, GraphEdge, GraphNode, GraphViewport } from "@/lib/bindings";
 import type { Settings } from "../settings";
 import type { SimLinkInput, SimNodeInput } from "../simulation";
 import { useSimulation } from "../useSimulation";
@@ -53,6 +53,10 @@ type Props = {
   onTogglePin: (id: string) => void;
   /** A pinned node dropped elsewhere: it stays pinned there. */
   onPinnedMove: (id: string, x: number, y: number) => void;
+  /** The framing saved with the graph; `null`: frame every node. */
+  initialViewport: GraphViewport | null;
+  /** The view was moved (or framed again: `null`). */
+  onViewChange: (viewport: GraphViewport | null) => void;
 };
 
 /** Value of a CSS variable of the theme, or `fallback`. */
@@ -86,6 +90,8 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     pinned,
     onTogglePin,
     onPinnedMove,
+    initialViewport,
+    onViewChange,
   },
   ref,
 ) {
@@ -97,8 +103,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   const container = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const transform = useRef<Transform>({ tx: 0, ty: 0, k: 1 });
-  // Until the view is moved by hand, it keeps framing the whole graph.
-  const autoFit = useRef(true);
+  // Until the view is moved by hand, it keeps framing the whole graph; a
+  // saved framing is applied once the canvas has its size.
+  const autoFit = useRef(initialViewport === null);
+  const savedView = useRef(initialViewport);
   const frame = useRef<number | null>(null);
   const images = useRef(new Map<string, HTMLImageElement | "loading" | "failed">());
   // Where each node was last drawn: a filter that changes the nodes keeps
@@ -168,6 +176,16 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
           positions[index * 2 + 1] as number,
         ]);
       });
+    }
+    const saved = savedView.current;
+    if (saved && width > 0 && height > 0) {
+      savedView.current = null;
+      const k = saved.zoom ?? 1;
+      transform.current = {
+        k,
+        tx: width / 2 - (saved.x ?? 0) * k,
+        ty: height / 2 - (saved.y ?? 0) * k,
+      };
     }
     if (autoFit.current) frameAll(width, height);
     const { tx, ty, k } = transform.current;
@@ -334,6 +352,18 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     };
   }
 
+  /** Tells where the view now is: the graph point at its centre, and the zoom. */
+  function reportView() {
+    const element = canvas.current;
+    if (!element) return;
+    const { tx, ty, k } = transform.current;
+    onViewChange({
+      x: (element.clientWidth / 2 - tx) / k,
+      y: (element.clientHeight / 2 - ty) / k,
+      zoom: k,
+    });
+  }
+
   /** Zooms by `factor` around the screen point (sx, sy). */
   function zoomAt(factor: number, sx: number, sy: number) {
     autoFit.current = false;
@@ -345,6 +375,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
       ty: sy - ((sy - ty) / k) * next,
     };
     redraw();
+    reportView();
   }
 
   function panBy(dx: number, dy: number) {
@@ -352,6 +383,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
     const { tx, ty, k } = transform.current;
     transform.current = { k, tx: tx + dx, ty: ty + dy };
     redraw();
+    reportView();
   }
 
   /** Graph coordinates of the screen point (sx, sy), relative to the canvas. */
@@ -377,7 +409,9 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   useImperativeHandle(ref, () => ({
     recenter: () => {
       autoFit.current = true;
+      savedView.current = null;
       redraw();
+      onViewChange(null);
     },
     positionOf: (id) => {
       const index = indexOf.get(id);
@@ -398,6 +432,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
         ty: element.clientHeight / 2 - (positions[index * 2 + 1] as number) * k,
       };
       redraw();
+      reportView();
     },
   }));
 

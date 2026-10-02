@@ -60,6 +60,7 @@ const DATA: GraphData = {
 let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: Graph | null;
+let copy: Graph | null;
 let data: GraphData;
 
 beforeEach(() => {
@@ -67,6 +68,7 @@ beforeEach(() => {
   mockConvertFileSrc("windows");
   calls = [];
   stored = null;
+  copy = null;
   data = DATA;
   tree = { folders: [], documents: [] };
   mockIPC((command, payload) => {
@@ -104,8 +106,26 @@ beforeEach(() => {
         };
         return stored;
       }
-      case "get_graph":
-        return stored;
+      case "get_graph": {
+        const { id } = payload as { id: string };
+        return id === copy?.id ? copy : stored;
+      }
+      case "save_graph": {
+        const { config } = payload as { config: Graph["config"] };
+        if (stored) stored = { ...stored, config };
+        return null;
+      }
+      case "duplicate_graph": {
+        const { title } = payload as { title: string };
+        copy = {
+          id: "g2",
+          title,
+          config: stored
+            ? stored.config
+            : { filters: {}, settings: {}, pinned: [], viewport: null },
+        };
+        return copy;
+      }
       case "graph_data":
         return data;
       case "list_card_types":
@@ -402,4 +422,36 @@ test("the selected card is pinned and unpinned from the list; the list marks it"
   ).toContain("Aragorn (épinglée)");
   fireEvent.click(pin);
   expect(within(list).getByRole("option", { name: "Aragorn" })).toBeTruthy();
+});
+
+test("the configuration saves itself; « Save as… » makes a named copy of it and opens it", async () => {
+  stored = {
+    id: "g1",
+    title: "Royaume",
+    config: { filters: {}, settings: {}, pinned: [], viewport: null },
+  };
+  const router = await renderAt("/world/demo/world/graph/g1");
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Réglages du graph" }));
+  const dialog = await screen.findByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("switch", { name: "Afficher les noms" }));
+  // Saved after a short pause.
+  await waitFor(() => expect(stored?.config.settings.showLabels).toBe(false), { timeout: 3000 });
+  fireEvent.keyDown(dialog, { key: "Escape" });
+
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Enregistrer sous…" }));
+  const saveAs = await screen.findByRole("dialog", {
+    name: "Enregistrer cette vue sous un nouveau nom",
+  });
+  fireEvent.change(within(saveAs).getByLabelText("Nom du nouveau graph"), {
+    target: { value: "Famille Stark" },
+  });
+  fireEvent.click(within(saveAs).getByRole("button", { name: "Enregistrer" }));
+
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/graph/g2"));
+  expect(calls).toContainEqual({
+    command: "duplicate_graph",
+    payload: { id: "g1", title: "Famille Stark" },
+  });
+  expect(copy?.config.settings.showLabels).toBe(false);
 });

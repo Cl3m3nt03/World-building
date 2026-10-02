@@ -7,10 +7,11 @@ import { DocumentTitleField } from "@/components/DocumentTitleField";
 import { Button } from "@/components/ui/button";
 import { useCardTypes } from "@/features/card-types";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
-import type { CardType, Graph, GraphConfig, GraphData } from "@/lib/bindings";
+import type { CardType, Graph, GraphData } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { visibleGraph } from "../filters";
-import { useGraph, useGraphData, useRenameGraph } from "../hooks/useGraphs";
+import { useGraphConfig } from "../hooks/useGraphConfig";
+import { useGraph, useGraphData, useRenameGraph, useSaveGraphAs } from "../hooks/useGraphs";
 import { searchNodes } from "../search";
 import { resolveSettings } from "../settings";
 import { GraphCanvas, type GraphCanvasHandle } from "./GraphCanvas";
@@ -18,6 +19,7 @@ import { GraphFilters } from "./GraphFilters";
 import { GraphSearch } from "./GraphSearch";
 import { GraphSettingsPanel } from "./GraphSettingsPanel";
 import { NodeList } from "./NodeList";
+import { SaveGraphAs } from "./SaveGraphAs";
 
 function TitleField({ graph }: { graph: Graph }) {
   const { t } = useTranslation();
@@ -51,7 +53,8 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
   const { worldId } = useParams({ from: "/world/$worldId/world/graph/$graphId" });
   const navigate = useNavigate();
   const view = useRef<GraphCanvasHandle>(null);
-  const [config, setConfig] = useState<GraphConfig>(graph.config);
+  const { config, update: setConfig, setViewport, flush, error } = useGraphConfig(graph);
+  const saveAs = useSaveGraphAs(graph.id, worldId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -102,6 +105,7 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
           {t("graphs.recenter")}
         </Button>
       </header>
+      {error && <AppErrorMessage error={error} />}
       {data.nodes.length === 0 ? (
         <p className="flex min-h-0 flex-1 items-center justify-center rounded-lg bg-muted p-6 text-center text-sm text-muted-foreground">
           {t("graphs.empty")}
@@ -131,6 +135,8 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
                 onOpen={open}
                 pinned={pinned}
                 onTogglePin={togglePin}
+                initialViewport={graph.config.viewport}
+                onViewChange={setViewport}
                 onPinnedMove={(id, x, y) =>
                   setConfig((current) => ({
                     ...current,
@@ -176,6 +182,15 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
                     settings: { ...resolveSettings(current.settings), ...change },
                   }))
                 }
+              />
+              <SaveGraphAs
+                pending={saveAs.isPending}
+                error={saveAs.error}
+                onSave={async (title) => {
+                  // The copy takes the configuration as saved: everything first.
+                  await flush();
+                  await saveAs.mutateAsync(title);
+                }}
               />
             </div>
           </div>
