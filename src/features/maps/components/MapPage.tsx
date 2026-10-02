@@ -48,6 +48,7 @@ import { MapTextView } from "./MapTextView";
 import { type MapPoint, MapView, type MapViewHandle } from "./MapView";
 import { PinMarker } from "./PinMarker";
 import { PinPanel } from "./PinPanel";
+import { PreparingMapDialog } from "./PreparingMapDialog";
 import { TextPanel } from "./TextPanel";
 import { ZonePanel } from "./ZonePanel";
 
@@ -485,6 +486,7 @@ function MapEditor({ map }: { map: WorldMap }) {
         selectedId={data.backgroundAssetId}
         onPick={(assetId) => setBackground.mutate(assetId)}
       />
+      <PreparingMapDialog pending={setBackground.isPending} />
       {editor.saveError && (
         <p role="alert" className="text-sm text-destructive">
           {t("maps.saveError")}

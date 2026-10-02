@@ -641,6 +641,8 @@
   "maps.viewLabel": "Map {{name}}",
   "maps.navigationHint": "Wheel or touchpad to zoom, drag to move. With the keyboard, on the map: arrows to move, + and - to zoom.",
   "maps.chooseBackground": "Background image of the new map",
+  "maps.preparing.title": "Preparing the map…",
+  "maps.preparing.description": "A very large image is cut into tiles to stay smooth. This can take a few seconds.",
   "maps.untitled": "Untitled map",
   "maps.defaultLayer": "Layer 1",
   "sidebar.newMap": "New map",
