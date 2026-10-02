@@ -55,10 +55,10 @@ type Props = {
   onOpen: (id: string) => void;
   /** Pinned nodes and where they stay. */
   pinned: ReadonlyMap<string, readonly [number, number]>;
-  /** Right click › Pin / Unpin. */
-  onTogglePin: (id: string) => void;
+  /** Right click › Pin / Unpin (absent: the graph is not pinned, Home). */
+  onTogglePin?: (id: string) => void;
   /** A pinned node dropped elsewhere: it stays pinned there. */
-  onPinnedMove: (id: string, x: number, y: number) => void;
+  onPinnedMove?: (id: string, x: number, y: number) => void;
   /** The framing saved with the graph; `null`: frame every node. */
   initialViewport: GraphViewport | null;
   /** The view was moved (or framed again: `null`). */
@@ -674,7 +674,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
               if (held.kind === "node") {
                 if (!held.moved) onSelect(held.id);
                 else if (held.at && pinned.has(held.id))
-                  onPinnedMove(held.id, held.at[0], held.at[1]);
+                  onPinnedMove?.(held.id, held.at[0], held.at[1]);
                 else simulation.send({ type: "drag", id: held.id, x: null, y: null });
               } else if (!held.moved) {
                 onSelect(null);
@@ -714,10 +714,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
         </ContextMenuTrigger>
         {menuNode && (
           <ContextMenuContent>
-            <ContextMenuItem onSelect={() => onTogglePin(menuNode)}>
-              {pinned.has(menuNode) ? <PinOff /> : <Pin />}
-              {pinned.has(menuNode) ? t("graphs.pins.unpin") : t("graphs.pins.pin")}
-            </ContextMenuItem>
+            {onTogglePin && (
+              <ContextMenuItem onSelect={() => onTogglePin(menuNode)}>
+                {pinned.has(menuNode) ? <PinOff /> : <Pin />}
+                {pinned.has(menuNode) ? t("graphs.pins.unpin") : t("graphs.pins.pin")}
+              </ContextMenuItem>
+            )}
             <ContextMenuItem onSelect={() => onOpen(menuNode)}>
               <ArrowUpRight />
               {t("graphs.pins.open")}

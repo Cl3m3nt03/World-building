@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Images, type LucideIcon, Palette, Settings2, Shapes, Share2 } from "lucide-react";
+import { Images, Palette, Settings2, Shapes } from "lucide-react";
 import type { ReactNode } from "react";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useCardCounts } from "@/features/cards";
+import { HomeGraphPreview } from "@/features/graphs";
 import { AssetImage, useAssets } from "@/features/media";
 import { genreLabel, useCurrentWorld } from "@/features/world";
 import { cn } from "@/lib/utils";
@@ -37,18 +38,9 @@ function Section({
   );
 }
 
-function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-      <Icon aria-hidden className="size-8 text-muted-foreground" />
-      <p className="max-w-sm text-sm text-muted-foreground">{text}</p>
-    </div>
-  );
-}
-
 /**
  * Home tab: the landing page of the open world. Welcome, recent documents,
- * "Manage" block, world summary and graph preview (empty until M2–M5).
+ * "Manage" block, world summary and the world's graph (M5).
  */
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -145,7 +137,7 @@ export function HomeScreen() {
           </Section>
 
           <Section title={t("home.graph")}>
-            <EmptyState icon={Share2} text={t("home.graphEmpty", { milestone: "M5" })} />
+            <HomeGraphPreview worldId={world.id} />
           </Section>
         </div>
 

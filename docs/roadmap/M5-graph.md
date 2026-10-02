@@ -12,7 +12,7 @@
 - **La simulation tourne dans un Web Worker** (`d3-force`), qui renvoie les positions ; le fil principal ne fait que dessiner (Canvas 2D, images mises en cache) et répondre à la souris. Le survol et le clic passent par un `quadtree` (dépendance de `d3-force`).
 - **Accessibilité** : un canvas n'est pas lisible par un lecteur d'écran. À côté du dessin, une liste des cartes affichées (avec leurs voisins) se parcourt au clavier, et la sélection suit dans les deux sens.
 
-**Ordre d'exécution** : 5.1 → 5.2 → 5.3, puis 5.4 → 5.5 → 5.6 → 5.7 → 5.8, puis 5.9, 5.10, et la recette 5.11 en dernier.
+**Ordre d'exécution** : 5.1 → 5.2 → 5.3, puis 5.4 → 5.5 → 5.6 → 5.7 → 5.8, puis 5.9, 5.10, 5.12, et la recette 5.11 en dernier.
 
 ---
 
@@ -98,6 +98,14 @@
 - [ ] Scénarios : mention qui crée une arête, filtre « Personnage », recherche, nœud épinglé qui ne bouge pas en changeant la répulsion, configuration enregistrée sous un nom et rouverte à l'identique après relance
 
 **Critères d'acceptation** : les critères de `04-graph.md` sont couverts et passent en CI.
+
+## 5.12 — Aperçu du graph dans Home (#233)
+**Branche** : `feat/home-graph` · **Dépend de** : 5.5 · *Ajoutée pendant M5 : la spec de Home la prévoyait (`00-interface.md`)*
+
+- [ ] Home : le graph du monde, avec la loupe et les filtres, rien d'enregistré ; clic et double-clic comme dans un graph
+- [ ] Sans lien entre cartes, un texte qui dit comment en créer (mentions @, propriétés de type lien)
+
+**Critères d'acceptation** : dès que deux cartes sont reliées, Home montre leur graph.
 
 ## 5.11 — Recette M5 (#219)
 **Branche** : — · **Dépend de** : 5.10

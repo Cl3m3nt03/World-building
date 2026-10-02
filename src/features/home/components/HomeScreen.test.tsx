@@ -2,12 +2,19 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { useUiStore } from "@/app/stores/ui";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { AppSettings, CardType, RecentDocument, TypeCount, WorldInfo } from "@/lib/bindings";
+import type {
+  AppSettings,
+  CardType,
+  GraphData,
+  RecentDocument,
+  TypeCount,
+  WorldInfo,
+} from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const WORLD: WorldInfo = {
@@ -61,6 +68,7 @@ const TYPES = [
 let world: WorldInfo;
 let recent: RecentDocument[];
 let counts: TypeCount[];
+let graph: GraphData;
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -69,6 +77,7 @@ beforeEach(() => {
   world = WORLD;
   recent = [];
   counts = [];
+  graph = { nodes: [], edges: [] };
   mockIPC((command) => {
     switch (command) {
       case "current_world":
@@ -79,6 +88,8 @@ beforeEach(() => {
         return [{ id: "a.png" }, { id: "b.mp3" }, { id: "c.png" }];
       case "list_card_types":
         return TYPES;
+      case "graph_data":
+        return graph;
       case "recent_documents":
         return recent;
       case "count_cards_by_type":
@@ -145,7 +156,8 @@ test("welcomes to the open world and sums it up", async () => {
     "Personnage2",
     "Lieu2",
   ]);
-  expect(screen.getByText(/Il arrive avec M5/)).toBeTruthy();
+  // No link between cards yet: the graph says how to make some.
+  expect(await screen.findByText(/reliez-les par des mentions @/)).toBeTruthy();
 });
 
 test("with no card opened yet, invites to create the first one", async () => {
@@ -209,4 +221,23 @@ test("types opens the card types screen; theme opens the theme settings", async 
   fireEvent.click(screen.getByRole("button", { name: "Types" }));
   expect(useUiStore.getState().cardTypesOpen).toBe(true);
   expect(await screen.findByRole("dialog", { name: "Types de cartes" })).toBeTruthy();
+});
+
+test("shows the world's graph once cards are linked, with its search and filters", async () => {
+  graph = {
+    nodes: [
+      { id: "arya", title: "Arya", typeId: "character", imageAssetId: null, aliases: [] },
+      { id: "winterfell", title: "Winterfell", typeId: "place", imageAssetId: null, aliases: [] },
+    ],
+    edges: [{ source: "arya", target: "winterfell", weight: 1 }],
+  };
+  await renderHome();
+  expect(
+    await screen.findByRole("img", { name: "Graph du monde : 2 cartes, 1 liens" }),
+  ).toBeTruthy();
+  const toolbar = screen.getByRole("toolbar", { name: "Outils du graph" });
+  expect(within(toolbar).getByRole("button", { name: "Rechercher dans le graph" })).toBeTruthy();
+  expect(within(toolbar).getByRole("button", { name: "Filtrer par type" })).toBeTruthy();
+  // Home keeps nothing: no settings, no « Save as ».
+  expect(within(toolbar).queryByRole("button", { name: "Réglages du graph" })).toBeNull();
 });
