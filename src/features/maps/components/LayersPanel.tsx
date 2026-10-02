@@ -9,7 +9,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { type KeyboardEvent, useState } from "react";
+import { type KeyboardEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +60,9 @@ export function LayersPanel({
 }: LayersPanelProps) {
   const { t } = useTranslation();
   const [renaming, setRenaming] = useState<string | null>(null);
+  const panel = useRef<HTMLElement>(null);
+  // Set when « Rename » closed a layer's menu: the field takes the focus then.
+  const renamedFromMenu = useRef(false);
   const [deleting, setDeleting] = useState<MapLayer | null>(null);
   // Top layer first, as it is drawn over the others.
   const listed = [...content.layers].reverse();
@@ -99,7 +102,7 @@ export function LayersPanel({
   };
 
   return (
-    <section aria-labelledby="map-layers-title" className="flex flex-col gap-2">
+    <section ref={panel} aria-labelledby="map-layers-title" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <h2 id="map-layers-title" className="flex items-center gap-1.5 text-sm font-medium">
           <Layers aria-hidden className="size-4" />
@@ -174,8 +177,27 @@ export function LayersPanel({
                     <MoreHorizontal />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => setRenaming(layer.id)}>
+                <DropdownMenuContent
+                  align="end"
+                  // The menu would give the focus back to its button, which
+                  // would end the rename at once (the field blurs).
+                  onCloseAutoFocus={(event) => {
+                    if (!renamedFromMenu.current) return;
+                    renamedFromMenu.current = false;
+                    event.preventDefault();
+                    panel.current
+                      ?.querySelector<HTMLInputElement>(
+                        `input[aria-label="${t("maps.layers.nameLabel")}"]`,
+                      )
+                      ?.focus();
+                  }}
+                >
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      renamedFromMenu.current = true;
+                      setRenaming(layer.id);
+                    }}
+                  >
                     <Pencil />
                     {t("maps.layers.rename")}
                   </DropdownMenuItem>
