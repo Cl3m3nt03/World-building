@@ -634,5 +634,14 @@
   "worldSettings.preferences.autoMentionLinks": "Automatic mention links",
   "worldSettings.preferences.autoMentionLinksHelp": "Turn a card name or alias into a mention as soon as it is typed. Backspace right after keeps the text. Turn off to link cards yourself, with @.",
   "worldSettings.preferences.animateNewLinks": "Animate new links",
-  "worldSettings.preferences.animateNewLinksHelp": "Show a mention created automatically with a short animation. Never when Windows asks to reduce animations."
+  "worldSettings.preferences.animateNewLinksHelp": "Show a mention created automatically with a short animation. Never when Windows asks to reduce animations.",
+  "maps.title": "Map name",
+  "maps.recenter": "Recenter",
+  "maps.noBackground": "The background image of this map is no longer in the media library.",
+  "maps.viewLabel": "Map {{name}}",
+  "maps.navigationHint": "Wheel or touchpad to zoom, drag to move. With the keyboard, on the map: arrows to move, + and - to zoom.",
+  "maps.chooseBackground": "Background image of the new map",
+  "maps.untitled": "Untitled map",
+  "maps.defaultLayer": "Layer 1",
+  "sidebar.newMap": "New map"
 }

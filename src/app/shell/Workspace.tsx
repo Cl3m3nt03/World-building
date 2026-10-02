@@ -7,7 +7,7 @@ import {
   Share2,
   SquareUser,
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PanelImperativeHandle } from "react-resizable-panels";
 import { SIDEBAR_WIDTH } from "@/app/stores/ui";
@@ -16,12 +16,12 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CreateCardMenu } from "@/features/cards";
+import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import type { TranslationKey } from "@/i18n";
 
 /** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
 const SOON_TILES: { icon: LucideIcon; label: TranslationKey; milestone: string }[] = [
-  { icon: MapIcon, label: "workspace.create.map", milestone: "M4" },
   { icon: LayoutGrid, label: "workspace.create.canvas", milestone: "M7" },
   { icon: Share2, label: "workspace.create.graph", milestone: "M5" },
 ];
@@ -36,6 +36,7 @@ const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-
  */
 export function StartWith() {
   const { t } = useTranslation();
+  const [creatingMap, setCreatingMap] = useState(false);
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
@@ -51,6 +52,18 @@ export function StartWith() {
             </Button>
           </CreateCardMenu>
           <span className="text-xs text-muted-foreground">{t("workspace.create.card")}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <Button
+            variant="secondary"
+            aria-label={t("workspace.create.map")}
+            className={TILE_CLASS}
+            onClick={() => setCreatingMap(true)}
+          >
+            <MapIcon />
+          </Button>
+          <span className="text-xs text-muted-foreground">{t("workspace.create.map")}</span>
+          <CreateMapDialog open={creatingMap} onOpenChange={setCreatingMap} />
         </div>
         {SOON_TILES.map(({ icon: Icon, label, milestone }) => (
           <div key={label} className="flex flex-col items-center gap-1.5">

@@ -21,6 +21,7 @@ import {
   FolderPlus,
   Globe,
   type LucideIcon,
+  Map as MapIcon,
   Pencil,
   Pin,
   PinOff,
@@ -50,6 +51,7 @@ import {
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
 import type { CardType, DocumentTree } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import {
   useCreateFolder,
   useDuplicateCard,
@@ -105,6 +107,8 @@ type Props = {
   initialExpanded: string[];
   /** Called when folders or parents open or close (to remember them). */
   onExpandedChange: (expanded: string[]) => void;
+  /** "New map" from the right click (M4). */
+  onNewMap: () => void;
   ref?: Ref<DocumentTreeHandle>;
 };
 
@@ -132,6 +136,7 @@ export function DocumentTreeView({
   onViewChange,
   initialExpanded,
   onExpandedChange,
+  onNewMap,
   ref,
 }: Props) {
   const { t } = useTranslation();
@@ -281,10 +286,7 @@ export function DocumentTreeView({
     setActiveKey(row.node.key);
     if (row.node.kind === "document") {
       revealed.current = row.node.key;
-      void navigate({
-        to: "/world/$worldId/world/card/$cardId",
-        params: { worldId, cardId: row.node.document.id },
-      });
+      void navigate(documentRoute(worldId, row.node.document.kind, row.node.document.id));
     } else if (row.node.children.length > 0) {
       setOpen(row.node.key, !expanded.has(row.node.key));
     }
@@ -503,10 +505,16 @@ export function DocumentTreeView({
     />
   );
   const rootMenu = (
-    <ContextMenuItem onSelect={() => newFolder(null)}>
-      <FolderPlus />
-      {t("sidebar.folder.new")}
-    </ContextMenuItem>
+    <>
+      <ContextMenuItem onSelect={() => newFolder(null)}>
+        <FolderPlus />
+        {t("sidebar.folder.new")}
+      </ContextMenuItem>
+      <ContextMenuItem onSelect={onNewMap}>
+        <MapIcon />
+        {t("sidebar.newMap")}
+      </ContextMenuItem>
+    </>
   );
 
   // --- Drag and drop -----------------------------------------------------------
@@ -851,6 +859,7 @@ function nodeVisual(
       node.folder.icon === "folder" && isOpen ? FolderOpen : folderIcon(node.folder.icon);
     return { Icon, label: node.folder.name };
   }
+  if (node.document.kind === "map") return { Icon: MapIcon, label: node.document.title };
   const type = node.document.typeId ? typesById.get(node.document.typeId) : undefined;
   return {
     Icon: typeIcon(type?.icon ?? "shapes"),

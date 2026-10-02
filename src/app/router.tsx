@@ -14,6 +14,7 @@ import { ComingSoon, StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
 import { CardPage } from "@/features/cards";
 import { HomeScreen } from "@/features/home";
+import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
 import { sidebarStateQuery } from "@/features/sidebar";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
@@ -26,6 +27,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *   /world/$worldId/home       Home tab
  *   /world/$worldId/world      World tab (sidebar + workspace)
  *     /card/$cardId            a card, in the workspace
+ *     /map/$mapId              a map, in the workspace (M4)
  *   /world/$worldId/wiki       Wiki tab
  *   /world/$worldId/quill      Quill tab
  *   /world/$worldId/media      Media library (reached from Home)
@@ -99,6 +101,12 @@ const cardRoute = createRoute({
   component: CardPage,
 });
 
+const mapRoute = createRoute({
+  getParentRoute: () => worldTabRoute,
+  path: "map/$mapId",
+  component: MapPage,
+});
+
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
@@ -126,7 +134,7 @@ export const routeTree = rootRoute.addChildren([
   worldRoute.addChildren([
     worldIndexRoute,
     homeRoute,
-    worldTabRoute.addChildren([worldTabIndexRoute, cardRoute]),
+    worldTabRoute.addChildren([worldTabIndexRoute, cardRoute, mapRoute]),
     wikiRoute,
     quillRoute,
     mediaRoute,

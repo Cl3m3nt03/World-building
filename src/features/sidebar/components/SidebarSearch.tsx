@@ -6,6 +6,7 @@ import { useUiStore } from "@/app/stores/ui";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import type { SearchHit, TextPart } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import { cn } from "@/lib/utils";
 import { useSearch } from "../hooks/useSearch";
 
@@ -46,10 +47,7 @@ export function SidebarSearch({ children, actions }: Props) {
 
   const open = (hit: SearchHit | undefined) => {
     if (!hit) return;
-    void navigate({
-      to: "/world/$worldId/world/card/$cardId",
-      params: { worldId, cardId: hit.id },
-    });
+    void navigate(documentRoute(worldId, hit.kind, hit.id));
   };
   const optionId = (index: number) => `${listId}-${index}`;
   const names = hits.filter((hit) => hit.match.kind !== "content");
