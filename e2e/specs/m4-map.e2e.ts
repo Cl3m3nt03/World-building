@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { createCard, createWorld, currentWorldButton, openCard, openTab } from "../helpers";
 
 /**
@@ -37,6 +38,58 @@ function image(name: string): string {
   }
   return file;
 }
+
+/** A grey PNG of `width`×`height` px (not square: the ratio of the background changes). */
+function wideImage(name: string, width: number, height: number): string {
+  const file = path.join(builderzHome(), "fixtures-m4", name);
+  if (existsSync(file)) return file;
+  mkdirSync(path.dirname(file), { recursive: true });
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc32 = (buffer: Buffer) => {
+    let crc = 0xffffffff;
+    for (const byte of buffer) crc = (crcTable[(crc ^ byte) & 0xff] as number) ^ (crc >>> 8);
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body));
+    return Buffer.concat([length, body, crc]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8;
+  header[9] = 2;
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width * 3, 128)]);
+  writeFileSync(
+    file,
+    Buffer.concat([
+      Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+      chunk("IHDR", header),
+      chunk("IDAT", zlib.deflateSync(Buffer.concat(Array.from({ length: height }, () => row)))),
+      chunk("IEND", Buffer.alloc(0)),
+    ]),
+  );
+  return file;
+}
+
+/** Position of the pin `name` on the background image, as a share of its width and height. */
+const relativePosition = (name: string) =>
+  browser.execute((label) => {
+    const image = document.querySelector(".leaflet-image-layer")?.getBoundingClientRect();
+    const pin = document
+      .querySelector(`[aria-label="${label}"].bz-map-pin`)
+      ?.getBoundingClientRect();
+    if (!image || !pin) return null;
+    return { x: (pin.x - image.x) / image.width, y: (pin.y - image.y) / image.height };
+  }, name);
 
 /** Replaces the value of a React text field (select all, then type). */
 async function typeOver(selector: string, value: string) {
@@ -191,10 +244,15 @@ describe("M4: the map", () => {
     await pinNamed("Pin Minas Tirith").waitForExist();
   });
 
-  it("keeps everything on a new background", async () => {
+  it("keeps everything on a new background, even of another ratio", async () => {
+    await $("button=Recentrer").click();
+    await browser.pause(800);
+    const before = await relativePosition("Pin Minas Tirith");
+    expect(before).not.toBeNull();
     await $("button=Fond").click();
     await $('[role="dialog"]').waitForDisplayed();
-    await pickNext(image("arda-2.png"));
+    // 4×1 against the 2×2 of the first background (#193).
+    await pickNext(wideImage("arda-wide.png", 400, 100));
     await $("button=Importer une image").click();
     await $('[role="dialog"]').waitForExist({ reverse: true });
     await browser.waitUntil(async () => (await drawn()).length === 4, {
@@ -203,6 +261,11 @@ describe("M4: the map", () => {
     expect((await drawn()).sort()).toEqual(
       ["Pin Minas Tirith", "Pin de la carte Gondor", "Texte Royaumes", "Zone Mordor"].sort(),
     );
+    await browser.pause(500);
+    const after = await relativePosition("Pin Minas Tirith");
+    expect(after).not.toBeNull();
+    expect(Math.abs((after?.x ?? 9) - (before?.x ?? 0))).toBeLessThan(0.02);
+    expect(Math.abs((after?.y ?? 9) - (before?.y ?? 0))).toBeLessThan(0.02);
   });
 
   it("keeps the map after reopening the world, and the card shows it in its backlinks", async () => {

@@ -366,7 +366,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
         ),
       );
     }
-  }, [items]);
+  }, [items, width, height]);
 
   // The names of the cards can arrive after the pins are drawn: the labels of
   // the markers follow every render.
@@ -379,8 +379,8 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
 
   // The zones, kept in step.
   useEffect(() => {
-    zoneLayers.current?.sync(zones, selectedZoneId, zoneLabel);
-  }, [zones, selectedZoneId, zoneLabel]);
+    zoneLayers.current?.sync(zones, selectedZoneId, zoneLabel, `${width}x${height}`);
+  }, [zones, selectedZoneId, zoneLabel, width, height]);
 
   // The zone being traced, with its line to the pointer.
   // biome-ignore lint/correctness/useExhaustiveDependencies: toLatLng reads the size through a ref

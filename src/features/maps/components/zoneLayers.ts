@@ -93,7 +93,13 @@ export class ZoneLayers {
     return points.map(([x, y]) => this.toLatLng(x, y));
   }
 
-  sync(zones: MapZone[], selectedId: string | null, labelOf: (zone: MapZone) => string) {
+  /** Size of the image the shapes were last placed for (they move when it changes). */
+  private placedFor = "";
+
+  /** `size` identifies the image size: the shapes are placed again when it changes. */
+  sync(zones: MapZone[], selectedId: string | null, labelOf: (zone: MapZone) => string, size = "") {
+    const resized = size !== this.placedFor;
+    this.placedFor = size;
     const ids = new Set(zones.map((zone) => zone.id));
     for (const [id, drawn] of this.drawn) {
       if (!ids.has(id)) {
@@ -111,7 +117,7 @@ export class ZoneLayers {
         polygon.on("click", () => this.handlers().onZoneClick?.(zone.id));
         drawn = { zone, polygon, label: null };
         this.drawn.set(zone.id, drawn);
-      } else if (drawn.zone.points !== zone.points) {
+      } else if (resized || drawn.zone.points !== zone.points) {
         drawn.polygon.setLatLngs(this.latlngs(zone.points as Point[]));
       }
       drawn.zone = zone;
