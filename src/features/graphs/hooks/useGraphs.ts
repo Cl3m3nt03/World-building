@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { documentKeys } from "@/features/cards/hooks/keys";
-import { commands, type GraphConfig } from "@/lib/bindings";
+import { commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 
 /** Query keys of the graphs (see the conventions in src/lib/query.ts). */
@@ -61,14 +61,22 @@ export function useRenameGraph(id: string) {
   });
 }
 
-/** Saves the graph's configuration (filters, settings, pinned nodes, framing). */
-export function useSaveGraph(id: string) {
+/**
+ * « Save as… »: a new graph named `title` with the configuration of the
+ * graph `id` as saved, which then opens.
+ */
+export function useSaveGraphAs(id: string, worldId: string) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   return useMutation({
-    mutationFn: (config: GraphConfig) => unwrap(commands.saveGraph(id, config)),
-    onSuccess: (_saved, config) =>
-      queryClient.setQueryData(graphKeys.detail(id), (old: { config: GraphConfig } | undefined) =>
-        old ? { ...old, config } : old,
-      ),
+    mutationFn: (title: string) => unwrap(commands.duplicateGraph(id, title)),
+    onSuccess: async (graph) => {
+      queryClient.setQueryData(graphKeys.detail(graph.id), graph);
+      await queryClient.invalidateQueries({ queryKey: documentKeys.all() });
+      await navigate({
+        to: "/world/$worldId/world/graph/$graphId",
+        params: { worldId, graphId: graph.id },
+      });
+    },
   });
 }

@@ -68,6 +68,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.7)** : clic droit sur un nœud : « Épingler » / « Désépingler » et « Ouvrir la carte » ; au clavier, le bouton « Épingler … » sous la liste agit sur la carte sélectionnée. Un nœud épinglé porte un point de la couleur principale (et « épinglée » dans la liste) ; il ne bouge plus, quels que soient les réglages ou les déplacements de la vue. Le glisser le déplace : il reste épinglé là où on le lâche.
 
+**Réalisé en M5 (5.8)** : la configuration du graph (filtres, réglages, nœuds épinglés avec leur position, cadrage) s'enregistre seule, peu après chaque changement, en quittant le graph et avant la fermeture du monde ou de la fenêtre ; rouvert, même après relance, le graph revient avec la même configuration et le même cadrage (les nœuds libres se replacent d'eux-mêmes). « Recentrer » revient au cadrage qui montre tout. « Enregistrer sous… » (barre du bas) crée un nouveau graph nommé avec la configuration courante, qui s'ouvre et apparaît dans la sidebar (*adaptation locale* : dans vvd, la vue n'existe que si on l'enregistre ; ici rien ne se perd).
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)
