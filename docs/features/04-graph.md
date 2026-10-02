@@ -58,6 +58,8 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 
 **Réalisé en M5 (5.2)** : « Nouveau graph » (menu « Nouveau document » en bas de la sidebar, clic droit dans l'arbre, tuile « Graph » de l'espace vide) crée « Graph sans nom » et l'ouvre : toutes les cartes et leurs liens, sans rien à dessiner. Il apparaît dans l'arbre (icône graph), se filtre (« Graphs »), se duplique et va à la corbeille comme les autres documents. Le dessin est un canvas (pas d'élément par nœud) : chaque nœud montre l'image de la carte, ou la couleur de son type et son initiale, avec son nom dessous ; une arête est plus épaisse avec le nombre de liens. La simulation `d3-force` tourne dans un Web Worker. La vue cadre tout le graph tant qu'on ne l'a pas déplacée ; molette pour zoomer autour du pointeur, glisser pour se déplacer, « Recentrer » ; au clavier, le graph prend le focus (Tab), les flèches le déplacent et `+` / `-` zooment. Le nom se modifie en haut à gauche. Sans carte, le graph dit comment il se construit.
 
+**Réalisé en M5 (5.3)** : un clic sur un nœud sélectionne la carte : elle est entourée, ses voisins et leurs liens restent nets et le reste s'estompe ; un clic dans le vide ou `Échap` désélectionne. Un double-clic (ou `Entrée` sur le graph) ouvre la carte. Glisser un nœud le déplace et la simulation réagit. À côté du dessin, la liste des cartes affichées (« 6 cartes ») sert au clavier et aux lecteurs d'écran : flèches, `Début` / `Fin` pour sélectionner (la vue se centre sur la carte), `Entrée` pour l'ouvrir ; dessous, « Cartes liées à … » donne ses voisins, cliquables.
+
 ## Modèle de données (indicatif)
 
 - `graphs` : document_id, filters (JSON), settings (JSON), viewport (JSON)
