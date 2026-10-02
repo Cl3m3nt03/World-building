@@ -67,12 +67,23 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
   const autoFit = useRef(true);
   const frame = useRef<number | null>(null);
   const images = useRef(new Map<string, HTMLImageElement | "loading" | "failed">());
+  // Where each node was last drawn: a filter that changes the nodes keeps
+  // the others in place instead of laying everything out again.
+  const lastPositions = useRef(new Map<string, [number, number]>());
 
   // The collision radius follows the size setting when the layout starts
   // again; a size change alone does not restart it.
   // biome-ignore lint/correctness/useExhaustiveDependencies: see above
   const simNodes = useMemo<SimNodeInput[]>(
-    () => nodes.map((node) => ({ id: node.id, radius: NODE_RADIUS * settings.nodeSize })),
+    () =>
+      nodes.map((node) => {
+        const last = lastPositions.current.get(node.id);
+        return {
+          id: node.id,
+          radius: NODE_RADIUS * settings.nodeSize,
+          ...(last ? { x: last[0], y: last[1] } : {}),
+        };
+      }),
     [nodes],
   );
   const simLinks = useMemo<SimLinkInput[]>(
@@ -117,6 +128,14 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCa
       element.height = Math.round(height * ratio);
     }
     const positions = simulation.positions.current;
+    if (positions.length === nodes.length * 2) {
+      nodes.forEach((node, index) => {
+        lastPositions.current.set(node.id, [
+          positions[index * 2] as number,
+          positions[index * 2 + 1] as number,
+        ]);
+      });
+    }
     if (autoFit.current) frameAll(width, height);
     const { tx, ty, k } = transform.current;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);

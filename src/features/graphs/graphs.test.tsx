@@ -6,8 +6,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { DocumentTree, Graph, GraphData, WorldInfo } from "@/lib/bindings";
+import type { CardType, DocumentTree, Graph, GraphData, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
+import { visibleGraph } from "./filters";
 import { searchNodes } from "./search";
 import { DEFAULT_SETTINGS, resolveSettings } from "./settings";
 import { createSimulationHost, type SimEvent } from "./simulation";
@@ -26,6 +27,26 @@ const WORLD = {
   createdAt: "2026-10-02T10:00:00Z",
   lastOpenedAt: "2026-10-02T10:00:00Z",
 } satisfies WorldInfo;
+
+function cardType(id: string, name: string, parentId: string | null = null): CardType {
+  return {
+    id,
+    parentId,
+    name,
+    icon: "user",
+    color: "blue",
+    guidedTemplate: [],
+    orientation: "portrait",
+    canvasFormat: "compact",
+    sortOrder: 0,
+  };
+}
+
+const TYPES = [
+  cardType("character", "Personnage"),
+  cardType("place", "Lieu"),
+  cardType("city", "Ville", "place"),
+];
 
 const DATA: GraphData = {
   nodes: [
@@ -87,6 +108,8 @@ beforeEach(() => {
         return stored;
       case "graph_data":
         return data;
+      case "list_card_types":
+        return TYPES;
       default:
         return null;
     }
@@ -263,4 +286,70 @@ test("the magnifying glass opens a field; the count is announced; Escape closes 
   expect(document.activeElement).toBe(
     within(toolbar).getByRole("button", { name: "Rechercher dans le graph" }),
   );
+});
+
+test("filters keep the cards of the chosen types (subtypes included), their links, and hide the isolated", () => {
+  const typed: GraphData = {
+    nodes: [
+      { id: "aragorn", title: "Aragorn", typeId: "character", imageAssetId: null, aliases: [] },
+      { id: "arwen", title: "Arwen", typeId: "character", imageAssetId: null, aliases: [] },
+      { id: "minas", title: "Minas Tirith", typeId: "city", imageAssetId: null, aliases: [] },
+      { id: "gondor", title: "Gondor", typeId: "place", imageAssetId: null, aliases: [] },
+      { id: "sauron", title: "Sauron", typeId: "character", imageAssetId: null, aliases: [] },
+    ],
+    edges: [
+      { source: "aragorn", target: "arwen", weight: 1 },
+      { source: "aragorn", target: "minas", weight: 1 },
+      { source: "gondor", target: "minas", weight: 1 },
+    ],
+  };
+  const ids = (shown: GraphData) => [
+    shown.nodes.map((node) => node.id),
+    shown.edges.map((edge) => `${edge.source}-${edge.target}`),
+  ];
+  expect(visibleGraph(typed, [], TYPES, false)).toBe(typed);
+  expect(ids(visibleGraph(typed, ["character"], TYPES, false))).toEqual([
+    ["aragorn", "arwen", "sauron"],
+    ["aragorn-arwen"],
+  ]);
+  // A type includes its subtypes.
+  expect(ids(visibleGraph(typed, ["place"], TYPES, false))).toEqual([
+    ["minas", "gondor"],
+    ["gondor-minas"],
+  ]);
+  expect(ids(visibleGraph(typed, ["character"], TYPES, true))).toEqual([
+    ["aragorn", "arwen"],
+    ["aragorn-arwen"],
+  ]);
+});
+
+test("the filters menu checks types; with no card left, it says so and can show everything again", async () => {
+  data = {
+    nodes: [
+      { id: "aragorn", title: "Aragorn", typeId: "character", imageAssetId: null, aliases: [] },
+    ],
+    edges: [],
+  };
+  stored = {
+    id: "g1",
+    title: "Royaume",
+    config: { filters: {}, settings: {}, pinned: [], viewport: null },
+  };
+  await renderAt("/world/demo/world/graph/g1");
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
+  const open = async () => {
+    const trigger = within(toolbar).getByRole("button", { name: /^Filtrer par type/ });
+    await act(async () => {
+      trigger.focus();
+      fireEvent.keyDown(trigger, { key: "Enter" });
+    });
+  };
+  await open();
+  fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Lieu" }));
+  expect(await screen.findByText("Aucune carte ne correspond aux filtres.")).toBeTruthy();
+  expect(
+    within(toolbar).getByRole("button", { name: "Filtrer par type (actif)", hidden: true }),
+  ).toBeTruthy();
+  fireEvent.click(screen.getByRole("menuitem", { name: "Tout afficher" }));
+  expect(await screen.findByRole("listbox", { name: "1 carte" })).toBeTruthy();
 });
