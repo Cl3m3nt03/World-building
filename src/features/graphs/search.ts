@@ -1,12 +1,7 @@
 import type { GraphNode } from "@/lib/bindings";
+import { fold } from "@/lib/text";
 
-/** `text` without accents nor case, to compare what is typed with names. */
-export function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
+export { fold };
 
 /**
  * The cards whose name or an alias contains `query` (accents and case

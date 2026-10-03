@@ -20,6 +20,7 @@ import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
 import { sidebarStateQuery } from "@/features/sidebar";
 import { TreePage } from "@/features/trees";
+import { WikiHome, WikiLayout } from "@/features/wiki";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -34,7 +35,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *     /graph/$graphId          a graph, in the workspace (M5)
  *     /tree/$treeId            a relation tree, in the workspace (M6)
  *     /canvas/$canvasId        a canvas, in the workspace (M7)
- *   /world/$worldId/wiki       Wiki tab
+ *   /world/$worldId/wiki       Wiki tab: its home page (M8)
  *   /world/$worldId/quill      Quill tab
  *   /world/$worldId/media      Media library (reached from Home)
  */
@@ -134,9 +135,14 @@ const canvasRoute = createRoute({
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
-  component: () => (
-    <ComingSoon title="shell.tabs.wiki" description="placeholder.wiki" milestone="M8" />
-  ),
+  component: WikiLayout,
+});
+
+/** The wiki's home page (M8). */
+const wikiHomeRoute = createRoute({
+  getParentRoute: () => wikiRoute,
+  path: "/",
+  component: WikiHome,
 });
 
 const quillRoute = createRoute({
@@ -166,7 +172,7 @@ export const routeTree = rootRoute.addChildren([
       treeRoute,
       canvasRoute,
     ]),
-    wikiRoute,
+    wikiRoute.addChildren([wikiHomeRoute]),
     quillRoute,
     mediaRoute,
   ]),
