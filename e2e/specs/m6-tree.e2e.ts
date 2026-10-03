@@ -140,6 +140,18 @@ describe("M6: the relation tree", () => {
         target instanceof Element
           ? `${target.tagName}[${target.getAttribute("aria-label") ?? target.className.toString().slice(0, 30)}]`
           : String(target);
+      for (const type of ["pointerdown", "pointerup", "click"]) {
+        document.addEventListener(
+          type,
+          (event) => {
+            const e = event as PointerEvent;
+            log.push(
+              `${type} ${name(event.target)} at ${Math.round(e.clientX)},${Math.round(e.clientY)}`,
+            );
+          },
+          true,
+        );
+      }
       for (const type of ["focusin", "focusout"]) {
         document.addEventListener(
           type,
