@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-write-wiki-export"
+description = "Enables the write_wiki_export command without any pre-configured scope."
+commands.allow = ["write_wiki_export"]
+
+[[permission]]
+identifier = "deny-write-wiki-export"
+description = "Denies the write_wiki_export command without any pre-configured scope."
+commands.deny = ["write_wiki_export"]

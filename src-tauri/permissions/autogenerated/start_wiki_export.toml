@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-start-wiki-export"
+description = "Enables the start_wiki_export command without any pre-configured scope."
+commands.allow = ["start_wiki_export"]
+
+[[permission]]
+identifier = "deny-start-wiki-export"
+description = "Denies the start_wiki_export command without any pre-configured scope."
+commands.deny = ["start_wiki_export"]

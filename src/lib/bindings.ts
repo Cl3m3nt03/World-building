@@ -153,6 +153,18 @@ export const commands = {
 	setWikiVisible: (id: string, visible: boolean) => typedError<null, AppError>(__TAURI_INVOKE("set_wiki_visible", { id, visible })),
 	/**  The wiki's pages: the cards and maps marked visible, by title. */
 	wikiPages: () => typedError<WikiPage[], AppError>(__TAURI_INVOKE("wiki_pages")),
+	/**
+	 *  Starts an export of the wiki: creates the site's folder, named after the
+	 *  wiki, in `parent` (a folder chosen by the user). Returns its path.
+	 */
+	startWikiExport: (parent: string, title: string) => typedError<string, AppError>(__TAURI_INVOKE("start_wiki_export", { parent, title })),
+	/**  Writes a batch of the site's text files (pages, styles, scripts). */
+	writeWikiExport: (files: SiteFile[]) => typedError<null, AppError>(__TAURI_INVOKE("write_wiki_export", { files })),
+	/**
+	 *  Copies a batch of the world's images into the site. Returns how many were
+	 *  copied (an image deleted meanwhile is skipped).
+	 */
+	copyWikiExportAssets: (ids: string[]) => typedError<number, AppError>(__TAURI_INVOKE("copy_wiki_export_assets", { ids })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -935,6 +947,12 @@ export type SidebarView = {
 	reversed?: boolean,
 	/**  Only the documents visible in the wiki (M8). */
 	wikiOnly?: boolean,
+};
+
+/**  A text file of the site: its path in the site's folder, and its content. */
+export type SiteFile = {
+	path: string,
+	content: string,
 };
 
 export type SortBy = "manual" | "name" | "created";

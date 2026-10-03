@@ -16,3 +16,4 @@ pub mod tree;
 pub mod trees;
 pub mod ui_state;
 pub mod wiki;
+pub mod wiki_export;
