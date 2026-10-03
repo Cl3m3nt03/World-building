@@ -358,3 +358,84 @@ async fn a_provided_type_is_never_the_inverse_of_a_type_of_the_world() {
     let parent = types.iter().find(|t| t.id == "rel-parent").unwrap();
     assert_eq!(parent.inverse_id.as_deref(), Some("rel-child"));
 }
+
+#[tokio::test]
+async fn a_tree_is_cited_in_by_the_cards_it_shows() {
+    use crate::domain::{card_types, cards, links};
+    let fx = Fixture::new().await;
+    let type_id = card_types::create(
+        fx.pool(),
+        card_types::NewCardType {
+            parent_id: None,
+            name: "Personnage".into(),
+            icon: "user".into(),
+            color: "blue".into(),
+        },
+    )
+    .await
+    .unwrap()
+    .id;
+    let aragorn = cards::create(fx.pool(), &type_id, "Aragorn")
+        .await
+        .unwrap()
+        .id;
+    let arwen = cards::create(fx.pool(), &type_id, "Arwen")
+        .await
+        .unwrap()
+        .id;
+    let tree = create(fx.pool(), "Maison d'Elendil", "Principale")
+        .await
+        .unwrap();
+    let first = tree.variants[0].id.clone();
+    let with = |prefix: &str, cards: &[&str]| VariantContent {
+        nodes: cards
+            .iter()
+            .enumerate()
+            .map(|(i, card)| TreeNode {
+                card_id: Some((*card).to_owned()),
+                label: String::new(),
+                ..node(&format!("{prefix}{i}"), "", i as f64 * 200.0)
+            })
+            .collect(),
+        edges: vec![],
+        annotations: vec![],
+    };
+    let cited_by_tree = |backlinks: Vec<links::Backlink>| {
+        backlinks.iter().any(|b| {
+            b.source_id == tree.id && b.via.iter().any(|v| v.kind == links::LinkKind::Tree)
+        })
+    };
+
+    save_variant(fx.pool(), &first, &with("a", &[&aragorn, &arwen]))
+        .await
+        .unwrap();
+    assert!(cited_by_tree(
+        links::backlinks(fx.pool(), &aragorn).await.unwrap()
+    ));
+    assert!(cited_by_tree(
+        links::backlinks(fx.pool(), &arwen).await.unwrap()
+    ));
+
+    // Arwen only on a second variant: still cited; that variant deleted: no more.
+    save_variant(fx.pool(), &first, &with("b", &[&aragorn]))
+        .await
+        .unwrap();
+    let tree = add_variant(fx.pool(), &first, "Autre").await.unwrap();
+    let second = tree.variants[1].id.clone();
+    save_variant(fx.pool(), &second, &with("c", &[&aragorn, &arwen]))
+        .await
+        .unwrap();
+    assert!(cited_by_tree(
+        links::backlinks(fx.pool(), &arwen).await.unwrap()
+    ));
+    delete_variant(fx.pool(), &second).await.unwrap();
+    assert!(!cited_by_tree(
+        links::backlinks(fx.pool(), &arwen).await.unwrap()
+    ));
+
+    // A tree in the trash cites nothing.
+    documents::trash(fx.pool(), &tree.id).await.unwrap();
+    assert!(!cited_by_tree(
+        links::backlinks(fx.pool(), &aragorn).await.unwrap()
+    ));
+}
