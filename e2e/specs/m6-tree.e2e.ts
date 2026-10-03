@@ -103,7 +103,19 @@ async function recenter() {
 async function name(label: string) {
   const search = await $('input[aria-label="Carte ou nom du nœud"]');
   await search.waitForDisplayed();
+  // Keys typed before the field has the focus would be lost (it opens while
+  // the view moves to the new node).
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        () => document.activeElement?.getAttribute("aria-label") === "Carte ou nom du nœud",
+      ),
+    { timeoutMsg: "the node search never got the focus" },
+  );
   await browser.keys(label);
+  await $(
+    `//*[@role="option"][normalize-space()="Utiliser le nom « ${label} »"]`,
+  ).waitForDisplayed();
   await $(`//*[@role="option"][normalize-space()="Utiliser le nom « ${label} »"]`).click();
   await node(label).waitForDisplayed();
 }
