@@ -21,6 +21,7 @@ import { treeKeys } from "./useTrees";
 export function invalidateWorldLinks(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
   void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "graph-data"] });
+  void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "known-relations"] });
 }
 
 /** Delay of inactivity before a change of a variant is saved. */

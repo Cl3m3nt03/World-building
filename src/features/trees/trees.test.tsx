@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import type {
   Card,
   DocumentTree,
+  KnownRelation,
   RelationTree,
   RelationType,
   VariantContent,
@@ -52,6 +53,7 @@ function relation(
 }
 
 let relationTypes: RelationType[];
+let known: KnownRelation[];
 let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: RelationTree | null;
@@ -79,6 +81,7 @@ beforeEach(() => {
   mockConvertFileSrc("windows");
   calls = [];
   stored = null;
+  known = [];
   relationTypes = [
     relation("rel-parent", "parent", "family"),
     relation("rel-child", "child", "family"),
@@ -183,6 +186,8 @@ beforeEach(() => {
       }
       case "list_relation_types":
         return relationTypes;
+      case "known_relations":
+        return known;
       case "create_relation_type": {
         const { input } = payload as { input: { name: string; icon: string } };
         const created = relation("rel-new", null, "custom", input.name);
@@ -246,6 +251,53 @@ test("the « Relation tree » tile of the empty workspace creates a tree too", a
   const router = await renderAt("/world/demo/world");
   fireEvent.click(await screen.findByRole("button", { name: "Arbre de relations" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/tree/t1"));
+});
+
+test("a blank tree offers to start from the known relations, placed by generation", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  known = [
+    { from: "arathorn", to: "gilraen", relationTypeId: "rel-partner" },
+    { from: "arathorn", to: "aragorn", relationTypeId: "rel-child" },
+    { from: "gilraen", to: "aragorn", relationTypeId: "rel-child" },
+  ];
+  await renderAt("/world/demo/world/tree/t1");
+  const offer = await screen.findByRole("region", { name: "Partir de ce que le monde sait ?" });
+  expect(offer.textContent).toContain("3 cartes sont déjà reliées par 3 relations");
+
+  fireEvent.click(screen.getByRole("button", { name: "Reprendre ces relations" }));
+
+  await waitFor(() =>
+    expect(
+      savedNodes()
+        .map((node) => node.cardId)
+        .sort(),
+    ).toEqual(["aragorn", "arathorn", "gilraen"]),
+  );
+  const edges = stored?.variants[0]?.content.edges ?? [];
+  expect(edges).toHaveLength(2);
+  expect(edges.some((edge) => edge.source.kind === "edge")).toBe(true);
+  expect(screen.queryByRole("region", { name: "Partir de ce que le monde sait ?" })).toBeNull();
+  // Everything is there: nothing more to add.
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "L'arbre montre déjà toutes les relations connues",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(true);
+});
+
+test("« Commencer vide » keeps the blank tree", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  known = [{ from: "arathorn", to: "aragorn", relationTypeId: "rel-child" }];
+  await renderAt("/world/demo/world/tree/t1");
+  fireEvent.click(await screen.findByRole("button", { name: "Commencer vide" }));
+  expect(screen.queryByRole("region", { name: "Partir de ce que le monde sait ?" })).toBeNull();
+  expect(savedNodes()).toHaveLength(1);
+  // Still offered from the bar.
+  expect(
+    screen.getByRole("button", { name: "Ajouter la relation connue qui manque (1)" }),
+  ).toBeTruthy();
 });
 
 test("a node shows its card's name, or its plain name", async () => {

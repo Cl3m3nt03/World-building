@@ -338,12 +338,7 @@ async fn the_relations_of_the_trees_are_edges_with_their_reasons() {
                 "n2",
                 Some("rel-spouse"),
             ),
-            tree_edge(
-                "e2",
-                EdgeSource::Edge("e1".into()),
-                "n3",
-                Some("rel-parent"),
-            ),
+            tree_edge("e2", EdgeSource::Edge("e1".into()), "n3", Some("rel-child")),
             // A plain name is no card: no edge.
             tree_edge("e3", EdgeSource::Node("n4".into()), "n3", None),
         ],
@@ -403,7 +398,7 @@ async fn the_relations_of_the_trees_are_edges_with_their_reasons() {
     }));
     assert!(father.reasons.iter().any(|r| matches!(r,
         EdgeReason::Relation { from, to, relation_type_id: Some(t), .. }
-            if *from == arathorn && *to == aragorn && t == "rel-parent")));
+            if *from == arathorn && *to == aragorn && t == "rel-child")));
     assert!(
         edge(&aragorn, &arwen).is_none(),
         "a trashed tree draws nothing"

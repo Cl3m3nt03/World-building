@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Layers, Redo2, Undo2 } from "lucide-react";
+import { Layers, Redo2, Undo2, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -10,8 +10,9 @@ import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import type { Card, CardType, RelationTree, RelationType } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
+import { addKnown, isBlank, knownCards } from "../fromKnown";
 import { useTreeEditor } from "../hooks/useTreeEditor";
-import { useRelationTypes, useRenameTree, useTree } from "../hooks/useTrees";
+import { useKnownRelations, useRelationTypes, useRenameTree, useTree } from "../hooks/useTrees";
 import { useVariants } from "../hooks/useVariants";
 import { RelationTypesDialog } from "./RelationTypesDialog";
 import { TreeCanvas, type TreeCanvasHandle } from "./TreeCanvas";
@@ -124,6 +125,40 @@ function TreeEditor({
       },
     );
   const cardsById = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
+
+  // What the world already knows (ADR 0007): a blank tree offers to start
+  // from it, any tree can take what it lacks.
+  const known = useKnownRelations();
+  const [startBlank, setStartBlank] = useState<ReadonlySet<string>>(new Set());
+  const withKnown = useMemo(
+    () =>
+      content && known.data ? addKnown(content, known.data, relationTypes, () => "preview") : null,
+    [content, known.data, relationTypes],
+  );
+  const toAdd =
+    content && withKnown && withKnown !== content
+      ? {
+          cards: withKnown.nodes.filter(
+            (node) => node.cardId && !content.nodes.some((n) => n.cardId === node.cardId),
+          ).length,
+          relations: withKnown.edges.length - content.edges.length,
+        }
+      : null;
+  const takeKnown = () => {
+    const relations = known.data;
+    if (!relations) return;
+    editor.update(variantId, (previous) =>
+      addKnown(previous, relations, relationTypes, () => crypto.randomUUID()),
+    );
+    // Once drawn, the whole tree in sight.
+    window.setTimeout(() => view.current?.recenter(), 50);
+  };
+  const offerKnown =
+    content !== undefined &&
+    isBlank(content) &&
+    toAdd !== null &&
+    !startBlank.has(variantId) &&
+    (known.data?.length ?? 0) > 0;
   const typesById = useMemo(() => new Map(types.map((type) => [type.id, type])), [types]);
 
   return (
@@ -176,6 +211,25 @@ function TreeEditor({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={
+                    toAdd
+                      ? t("trees.known.addButton", { count: toAdd.relations })
+                      : t("trees.known.nothing")
+                  }
+                  title={
+                    toAdd
+                      ? t("trees.known.addButton", { count: toAdd.relations })
+                      : t("trees.known.nothing")
+                  }
+                  disabled={!toAdd}
+                  onClick={takeKnown}
+                >
+                  <UsersRound />
+                  <span className="max-xl:sr-only">{t("trees.known.short")}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   aria-label={t("trees.variants.addButton")}
                   title={t("trees.variants.addButton")}
                   disabled={variants.add.isPending}
@@ -218,6 +272,33 @@ function TreeEditor({
             onChange={(change, group) => editor.update(variantId, change, group ?? null)}
             onOpenCard={(cardId) => void navigate(documentRoute(worldId, "card", cardId))}
           />
+        )}
+        {offerKnown && toAdd && (
+          <section
+            aria-label={t("trees.known.title")}
+            className="glass absolute top-4 left-1/2 z-10 flex w-[min(28rem,calc(100%-2rem))] -translate-x-1/2 flex-col gap-3 rounded-lg border border-border p-4 shadow-md"
+          >
+            <h2 className="font-heading text-sm font-bold">{t("trees.known.title")}</h2>
+            <p className="text-sm text-muted-foreground">
+              {t("trees.known.offer", {
+                cards: knownCards(known.data ?? []).length,
+                count: known.data?.length ?? 0,
+              })}
+            </p>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStartBlank((before) => new Set(before).add(variantId))}
+              >
+                {t("trees.known.blank")}
+              </Button>
+              <Button size="sm" onClick={takeKnown}>
+                <UsersRound />
+                {t("trees.known.take")}
+              </Button>
+            </div>
+          </section>
         )}
       </div>
       <p className="text-xs text-muted-foreground">{t("trees.navigationHint")}</p>

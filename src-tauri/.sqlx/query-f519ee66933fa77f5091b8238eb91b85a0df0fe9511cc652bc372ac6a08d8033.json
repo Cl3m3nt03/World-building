@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.id AS \"id!\" FROM cards c JOIN documents d ON d.id = c.document_id\n           WHERE d.trashed_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f519ee66933fa77f5091b8238eb91b85a0df0fe9511cc652bc372ac6a08d8033"
+}

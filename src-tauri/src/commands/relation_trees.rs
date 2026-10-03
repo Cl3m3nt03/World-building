@@ -146,3 +146,13 @@ pub async fn relation_type_uses(state: State<'_, AppState>, id: String) -> AppRe
 pub async fn delete_relation_type(state: State<'_, AppState>, id: String) -> AppResult<()> {
     trees::delete_relation_type(&pool(&state, "delete_relation_type").await?, &id).await
 }
+
+/// The relations the world already knows between its cards (ADR 0007): a
+/// tree can start from them.
+#[tauri::command]
+#[specta::specta]
+pub async fn known_relations(
+    state: State<'_, AppState>,
+) -> AppResult<Vec<crate::domain::relations::KnownRelation>> {
+    crate::domain::relations::known(&pool(&state, "known_relations").await?).await
+}
