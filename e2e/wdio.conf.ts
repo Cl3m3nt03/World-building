@@ -12,6 +12,7 @@ import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import {
   appendFileSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -113,10 +114,28 @@ export const config: WebdriverIO.Config = {
     tauriDriver?.kill();
   },
 
-  afterTest(test, _context, { passed, error }) {
+  async afterTest(test, _context, { passed, error }) {
     if (passed) return;
     const message = `${test.parent} › ${test.title}: ${error?.message ?? "failed"}`;
     appendFileSync(failures, `${message.replace(/\r?\n/g, " ")}\n`);
+    // What the window showed, next to the app's logs (uploaded by CI on failure).
+    const logs = path.join(home, "logs");
+    const name = `${test.parent} ${test.title}`.replace(/[^\p{L}\p{N}]+/gu, "-").slice(0, 80);
+    try {
+      mkdirSync(logs, { recursive: true });
+      await browser.saveScreenshot(path.join(logs, `e2e-${name}.png`));
+      const state = await browser.execute(() => ({
+        size: `${innerWidth}x${innerHeight}`,
+        windowFocused: document.hasFocus(),
+        // Kept by the specs that record focus moves (window.__e2eFocusLog).
+        focusLog: (window as unknown as { __e2eFocusLog?: string[] }).__e2eFocusLog?.slice(-40),
+        focus: `${document.activeElement?.tagName} ${document.activeElement?.getAttribute("aria-label") ?? ""}`,
+        text: document.body.innerText.slice(0, 4000),
+      }));
+      writeFileSync(path.join(logs, `e2e-${name}.json`), JSON.stringify(state, null, 2));
+    } catch {
+      // A failed session cannot be pictured; the message above remains.
+    }
   },
 
   onComplete() {
