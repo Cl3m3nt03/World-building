@@ -453,3 +453,21 @@ div.leaflet-container {
 .excalidraw-hyperlinkContainer:has(input[value^="https://builderz.invalid/"]) {
   display: none;
 }
+
+/* A note's empty title and text say what goes there, faintly. */
+.bz-canvas-note-placeholder,
+.bz-canvas-note-field::placeholder {
+  color: currentColor;
+  opacity: 0.45;
+}
+
+/* A note's fields are its paper: none of Excalidraw's own field style
+   (frame, background, padding, single line). */
+.bz-canvas .excalidraw .bz-canvas-note-field {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre-wrap;
+}
