@@ -101,6 +101,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::relation_trees::delete_tree_variant,
         commands::relation_trees::duplicate_tree,
         commands::relation_trees::list_relation_types,
+        commands::relation_trees::known_relations,
         commands::relation_trees::create_relation_type,
         commands::relation_trees::update_relation_type,
         commands::relation_trees::relation_type_uses,

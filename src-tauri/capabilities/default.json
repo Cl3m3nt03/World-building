@@ -46,6 +46,7 @@
     "allow-delete-tree-variant",
     "allow-duplicate-tree",
     "allow-list-relation-types",
+    "allow-known-relations",
     "allow-create-relation-type",
     "allow-update-relation-type",
     "allow-relation-type-uses",

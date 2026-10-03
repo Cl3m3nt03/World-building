@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT l.source_id AS \"holder_id!\", l.target_id AS \"value_id!\",\n                  p.relation_type_id AS \"relation_type_id!\"\n           FROM links l\n           JOIN property_definitions p ON p.id = l.detail\n           WHERE l.kind = 'property' AND p.relation_type_id IS NOT NULL\n           ORDER BY l.source_id, p.sort_order, l.target_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "holder_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "name": "value_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "target_id"
+          }
+        }
+      },
+      {
+        "name": "relation_type_id!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "property_definitions",
+            "name": "relation_type_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "605694be26b998ac22122bdbe2cb884273daa9d910b40336c03da7c1780eb252"
+}

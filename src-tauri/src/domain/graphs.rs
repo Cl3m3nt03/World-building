@@ -159,8 +159,9 @@ pub enum EdgeReason {
         label: String,
         relation_type_id: Option<String>,
     },
-    /// A relation drawn in a tree: `from` is `relation_type_id` of `to`
-    /// (« Gilraen : parent de Aragorn »); `None`: a link without a type.
+    /// A relation drawn in a tree, as the tree words it: `to` is
+    /// `relation_type_id` of `from` (« Arwen : épouse de Aragorn »);
+    /// `None`: a link without a type.
     #[serde(rename_all = "camelCase")]
     Relation {
         from: String,
@@ -372,10 +373,11 @@ pub async fn duplicate(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Gr
 }
 
 /// The relations drawn between two cards in the live trees (ADR 0007):
-/// `(from, to, relation type, tree id, tree title)`, once per direction and
-/// type (the first tree by title wins). A child hanging from the link of a
-/// couple (a junction) is related to both of them.
-fn tree_relations(
+/// `(from, to, relation type, tree id, tree title)`, `to` being that
+/// relation of `from`; once per direction and type (the first tree by title
+/// wins). A child hanging from the link of a couple (a junction) is related
+/// to both of them.
+pub(crate) fn tree_relations(
     nodes: &[queries::TreeNodeRow],
     edges: &[queries::TreeEdgeRow],
 ) -> Vec<(String, String, Option<String>, String, String)> {
@@ -437,6 +439,15 @@ fn tree_relations(
 
 /// The live cards and their links, one edge per pair of cards (whatever the
 /// direction) with its reasons, and their count as its weight.
+/// The relations of the live trees between live cards (see `tree_relations`).
+pub(crate) async fn live_tree_relations(
+    pool: &SqlitePool,
+) -> AppResult<Vec<(String, String, Option<String>, String, String)>> {
+    let tree_nodes = queries::tree_nodes(pool).await?;
+    let tree_edges = queries::tree_edges(pool).await?;
+    Ok(tree_relations(&tree_nodes, &tree_edges))
+}
+
 pub async fn data(pool: &SqlitePool) -> AppResult<GraphData> {
     let nodes: Vec<GraphNode> = queries::nodes(pool)
         .await?
@@ -480,11 +491,7 @@ pub async fn data(pool: &SqlitePool) -> AppResult<GraphData> {
             reasons.push(reason);
         }
     }
-    let tree_nodes = queries::tree_nodes(pool).await?;
-    let tree_edges = queries::tree_edges(pool).await?;
-    for (from, to, relation_type_id, tree_id, tree_title) in
-        tree_relations(&tree_nodes, &tree_edges)
-    {
+    for (from, to, relation_type_id, tree_id, tree_title) in live_tree_relations(pool).await? {
         // A card in the trash (or deleted) draws no edge.
         if !live.contains(from.as_str()) || !live.contains(to.as_str()) {
             continue;

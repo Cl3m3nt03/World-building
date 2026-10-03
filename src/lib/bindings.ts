@@ -176,6 +176,11 @@ export const commands = {
 	duplicateTree: (id: string, title: string) => typedError<RelationTree, AppError>(__TAURI_INVOKE("duplicate_tree", { id, title })),
 	/**  The relation types of the world, provided ones first. */
 	listRelationTypes: () => typedError<RelationType[], AppError>(__TAURI_INVOKE("list_relation_types")),
+	/**
+	 *  The relations the world already knows between its cards (ADR 0007): a
+	 *  tree can start from them.
+	 */
+	knownRelations: () => typedError<KnownRelation[], AppError>(__TAURI_INVOKE("known_relations")),
 	createRelationType: (input: RelationTypeInput) => typedError<RelationType, AppError>(__TAURI_INVOKE("create_relation_type", { input })),
 	updateRelationType: (id: string, input: RelationTypeInput) => typedError<RelationType, AppError>(__TAURI_INVOKE("update_relation_type", { id, input })),
 	/**  How many tree links use the relation type (before deleting it). */
@@ -523,8 +528,9 @@ export type EdgeReason =
  */
 { kind: "property"; from: string; label: string; relationTypeId: string | null } | 
 /**
- *  A relation drawn in a tree: `from` is `relation_type_id` of `to`
- *  (« Gilraen : parent de Aragorn »); `None`: a link without a type.
+ *  A relation drawn in a tree, as the tree words it: `to` is
+ *  `relation_type_id` of `from` (« Arwen : épouse de Aragorn »);
+ *  `None`: a link without a type.
  */
 { kind: "relation"; from: string; to: string; relationTypeId: string | null; treeId: string; treeTitle: string };
 
@@ -638,6 +644,17 @@ export type ImportedAsset = {
 	asset: Asset,
 	/**  False when the same content was already in the world. */
 	created: boolean,
+};
+
+/**
+ *  A relation between two cards, as the trees word it: `to` is
+ *  `relation_type_id` of `from` (« Aragorn : enfant de Arathorn »).
+ */
+export type KnownRelation = {
+	from: string,
+	to: string,
+	/**  `None`: a link without a type, drawn in a tree. */
+	relationTypeId: string | null,
 };
 
 export type LabelStyle = {

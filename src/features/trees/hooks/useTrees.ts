@@ -27,6 +27,18 @@ export function useRelationTypes() {
   });
 }
 
+/**
+ * The relations the world already knows between its cards (trees and
+ * relation properties, ADR 0007); under the documents, so that any change
+ * of cards or links reads them again.
+ */
+export function useKnownRelations() {
+  return useQuery({
+    queryKey: [...documentKeys.all(), "known-relations"],
+    queryFn: () => unwrap(commands.knownRelations()),
+  });
+}
+
 /** Creates a tree (one variant, one empty node) and opens it. */
 export function useCreateTree() {
   const { t } = useTranslation();

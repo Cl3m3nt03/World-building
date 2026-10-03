@@ -44,6 +44,7 @@ const COMMANDS: &[&str] = &[
     "delete_tree_variant",
     "duplicate_tree",
     "list_relation_types",
+    "known_relations",
     "create_relation_type",
     "update_relation_type",
     "relation_type_uses",
