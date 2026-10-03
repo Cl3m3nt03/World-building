@@ -84,7 +84,7 @@ const handle = (name: string, side: "top" | "right" | "bottom" | "left") =>
 
 /** Names the empty node whose search is open. */
 async function name(label: string) {
-  const search = await $("aria/Carte ou nom du nœud");
+  const search = await $('input[aria-label="Carte ou nom du nœud"]');
   await search.waitForDisplayed();
   await browser.keys(label);
   await $(`//*[@role="option"][normalize-space()="Utiliser le nom « ${label} »"]`).click();
