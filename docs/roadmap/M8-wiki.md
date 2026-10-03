@@ -89,3 +89,9 @@
 - [ ] Recette Playwright sur l'app réelle (FR et EN, clair et sombre, fenêtre étroite) ; release `v1.0.0`
 
 **Critères d'acceptation** : la recette est validée avant la release.
+
+---
+
+## Bilan (03/10)
+
+Les dix étapes sont livrées (#327, #328, #330 à #336). Recette Playwright sur l'app réelle, FR et EN, app claire et sombre, fenêtre étroite : toutes les vérifications passent, détail dans #325. Trouvé en route et corrigé dans les PR : les images d'un site exporté dans un dossier profond dépassaient la limite de 260 caractères de Windows (noms d'images raccourcis, ADR 0008) ; le sélecteur de couleur et le champ hexadécimal portaient le même nom pour les lecteurs d'écran. Reste à confirmer l'ADR 0008 (statut « Proposé »).
