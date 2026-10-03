@@ -20,6 +20,7 @@ function doc(id: string, sortOrder: number): TreeDocument {
     createdAt: "2026-10-01T10:00:00Z",
     typeId: null,
     imageAssetId: null,
+    wikiVisible: false,
   };
 }
 

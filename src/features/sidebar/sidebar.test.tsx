@@ -80,6 +80,7 @@ function doc(
     createdAt: "2026-10-01T10:00:00Z",
     typeId: "character",
     imageAssetId: null,
+    wikiVisible: false,
   };
 }
 
@@ -455,7 +456,6 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
     "Épingler",
     "Dupliquer",
     "Déplacer vers…",
-    "Visible dans le wikiArrive avec M8",
     "Mettre à la corbeilleSuppr",
     "Nouvelle carte",
     "Nouveau dossier",
@@ -546,6 +546,20 @@ test("pinned documents show at the top, in their order; nothing while none is pi
   };
   await renderAt("/world/demo/world");
   await waitFor(() => expect(pinned()).toEqual(["Wall", "Arya"]));
+});
+
+test("a card's right click marks it visible in the wiki; the row shows it", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  await act(async () => {
+    fireEvent.contextMenu(item("Arya"));
+  });
+  const entry = screen.getByRole("menuitemcheckbox", { name: "Visible dans le wiki" });
+  expect(entry.getAttribute("aria-checked")).toBe("false");
+  await act(async () => {
+    fireEvent.click(entry);
+  });
+  expect(callsOf("set_wiki_visible")[0]?.args).toEqual({ id: "Arya", visible: true });
 });
 
 test("a document's right click pins it, a pin's right click unpins it", async () => {

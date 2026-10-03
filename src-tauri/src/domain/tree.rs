@@ -71,6 +71,8 @@ pub struct TreeDocument {
     /// For a card: its type and image.
     pub type_id: Option<String>,
     pub image_asset_id: Option<String>,
+    /// Marked « Visible dans le wiki » (cards and maps, M8).
+    pub wiki_visible: bool,
 }
 
 /// Everything the sidebar shows: folders and live documents, with their place
@@ -137,6 +139,7 @@ pub async fn tree(pool: &SqlitePool) -> AppResult<DocumentTree> {
                 created_at: row.created_at,
                 type_id: row.type_id,
                 image_asset_id: row.image_asset_id,
+                wiki_visible: row.wiki_visible != 0,
             })
         })
         .collect::<AppResult<_>>()?;

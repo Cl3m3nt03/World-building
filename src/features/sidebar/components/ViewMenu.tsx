@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react";
+import { Globe, SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,6 +89,14 @@ export function ViewMenu({ view, onChange }: Props) {
             )}
           </DropdownMenuCheckboxItem>
         ))}
+        <DropdownMenuCheckboxItem
+          checked={view.wikiOnly}
+          onSelect={keepOpen}
+          onCheckedChange={() => onChange((latest) => ({ wikiOnly: !latest.wikiOnly }))}
+        >
+          <Globe aria-hidden />
+          {t("sidebar.view.wikiOnly")}
+        </DropdownMenuCheckboxItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>{t("sidebar.view.types")}</DropdownMenuLabel>
         {(types.data ?? []).map((type) => {

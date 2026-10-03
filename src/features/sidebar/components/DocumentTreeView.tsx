@@ -47,12 +47,14 @@ import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import {
+  ContextMenuCheckboxItem,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
+import { useSetWikiVisible } from "@/features/wiki";
 import type { CardType, DocumentTree } from "@/lib/bindings";
 import { dropCard } from "@/lib/cardDrop";
 import { documentRoute } from "@/lib/documentRoute";
@@ -458,6 +460,7 @@ export function DocumentTreeView({
   // --- Documents ---------------------------------------------------------------
 
   const setPinned = useSetPinned();
+  const setWikiVisible = useSetWikiVisible();
   const duplicate = useDuplicateDocument();
   const trash = useTrashDocument();
   // The document whose "Move to…" dialog is open.
@@ -515,6 +518,9 @@ export function DocumentTreeView({
         afterMenu.current = () => setMoveKey(menuDocumentNode.key);
       }}
       onTrash={() => trashDocument(menuDocumentNode)}
+      onWikiVisible={(visible) =>
+        setWikiVisible.mutate({ id: menuDocumentNode.document.id, visible })
+      }
     />
   );
   const rootMenu = (
@@ -829,6 +835,8 @@ type DocumentMenuProps = {
   onDuplicate: () => void;
   onMove: () => void;
   onTrash: () => void;
+  /** Marks a card or map « Visible dans le wiki » (M8). */
+  onWikiVisible: (visible: boolean) => void;
 };
 
 /** A document's right click: what can be done to it (card creation follows). */
@@ -840,6 +848,7 @@ function DocumentMenu({
   onDuplicate,
   onMove,
   onTrash,
+  onWikiVisible,
 }: DocumentMenuProps) {
   const { t } = useTranslation();
   const pinned = node.document.pinnedOrder !== null;
@@ -867,11 +876,16 @@ function DocumentMenu({
         <FolderInput />
         {t("sidebar.document.moveTo")}
       </ContextMenuItem>
-      <ContextMenuItem disabled>
-        <Globe />
-        {t("sidebar.document.wiki")}
-        <ContextMenuShortcut>{t("sidebar.document.soon", { milestone: "M8" })}</ContextMenuShortcut>
-      </ContextMenuItem>
+      {/* Only cards and maps have a page in the wiki. */}
+      {(node.document.kind === "card" || node.document.kind === "map") && (
+        <ContextMenuCheckboxItem
+          checked={node.document.wikiVisible}
+          onCheckedChange={(checked) => onWikiVisible(checked === true)}
+        >
+          <Globe />
+          {t("sidebar.document.wiki")}
+        </ContextMenuCheckboxItem>
+      )}
       <ContextMenuSeparator />
       <ContextMenuItem variant="destructive" onSelect={onTrash}>
         <Trash2 />
@@ -1009,6 +1023,12 @@ function TreeItem({
         />
       ) : (
         <span className="truncate">{label}</span>
+      )}
+      {node.kind === "document" && node.document.wikiVisible && !editing && (
+        <>
+          <Globe aria-hidden className="ml-auto size-3 shrink-0 text-muted-foreground" />
+          <span className="sr-only">{t("sidebar.document.wikiMark")}</span>
+        </>
       )}
     </div>
   );

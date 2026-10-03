@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { documentKeys } from "@/features/cards";
+import { documentKeys } from "@/features/cards/hooks/keys";
 import { commands, type WikiSettings } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 

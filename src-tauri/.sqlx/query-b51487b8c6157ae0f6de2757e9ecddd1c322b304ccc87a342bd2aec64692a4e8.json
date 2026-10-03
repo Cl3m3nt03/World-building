@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT d.id AS \"id!\", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,\n                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.sort_order, d.created_at",
+  "query": "SELECT d.id AS \"id!\", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,\n                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id, d.wiki_visible\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.sort_order, d.created_at",
   "describe": {
     "columns": [
       {
@@ -112,6 +112,17 @@
             "name": "image_asset_id"
           }
         }
+      },
+      {
+        "name": "wiki_visible",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "wiki_visible"
+          }
+        }
       }
     ],
     "parameters": {
@@ -127,8 +138,9 @@
       true,
       false,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "185ba780333f0a81d907bd09340257d1e2db7f18b7877346d477a82a0f30d16c"
+  "hash": "b51487b8c6157ae0f6de2757e9ecddd1c322b304ccc87a342bd2aec64692a4e8"
 }

@@ -300,6 +300,8 @@
   "sidebar.document.copyTitle": "{{title}} (copie)",
   "sidebar.document.moveTo": "Déplacer vers…",
   "sidebar.document.wiki": "Visible dans le wiki",
+  "sidebar.document.wikiMark": " (visible dans le wiki)",
+  "sidebar.view.wikiOnly": "Visibles dans le wiki",
   "sidebar.document.soon": "Arrive avec {{milestone}}",
   "sidebar.document.trash": "Mettre à la corbeille",
   "sidebar.move.title": "Déplacer « {{name}} »",

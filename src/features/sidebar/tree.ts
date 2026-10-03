@@ -352,10 +352,16 @@ function nodeName(node: TreeNode): string {
  */
 export type TreeView = Required<SidebarView>;
 
-export const DEFAULT_VIEW: TreeView = { kinds: [], typeIds: [], sort: "manual", reversed: false };
+export const DEFAULT_VIEW: TreeView = {
+  kinds: [],
+  typeIds: [],
+  sort: "manual",
+  reversed: false,
+  wikiOnly: false,
+};
 
 export function isFiltered(view: TreeView): boolean {
-  return view.kinds.length > 0 || view.typeIds.length > 0;
+  return view.kinds.length > 0 || view.typeIds.length > 0 || view.wikiOnly;
 }
 
 const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
@@ -376,7 +382,8 @@ export function viewTree(
   const matches = (node: TreeNode) =>
     node.kind === "document" &&
     (kinds.size === 0 || kinds.has(node.document.kind)) &&
-    (types.size === 0 || (node.document.typeId !== null && types.has(node.document.typeId)));
+    (types.size === 0 || (node.document.typeId !== null && types.has(node.document.typeId))) &&
+    (!view.wikiOnly || node.document.wikiVisible);
   const context = new Set<string>();
 
   const order = (a: TreeNode, b: TreeNode): number => {
