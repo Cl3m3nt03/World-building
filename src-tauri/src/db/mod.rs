@@ -14,6 +14,7 @@ pub mod search;
 pub mod tree;
 pub mod trees;
 pub mod ui_state;
+pub mod wiki;
 
 use std::path::Path;
 use std::time::Duration;

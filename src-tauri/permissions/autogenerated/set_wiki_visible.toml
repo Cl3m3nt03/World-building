@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-wiki-visible"
+description = "Enables the set_wiki_visible command without any pre-configured scope."
+commands.allow = ["set_wiki_visible"]
+
+[[permission]]
+identifier = "deny-set-wiki-visible"
+description = "Denies the set_wiki_visible command without any pre-configured scope."
+commands.deny = ["set_wiki_visible"]

@@ -94,6 +94,7 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
     if (usage.kind === "worldTheme") {
       return t("media.usage.worldTheme", { name: usage.worldName });
     }
+    if (usage.kind === "wikiBanner") return t("media.usage.wikiBanner");
     const where =
       usage.kind === "mapBackground"
         ? t("media.usage.mapBackground", { name: usage.mapTitle })
@@ -130,7 +131,9 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
               {usages.data?.map((usage) => (
                 <li
                   key={
-                    usage.kind === "worldMainImage" || usage.kind === "worldTheme"
+                    usage.kind === "worldMainImage" ||
+                    usage.kind === "worldTheme" ||
+                    usage.kind === "wikiBanner"
                       ? usage.kind
                       : usage.kind === "mapBackground"
                         ? `${usage.kind}-${usage.mapId}`

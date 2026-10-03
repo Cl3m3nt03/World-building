@@ -145,6 +145,14 @@ export const commands = {
 	saveCanvas: (id: string, scene: string, appState: string) => typedError<null, AppError>(__TAURI_INVOKE("save_canvas", { id, scene, appState })),
 	/**  Duplicates a canvas as `title` (translated by the front), right after it. */
 	duplicateCanvas: (id: string, title: string) => typedError<Canvas, AppError>(__TAURI_INVOKE("duplicate_canvas", { id, title })),
+	/**  The wiki's home page and style. */
+	wikiSettings: () => typedError<WikiSettings, AppError>(__TAURI_INVOKE("wiki_settings")),
+	/**  Replaces the wiki's settings. */
+	saveWikiSettings: (settings: WikiSettings) => typedError<null, AppError>(__TAURI_INVOKE("save_wiki_settings", { settings })),
+	/**  Marks a card or a map « Visible dans le wiki », or not. */
+	setWikiVisible: (id: string, visible: boolean) => typedError<null, AppError>(__TAURI_INVOKE("set_wiki_visible", { id, visible })),
+	/**  The wiki's pages: the cards and maps marked visible, by title. */
+	wikiPages: () => typedError<WikiPage[], AppError>(__TAURI_INVOKE("wiki_pages")),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -392,6 +400,8 @@ export type AssetUsage =
 { kind: "cardBlock"; cardId: string; cardTitle: string; inTrash: boolean } | 
 /**  The background of a map (M4). */
 { kind: "mapBackground"; mapId: string; mapTitle: string; inTrash: boolean } | 
+/**  The banner of the wiki's home page (M8). */
+{ kind: "wikiBanner" } | 
 /**  An image on a canvas (M7). */
 { kind: "canvasImage"; canvasId: string; canvasTitle: string; inTrash: boolean };
 
@@ -739,6 +749,12 @@ export type MapZone = {
 	pattern: ZonePattern,
 };
 
+/**  A palette the user saved under a name. */
+export type NamedPalette = {
+	name: string,
+	palette: WikiPalette,
+};
+
 export type NewCardType = {
 	/**  The type to create a subtype of, or `null` for a type. */
 	parentId: string | null,
@@ -1024,6 +1040,54 @@ export type VariantContent = {
 	nodes: TreeNode[],
 	edges: TreeEdge[],
 	annotations: TreeAnnotation[],
+};
+
+/**  A page of the wiki: a card or a map marked visible. */
+export type WikiPage = {
+	id: string,
+	kind: DocumentKind,
+	title: string,
+	/**  For a card: its type and image. */
+	typeId: string | null,
+	imageAssetId: string | null,
+	/**  For a card: its other names (the wiki's search finds them). */
+	aliases: string[],
+};
+
+/**  The colours of the wiki (CSS `#rrggbb`). */
+export type WikiPalette = {
+	background: string,
+	surface: string,
+	text: string,
+	muted: string,
+	accent: string,
+};
+
+/**  The wiki's home page and style. */
+export type WikiSettings = {
+	/**  Empty: the world's name. */
+	title: string,
+	description: string,
+	bannerAssetId: string | null,
+	/**  Cards shown on the home page, in order. */
+	featured: string[],
+	theme: WikiTheme,
+};
+
+/**
+ *  The style of the wiki: a provided theme, maybe changed colour by colour,
+ *  and the fonts of the titles and of the text. Read with tolerance: a field
+ *  missing or unknown takes its default.
+ */
+export type WikiTheme = {
+	/**  Key of a provided theme (the front knows them). */
+	preset?: string,
+	/**  Colours changed from the preset's; `None`: the preset's. */
+	palette?: WikiPalette | null,
+	/**  Font keys (the front knows them); `None`: the preset's. */
+	headingFont?: string | null,
+	bodyFont?: string | null,
+	savedPalettes?: NamedPalette[],
 };
 
 /**  A world as seen by the front. */

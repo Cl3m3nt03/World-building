@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE wiki_settings SET title = ?, description = ?, banner_asset_id = ?, featured = ?,\n                theme = ? WHERE id = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "20495e576416ecc0c44548d3ed573ce8f9fb541bcf2c17c131a6d82e41a296e8"
+}
