@@ -29,14 +29,15 @@ import { useResolvedTheme } from "@/app/theme";
 import type { Canvas } from "@/lib/bindings";
 import { CARD_DROP_EVENT, type CardDropDetail } from "@/lib/cardDrop";
 import {
-  CARD_HEIGHT,
-  CARD_WIDTH,
-  cardAt,
-  cardIdOf,
-  cardLink,
-  dropOrigin,
+  type Embed,
+  type EmbedKind,
+  embedAt,
+  embedLink,
+  embedOf,
+  embedSize,
   type PlacedElement,
-} from "../cardElements";
+  placeAt,
+} from "../embeds";
 import type { KeptState, SceneElement } from "../hooks/useCanvasEditor";
 import {
   CURRENT_ITEM,
@@ -51,7 +52,7 @@ import {
   type ToolType,
 } from "../tools";
 import { CanvasToolbar, type ToolbarState } from "./CanvasToolbar";
-import { CardThumbnail } from "./CardThumbnail";
+import { DocumentThumbnail } from "./DocumentThumbnail";
 
 export type CanvasViewHandle = {
   /** Frames every element. */
@@ -63,8 +64,8 @@ type Props = {
   /** Accessible name of the drawing area. */
   label: string;
   onChange: (elements: readonly SceneElement[], version: number, view: KeptState) => void;
-  /** A card's thumbnail was double-clicked. */
-  onOpenCard: (cardId: string) => void;
+  /** A document's thumbnail was double-clicked (or its link icon clicked). */
+  onOpenDocument: (kind: EmbedKind, id: string) => void;
   ref?: Ref<CanvasViewHandle>;
 };
 
@@ -131,7 +132,7 @@ function toolbarState(elements: readonly ExcalidrawElement[], state: AppState): 
  * its fonts served by the app, and nothing of Excalidraw that has no sense
  * here (opening or saving files, collaboration, links to excalidraw.com).
  */
-export default function CanvasView({ canvas, label, onChange, onOpenCard, ref }: Props) {
+export default function CanvasView({ canvas, label, onChange, onOpenDocument, ref }: Props) {
   const { t, i18n } = useTranslation();
   const theme = useResolvedTheme();
   const api = useRef<ExcalidrawImperativeAPI | null>(null);
@@ -201,8 +202,56 @@ export default function CanvasView({ canvas, label, onChange, onOpenCard, ref }:
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial data only
   const data = useMemo(() => initialData(canvas), [canvas.id]);
 
-  const openCard = useRef(onOpenCard);
-  openCard.current = onOpenCard;
+  const openDocument = useRef(onOpenDocument);
+  openDocument.current = onOpenDocument;
+
+  /** Adds a document's thumbnail centred on scene point (`x`, `y`), selected. */
+  const place = useCallback((embed: Embed, x: number, y: number) => {
+    const excalidraw = api.current;
+    if (!excalidraw) return;
+    // Excalidraw builds the element from its main fields (defaults for the rest).
+    const [element] = restoreElements(
+      [
+        {
+          type: "embeddable",
+          id: crypto.randomUUID(),
+          ...placeAt(embed.kind, x, y),
+          ...embedSize(embed.kind),
+          link: embedLink(embed),
+          strokeColor: "transparent",
+          backgroundColor: "transparent",
+          roundness: null,
+          // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
+        } as any,
+      ],
+      null,
+    );
+    if (!element) return;
+    excalidraw.updateScene({
+      elements: [...excalidraw.getSceneElementsIncludingDeleted(), element],
+      appState: { selectedElementIds: { [element.id]: true } },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+    excalidraw.setActiveTool({ type: "selection" });
+  }, []);
+
+  /** The « Insert » tool: in the middle of the view. */
+  const insert = useCallback(
+    (embed: Embed) => {
+      const state = api.current?.getAppState();
+      if (!state) return;
+      const point = viewportCoordsToSceneCoords(
+        {
+          clientX: state.offsetLeft + state.width / 2,
+          clientY: state.offsetTop + state.height / 2,
+        },
+        state,
+      );
+      place(embed, point.x, point.y);
+      section.current?.querySelector<HTMLElement>(".excalidraw")?.focus();
+    },
+    [place],
+  );
 
   useEffect(() => {
     const box = section.current;
@@ -214,54 +263,28 @@ export default function CanvasView({ canvas, label, onChange, onOpenCard, ref }:
     // A card of the sidebar dropped here (DocumentTreeView): its thumbnail,
     // centred where it was dropped.
     const onDrop = (event: Event) => {
-      const excalidraw = api.current;
       const { cardId, clientX, clientY } = (event as CustomEvent<CardDropDetail>).detail;
       const rect = box.getBoundingClientRect();
-      if (!excalidraw || clientX < rect.left || clientX > rect.right) return;
+      if (clientX < rect.left || clientX > rect.right) return;
       if (clientY < rect.top || clientY > rect.bottom) return;
       const point = scenePoint(clientX, clientY);
-      if (!point) return;
-      // Excalidraw builds the element from its main fields (defaults for the rest).
-      const [card] = restoreElements(
-        [
-          {
-            type: "embeddable",
-            id: crypto.randomUUID(),
-            ...dropOrigin(point.x, point.y),
-            width: CARD_WIDTH,
-            height: CARD_HEIGHT,
-            link: cardLink(cardId),
-            strokeColor: "transparent",
-            backgroundColor: "transparent",
-            roundness: null,
-            // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
-          } as any,
-        ],
-        null,
-      );
-      if (!card) return;
-      excalidraw.updateScene({
-        elements: [...excalidraw.getSceneElementsIncludingDeleted(), card],
-        appState: { selectedElementIds: { [card.id]: true } },
-        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
-      });
-      excalidraw.setActiveTool({ type: "selection" });
+      if (point) place({ kind: "card", id: cardId }, point.x, point.y);
     };
-    // A double click on a card opens it (before Excalidraw would start a text there).
+    // A double click on a document opens it (before Excalidraw would start a text there).
     const onDoubleClick = (event: MouseEvent) => {
       const point = scenePoint(event.clientX, event.clientY);
       const elements = api.current?.getSceneElements() as unknown as PlacedElement[] | undefined;
-      const cardId = point && elements ? cardAt(elements, point.x, point.y) : null;
-      if (!cardId) return;
+      const embed = point && elements ? embedAt(elements, point.x, point.y) : null;
+      if (!embed) return;
       event.stopPropagation();
       event.preventDefault();
-      openCard.current(cardId);
+      openDocument.current(embed.kind, embed.id);
     };
-    // Hovering a card's link icon, Excalidraw shows the link in its tooltip:
-    // a card's link means nothing to read, the tooltip is hidden.
+    // Hovering a document's link icon, Excalidraw shows the link in its
+    // tooltip: that link means nothing to read, the tooltip is hidden.
     const hideCardLinks = () => {
       const tip = document.querySelector(".excalidraw-tooltip--visible");
-      if (tip && cardIdOf(tip.textContent?.trim()))
+      if (tip && embedOf(tip.textContent?.trim()))
         tip.classList.remove("excalidraw-tooltip--visible");
     };
     const tooltips = new MutationObserver(hideCardLinks);
@@ -278,7 +301,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenCard, ref }:
       window.removeEventListener(CARD_DROP_EVENT, onDrop);
       box.removeEventListener("dblclick", onDoubleClick, { capture: true });
     };
-  }, []);
+  }, [place]);
 
   useImperativeHandle(ref, () => ({
     recenter: () => {
@@ -314,18 +337,18 @@ export default function CanvasView({ canvas, label, onChange, onOpenCard, ref }:
             if (isShape(next.tool)) setShape(next.tool);
           }
         }}
-        // Only BuilderZ's own embeds (cards): no web page is ever loaded.
-        validateEmbeddable={(link) => cardIdOf(link) !== null}
-        // A card's link icon opens the card (its link leads nowhere).
+        // Only BuilderZ's own embeds (world documents): no web page is ever loaded.
+        validateEmbeddable={(link) => embedOf(link) !== null}
+        // A document's link icon opens it (its link leads nowhere).
         onLinkOpen={(element, event) => {
-          const cardId = cardIdOf(element.link);
-          if (!cardId) return;
+          const embed = embedOf(element.link);
+          if (!embed) return;
           event.preventDefault();
-          openCard.current(cardId);
+          openDocument.current(embed.kind, embed.id);
         }}
         renderEmbeddable={(element) => {
-          const cardId = cardIdOf(element.link);
-          return cardId ? <CardThumbnail cardId={cardId} /> : null;
+          const embed = embedOf(element.link);
+          return embed ? <DocumentThumbnail embed={embed} /> : null;
         }}
         UIOptions={{
           canvasActions: {
@@ -352,6 +375,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenCard, ref }:
             onTool={setTool}
             onStyle={setStyle}
             onRemove={remove}
+            onInsert={insert}
           />
         </Footer>
       </Excalidraw>

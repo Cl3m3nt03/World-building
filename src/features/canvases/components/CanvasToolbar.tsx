@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChoiceTiles } from "@/features/card-types";
 import type { TranslationKey } from "@/i18n";
+import type { Embed } from "../embeds";
 import {
   FILL_COLORS,
   FILL_STYLES,
@@ -37,6 +38,7 @@ import {
   type StyleKey,
   type ToolType,
 } from "../tools";
+import { InsertPicker } from "./InsertPicker";
 
 /** What the toolbar shows: the active tool and the options to offer. */
 export type ToolbarState = {
@@ -55,6 +57,8 @@ type Props = ToolbarState & {
   onTool: (tool: ToolType) => void;
   onStyle: <K extends StyleKey>(key: K, value: Style[K]) => void;
   onRemove: () => void;
+  /** Places a card, map, graph or tree of the world in the middle of the view. */
+  onInsert: (embed: Embed) => void;
 };
 
 const SHAPE_ICONS: Record<Shape, typeof Square> = {
@@ -374,6 +378,7 @@ export function CanvasToolbar({
   onTool,
   onStyle,
   onRemove,
+  onInsert,
 }: Props) {
   const { t } = useTranslation();
   const drawing = tool === "freedraw" || tool === "eraser";
@@ -503,9 +508,16 @@ export function CanvasToolbar({
           {shaping ? <ShapeIcon /> : <Shapes />}
         </ToolButton>
         <Divider />
-        <ToolButton label={`${t("canvases.tools.insert")} (${soon})`} disabled>
-          <LayoutGrid />
-        </ToolButton>
+        <InsertPicker onInsert={onInsert}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("canvases.tools.insert")}
+            title={t("canvases.tools.insert")}
+          >
+            <LayoutGrid />
+          </Button>
+        </InsertPicker>
         <ToolButton
           label={t("canvases.tools.section")}
           shortcut="F"

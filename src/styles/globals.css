@@ -446,3 +446,10 @@ div.leaflet-container {
 .bz-canvas-fill-solid {
   background: currentColor;
 }
+
+/* A world document's link (a card, a map…) is BuilderZ's own: Excalidraw's
+   box to read or edit it never shows for it. */
+.excalidraw-hyperlinkContainer:has(a[href^="https://builderz.invalid/"]),
+.excalidraw-hyperlinkContainer:has(input[value^="https://builderz.invalid/"]) {
+  display: none;
+}
