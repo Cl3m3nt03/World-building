@@ -11,7 +11,7 @@ L'ordre suit les dépendances : le Graph a besoin des liens entre cartes, le Can
 | **M4 Map** | Pins, zones, calques, texte, fond | `M4-map.md` |
 | **M5 Graph** | Graphe de forces, filtres, réglages, configurations sauvegardées | `M5-graph.md` |
 | **M6 Relation Tree** | Nœuds, relations, jonctions, variantes | `M6-relation-tree.md` |
-| **M7 Canvas** | Tableau blanc et intégration des autres modules | `features/06-canvas.md` |
+| **M7 Canvas** | Tableau blanc et intégration des autres modules | `M7-canvas.md` |
 | **M8 Wiki** → `v1.0.0` | Vue lecture et édition, thèmes, export HTML | `features/07-wiki.md` |
 | **M9 Quill – écriture** | Histoires, chapitres, brouillons, notes, panneau monde | `features/08-quill.md` |
 | **M10 Quill – avancé** | Couverture 3D, mode audio, prévisualisation, exports PDF/DOCX/ePub | `features/08-quill.md` |
