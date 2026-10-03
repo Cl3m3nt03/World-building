@@ -48,6 +48,8 @@ type Props = {
   onRecenter: () => void;
   /** More tools (the variants). */
   children?: ReactNode;
+  /** Shown right above the main bar (the variants' tabs). */
+  above?: ReactNode;
 };
 
 /** Colour swatches: a radio group, one tab stop. */
@@ -146,6 +148,7 @@ export function TreeTools({
   onAddNode,
   onRecenter,
   children,
+  above,
 }: Props) {
   const { t } = useTranslation();
   const drawing = tool === "draw" || tool === "erase";
@@ -258,6 +261,7 @@ export function TreeTools({
           {options}
         </div>
       )}
+      {above}
       <div
         role="toolbar"
         aria-label={t("trees.toolbar")}
