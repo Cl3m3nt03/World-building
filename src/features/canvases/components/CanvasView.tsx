@@ -42,6 +42,13 @@ import {
 } from "../embeds";
 import type { KeptState, SceneElement } from "../hooks/useCanvasEditor";
 import { isNoteLink, NEW_NOTE, NOTE_LINK, NOTE_SIZE, type Note, noteOf } from "../notes";
+import {
+  type FrameLike,
+  frameAround,
+  insertionIndex,
+  sectionName,
+  unnamedFrames,
+} from "../sections";
 import { boxOf, bubblePoints, cloudPoints, DEFAULT_SHAPE_SIZE, MIN_SHAPE_SIZE } from "../shapes";
 import {
   CURRENT_ITEM,
@@ -198,6 +205,31 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const toolbarKey = useRef("");
   const [shape, setShape] = useState<Shape>("rectangle");
 
+  /**
+   * A new section is named « Section 3 » (Excalidraw would say « Frame »),
+   * once drawn; outside the history (undoing the section undoes its name).
+   */
+  const nameSections = (elements: readonly ExcalidrawElement[], state: AppState) => {
+    if (state.newElement) return;
+    const unnamed = new Set(unnamedFrames(elements as unknown as FrameLike[]));
+    if (unnamed.size === 0) return;
+    const names = elements
+      .filter((element) => element.type === "frame" && !element.isDeleted)
+      .map((element) => (element as { name?: string | null }).name ?? null);
+    const excalidraw = api.current;
+    if (!excalidraw) return;
+    excalidraw.updateScene({
+      elements: excalidraw.getSceneElementsIncludingDeleted().map((element) => {
+        if (!unnamed.has(element.id)) return element;
+        const name = sectionName(t("canvases.sections.name"), names);
+        names.push(name);
+        // biome-ignore lint/suspicious/noExplicitAny: a frame's name
+        return newElementWith(element, { name } as any);
+      }),
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
+  };
+
   const setTool = useCallback((type: ToolType) => {
     api.current?.setActiveTool(isOwnShape(type) ? { type: "custom", customType: type } : { type });
   }, []);
@@ -235,9 +267,10 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     const selected = new Set(selectedOf(excalidraw.getSceneElements(), state).map((e) => e.id));
     excalidraw.updateScene({
       elements: excalidraw.getSceneElementsIncludingDeleted().map((element) =>
-        // A text bound to a removed shape goes with it.
+        // A text bound to a removed shape goes with it, what a removed section holds too.
         selected.has(element.id) ||
-        ("containerId" in element && element.containerId && selected.has(element.containerId))
+        ("containerId" in element && element.containerId && selected.has(element.containerId)) ||
+        (element.frameId && selected.has(element.frameId))
           ? newElementWith(element, { isDeleted: true })
           : element,
       ),
@@ -255,6 +288,36 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const openDocument = useRef(onOpenDocument);
   openDocument.current = onOpenDocument;
 
+  /**
+   * Adds an element BuilderZ builds (a document, a note, a cloud…), selected:
+   * in the section that holds it, if any, as Excalidraw does for its own.
+   * Gives its id.
+   */
+  const addElement = useCallback((fields: Record<string, unknown> & { type: string }) => {
+    const excalidraw = api.current;
+    if (!excalidraw) return null;
+    const all = excalidraw.getSceneElementsIncludingDeleted();
+    const frameId = frameAround(
+      all as unknown as FrameLike[],
+      fields as unknown as { x: number; y: number; width: number; height: number },
+    );
+    // Excalidraw builds the element from its main fields (defaults for the rest).
+    const [element] = restoreElements(
+      // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
+      [{ id: crypto.randomUUID(), ...fields, frameId } as any],
+      null,
+    );
+    if (!element) return null;
+    const at = insertionIndex(all, frameId);
+    excalidraw.updateScene({
+      elements: [...all.slice(0, at), element, ...all.slice(at)],
+      appState: { selectedElementIds: { [element.id]: true } },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+    excalidraw.setActiveTool({ type: "selection" });
+    return element.id;
+  }, []);
+
   /** Adds one of BuilderZ's embeddables (a document, a note), selected; gives its id. */
   const addEmbeddable = useCallback(
     (fields: {
@@ -264,34 +327,15 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
       height: number;
       link: string;
       customData?: Record<string, unknown>;
-    }) => {
-      const excalidraw = api.current;
-      if (!excalidraw) return null;
-      // Excalidraw builds the element from its main fields (defaults for the rest).
-      const [element] = restoreElements(
-        [
-          {
-            type: "embeddable",
-            id: crypto.randomUUID(),
-            ...fields,
-            strokeColor: "transparent",
-            backgroundColor: "transparent",
-            roundness: null,
-            // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
-          } as any,
-        ],
-        null,
-      );
-      if (!element) return null;
-      excalidraw.updateScene({
-        elements: [...excalidraw.getSceneElementsIncludingDeleted(), element],
-        appState: { selectedElementIds: { [element.id]: true } },
-        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
-      });
-      excalidraw.setActiveTool({ type: "selection" });
-      return element.id;
-    },
-    [],
+    }) =>
+      addElement({
+        type: "embeddable",
+        ...fields,
+        strokeColor: "transparent",
+        backgroundColor: "transparent",
+        roundness: null,
+      }),
+    [addElement],
   );
 
   /** Adds a document's thumbnail centred on scene point (`x`, `y`), selected. */
@@ -511,44 +555,29 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
         };
       }
       const points = (shape === "cloud" ? cloudPoints : bubblePoints)(area.width, area.height);
-      const [element] = restoreElements(
-        [
-          {
-            type: "line",
-            id: crypto.randomUUID(),
-            x: area.x,
-            y: area.y,
-            width: area.width,
-            height: area.height,
-            points,
-            strokeColor: state.currentItemStrokeColor,
-            backgroundColor: state.currentItemBackgroundColor,
-            fillStyle: state.currentItemFillStyle,
-            strokeWidth: state.currentItemStrokeWidth,
-            strokeStyle: state.currentItemStrokeStyle,
-            roughness: state.currentItemRoughness,
-            opacity: state.currentItemOpacity,
-            roundness: null,
-            // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
-          } as any,
-        ],
-        null,
-      );
-      if (!element) return;
-      excalidraw.updateScene({
-        elements: [...excalidraw.getSceneElementsIncludingDeleted(), element],
-        appState: { selectedElementIds: { [element.id]: true } },
-        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      addElement({
+        type: "line",
+        x: area.x,
+        y: area.y,
+        width: area.width,
+        height: area.height,
+        points,
+        strokeColor: state.currentItemStrokeColor,
+        backgroundColor: state.currentItemBackgroundColor,
+        fillStyle: state.currentItemFillStyle,
+        strokeWidth: state.currentItemStrokeWidth,
+        strokeStyle: state.currentItemStrokeStyle,
+        roughness: state.currentItemRoughness,
+        opacity: state.currentItemOpacity,
+        roundness: null,
       });
-      // As after Excalidraw's own shapes: back to selecting.
-      excalidraw.setActiveTool({ type: "selection" });
     });
     return () => {
       offDown();
       offUp();
       window.removeEventListener("pointermove", track);
     };
-  }, [ready]);
+  }, [ready, addElement]);
 
   useImperativeHandle(ref, () => ({
     recenter: () => {
@@ -577,6 +606,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
             getSceneVersion(elements),
             appState as unknown as KeptState,
           );
+          nameSections(elements, appState);
           if (editing.current && appState.activeEmbeddable?.element.id !== editing.current) {
             stopWriting();
           }

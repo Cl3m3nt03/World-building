@@ -703,6 +703,7 @@
   "canvases.shapes.diamond": "Diamond",
   "canvases.shapes.cloud": "Cloud",
   "canvases.shapes.bubble": "Bubble",
+  "canvases.sections.name": "Section",
   "canvases.options.label": "Tool options",
   "canvases.options.strokeColor": "Colour",
   "canvases.options.backgroundColor": "Fill colour",
