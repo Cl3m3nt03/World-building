@@ -479,3 +479,10 @@ div.leaflet-container {
 .bz-canvas .excalidraw .mobile-misc-tools-container {
   display: none;
 }
+
+/* Excalidraw's hint line speaks of its own tools, half in English in French
+   (its translation is incomplete): BuilderZ's hint under the canvas and its
+   toolbar's tooltips say what to do instead. */
+.bz-canvas .excalidraw .HintViewer {
+  display: none;
+}
