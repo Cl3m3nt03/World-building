@@ -101,8 +101,9 @@ async function recenter() {
 
 /** Names the empty node whose search is open. */
 async function name(label: string) {
-  const search = await $('input[aria-label="Carte ou nom du nœud"]');
-  await search.waitForDisplayed();
+  // Its popover fades in: on the CI runner it may stay at opacity 0 for
+  // WebdriverIO's « displayed »; what matters is that it is there, focused.
+  await $('input[aria-label="Carte ou nom du nœud"]').waitForExist();
   // Keys typed before the field has the focus would be lost (it opens while
   // the view moves to the new node).
   await browser.waitUntil(
@@ -113,9 +114,7 @@ async function name(label: string) {
     { timeoutMsg: "the node search never got the focus" },
   );
   await browser.keys(label);
-  await $(
-    `//*[@role="option"][normalize-space()="Utiliser le nom « ${label} »"]`,
-  ).waitForDisplayed();
+  await $(`//*[@role="option"][normalize-space()="Utiliser le nom « ${label} »"]`).waitForExist();
   await $(`//*[@role="option"][normalize-space()="Utiliser le nom « ${label} »"]`).click();
   await node(label).waitForDisplayed();
 }
