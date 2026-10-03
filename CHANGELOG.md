@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0](https://github.com/Cl3m3nt03/World-building/compare/v0.7.0...v0.8.0) (2026-10-03)
+
+
+### Fonctionnalités
+
+* **graph:** say what the graph is for and why cards are linked ([#314](https://github.com/Cl3m3nt03/World-building/issues/314)) ([6eb60e8](https://github.com/Cl3m3nt03/World-building/commit/6eb60e86c1696f618e590c317501de60584e4666)), closes [#306](https://github.com/Cl3m3nt03/World-building/issues/306)
+* **graph:** tree relations link cards in the graph, with reasons ([#309](https://github.com/Cl3m3nt03/World-building/issues/309)) ([7728175](https://github.com/Cl3m3nt03/World-building/commit/772817588426b6945f04b15ca10acf1e5b142583)), closes [#302](https://github.com/Cl3m3nt03/World-building/issues/302)
+* **properties:** a link property can be a relation of the world ([#312](https://github.com/Cl3m3nt03/World-building/issues/312)) ([33744a0](https://github.com/Cl3m3nt03/World-building/commit/33744a00731258a43e11ba5100d4adc83a3c9523)), closes [#304](https://github.com/Cl3m3nt03/World-building/issues/304)
+* **trees:** a tree is cited in by the cards it shows ([#310](https://github.com/Cl3m3nt03/World-building/issues/310)) ([f07dfb9](https://github.com/Cl3m3nt03/World-building/commit/f07dfb9a04896e51fd39b244104ea4678414099e)), closes [#303](https://github.com/Cl3m3nt03/World-building/issues/303)
+* **trees:** start a tree from the relations the world knows ([#313](https://github.com/Cl3m3nt03/World-building/issues/313)) ([88147ee](https://github.com/Cl3m3nt03/World-building/commit/88147ee97419734a682b89f5bcbcc7b004bf967b)), closes [#305](https://github.com/Cl3m3nt03/World-building/issues/305)
+
 ## [0.7.0](https://github.com/Cl3m3nt03/World-building/compare/v0.6.0...v0.7.0) (2026-10-03)
 
 
