@@ -25,7 +25,7 @@ const KINDS: { kind: DocumentKind; label: TranslationKey; milestone?: string }[]
   { kind: "map", label: "sidebar.view.kind.map" },
   { kind: "graph", label: "sidebar.view.kind.graph" },
   { kind: "tree", label: "sidebar.view.kind.tree" },
-  { kind: "canvas", label: "sidebar.view.kind.canvas", milestone: "M7" },
+  { kind: "canvas", label: "sidebar.view.kind.canvas" },
 ];
 
 const SORTS: { sort: SortBy; label: TranslationKey }[] = [

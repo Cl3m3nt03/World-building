@@ -12,6 +12,7 @@ import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
 import { ComingSoon, StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
+import { CanvasPage } from "@/features/canvases";
 import { CardPage } from "@/features/cards";
 import { GraphPage } from "@/features/graphs";
 import { HomeScreen } from "@/features/home";
@@ -32,6 +33,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *     /map/$mapId              a map, in the workspace (M4)
  *     /graph/$graphId          a graph, in the workspace (M5)
  *     /tree/$treeId            a relation tree, in the workspace (M6)
+ *     /canvas/$canvasId        a canvas, in the workspace (M7)
  *   /world/$worldId/wiki       Wiki tab
  *   /world/$worldId/quill      Quill tab
  *   /world/$worldId/media      Media library (reached from Home)
@@ -123,6 +125,12 @@ const treeRoute = createRoute({
   component: TreePage,
 });
 
+const canvasRoute = createRoute({
+  getParentRoute: () => worldTabRoute,
+  path: "canvas/$canvasId",
+  component: CanvasPage,
+});
+
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
@@ -150,7 +158,14 @@ export const routeTree = rootRoute.addChildren([
   worldRoute.addChildren([
     worldIndexRoute,
     homeRoute,
-    worldTabRoute.addChildren([worldTabIndexRoute, cardRoute, mapRoute, graphRoute, treeRoute]),
+    worldTabRoute.addChildren([
+      worldTabIndexRoute,
+      cardRoute,
+      mapRoute,
+      graphRoute,
+      treeRoute,
+      canvasRoute,
+    ]),
     wikiRoute,
     quillRoute,
     mediaRoute,

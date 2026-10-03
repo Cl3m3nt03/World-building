@@ -2,6 +2,7 @@ import { useParams } from "@tanstack/react-router";
 import {
   FilePlus,
   FolderPlus,
+  LayoutGrid,
   Map as MapIcon,
   Network,
   PanelLeftClose,
@@ -19,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCreateCanvas } from "@/features/canvases";
 import { CreateCardMenu, TrashDialog } from "@/features/cards";
 import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
@@ -39,8 +41,8 @@ import { ViewMenu } from "./ViewMenu";
  */
 export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   const { t } = useTranslation();
-  const { worldId, cardId, mapId, graphId, treeId } = useParams({ strict: false });
-  const currentId = cardId ?? mapId ?? graphId ?? treeId ?? null;
+  const { worldId, cardId, mapId, graphId, treeId, canvasId } = useParams({ strict: false });
+  const currentId = cardId ?? mapId ?? graphId ?? treeId ?? canvasId ?? null;
   const [creatingMap, setCreatingMap] = useState(false);
   const createGraph = useCreateGraph();
   const newGraph = () => {
@@ -49,6 +51,10 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   const createTree = useCreateTree();
   const newTree = () => {
     if (worldId) createTree.mutate(worldId);
+  };
+  const createCanvas = useCreateCanvas();
+  const newCanvas = () => {
+    if (worldId) createCanvas.mutate(worldId);
   };
   const tree = useDocumentTree();
   const [trashOpen, setTrashOpen] = useState(false);
@@ -65,10 +71,20 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
   return (
     <aside aria-label={t("sidebar.label")} className="glass flex h-full flex-col rounded-lg">
       <div className="flex min-h-0 flex-1 flex-col">
-        {(tree.error ?? sidebar.error ?? createGraph.error ?? createTree.error) && (
+        {(tree.error ??
+          sidebar.error ??
+          createGraph.error ??
+          createTree.error ??
+          createCanvas.error) && (
           <div className="p-2">
             <AppErrorMessage
-              error={tree.error ?? sidebar.error ?? createGraph.error ?? createTree.error}
+              error={
+                tree.error ??
+                sidebar.error ??
+                createGraph.error ??
+                createTree.error ??
+                createCanvas.error
+              }
             />
           </div>
         )}
@@ -82,6 +98,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
               onNewMap={() => setCreatingMap(true)}
               onNewGraph={newGraph}
               onNewTree={newTree}
+              onNewCanvas={newCanvas}
               view={view}
               onViewChange={changeView}
               initialExpanded={sidebar.state.expanded ?? []}
@@ -97,7 +114,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             {t("sidebar.newCard")}
           </Button>
         </CreateCardMenu>
-        {/* Maps, graphs, trees (and later canvases): one menu, so the bar does not grow. */}
+        {/* Maps, graphs, trees and canvases: one menu, so the bar does not grow. */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -121,6 +138,10 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             <DropdownMenuItem disabled={createTree.isPending} onSelect={newTree}>
               <Network />
               {t("sidebar.newTree")}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={createCanvas.isPending} onSelect={newCanvas}>
+              <LayoutGrid />
+              {t("sidebar.newCanvas")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

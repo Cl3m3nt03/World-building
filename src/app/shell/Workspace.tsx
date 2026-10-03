@@ -1,7 +1,6 @@
 import { Outlet, useParams } from "@tanstack/react-router";
 import {
   LayoutGrid,
-  type LucideIcon,
   Map as MapIcon,
   Network,
   PanelLeftOpen,
@@ -15,18 +14,13 @@ import { SIDEBAR_WIDTH } from "@/app/stores/ui";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCreateCanvas } from "@/features/canvases";
 import { CreateCardMenu } from "@/features/cards";
 import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import { useCreateTree } from "@/features/trees";
 import type { TranslationKey } from "@/i18n";
-
-/** Document kinds not available yet, and the milestone that brings each one (docs/roadmap). */
-const SOON_TILES: { icon: LucideIcon; label: TranslationKey; milestone: string }[] = [
-  { icon: LayoutGrid, label: "workspace.create.canvas", milestone: "M7" },
-];
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
 
@@ -42,7 +36,8 @@ export function StartWith() {
   const { worldId } = useParams({ strict: false });
   const createGraph = useCreateGraph();
   const createTree = useCreateTree();
-  const createError = createGraph.error ?? createTree.error;
+  const createCanvas = useCreateCanvas();
+  const createError = createGraph.error ?? createTree.error ?? createCanvas.error;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
       {createError && <AppErrorMessage error={createError} />}
@@ -96,29 +91,18 @@ export function StartWith() {
           </Button>
           <span className="text-xs text-muted-foreground">{t("workspace.create.tree")}</span>
         </div>
-        {SOON_TILES.map(({ icon: Icon, label, milestone }) => (
-          <div key={label} className="flex flex-col items-center gap-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="secondary"
-                  aria-label={t(label)}
-                  aria-disabled
-                  aria-describedby={`${label}-soon`}
-                  onClick={(event) => event.preventDefault()}
-                  className={`${TILE_CLASS} cursor-not-allowed opacity-60`}
-                >
-                  <Icon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t("placeholder.comingIn", { milestone })}</TooltipContent>
-            </Tooltip>
-            <span className="text-xs text-muted-foreground">{t(label)}</span>
-            <span id={`${label}-soon`} className="sr-only">
-              {t("placeholder.comingIn", { milestone })}
-            </span>
-          </div>
-        ))}
+        <div className="flex flex-col items-center gap-1.5">
+          <Button
+            variant="secondary"
+            aria-label={t("workspace.create.canvas")}
+            className={TILE_CLASS}
+            disabled={createCanvas.isPending}
+            onClick={() => worldId && createCanvas.mutate(worldId)}
+          >
+            <LayoutGrid />
+          </Button>
+          <span className="text-xs text-muted-foreground">{t("workspace.create.canvas")}</span>
+        </div>
       </div>
     </div>
   );
