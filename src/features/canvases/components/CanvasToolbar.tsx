@@ -24,6 +24,14 @@ import { ChoiceTiles } from "@/features/card-types";
 import type { TranslationKey } from "@/i18n";
 import type { Embed } from "../embeds";
 import {
+  NOTE_COLORS,
+  NOTE_PATTERNS,
+  type Note,
+  type NoteColor,
+  type NotePattern,
+  noteBackground,
+} from "../notes";
+import {
   FILL_COLORS,
   FILL_STYLES,
   FONT_SIZES,
@@ -49,6 +57,8 @@ export type ToolbarState = {
   values: Partial<Style>;
   /** Something is selected (it can be removed). */
   selection: boolean;
+  /** Only notes are selected: their colour and paper (`undefined`: they differ). */
+  note?: { color?: NoteColor | undefined; pattern?: NotePattern | undefined } | undefined;
 };
 
 type Props = ToolbarState & {
@@ -59,6 +69,10 @@ type Props = ToolbarState & {
   onRemove: () => void;
   /** Places a card, map, graph or tree of the world in the middle of the view. */
   onInsert: (embed: Embed) => void;
+  /** Places a new note in the middle of the view, to write in. */
+  onNote: () => void;
+  /** Sets the colour or paper of the selected notes. */
+  onNoteStyle: (patch: Partial<Pick<Note, "color" | "pattern">>) => void;
 };
 
 const SHAPE_ICONS: Record<Shape, typeof Square> = {
@@ -379,6 +393,9 @@ export function CanvasToolbar({
   onStyle,
   onRemove,
   onInsert,
+  onNote,
+  onNoteStyle,
+  note,
 }: Props) {
   const { t } = useTranslation();
   const drawing = tool === "freedraw" || tool === "eraser";
@@ -424,6 +441,43 @@ export function CanvasToolbar({
 
   const groups = groupOptions(options);
   const showOptions = subTools !== null || options.length > 0 || selection;
+  const noteOptions = note ? (
+    <>
+      <Choice
+        label={t("canvases.notes.color")}
+        value={note.color}
+        onChange={(color) => onNoteStyle({ color })}
+        choices={NOTE_COLORS.map((color) => ({
+          value: color.value,
+          label: t(color.label),
+          content: (
+            <span
+              aria-hidden
+              className="size-4 rounded-full border border-border"
+              style={{ background: color.paper }}
+            />
+          ),
+        }))}
+      />
+      <Divider />
+      <Choice
+        label={t("canvases.notes.pattern")}
+        value={note.pattern}
+        onChange={(pattern) => onNoteStyle({ pattern })}
+        choices={NOTE_PATTERNS.map((pattern) => ({
+          value: pattern,
+          label: t(`canvases.notes.patterns.${pattern}`),
+          content: (
+            <span
+              aria-hidden
+              className="size-4 rounded-sm border border-border"
+              style={noteBackground({ color: note.color ?? "yellow", pattern })}
+            />
+          ),
+        }))}
+      />
+    </>
+  ) : null;
 
   return (
     <div className="bz-canvas-tools pointer-events-none flex min-w-0 max-w-full flex-col items-center gap-2">
@@ -434,6 +488,7 @@ export function CanvasToolbar({
           className="glass pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-1 rounded-lg border border-border p-1 shadow-sm"
         >
           {subTools}
+          {noteOptions}
           {groups.map((group, index) => (
             <span key={group.join()} className="flex items-center">
               {(index > 0 || subTools) && <Divider />}
@@ -450,7 +505,7 @@ export function CanvasToolbar({
           ))}
           {selection && (
             <>
-              {(options.length > 0 || subTools) && <Divider />}
+              {(options.length > 0 || subTools || noteOptions) && <Divider />}
               <ToolButton label={t("canvases.options.remove")} shortcut="Delete" onClick={onRemove}>
                 <Trash2 className="text-destructive" />
               </ToolButton>
@@ -488,7 +543,7 @@ export function CanvasToolbar({
         >
           <Pencil />
         </ToolButton>
-        <ToolButton label={`${t("canvases.tools.notes")} (${soon})`} disabled>
+        <ToolButton label={t("canvases.tools.notes")} onClick={onNote}>
           <StickyNote />
         </ToolButton>
         <ToolButton

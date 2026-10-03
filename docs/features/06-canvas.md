@@ -51,6 +51,8 @@ Le canvas est sauvegardé automatiquement. La scène Excalidraw est stockée en 
 
 **Réalisé en M7 (7.5)** : l'outil « Insérer » de la barre ouvre, au-dessus d'elle, un sélecteur : carte, map, graph ou arbre, puis une recherche par nom (le champ a le focus, Entrée prend le premier résultat). Le document choisi est posé au milieu de la vue, sélectionné. Une map s'affiche avec son image de fond (une map découpée en tuiles, trop grande, avec son icône) ; un graph tel que sa page le dessine (ses filtres et réglages), en lecture seule ; un arbre en croquis de sa première variante (ses nœuds et ses liens). Chacun montre son type et son nom, suit ses changements, et montre « Document introuvable » à la corbeille. Un double-clic ou l'icône de lien ouvre le document. La petite fenêtre d'Excalidraw qui montre ou modifie le lien d'un élément n'apparaît jamais pour ces documents.
 
+**Réalisé en M7 (7.6)** : l'outil « Notes » pose un post-it au milieu de la vue et on y écrit aussitôt : le titre (Entrée passe au texte), puis le texte, sur plusieurs lignes. Échap ou un clic ailleurs termine ; ce qui a été écrit s'annule d'un seul `Ctrl+Z`. Un double-clic sur une note (ou son icône de lien) permet d'y réécrire. Sélectionnée, une note se règle dans la barre d'options : sa couleur (jaune, rose, violet, bleu, vert, blanc) et son papier (ligné, quadrillé, pointé ou uni). Une note est du papier : elle garde ses couleurs dans le thème sombre, comme sur le board. Elle se déplace, se redimensionne et se supprime comme tout élément ; son titre et son texte sont enregistrés avec la scène.
+
 ## Modèle de données (indicatif)
 
 - `canvases` : document_id, scene (JSON Excalidraw sans les binaires), app_state (JSON : cadrage, grille)

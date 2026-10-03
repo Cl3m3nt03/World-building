@@ -46,27 +46,48 @@ export type PlacedElement = {
   angle?: number;
 };
 
+/** Whether scene point (`x`, `y`) is on `element` (a rotated one in its own frame). */
+export function hits(element: PlacedElement, x: number, y: number): boolean {
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
+  const angle = -(element.angle ?? 0);
+  const dx = x - cx;
+  const dy = y - cy;
+  const lx = dx * Math.cos(angle) - dy * Math.sin(angle);
+  const ly = dx * Math.sin(angle) + dy * Math.cos(angle);
+  return Math.abs(lx) <= element.width / 2 && Math.abs(ly) <= element.height / 2;
+}
+
+/**
+ * The topmost element (the last in the scene's order) at scene point
+ * (`x`, `y`) among the live embeddables `wanted` keeps, or `null`.
+ */
+export function embeddableAt<T extends PlacedElement>(
+  elements: readonly T[],
+  x: number,
+  y: number,
+  wanted: (element: T) => boolean,
+): T | null {
+  for (let index = elements.length - 1; index >= 0; index--) {
+    const element = elements[index];
+    if (!element || element.isDeleted || element.type !== "embeddable") continue;
+    if (wanted(element) && hits(element, x, y)) return element;
+  }
+  return null;
+}
+
 /**
  * The document drawn at scene point (`x`, `y`): the topmost one there (the
  * last in the scene's order), or `null`.
  */
 export function embedAt(elements: readonly PlacedElement[], x: number, y: number): Embed | null {
-  for (let index = elements.length - 1; index >= 0; index--) {
-    const element = elements[index];
-    if (!element || element.isDeleted || element.type !== "embeddable") continue;
-    const embed = embedOf(element.link);
-    if (!embed) continue;
-    // A rotated element is hit in its own frame.
-    const cx = element.x + element.width / 2;
-    const cy = element.y + element.height / 2;
-    const angle = -(element.angle ?? 0);
-    const dx = x - cx;
-    const dy = y - cy;
-    const lx = dx * Math.cos(angle) - dy * Math.sin(angle);
-    const ly = dx * Math.sin(angle) + dy * Math.cos(angle);
-    if (Math.abs(lx) <= element.width / 2 && Math.abs(ly) <= element.height / 2) return embed;
-  }
-  return null;
+  const element = embeddableAt(elements, x, y, (each) => embedOf(each.link) !== null);
+  return element ? embedOf(element.link) : null;
+}
+
+/** Whether a link is one of BuilderZ's own (a document or a note). */
+export function isOwnLink(link: string | null | undefined): boolean {
+  return link?.startsWith(LINK) ?? false;
 }
 
 /** The top left corner of a document placed at scene point (`x`, `y`): centred on it. */

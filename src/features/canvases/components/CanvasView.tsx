@@ -32,13 +32,16 @@ import {
   type Embed,
   type EmbedKind,
   embedAt,
+  embeddableAt,
   embedLink,
   embedOf,
   embedSize,
+  isOwnLink,
   type PlacedElement,
   placeAt,
 } from "../embeds";
 import type { KeptState, SceneElement } from "../hooks/useCanvasEditor";
+import { isNoteLink, NEW_NOTE, NOTE_LINK, NOTE_SIZE, type Note, noteOf } from "../notes";
 import {
   CURRENT_ITEM,
   isShape,
@@ -53,6 +56,7 @@ import {
 } from "../tools";
 import { CanvasToolbar, type ToolbarState } from "./CanvasToolbar";
 import { DocumentThumbnail } from "./DocumentThumbnail";
+import { NoteView } from "./NoteView";
 
 export type CanvasViewHandle = {
   /** Frames every element. */
@@ -124,7 +128,21 @@ function toolbarState(elements: readonly ExcalidrawElement[], state: AppState): 
   for (const option of options) {
     (values as Record<StyleKey, unknown>)[option] = shownValue(option, selected, current);
   }
-  return { tool, options, values, selection: selected.length > 0 };
+  const notes = selected.filter(
+    (element) => element.type === "embeddable" && isNoteLink((element as { link?: string }).link),
+  );
+  const note =
+    notes.length > 0 && notes.length === selected.length
+      ? (() => {
+          const all = notes.map((element) =>
+            noteOf((element as { customData?: unknown }).customData),
+          );
+          const same = <K extends "color" | "pattern">(key: K) =>
+            all.every((each) => each[key] === all[0]?.[key]) ? all[0]?.[key] : undefined;
+          return { color: same("color"), pattern: same("pattern") };
+        })()
+      : undefined;
+  return { tool, options, values, selection: selected.length > 0, note };
 }
 
 /**
@@ -205,53 +223,159 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const openDocument = useRef(onOpenDocument);
   openDocument.current = onOpenDocument;
 
+  /** Adds one of BuilderZ's embeddables (a document, a note), selected; gives its id. */
+  const addEmbeddable = useCallback(
+    (fields: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      link: string;
+      customData?: Record<string, unknown>;
+    }) => {
+      const excalidraw = api.current;
+      if (!excalidraw) return null;
+      // Excalidraw builds the element from its main fields (defaults for the rest).
+      const [element] = restoreElements(
+        [
+          {
+            type: "embeddable",
+            id: crypto.randomUUID(),
+            ...fields,
+            strokeColor: "transparent",
+            backgroundColor: "transparent",
+            roundness: null,
+            // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
+          } as any,
+        ],
+        null,
+      );
+      if (!element) return null;
+      excalidraw.updateScene({
+        elements: [...excalidraw.getSceneElementsIncludingDeleted(), element],
+        appState: { selectedElementIds: { [element.id]: true } },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+      excalidraw.setActiveTool({ type: "selection" });
+      return element.id;
+    },
+    [],
+  );
+
   /** Adds a document's thumbnail centred on scene point (`x`, `y`), selected. */
-  const place = useCallback((embed: Embed, x: number, y: number) => {
-    const excalidraw = api.current;
-    if (!excalidraw) return;
-    // Excalidraw builds the element from its main fields (defaults for the rest).
-    const [element] = restoreElements(
-      [
-        {
-          type: "embeddable",
-          id: crypto.randomUUID(),
-          ...placeAt(embed.kind, x, y),
-          ...embedSize(embed.kind),
-          link: embedLink(embed),
-          strokeColor: "transparent",
-          backgroundColor: "transparent",
-          roundness: null,
-          // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
-        } as any,
-      ],
-      null,
-    );
-    if (!element) return;
-    excalidraw.updateScene({
-      elements: [...excalidraw.getSceneElementsIncludingDeleted(), element],
-      appState: { selectedElementIds: { [element.id]: true } },
-      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
-    });
-    excalidraw.setActiveTool({ type: "selection" });
+  const place = useCallback(
+    (embed: Embed, x: number, y: number) =>
+      addEmbeddable({
+        ...placeAt(embed.kind, x, y),
+        ...embedSize(embed.kind),
+        link: embedLink(embed),
+      }),
+    [addEmbeddable],
+  );
+
+  /** The middle of the view, in scene coordinates. */
+  const viewCentre = useCallback(() => {
+    const state = api.current?.getAppState();
+    return state
+      ? viewportCoordsToSceneCoords(
+          {
+            clientX: state.offsetLeft + state.width / 2,
+            clientY: state.offsetTop + state.height / 2,
+          },
+          state,
+        )
+      : null;
   }, []);
 
   /** The « Insert » tool: in the middle of the view. */
   const insert = useCallback(
     (embed: Embed) => {
-      const state = api.current?.getAppState();
-      if (!state) return;
-      const point = viewportCoordsToSceneCoords(
-        {
-          clientX: state.offsetLeft + state.width / 2,
-          clientY: state.offsetTop + state.height / 2,
-        },
-        state,
-      );
+      const point = viewCentre();
+      if (!point) return;
       place(embed, point.x, point.y);
       section.current?.querySelector<HTMLElement>(".excalidraw")?.focus();
     },
-    [place],
+    [place, viewCentre],
   );
+
+  // --- Notes ---------------------------------------------------------------
+  // The note written in, if any: Excalidraw lets the pointer into it while
+  // it is its « active » embeddable.
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const editing = useRef<string | null>(null);
+  editing.current = editingNote;
+
+  const startWriting = useCallback((id: string) => {
+    const excalidraw = api.current;
+    const element = excalidraw?.getSceneElements().find((each) => each.id === id);
+    if (!excalidraw || !element) return;
+    setEditingNote(id);
+    excalidraw.updateScene({
+      appState: {
+        selectedElementIds: { [id]: true },
+        // biome-ignore lint/suspicious/noExplicitAny: Excalidraw's own embeddable type
+        activeEmbeddable: { element: element as any, state: "active" },
+      },
+      captureUpdate: CaptureUpdateAction.EVENTUALLY,
+    });
+  }, []);
+
+  /** A note changed while written: in the scene at once, one undo step when done. */
+  const writeNote = useCallback((id: string, note: Note) => {
+    const excalidraw = api.current;
+    const element = excalidraw?.getSceneElementsIncludingDeleted().find((each) => each.id === id);
+    if (!excalidraw || !element) return;
+    const next = newElementWith(element, { customData: note });
+    excalidraw.updateScene({
+      elements: excalidraw
+        .getSceneElementsIncludingDeleted()
+        .map((each) => (each.id === id ? next : each)),
+      // biome-ignore lint/suspicious/noExplicitAny: Excalidraw's own embeddable type
+      appState: { activeEmbeddable: { element: next as any, state: "active" } },
+      captureUpdate: CaptureUpdateAction.EVENTUALLY,
+    });
+  }, []);
+
+  const stopWriting = useCallback(() => {
+    if (editing.current === null) return;
+    setEditingNote(null);
+    api.current?.updateScene({
+      appState: { activeEmbeddable: null },
+      // What was written becomes one step to undo.
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+    section.current?.querySelector<HTMLElement>(".excalidraw")?.focus();
+  }, []);
+
+  /** The « Notes » tool: a new note in the middle of the view, to write in at once. */
+  const addNote = useCallback(() => {
+    const point = viewCentre();
+    if (!point) return;
+    const id = addEmbeddable({
+      x: point.x - NOTE_SIZE.width / 2,
+      y: point.y - NOTE_SIZE.height / 2,
+      ...NOTE_SIZE,
+      link: NOTE_LINK,
+      customData: { ...NEW_NOTE },
+    });
+    if (id) startWriting(id);
+  }, [addEmbeddable, startWriting, viewCentre]);
+
+  const setNoteStyle = useCallback((patch: Partial<Pick<Note, "color" | "pattern">>) => {
+    const excalidraw = api.current;
+    if (!excalidraw) return;
+    const state = excalidraw.getAppState();
+    excalidraw.updateScene({
+      elements: excalidraw
+        .getSceneElementsIncludingDeleted()
+        .map((element) =>
+          state.selectedElementIds[element.id] && !element.isDeleted && isNoteLink(element.link)
+            ? newElementWith(element, { customData: { ...noteOf(element.customData), ...patch } })
+            : element,
+        ),
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    });
+  }, []);
 
   useEffect(() => {
     const box = section.current;
@@ -270,21 +394,27 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
       const point = scenePoint(clientX, clientY);
       if (point) place({ kind: "card", id: cardId }, point.x, point.y);
     };
-    // A double click on a document opens it (before Excalidraw would start a text there).
+    // A double click on a document opens it, on a note writes in it (before
+    // Excalidraw would start a text there).
     const onDoubleClick = (event: MouseEvent) => {
       const point = scenePoint(event.clientX, event.clientY);
-      const elements = api.current?.getSceneElements() as unknown as PlacedElement[] | undefined;
-      const embed = point && elements ? embedAt(elements, point.x, point.y) : null;
-      if (!embed) return;
+      const elements = api.current?.getSceneElements() as unknown as
+        | (PlacedElement & { id: string })[]
+        | undefined;
+      if (!point || !elements) return;
+      const note = embeddableAt(elements, point.x, point.y, (each) => isNoteLink(each.link));
+      const embed = note ? null : embedAt(elements, point.x, point.y);
+      if (!note && !embed) return;
       event.stopPropagation();
       event.preventDefault();
-      openDocument.current(embed.kind, embed.id);
+      if (note) startWriting(note.id);
+      else if (embed) openDocument.current(embed.kind, embed.id);
     };
     // Hovering a document's link icon, Excalidraw shows the link in its
     // tooltip: that link means nothing to read, the tooltip is hidden.
     const hideCardLinks = () => {
       const tip = document.querySelector(".excalidraw-tooltip--visible");
-      if (tip && embedOf(tip.textContent?.trim()))
+      if (tip && isOwnLink(tip.textContent?.trim()))
         tip.classList.remove("excalidraw-tooltip--visible");
     };
     const tooltips = new MutationObserver(hideCardLinks);
@@ -301,7 +431,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
       window.removeEventListener(CARD_DROP_EVENT, onDrop);
       box.removeEventListener("dblclick", onDoubleClick, { capture: true });
     };
-  }, [place]);
+  }, [place, startWriting]);
 
   useImperativeHandle(ref, () => ({
     recenter: () => {
@@ -329,6 +459,9 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
             getSceneVersion(elements),
             appState as unknown as KeptState,
           );
+          if (editing.current && appState.activeEmbeddable?.element.id !== editing.current) {
+            stopWriting();
+          }
           const next = toolbarState(elements, appState);
           const key = JSON.stringify(next);
           if (key !== toolbarKey.current) {
@@ -338,15 +471,30 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
           }
         }}
         // Only BuilderZ's own embeds (world documents): no web page is ever loaded.
-        validateEmbeddable={(link) => embedOf(link) !== null}
-        // A document's link icon opens it (its link leads nowhere).
+        validateEmbeddable={(link) => embedOf(link) !== null || isNoteLink(link)}
+        // A document's link icon opens it, a note's writes in it (their links lead nowhere).
         onLinkOpen={(element, event) => {
+          if (isNoteLink(element.link)) {
+            event.preventDefault();
+            startWriting(element.id);
+            return;
+          }
           const embed = embedOf(element.link);
           if (!embed) return;
           event.preventDefault();
           openDocument.current(embed.kind, embed.id);
         }}
         renderEmbeddable={(element) => {
+          if (isNoteLink(element.link)) {
+            return (
+              <NoteView
+                note={noteOf(element.customData)}
+                editing={editingNote === element.id}
+                onChange={(note) => writeNote(element.id, note)}
+                onDone={stopWriting}
+              />
+            );
+          }
           const embed = embedOf(element.link);
           return embed ? <DocumentThumbnail embed={embed} /> : null;
         }}
@@ -376,6 +524,8 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
             onStyle={setStyle}
             onRemove={remove}
             onInsert={insert}
+            onNote={addNote}
+            onNoteStyle={setNoteStyle}
           />
         </Footer>
       </Excalidraw>
