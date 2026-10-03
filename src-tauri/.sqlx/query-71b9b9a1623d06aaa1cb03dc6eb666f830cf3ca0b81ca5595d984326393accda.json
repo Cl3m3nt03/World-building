@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO canvases (document_id, scene, app_state) VALUES (?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "71b9b9a1623d06aaa1cb03dc6eb666f830cf3ca0b81ca5595d984326393accda"
+}

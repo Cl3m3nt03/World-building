@@ -41,6 +41,8 @@ La recherche d'images Google intégrée à vvd est remplacée par le glisser-dé
 
 Le canvas est sauvegardé automatiquement. La scène Excalidraw est stockée en JSON dans la base, et les images sont des assets du monde, jamais des données base64 dans le JSON.
 
+**Réalisé en M7 (7.1)** : le socle de données, sans interface pour l'instant (migration 0014). Un canvas est un document qui garde sa scène Excalidraw (`{ "elements": [...] }`) et l'état gardé (cadrage, grille…), en JSON. Le Rust refuse une scène qui n'est pas du JSON, trop grande (8 Mo, 50 000 éléments) ou qui contient des octets d'image (`dataURL`) : une image est un asset du monde, l'élément image garde seulement son id (`fileId`). À chaque enregistrement, les assets montrés sont notés : la médiathèque dit « image du canvas … » avant de supprimer une image utilisée ; supprimer l'asset laisse la scène telle quelle. Le canvas suit la corbeille, la duplication et la suppression des documents.
+
 ## Modèle de données (indicatif)
 
 - `canvases` : document_id, scene (JSON Excalidraw sans les binaires), app_state (JSON : cadrage, grille)

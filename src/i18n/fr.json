@@ -476,6 +476,7 @@
   "media.usage.cardImage": "image de la carte « {{name}} »",
   "media.usage.cardBlock": "bloc image de la carte « {{name}} »",
   "media.usage.mapBackground": "fond de la map « {{name}} »",
+  "media.usage.canvasImage": "image du canvas « {{name}} »",
   "media.usage.inTrash": "{{where}} (à la corbeille)",
   "templates.use": "Utiliser le template « {{type}} »",
   "templates.apply": "Appliquer le template « {{type}} »",

@@ -1,0 +1,45 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.id AS \"id!\", d.title, d.trashed_at IS NOT NULL AS \"in_trash!: bool\"\n           FROM canvas_assets a JOIN documents d ON d.id = a.canvas_id\n           WHERE a.asset_id = ?\n           ORDER BY d.title COLLATE NOCASE",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "in_trash!: bool",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "eb1e0c147711214b731ab8d3f226ccef943c22006087bc31c086aa80d2bbb5c9"
+}

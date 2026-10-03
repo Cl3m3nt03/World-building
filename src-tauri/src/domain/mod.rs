@@ -1,5 +1,6 @@
 //! Business logic, independent from Tauri (see CLAUDE.md).
 
+pub mod canvases;
 pub mod card_types;
 pub mod cards;
 pub mod content;

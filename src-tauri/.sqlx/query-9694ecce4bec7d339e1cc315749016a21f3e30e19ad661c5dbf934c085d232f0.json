@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO canvas_assets (canvas_id, asset_id)\n             SELECT ?, id FROM assets WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "9694ecce4bec7d339e1cc315749016a21f3e30e19ad661c5dbf934c085d232f0"
+}

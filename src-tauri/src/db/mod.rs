@@ -1,6 +1,7 @@
 //! SQLite access for a world database (`world.db`).
 
 pub mod assets;
+pub mod canvases;
 pub mod card_types;
 pub mod cards;
 pub mod documents;

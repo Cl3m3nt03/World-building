@@ -121,16 +121,30 @@ pub enum AssetUsage {
         map_title: String,
         in_trash: bool,
     },
+    /// An image on a canvas (M7).
+    #[serde(rename_all = "camelCase")]
+    CanvasImage {
+        canvas_id: String,
+        canvas_title: String,
+        in_trash: bool,
+    },
 }
 
-/// Where cards use an asset: as their image, in image blocks (a card using
-/// it both ways is listed twice).
+/// Where an asset is used: map backgrounds, canvas images, card images and
+/// image blocks (a card using it both ways is listed twice).
 pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsage>> {
     let mut usages = Vec::new();
     for row in crate::db::maps::using_asset(pool, id).await? {
         usages.push(AssetUsage::MapBackground {
             map_id: row.id,
             map_title: row.title,
+            in_trash: row.in_trash,
+        });
+    }
+    for row in crate::db::canvases::using_asset(pool, id).await? {
+        usages.push(AssetUsage::CanvasImage {
+            canvas_id: row.id,
+            canvas_title: row.title,
             in_trash: row.in_trash,
         });
     }

@@ -133,6 +133,16 @@ export const commands = {
 	setMapBackground: (id: string, assetId: string) => typedError<Map, AppError>(__TAURI_INVOKE("set_map_background", { id, assetId })),
 	/**  Duplicates a map as `title` (translated by the front), right after it. */
 	duplicateMap: (id: string, title: string) => typedError<Map, AppError>(__TAURI_INVOKE("duplicate_map", { id, title })),
+	/**  Creates an empty canvas named `title` (translated by the front). */
+	createCanvas: (title: string) => typedError<Canvas, AppError>(__TAURI_INVOKE("create_canvas", { title })),
+	getCanvas: (id: string) => typedError<Canvas, AppError>(__TAURI_INVOKE("get_canvas", { id })),
+	/**
+	 *  Replaces the canvas's scene (`{ "elements": [...] }`, no image bytes) and
+	 *  kept state, both JSON.
+	 */
+	saveCanvas: (id: string, scene: string, appState: string) => typedError<null, AppError>(__TAURI_INVOKE("save_canvas", { id, scene, appState })),
+	/**  Duplicates a canvas as `title` (translated by the front), right after it. */
+	duplicateCanvas: (id: string, title: string) => typedError<Canvas, AppError>(__TAURI_INVOKE("duplicate_canvas", { id, title })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -374,7 +384,9 @@ export type AssetUsage =
 /**  In an image block of a card. */
 { kind: "cardBlock"; cardId: string; cardTitle: string; inTrash: boolean } | 
 /**  The background of a map (M4). */
-{ kind: "mapBackground"; mapId: string; mapTitle: string; inTrash: boolean };
+{ kind: "mapBackground"; mapId: string; mapTitle: string; inTrash: boolean } | 
+/**  An image on a canvas (M7). */
+{ kind: "canvasImage"; canvasId: string; canvasTitle: string; inTrash: boolean };
 
 /**  A document that cites a card, and how ("cited in" at the bottom of a card). */
 export type Backlink = {
@@ -391,6 +403,19 @@ export type BacklinkVia = {
 	kind: LinkKind,
 	/**  The property's label, for a link property. */
 	propertyLabel: string | null,
+};
+
+/**
+ *  A canvas as seen by the front. The scene and the state are JSON texts,
+ *  read and written by Excalidraw.
+ */
+export type Canvas = {
+	id: string,
+	title: string,
+	/**  `{ "elements": [...] }`. */
+	scene: string,
+	/**  A JSON object: what of Excalidraw's state is kept (framing, grid…). */
+	appState: string,
 };
 
 /**  How a card of this type shows on a canvas (M7). */
