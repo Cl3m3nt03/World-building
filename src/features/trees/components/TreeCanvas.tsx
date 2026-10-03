@@ -111,6 +111,10 @@ type Props = {
   onOpenCard: (cardId: string) => void;
   /** More tools for the bottom bar (the variants). */
   tools?: ReactNode;
+  /** Shown above the bottom bar (the variants' tabs). */
+  aboveTools?: ReactNode;
+  /** The variant shown: another one clears the selections (the view stays, to compare). */
+  variantId: string;
 };
 
 function toFlowNodes(
@@ -154,7 +158,18 @@ function nodeName(node: PersonNodeType, empty: string): string {
  * opens its picker and Delete removes it.
  */
 const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
-  { content, cardsById, typesById, relationTypes, label, onChange, onOpenCard, tools },
+  {
+    content,
+    cardsById,
+    typesById,
+    relationTypes,
+    label,
+    onChange,
+    onOpenCard,
+    tools,
+    aboveTools,
+    variantId,
+  },
   ref,
 ) {
   const { t } = useTranslation();
@@ -472,6 +487,20 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
   const [editingAnnotation, setEditingAnnotation] = useState<string | null>(null);
   const [draft, setDraft] = useState<[number, number][] | null>(null);
   const annotation = content.annotations.find((a) => a.id === selectedAnnotation);
+
+  // Another variant: nothing of the previous one stays selected or open.
+  const shownVariant = useRef(variantId);
+  useEffect(() => {
+    if (shownVariant.current === variantId) return;
+    shownVariant.current = variantId;
+    setPicking(null);
+    setSelectedEdges(new Set());
+    setRelationMenuFor(null);
+    setHovered(null);
+    toSelect.current = null;
+    setSelectedAnnotation(null);
+    setEditingAnnotation(null);
+  }, [variantId]);
   const changeTool = (next: Tool) => {
     setTool(next);
     setSelectedAnnotation(null);
@@ -749,6 +778,7 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
           addNodeInView();
         }}
         onRecenter={() => void flow.fitView({ ...FIT_VIEW, duration: 200 })}
+        above={aboveTools}
       >
         {tools}
       </TreeTools>

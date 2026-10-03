@@ -135,6 +135,27 @@ beforeEach(() => {
         return [ARAGORN];
       case "list_card_types":
         return [];
+      case "add_tree_variant": {
+        const { copyOf, name } = payload as { copyOf: string; name: string };
+        if (!stored) return null;
+        const source = stored.variants.find((variant) => variant.id === copyOf);
+        const copy = {
+          id: `v${stored.variants.length + 1}`,
+          name,
+          content: {
+            ...(source?.content ?? { nodes: [], edges: [], annotations: [] }),
+            nodes: (source?.content.nodes ?? []).map((node) => ({
+              ...node,
+              id: `${node.id}-copy`,
+            })),
+          },
+        };
+        const index = stored.variants.findIndex((variant) => variant.id === copyOf);
+        const variants = [...stored.variants];
+        variants.splice(index + 1, 0, copy);
+        stored = { ...stored, variants };
+        return stored;
+      }
       case "list_relation_types":
         return relationTypes;
       case "create_relation_type": {
@@ -412,4 +433,36 @@ test("the text tool writes a free text where the tree is clicked; the eraser rem
     },
   );
   await waitFor(() => expect(savedContent()?.annotations).toEqual([]));
+});
+
+test("« Ajouter une variante » names a copy of the current one; each variant is edited on its own", async () => {
+  stored = emptyTree("Lignée", "Tome 1");
+  const content = stored.variants[0]?.content;
+  if (content) content.nodes = [{ id: "n1", cardId: null, label: "Aragorn", x: 0, y: 0 }];
+  await renderAt("/world/demo/world/tree/t1");
+  await screen.findByText("Aragorn");
+  // One variant: no tabs yet.
+  expect(screen.queryByRole("tablist", { name: "Variantes de l'arbre" })).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une variante" }));
+  const name = await screen.findByLabelText("Nom de la nouvelle variante");
+  fireEvent.change(name, { target: { value: "Après la guerre" } });
+  fireEvent.keyDown(name, { key: "Enter" });
+
+  const tab = await screen.findByRole("tab", { name: "Après la guerre" });
+  await waitFor(() => expect(tab.getAttribute("aria-selected")).toBe("true"));
+  expect(calls).toContainEqual({
+    command: "add_tree_variant",
+    payload: { copyOf: "v1", name: "Après la guerre" },
+  });
+  expect(
+    screen.getByRole("application", { name: "Arbre Lignée, variante Après la guerre" }),
+  ).toBeTruthy();
+
+  // Back to « Tome 1 »: its own content.
+  fireEvent.click(screen.getByRole("tab", { name: "Tome 1" }));
+  await waitFor(() =>
+    expect(screen.getByRole("tab", { name: "Tome 1" }).getAttribute("aria-selected")).toBe("true"),
+  );
+  expect(screen.getByRole("application", { name: "Arbre Lignée, variante Tome 1" })).toBeTruthy();
 });
