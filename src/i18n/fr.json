@@ -658,6 +658,8 @@
   "trees.untitled": "Arbre sans nom",
   "trees.title": "Nom de l'arbre",
   "trees.recenter": "Recentrer",
+  "trees.history.undo": "Annuler (Ctrl+Z)",
+  "trees.history.redo": "Rétablir (Ctrl+Y)",
   "trees.toolbar": "Outils de l'arbre",
   "trees.tools.select": "Sélection",
   "trees.tools.pan": "Main (déplacer la vue)",

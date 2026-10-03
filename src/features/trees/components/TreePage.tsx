@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Layers } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { Layers, Redo2, Undo2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { DocumentTitleField } from "@/components/DocumentTitleField";
@@ -80,6 +80,36 @@ function TreeEditor({
   const variant = tree.variants.find((v) => v.id === variantId);
   const [addingVariant, setAddingVariant] = useState(false);
   const [managingRelations, setManagingRelations] = useState(false);
+
+  // Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) for the variant shown; fields keep their own.
+  const historyKeys = useRef({
+    undo: () => editor.undo(variantId),
+    redo: () => editor.redo(variantId),
+  });
+  historyKeys.current = { undo: () => editor.undo(variantId), redo: () => editor.redo(variantId) };
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        historyKeys.current.undo();
+      } else if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        historyKeys.current.redo();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const content = editor.contents[variantId];
   const addVariant = (name: string) =>
     variants.add.mutate(
@@ -120,15 +150,39 @@ function TreeEditor({
             variantId={variantId}
             onManageRelations={() => setManagingRelations(true)}
             tools={
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={variants.add.isPending}
-                onClick={() => setAddingVariant(true)}
-              >
-                <Layers />
-                {t("trees.variants.addButton")}
-              </Button>
+              <>
+                <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("trees.history.undo")}
+                  title={t("trees.history.undo")}
+                  disabled={!editor.canUndo(variantId)}
+                  onClick={() => editor.undo(variantId)}
+                >
+                  <Undo2 />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("trees.history.redo")}
+                  title={t("trees.history.redo")}
+                  disabled={!editor.canRedo(variantId)}
+                  onClick={() => editor.redo(variantId)}
+                >
+                  <Redo2 />
+                </Button>
+                <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={variants.add.isPending}
+                  onClick={() => setAddingVariant(true)}
+                >
+                  <Layers />
+                  {t("trees.variants.addButton")}
+                </Button>
+              </>
             }
             aboveTools={
               tree.variants.length > 1 || addingVariant ? (
@@ -159,7 +213,7 @@ function TreeEditor({
                 />
               ) : null
             }
-            onChange={(change) => editor.update(variantId, change)}
+            onChange={(change, group) => editor.update(variantId, change, group ?? null)}
             onOpenCard={(cardId) => void navigate(documentRoute(worldId, "card", cardId))}
           />
         )}
@@ -170,21 +224,20 @@ function TreeEditor({
         onOpenChange={setManagingRelations}
         relationTypes={relationTypes}
         flush={editor.flush}
-        onDeleted={(id) => {
-          // The Rust side already cleared it in every tree: the open one follows.
-          for (const v of tree.variants) {
-            editor.update(v.id, (previous) =>
-              previous.edges.some((edge) => edge.relationTypeId === id)
-                ? {
-                    ...previous,
-                    edges: previous.edges.map((edge) =>
-                      edge.relationTypeId === id ? { ...edge, relationTypeId: null } : edge,
-                    ),
-                  }
-                : previous,
-            );
-          }
-        }}
+        onDeleted={(id) =>
+          // The Rust side already cleared it in every tree: the open one
+          // follows, its undo history too (no step may name it again).
+          editor.rewriteAll((previous) =>
+            previous.edges.some((edge) => edge.relationTypeId === id)
+              ? {
+                  ...previous,
+                  edges: previous.edges.map((edge) =>
+                    edge.relationTypeId === id ? { ...edge, relationTypeId: null } : edge,
+                  ),
+                }
+              : previous,
+          )
+        }
       />
     </article>
   );

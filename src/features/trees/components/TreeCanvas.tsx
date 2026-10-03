@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import {
   addAnnotation,
   extendStroke,
+  type FreeText,
   moveAnnotation,
   newDrawing,
   newText,
@@ -106,8 +107,11 @@ type Props = {
   relationTypes: RelationType[];
   /** Accessible name of the view. */
   label: string;
-  /** Applies a change to the variant's content (it is then saved). */
-  onChange: (change: (previous: VariantContent) => VariantContent) => void;
+  /**
+   * Applies a change to the variant's content (it is then saved, and can be
+   * undone; changes of the same `group` close together are one step).
+   */
+  onChange: (change: (previous: VariantContent) => VariantContent, group?: string) => void;
   onOpenCard: (cardId: string) => void;
   /** More tools for the bottom bar (the variants). */
   tools?: ReactNode;
@@ -490,6 +494,7 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
   const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null);
   const [editingAnnotation, setEditingAnnotation] = useState<string | null>(null);
   const [draft, setDraft] = useState<[number, number][] | null>(null);
+  const [draftText, setDraftText] = useState<FreeText | null>(null);
   const annotation = content.annotations.find((a) => a.id === selectedAnnotation);
 
   // Another variant: nothing of the previous one stays selected or open.
@@ -504,6 +509,7 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
     toSelect.current = null;
     setSelectedAnnotation(null);
     setEditingAnnotation(null);
+    setDraftText(null);
   }, [variantId]);
   const changeTool = (next: Tool) => {
     setTool(next);
@@ -530,8 +536,9 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
     event.stopPropagation();
     const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
     if (tool === "text") {
+      // Written first, added once written: one step to undo, nothing empty saved.
       const text = newText(Math.round(at.x), Math.round(at.y), textStyle.color, textStyle.size);
-      onChange((previous) => addAnnotation(previous, text));
+      setDraftText(text);
       setEditingAnnotation(text.id);
       return;
     }
@@ -660,20 +667,31 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
         >
           <Background gap={24} size={1} />
           <AnnotationLayer
-            annotations={content.annotations}
+            annotations={draftText ? [...content.annotations, draftText] : content.annotations}
             tool={tool}
             draft={draft ? { points: draft, color: pen.color, width: pen.width } : null}
             selectedId={selectedAnnotation}
             editingId={editingAnnotation}
             onSelect={setSelectedAnnotation}
             onEdit={setEditingAnnotation}
-            onMove={(id, dx, dy) => onChange((previous) => moveAnnotation(previous, id, dx, dy))}
+            onMove={(id, dx, dy) =>
+              onChange((previous) => moveAnnotation(previous, id, dx, dy), `move:${id}`)
+            }
             onRemove={(id) => {
               onChange((previous) => removeAnnotation(previous, id));
               setSelectedAnnotation((selected) => (selected === id ? null : selected));
             }}
             onText={(id, text) => {
-              onChange((previous) => updateText(previous, id, { text }));
+              if (draftText?.id === id) {
+                if (text.trim() !== "") {
+                  onChange((previous) =>
+                    addAnnotation(previous, { ...draftText, text: text.trim() }),
+                  );
+                }
+                setDraftText(null);
+              } else {
+                onChange((previous) => updateText(previous, id, { text }));
+              }
               setEditingAnnotation(null);
             }}
           />

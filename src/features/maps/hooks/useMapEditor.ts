@@ -2,9 +2,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { documentKeys } from "@/features/cards/hooks/keys";
 import { commands, type MapContent, type Map as WorldMap } from "@/lib/bindings";
+import {
+  type History,
+  record,
+  redo as redoStep,
+  startHistory,
+  undo as undoStep,
+} from "@/lib/history";
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
-import { type History, record, redo as redoStep, startHistory, undo as undoStep } from "../history";
 import { mapKeys } from "./useMaps";
 
 /** Delay of inactivity before a change of the map is saved. */

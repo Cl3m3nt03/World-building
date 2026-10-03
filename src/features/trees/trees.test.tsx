@@ -550,3 +550,30 @@ test("« Gérer les relations… » changes a relation of the world, and deletin
   fireEvent.click(within(confirm).getByRole("button", { name: "Supprimer la relation" }));
   await waitFor(() => expect(savedContent()?.edges[0]?.relationTypeId).toBeNull());
 });
+
+test("Ctrl+Z undoes and Ctrl+Y redoes the variant's changes; the buttons too", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  await renderAt("/world/demo/world/tree/t1");
+  await screen.findByText("Nouveau personnage");
+  const undo = screen.getByRole("button", { name: "Annuler (Ctrl+Z)" });
+  expect((undo as HTMLButtonElement).disabled).toBe(true);
+
+  for (let i = 0; i < 2; i++) {
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter un nœud" }));
+    fireEvent.keyDown(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" }), {
+      key: "Escape",
+    });
+  }
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(3));
+
+  fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
+  fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(1));
+  await waitFor(() => expect(savedNodes()).toHaveLength(1));
+  expect((undo as HTMLButtonElement).disabled).toBe(true);
+
+  fireEvent.keyDown(document.body, { key: "y", ctrlKey: true });
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(2));
+  fireEvent.click(screen.getByRole("button", { name: "Rétablir (Ctrl+Y)" }));
+  await waitFor(() => expect(savedNodes()).toHaveLength(3));
+});
