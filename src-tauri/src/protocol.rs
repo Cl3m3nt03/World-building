@@ -146,6 +146,10 @@ async fn respond(assets_dir: Option<&Path>, id: &str) -> Response<Vec<u8>> {
                 header::CACHE_CONTROL,
                 "private, max-age=31536000, immutable",
             )
+            // The app reads an asset's bytes (a canvas image, M7) and draws
+            // it on a canvas it exports: the app's origin differs from this
+            // scheme's. Only the app's webview can reach this scheme.
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .body(bytes)
             .unwrap_or_else(|_| status(StatusCode::INTERNAL_SERVER_ERROR)),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => status(StatusCode::NOT_FOUND),
@@ -220,6 +224,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.body(), b"png bytes");
         assert_eq!(response.headers()[header::CONTENT_TYPE], "image/png");
+        assert_eq!(response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN], "*");
         assert_eq!(
             response.headers()[header::X_CONTENT_TYPE_OPTIONS],
             "nosniff"

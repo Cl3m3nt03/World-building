@@ -57,6 +57,8 @@ Le canvas est sauvegardé automatiquement. La scène Excalidraw est stockée en 
 
 **Réalisé en M7 (7.8)** : l'outil « Section » trace un cadre (ceux d'Excalidraw), nommé « Section 1 », « Section 2 »… dans la langue de l'app ; un double-clic sur son nom le renomme. Ce qu'on dessine, déplace ou pose dedans en fait partie, y compris une carte glissée de la sidebar, un document inséré, une note, un nuage ou une bulle : la section l'emporte quand on la déplace, et le masque à ses bords. Supprimer une section supprime ce qu'elle contient (`Ctrl+Z` rend le tout).
 
+**Réalisé en M7 (7.9)** : l'outil « Images » ouvre le sélecteur d'image de l'app (médiathèque du monde, bibliothèque partagée, ou import depuis le PC) ; l'image choisie se pose au milieu de la vue, à sa taille (480 au plus sur son grand côté). Une image collée (`Ctrl+V`) ou glissée depuis le PC sur le canvas est d'abord importée dans la médiathèque du monde. Dans tous les cas, la scène ne garde que l'id de l'asset ; à l'ouverture du canvas, les images sont relues depuis la médiathèque (un asset supprimé laisse une image vide). La médiathèque sait qu'une image sert à un canvas et prévient avant de la supprimer. L'image exportée (« Enregistrer en image ») montre les images.
+
 ## Modèle de données (indicatif)
 
 - `canvases` : document_id, scene (JSON Excalidraw sans les binaires), app_state (JSON : cadrage, grille)
