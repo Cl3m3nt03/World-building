@@ -67,6 +67,14 @@ async fn a_scene_is_refused_with_image_bytes_bad_json_or_too_big() {
     let canvas = create(fx.pool(), "Idées").await.unwrap();
     let with_bytes = r#"{"elements":[],"files":{"x":{"dataURL":"data:image/png;base64,AAAA"}}}"#;
     assert!(save(fx.pool(), &canvas.id, with_bytes, "{}").await.is_err());
+    let in_element = r#"{"elements":[{"id":"i","type":"image","customData":{"dataURL":"x"}}]}"#;
+    assert!(save(fx.pool(), &canvas.id, in_element, "{}").await.is_err());
+    let other_files = r#"{"elements":[],"files":{"x":{"mimeType":"image/png"}}}"#;
+    assert!(
+        save(fx.pool(), &canvas.id, other_files, "{}")
+            .await
+            .is_err()
+    );
     assert!(save(fx.pool(), &canvas.id, "not json", "{}").await.is_err());
     assert!(
         save(fx.pool(), &canvas.id, r#"{"other":1}"#, "{}")
@@ -163,4 +171,13 @@ async fn a_canvas_is_duplicated_trashed_and_deleted_like_a_document() {
         media::card_usages(fx.pool(), &image).await.unwrap().len(),
         1
     );
+}
+
+#[tokio::test]
+async fn a_text_about_image_data_is_saved() {
+    let fx = Fixture::new().await;
+    let canvas = create(fx.pool(), "Notes").await.unwrap();
+    let text = r#"{"elements":[{"id":"t","type":"text","text":"data:image/png and \"dataURL\""}],"files":{}}"#;
+    save(fx.pool(), &canvas.id, text, "{}").await.unwrap();
+    assert_eq!(get(fx.pool(), &canvas.id).await.unwrap().scene, text);
 }
