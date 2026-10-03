@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.6.0](https://github.com/Cl3m3nt03/World-building/compare/v0.5.0...v0.6.0) (2026-10-03)
+
+
+### Fonctionnalités
+
+* **tree:** add relatives with the « + » and show what links mean ([#252](https://github.com/Cl3m3nt03/World-building/issues/252)) ([73f135e](https://github.com/Cl3m3nt03/World-building/commit/73f135e6af3aa5cb27ea51170cb1ed8f934e5a6f)), closes [#238](https://github.com/Cl3m3nt03/World-building/issues/238)
+* **tree:** add, rename, reorder and delete a tree's variants ([#256](https://github.com/Cl3m3nt03/World-building/issues/256)) ([50921a7](https://github.com/Cl3m3nt03/World-building/commit/50921a7f42d554be43f1c455ecaa4165923daea5)), closes [#242](https://github.com/Cl3m3nt03/World-building/issues/242)
+* **tree:** create, open and browse a relation tree ([#250](https://github.com/Cl3m3nt03/World-building/issues/250)) ([817fffd](https://github.com/Cl3m3nt03/World-building/commit/817fffdfd814c0b606e0326bc806300b3113ac70)), closes [#236](https://github.com/Cl3m3nt03/World-building/issues/236)
+* **tree:** draw and write over a tree (annotations) ([#255](https://github.com/Cl3m3nt03/World-building/issues/255)) ([d2073d4](https://github.com/Cl3m3nt03/World-building/commit/d2073d4018ed4eb07eccb466c1c42b5a9d827299)), closes [#241](https://github.com/Cl3m3nt03/World-building/issues/241)
+* **tree:** draw, reconnect and set the links of a tree ([#253](https://github.com/Cl3m3nt03/World-building/issues/253)) ([e272965](https://github.com/Cl3m3nt03/World-building/commit/e2729655541e460edc58384faa0d7b5b0f4374f3)), closes [#239](https://github.com/Cl3m3nt03/World-building/issues/239)
+* **tree:** fill, replace, open and remove a tree's nodes ([#251](https://github.com/Cl3m3nt03/World-building/issues/251)) ([4048943](https://github.com/Cl3m3nt03/World-building/commit/4048943b63617bde97748ae048e59791005a19df)), closes [#237](https://github.com/Cl3m3nt03/World-building/issues/237)
+* **tree:** hang links from links (junctions) ([#254](https://github.com/Cl3m3nt03/World-building/issues/254)) ([6a8e0db](https://github.com/Cl3m3nt03/World-building/commit/6a8e0db60576773b125fa0de2c0ad0844b54d70f)), closes [#240](https://github.com/Cl3m3nt03/World-building/issues/240)
+* **tree:** manage the world's relation types ([#257](https://github.com/Cl3m3nt03/World-building/issues/257)) ([8cba59f](https://github.com/Cl3m3nt03/World-building/commit/8cba59f05ca4a6d7d67c55e7440d8b2cdc70c3a0)), closes [#243](https://github.com/Cl3m3nt03/World-building/issues/243)
+* **tree:** store relation trees, their variants and the world's relation types ([#248](https://github.com/Cl3m3nt03/World-building/issues/248)) ([8b6d6e2](https://github.com/Cl3m3nt03/World-building/commit/8b6d6e296c638940592c2cbb39299e919da48c8a)), closes [#235](https://github.com/Cl3m3nt03/World-building/issues/235)
+* **tree:** undo and redo a tree's changes, per variant ([#258](https://github.com/Cl3m3nt03/World-building/issues/258)) ([d24d107](https://github.com/Cl3m3nt03/World-building/commit/d24d10754450fc312f66fe2c460acb8c4ceea671)), closes [#244](https://github.com/Cl3m3nt03/World-building/issues/244)
+
+
+### Corrections
+
+* **tree:** always select the node added from a relation menu ([#267](https://github.com/Cl3m3nt03/World-building/issues/267)) ([3eef02b](https://github.com/Cl3m3nt03/World-building/commit/3eef02b3b371f022d43d40a8836c41bb0212171f)), closes [#266](https://github.com/Cl3m3nt03/World-building/issues/266)
+* **tree:** bring a node just added into view ([#263](https://github.com/Cl3m3nt03/World-building/issues/263)) ([db696a6](https://github.com/Cl3m3nt03/World-building/commit/db696a60f0306bb19762cc85d4b359e2b7f16bd1))
+* **tree:** give attach points a grab area of the same size at any zoom ([#265](https://github.com/Cl3m3nt03/World-building/issues/265)) ([ae9d751](https://github.com/Cl3m3nt03/World-building/commit/ae9d7516f22211994c0ebc13cdebe19441146734)), closes [#264](https://github.com/Cl3m3nt03/World-building/issues/264)
+* **tree:** keep the tree's tools inside its frame in a narrow window ([#261](https://github.com/Cl3m3nt03/World-building/issues/261)) ([a7f2373](https://github.com/Cl3m3nt03/World-building/commit/a7f237387fdb3efee773709c3a0cb4e233fc55b9)), closes [#260](https://github.com/Cl3m3nt03/World-building/issues/260)
+
 ## [0.5.0](https://github.com/Cl3m3nt03/World-building/compare/v0.4.0...v0.5.0) (2026-10-02)
 
 
