@@ -131,6 +131,27 @@ async function relative(from: string, side: string, relation: string, label: str
 }
 
 describe("M6: the relation tree", () => {
+  before(async () => {
+    // Where the focus goes, for the report of a failed test (wdio.conf.ts).
+    await browser.execute(() => {
+      const log: string[] = [];
+      (window as unknown as { __e2eFocusLog: string[] }).__e2eFocusLog = log;
+      const name = (target: EventTarget | null) =>
+        target instanceof Element
+          ? `${target.tagName}[${target.getAttribute("aria-label") ?? target.className.toString().slice(0, 30)}]`
+          : String(target);
+      for (const type of ["focusin", "focusout"]) {
+        document.addEventListener(
+          type,
+          (event) => log.push(`${type} ${name(event.target)} focused=${document.hasFocus()}`),
+          true,
+        );
+      }
+      window.addEventListener("blur", () => log.push("window blur"));
+      window.addEventListener("focus", () => log.push("window focus"));
+    });
+  });
+
   it("builds three generations with the « + » only", async () => {
     await createWorld(WORLD);
     await openTab("World");

@@ -126,6 +126,9 @@ export const config: WebdriverIO.Config = {
       await browser.saveScreenshot(path.join(logs, `e2e-${name}.png`));
       const state = await browser.execute(() => ({
         size: `${innerWidth}x${innerHeight}`,
+        windowFocused: document.hasFocus(),
+        // Kept by the specs that record focus moves (window.__e2eFocusLog).
+        focusLog: (window as unknown as { __e2eFocusLog?: string[] }).__e2eFocusLog?.slice(-40),
         focus: `${document.activeElement?.tagName} ${document.activeElement?.getAttribute("aria-label") ?? ""}`,
         text: document.body.innerText.slice(0, 4000),
       }));
