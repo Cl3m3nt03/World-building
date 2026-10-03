@@ -369,3 +369,80 @@ div.leaflet-container {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+/* Excalidraw (canvas, M7) on the app's tokens. The second selector beats
+   Excalidraw's own dark theme rule, whatever the order the sheets load in. */
+.bz-canvas .excalidraw,
+.bz-canvas .excalidraw.theme--dark {
+  --ui-font: var(--font-sans);
+  --color-primary: var(--bz-accent);
+  --color-primary-darker: color-mix(in oklab, var(--bz-accent) 85%, var(--bz-text));
+  --color-primary-darkest: color-mix(in oklab, var(--bz-accent) 70%, var(--bz-text));
+  --color-primary-hover: color-mix(in oklab, var(--bz-accent) 85%, var(--bz-text));
+  --color-primary-light: color-mix(in oklab, var(--bz-accent) 22%, transparent);
+  --color-primary-light-darker: color-mix(in oklab, var(--bz-accent) 32%, transparent);
+  --color-brand-hover: color-mix(in oklab, var(--bz-accent) 85%, var(--bz-text));
+  --color-brand-active: color-mix(in oklab, var(--bz-accent) 70%, var(--bz-text));
+  --color-surface-primary-container: color-mix(in oklab, var(--bz-accent) 22%, transparent);
+  --color-on-surface: var(--bz-text);
+  --text-primary-color: var(--bz-text);
+  --color-surface-lowest: var(--bz-surface-strong);
+  --color-surface-low: var(--bz-surface-strong);
+  --color-surface-mid: var(--bz-surface-strong);
+  --color-surface-high: var(--bz-hover);
+  --island-bg-color: var(--bz-surface-strong);
+  --popup-bg-color: var(--bz-surface-strong);
+  --input-bg-color: var(--bz-surface-strong);
+  --input-border-color: var(--bz-border);
+  --button-hover-bg: var(--bz-hover);
+  --default-bg-color: transparent;
+  --border-radius-md: var(--bz-radius-sm);
+  --border-radius-lg: var(--bz-radius-md);
+  --keybinding-color: var(--bz-text-muted);
+}
+
+/* BuilderZ draws the tools at the bottom (CanvasToolbar): Excalidraw's own
+   toolbar, its style panel and its library are hidden. */
+.bz-canvas .excalidraw .App-menu_top .shapes-section,
+.bz-canvas .excalidraw .App-menu__left,
+.bz-canvas .excalidraw .layer-ui__wrapper__top-right {
+  display: none;
+}
+
+/* The bar takes the footer's middle, between zoom and undo on the left and
+   help on the right: never over them, whatever the window's width; its
+   options wrap above it rather than overflow. */
+.bz-canvas .excalidraw .footer-center {
+  min-width: 0;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* A colour swatch is seen as Excalidraw draws it: inverted in the dark theme
+   (the same filter as Excalidraw's; popovers render outside Excalidraw). */
+[data-theme="dark"] .bz-canvas-swatch {
+  filter: invert(93%) hue-rotate(180deg);
+}
+
+.bz-canvas-swatch:not([style*="background"]) {
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--bz-danger) 50%,
+    transparent calc(50% + 1px)
+  );
+}
+
+.bz-canvas-fill-hachure {
+  background: repeating-linear-gradient(45deg, currentColor 0 1px, transparent 1px 4px);
+}
+
+.bz-canvas-fill-cross-hatch {
+  background:
+    repeating-linear-gradient(45deg, currentColor 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, currentColor 0 1px, transparent 1px 4px);
+}
+
+.bz-canvas-fill-solid {
+  background: currentColor;
+}
