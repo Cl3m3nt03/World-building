@@ -341,3 +341,20 @@ async fn relation_types_provided_and_of_the_world() {
     // Provided types stay as they are.
     assert!(delete_relation_type(fx.pool(), "rel-parent").await.is_err());
 }
+
+#[tokio::test]
+async fn a_provided_type_is_never_the_inverse_of_a_type_of_the_world() {
+    let fx = Fixture::new().await;
+    let input = RelationTypeInput {
+        name: "Tuteur".into(),
+        icon: "shield".into(),
+        category: RelationCategory::Custom,
+        inverse_id: Some("rel-child".into()),
+        symmetric: false,
+    };
+    assert!(create_relation_type(fx.pool(), &input).await.is_err());
+    // The provided pair is untouched.
+    let types = relation_types(fx.pool()).await.unwrap();
+    let parent = types.iter().find(|t| t.id == "rel-parent").unwrap();
+    assert_eq!(parent.inverse_id.as_deref(), Some("rel-child"));
+}

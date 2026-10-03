@@ -13,6 +13,7 @@ import { documentRoute } from "@/lib/documentRoute";
 import { useTreeEditor } from "../hooks/useTreeEditor";
 import { useRelationTypes, useRenameTree, useTree } from "../hooks/useTrees";
 import { useVariants } from "../hooks/useVariants";
+import { RelationTypesDialog } from "./RelationTypesDialog";
 import { TreeCanvas, type TreeCanvasHandle } from "./TreeCanvas";
 import { VariantTabs } from "./VariantTabs";
 
@@ -78,6 +79,7 @@ function TreeEditor({
     : (tree.variants[0]?.id ?? "");
   const variant = tree.variants.find((v) => v.id === variantId);
   const [addingVariant, setAddingVariant] = useState(false);
+  const [managingRelations, setManagingRelations] = useState(false);
   const content = editor.contents[variantId];
   const addVariant = (name: string) =>
     variants.add.mutate(
@@ -116,6 +118,7 @@ function TreeEditor({
                 : t("trees.viewLabel", { name: tree.title })
             }
             variantId={variantId}
+            onManageRelations={() => setManagingRelations(true)}
             tools={
               <Button
                 variant="ghost"
@@ -162,6 +165,27 @@ function TreeEditor({
         )}
       </div>
       <p className="text-xs text-muted-foreground">{t("trees.navigationHint")}</p>
+      <RelationTypesDialog
+        open={managingRelations}
+        onOpenChange={setManagingRelations}
+        relationTypes={relationTypes}
+        flush={editor.flush}
+        onDeleted={(id) => {
+          // The Rust side already cleared it in every tree: the open one follows.
+          for (const v of tree.variants) {
+            editor.update(v.id, (previous) =>
+              previous.edges.some((edge) => edge.relationTypeId === id)
+                ? {
+                    ...previous,
+                    edges: previous.edges.map((edge) =>
+                      edge.relationTypeId === id ? { ...edge, relationTypeId: null } : edge,
+                    ),
+                  }
+                : previous,
+            );
+          }
+        }}
+      />
     </article>
   );
 }

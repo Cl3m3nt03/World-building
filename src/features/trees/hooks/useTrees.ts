@@ -67,3 +67,38 @@ export function useCreateRelationType() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: treeKeys.relationTypes() }),
   });
 }
+
+/** Changes a relation type of the world (name, icon, category, inverse). */
+export function useUpdateRelationType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: RelationTypeInput }) =>
+      unwrap(commands.updateRelationType(id, input)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: treeKeys.relationTypes() }),
+  });
+}
+
+/**
+ * Deletes a relation type of the world: its links become « without type »
+ * in every tree. `beforeDelete` saves what waits (it must not name the type
+ * any more once it is gone); `afterDelete` clears it from what is open.
+ */
+export function useDeleteRelationType(
+  beforeDelete: () => Promise<unknown> | undefined,
+  afterDelete: (id: string) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await beforeDelete();
+      return unwrap(commands.deleteRelationType(id));
+    },
+    onSuccess: async (_, id) => {
+      afterDelete(id);
+      // The other trees, kept from an earlier visit, still name the type:
+      // they are read again when next opened (an editor starts from them).
+      queryClient.removeQueries({ queryKey: treeKeys.all(), type: "inactive" });
+      await queryClient.invalidateQueries({ queryKey: treeKeys.relationTypes() });
+    },
+  });
+}

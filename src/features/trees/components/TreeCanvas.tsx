@@ -113,6 +113,8 @@ type Props = {
   tools?: ReactNode;
   /** Shown above the bottom bar (the variants' tabs). */
   aboveTools?: ReactNode;
+  /** Opens the window managing the world's relation types. */
+  onManageRelations: () => void;
   /** The variant shown: another one clears the selections (the view stays, to compare). */
   variantId: string;
 };
@@ -169,6 +171,7 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
     tools,
     aboveTools,
     variantId,
+    onManageRelations,
   },
   ref,
 ) {
@@ -349,8 +352,9 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       },
       relationMenuFor,
       setRelationMenuFor,
+      manageRelations: onManageRelations,
     }),
-    [relationTypes, addRelativeTo, onChange, relationMenuFor, geometry],
+    [relationTypes, addRelativeTo, onChange, relationMenuFor, geometry, onManageRelations],
   );
 
   /** Selects only the link `id` (a link just drawn). */
@@ -710,6 +714,7 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
                 </CardPicker>
                 <RelationMenu
                   relationTypes={relationTypes}
+                  onManage={onManageRelations}
                   onPick={(type) => addRelativeTo(current.id, naturalDirection(type), type)}
                 >
                   <Button

@@ -1,4 +1,4 @@
-import { CircleDashed, Plus } from "lucide-react";
+import { CircleDashed, Plus, Settings2 } from "lucide-react";
 import { type ReactNode, type SyntheticEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -20,12 +20,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ChoiceTiles } from "@/features/card-types";
 import type { RelationType } from "@/lib/bindings";
 import { useCreateRelationType } from "../hooks/useTrees";
-import { RELATION_ICON_NAMES, relationIcon, relationName } from "../relations";
+import { relationIcon, relationName } from "../relations";
+import { emptyRelationInput, RelationTypeForm } from "./RelationTypeForm";
 
 type MenuProps = {
   /** The trigger: a « + » around a node, or the node bar's button. */
@@ -34,6 +32,8 @@ type MenuProps = {
   /** A relation was picked (`null`: « skip for now », a link without a type). */
   onPick: (type: RelationType | null) => void;
   side?: "top" | "right" | "bottom" | "left";
+  /** Opens the window that manages the world's relation types. */
+  onManage?: () => void;
   /** Opened from outside (a link just drawn); the menu stays usable alone. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -57,6 +57,7 @@ export function RelationMenu({
   side = "bottom",
   open,
   onOpenChange,
+  onManage,
 }: MenuProps) {
   const { t } = useTranslation();
   const [creating, setCreating] = useState(false);
@@ -126,11 +127,21 @@ export function RelationMenu({
               {t("trees.relations.skip")}
             </DropdownMenuItem>
           </div>
+          {onManage && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onManage}>
+                <Settings2 aria-hidden />
+                {t("trees.relationTypes.manage")}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <CustomRelationDialog
         open={creating}
         onOpenChange={setCreating}
+        relationTypes={relationTypes}
         onCreated={(type) => {
           setCreating(false);
           pick(type);
@@ -140,76 +151,44 @@ export function RelationMenu({
   );
 }
 
-/** Names a new relation type of the world, with its icon, and uses it at once. */
+/** Names a new relation type of the world (icon, category, inverse) and uses it at once. */
 function CustomRelationDialog({
   open,
   onOpenChange,
+  relationTypes,
   onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  relationTypes: RelationType[];
   onCreated: (type: RelationType) => void;
 }) {
   const { t } = useTranslation();
   const create = useCreateRelationType();
-  const [name, setName] = useState("");
-  const [icon, setIcon] = useState("link");
-  const submit = () => {
-    if (name.trim() === "") return;
-    create.mutate(
-      { name: name.trim(), icon, category: "custom", inverseId: null, symmetric: false },
-      {
-        onSuccess: (type) => {
-          setName("");
-          setIcon("link");
-          onCreated(type);
-        },
-      },
-    );
-  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>{t("trees.relations.customTitle")}</DialogTitle>
-            <DialogDescription>{t("trees.relations.customDescription")}</DialogDescription>
-          </DialogHeader>
-          {create.error && <AppErrorMessage error={create.error} />}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="relation-name">{t("trees.relations.customName")}</Label>
-            <Input
-              id="relation-name"
-              value={name}
-              autoFocus
-              maxLength={100}
-              placeholder={t("trees.relations.customPlaceholder")}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
-          <ChoiceTiles
-            label={t("trees.relations.customIcon")}
-            value={icon}
-            onChange={setIcon}
-            className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto"
-            tileClassName="size-9"
-            choices={RELATION_ICON_NAMES.map((value) => {
-              const Icon = relationIcon(value);
-              return { value, label: value, content: <Icon aria-hidden className="size-4" /> };
-            })}
-          />
-          <DialogFooter>
-            <Button type="submit" disabled={name.trim() === "" || create.isPending}>
-              {t("trees.relations.customSubmit")}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogHeader>
+          <DialogTitle>{t("trees.relations.customTitle")}</DialogTitle>
+          <DialogDescription>{t("trees.relations.customDescription")}</DialogDescription>
+        </DialogHeader>
+        {create.error && <AppErrorMessage error={create.error} />}
+        {open && (
+          <RelationTypeForm
+            initial={emptyRelationInput()}
+            relationTypes={relationTypes}
+            editingId={null}
+            onSubmit={(input) => create.mutate(input, { onSuccess: onCreated })}
+          >
+            {(valid) => (
+              <DialogFooter>
+                <Button type="submit" disabled={!valid || create.isPending}>
+                  {t("trees.relations.customSubmit")}
+                </Button>
+              </DialogFooter>
+            )}
+          </RelationTypeForm>
+        )}
       </DialogContent>
     </Dialog>
   );

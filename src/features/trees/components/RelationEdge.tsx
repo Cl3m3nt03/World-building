@@ -212,6 +212,7 @@ export const RelationEdge = memo(function RelationEdge({
           >
             <RelationMenu
               relationTypes={actions.relationTypes}
+              onManage={actions.manageRelations}
               open={actions.relationMenuFor === id}
               onOpenChange={(open) => actions.setRelationMenuFor(open ? id : null)}
               onPick={(type) => {
@@ -226,6 +227,7 @@ export const RelationEdge = memo(function RelationEdge({
             </RelationMenu>
             <RelationMenu
               relationTypes={actions.relationTypes}
+              onManage={actions.manageRelations}
               onPick={(type) => actions.addJunctionRelative(id, type)}
             >
               <Button
