@@ -41,7 +41,7 @@ Le wiki et l'onglet World lisent **les mêmes données**. Une modification faite
 
 - « Exporter le wiki » : on choisit un dossier de destination, et le site statique y est généré avec le thème courant.
 - Le site exporté fonctionne **hors ligne**, sans serveur : il s'ouvre en double-cliquant sur `index.html`, et sa recherche fonctionne côté client grâce à un index généré.
-- La génération est faite en Rust, avec une barre de progression.
+- La génération est faite en Rust, avec une barre de progression : le Rust écrit le dossier, copie les images et les polices, et dit où il en est ; le HTML des pages vient du même rendu que l'app (ADR 0008).
 
 ## Modèle de données (indicatif)
 
