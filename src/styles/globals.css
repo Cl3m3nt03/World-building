@@ -471,3 +471,11 @@ div.leaflet-container {
   color: inherit;
   white-space: pre-wrap;
 }
+
+/* In a narrow window Excalidraw shows its own bottom bar (tools, menu):
+   BuilderZ's bar takes its place (CanvasView). */
+.bz-canvas .excalidraw .App-bottom-bar,
+.bz-canvas .excalidraw .App-toolbar--mobile,
+.bz-canvas .excalidraw .mobile-misc-tools-container {
+  display: none;
+}
