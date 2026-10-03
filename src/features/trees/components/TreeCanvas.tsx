@@ -83,8 +83,15 @@ const JUNCTION_HANDLES = (["top", "right", "bottom", "left"] as const).map((side
 /** A node of the view: a person, or the middle of a link (where junctions start). */
 type TreeNodeType = PersonNodeType | JunctionNodeType;
 const EDGE_TYPES = { relation: RelationEdge };
-/** Framing of every node: a small tree is not blown up past its real size. */
-const FIT_VIEW = { padding: 0.2, maxZoom: 1 };
+/**
+ * Framing of every node: a small tree is not blown up past its real size,
+ * and nothing hides under the tools at the bottom or lacks room for its
+ * « + » and bar above.
+ */
+const FIT_VIEW = {
+  padding: { top: "110px", bottom: "120px", x: "60px" },
+  maxZoom: 1,
+} as const;
 /** Space between a node and its bar: room for the « + » above it (as on the board). */
 const TOOLBAR_OFFSET = 44;
 /** Room kept around a node brought into view (px): its bar above, the tools below. */
