@@ -292,3 +292,39 @@ test("the banner is chosen and removed", async () => {
   await waitFor(() => expect(saved.at(-1)?.bannerAssetId).toBeNull());
   expect(screen.getByRole("button", { name: "Ajouter une bannière" })).toBeTruthy();
 });
+
+test("« Style du site »: a theme, a colour, a saved palette", async () => {
+  await renderWiki();
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("button", { name: "Style du site" }));
+  });
+  const panel = await screen.findByRole("dialog");
+  fireEvent.click(within(panel).getByRole("button", { name: /Nuit/ }));
+  await waitFor(() =>
+    expect(saved.at(-1)?.theme).toMatchObject({ preset: "night", palette: null }),
+  );
+  const root = document.querySelector<HTMLElement>("[data-wiki]");
+  await waitFor(() => expect(root?.dataset.wikiScheme).toBe("dark"));
+
+  await act(async () => {
+    fireEvent.mouseDown(within(panel).getByRole("tab", { name: "Couleurs" }), { button: 0 });
+  });
+  const accent = within(panel).getByRole("textbox", { name: "Accent (titres, liens)" });
+  fireEvent.change(accent, { target: { value: "#AA3300" } });
+  await waitFor(() => expect(saved.at(-1)?.theme.palette?.accent).toBe("#aa3300"));
+  expect(root?.style.getPropertyValue("--wiki-accent")).toBe("#aa3300");
+
+  // A text too close to the background is flagged.
+  fireEvent.change(within(panel).getByRole("textbox", { name: "Texte" }), {
+    target: { value: "#1b1d26" },
+  });
+  expect(within(panel).getByRole("status").textContent).toMatch(/Contraste faible/);
+
+  fireEvent.change(within(panel).getByRole("textbox", { name: "Nom de la palette" }), {
+    target: { value: "Braise" },
+  });
+  fireEvent.click(within(panel).getByRole("button", { name: "Enregistrer" }));
+  await waitFor(() =>
+    expect(saved.at(-1)?.theme.savedPalettes?.map((named) => named.name)).toEqual(["Braise"]),
+  );
+});

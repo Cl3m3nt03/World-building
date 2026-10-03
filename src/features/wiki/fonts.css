@@ -1,0 +1,9 @@
+/*
+ * The wiki's fonts (M8), free (SIL Open Font License) and shipped with the
+ * app: see WIKI_FONTS in theme.ts. Inter is the app's own.
+ */
+@import "@fontsource-variable/cinzel";
+@import "@fontsource-variable/playfair-display";
+@import "@fontsource-variable/eb-garamond";
+@import "@fontsource-variable/lora";
+@import "@fontsource-variable/source-serif-4";
