@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useUiStore } from "@/app/stores/ui";
 
 export type ThemePreference = "light" | "dark" | "system";
@@ -55,4 +55,19 @@ export function useThemeSync(): void {
   useEffect(() => {
     applyTransparency(transparency);
   }, [transparency]);
+}
+
+function readTheme(): ResolvedTheme {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function subscribeTheme(onChange: () => void): () => void {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => observer.disconnect();
+}
+
+/** The theme shown now (for components that draw their own colours: the canvas). */
+export function useResolvedTheme(): ResolvedTheme {
+  return useSyncExternalStore(subscribeTheme, readTheme, () => "light");
 }

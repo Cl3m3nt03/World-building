@@ -20,6 +20,7 @@ import {
   FolderOpen,
   FolderPlus,
   Globe,
+  LayoutGrid,
   type LucideIcon,
   Map as MapIcon,
   Network,
@@ -115,6 +116,8 @@ type Props = {
   onNewGraph: () => void;
   /** "New tree" from the right click (M6). */
   onNewTree: () => void;
+  /** "New canvas" from the right click (M7). */
+  onNewCanvas: () => void;
   ref?: Ref<DocumentTreeHandle>;
 };
 
@@ -145,6 +148,7 @@ export function DocumentTreeView({
   onNewMap,
   onNewGraph,
   onNewTree,
+  onNewCanvas,
   ref,
 }: Props) {
   const { t } = useTranslation();
@@ -531,6 +535,10 @@ export function DocumentTreeView({
         <Network />
         {t("sidebar.newTree")}
       </ContextMenuItem>
+      <ContextMenuItem onSelect={onNewCanvas}>
+        <LayoutGrid />
+        {t("sidebar.newCanvas")}
+      </ContextMenuItem>
     </>
   );
 
@@ -851,12 +859,10 @@ function DocumentMenu({
         {pinned ? <PinOff /> : <Pin />}
         {pinned ? t("sidebar.pins.unpin") : t("sidebar.pins.pin")}
       </ContextMenuItem>
-      {node.document.kind !== "canvas" && (
-        <ContextMenuItem onSelect={onDuplicate}>
-          <Copy />
-          {t("sidebar.document.duplicate")}
-        </ContextMenuItem>
-      )}
+      <ContextMenuItem onSelect={onDuplicate}>
+        <Copy />
+        {t("sidebar.document.duplicate")}
+      </ContextMenuItem>
       <ContextMenuItem onSelect={onMove}>
         <FolderInput />
         {t("sidebar.document.moveTo")}
@@ -895,6 +901,7 @@ function nodeVisual(
   if (node.document.kind === "map") return { Icon: MapIcon, label: node.document.title };
   if (node.document.kind === "graph") return { Icon: Share2, label: node.document.title };
   if (node.document.kind === "tree") return { Icon: Network, label: node.document.title };
+  if (node.document.kind === "canvas") return { Icon: LayoutGrid, label: node.document.title };
   const type = node.document.typeId ? typesById.get(node.document.typeId) : undefined;
   return {
     Icon: typeIcon(type?.icon ?? "shapes"),

@@ -221,7 +221,7 @@ test('"New tree" in the sidebar creates a tree with one empty character, and ope
   const router = await renderAt("/world/demo/world");
 
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre…)",
+    name: "Nouveau document (map, graph, arbre, canvas…)",
   });
   await act(async () => {
     trigger.focus();
