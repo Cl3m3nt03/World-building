@@ -151,9 +151,14 @@ pub enum EdgeReason {
     #[serde(rename_all = "camelCase")]
     Mention { from: String, count: u32 },
     /// The other card is a value of card `from`'s link property `label`
-    /// (empty when the property is gone).
+    /// (empty when the property is gone); with the relation the property
+    /// carries, if any (the other card is that relation of `from`).
     #[serde(rename_all = "camelCase")]
-    Property { from: String, label: String },
+    Property {
+        from: String,
+        label: String,
+        relation_type_id: Option<String>,
+    },
     /// A relation drawn in a tree: `from` is `relation_type_id` of `to`
     /// (« Gilraen : parent de Aragorn »); `None`: a link without a type.
     #[serde(rename_all = "camelCase")]
@@ -459,6 +464,7 @@ pub async fn data(pool: &SqlitePool) -> AppResult<GraphData> {
             EdgeReason::Property {
                 from: edge.source_id.clone(),
                 label: edge.label.unwrap_or_default(),
+                relation_type_id: edge.relation_type_id,
             }
         } else {
             EdgeReason::Mention {

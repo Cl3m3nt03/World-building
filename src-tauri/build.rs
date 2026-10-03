@@ -79,6 +79,7 @@ const COMMANDS: &[&str] = &[
     "create_property",
     "rename_property",
     "set_property_kind",
+    "set_property_relation",
     "apply_property_to_existing",
     "reorder_properties",
     "count_property_values",

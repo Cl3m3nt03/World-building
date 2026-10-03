@@ -78,6 +78,22 @@ pub async fn set_property_kind(
     .await
 }
 
+/// Makes a link property a relation of the world (`None`: just a link).
+#[tauri::command]
+#[specta::specta]
+pub async fn set_property_relation(
+    state: State<'_, AppState>,
+    id: String,
+    relation_type_id: Option<String>,
+) -> AppResult<PropertyDefinition> {
+    properties::set_relation(
+        &pool(&state, "set_property_relation").await?,
+        &id,
+        relation_type_id.as_deref(),
+    )
+    .await
+}
+
 /// Shows a type property on the cards created before it too.
 #[tauri::command]
 #[specta::specta]

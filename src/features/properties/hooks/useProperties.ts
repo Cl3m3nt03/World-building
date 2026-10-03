@@ -70,6 +70,16 @@ export function useSetPropertyKind() {
   });
 }
 
+/** Makes a link property a relation of the world (`null`: just a link). */
+export function useSetPropertyRelation() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, relationTypeId }: { id: string; relationTypeId: string | null }) =>
+      unwrap(commands.setPropertyRelation(id, relationTypeId)),
+    onSuccess: invalidate,
+  });
+}
+
 export function useApplyPropertyToExisting() {
   const invalidate = useInvalidate();
   return useMutation({

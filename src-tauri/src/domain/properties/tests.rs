@@ -394,3 +394,112 @@ async fn link_values_are_links_to_allowed_live_cards() {
     );
     assert_eq!(count_values(fx.pool(), &birthplace.id).await.unwrap(), 0);
 }
+
+#[tokio::test]
+async fn a_link_property_can_be_a_relation_of_the_world() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let parents = create(
+        fx.pool(),
+        on_type(&character),
+        "Parents",
+        PropertyKind::Text,
+    )
+    .await
+    .unwrap();
+    // A text is no relation.
+    assert!(
+        set_relation(fx.pool(), &parents.id, Some("rel-parent"))
+            .await
+            .is_err()
+    );
+    let parents = set_kind(fx.pool(), &parents.id, PropertyKind::Cards, &[])
+        .await
+        .unwrap();
+    assert!(
+        set_relation(fx.pool(), &parents.id, Some("rel-unknown"))
+            .await
+            .is_err()
+    );
+    let parents = set_relation(fx.pool(), &parents.id, Some("rel-parent"))
+        .await
+        .unwrap();
+    assert_eq!(parents.relation_type_id.as_deref(), Some("rel-parent"));
+    assert_eq!(
+        get(fx.pool(), &parents.id)
+            .await
+            .unwrap()
+            .relation_type_id
+            .as_deref(),
+        Some("rel-parent")
+    );
+
+    // Its values tell the graph which relation links the cards.
+    tick().await;
+    let aragorn = fx.card(&character, "Aragorn").await;
+    let arathorn = fx.card(&character, "Arathorn").await;
+    set_value(
+        fx.pool(),
+        &aragorn,
+        &parents.id,
+        Some(PropertyValue::Cards(vec![arathorn.clone()])),
+    )
+    .await
+    .unwrap();
+    let data = crate::domain::graphs::data(fx.pool()).await.unwrap();
+    assert_eq!(
+        data.edges[0].reasons,
+        [crate::domain::graphs::EdgeReason::Property {
+            from: aragorn.clone(),
+            label: "Parents".into(),
+            relation_type_id: Some("rel-parent".into()),
+        }]
+    );
+
+    // No longer a link: no longer a relation.
+    let parents = set_kind(fx.pool(), &parents.id, PropertyKind::Text, &[])
+        .await
+        .unwrap();
+    assert_eq!(parents.relation_type_id, None);
+    // Back to a link: just a link, until told otherwise.
+    let parents = set_kind(fx.pool(), &parents.id, PropertyKind::Card, &[])
+        .await
+        .unwrap();
+    assert_eq!(parents.relation_type_id, None);
+    let parents = set_relation(fx.pool(), &parents.id, None).await.unwrap();
+    assert_eq!(parents.relation_type_id, None);
+}
+
+#[tokio::test]
+async fn a_relation_deleted_leaves_its_properties_plain_links() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let custom = crate::domain::trees::create_relation_type(
+        fx.pool(),
+        &crate::domain::trees::RelationTypeInput {
+            name: "Mentor".into(),
+            icon: "graduation-cap".into(),
+            category: crate::domain::trees::RelationCategory::Custom,
+            inverse_id: None,
+            symmetric: false,
+        },
+    )
+    .await
+    .unwrap();
+    let mentor = create(fx.pool(), on_type(&character), "Mentor", PropertyKind::Text)
+        .await
+        .unwrap();
+    set_kind(fx.pool(), &mentor.id, PropertyKind::Card, &[])
+        .await
+        .unwrap();
+    set_relation(fx.pool(), &mentor.id, Some(&custom.id))
+        .await
+        .unwrap();
+    crate::domain::trees::delete_relation_type(fx.pool(), &custom.id)
+        .await
+        .unwrap();
+    assert_eq!(
+        get(fx.pool(), &mentor.id).await.unwrap().relation_type_id,
+        None
+    );
+}

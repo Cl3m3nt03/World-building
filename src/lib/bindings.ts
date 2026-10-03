@@ -107,6 +107,8 @@ export const commands = {
 	renameProperty: (id: string, label: string) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("rename_property", { id, label })),
 	/**  Changes a property's kind; values of the old kind are dropped. */
 	setPropertyKind: (id: string, kind: PropertyKind, targetTypeIds: string[]) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("set_property_kind", { id, kind, targetTypeIds })),
+	/**  Makes a link property a relation of the world (`None`: just a link). */
+	setPropertyRelation: (id: string, relationTypeId: string | null) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("set_property_relation", { id, relationTypeId })),
 	/**  Shows a type property on the cards created before it too. */
 	applyPropertyToExisting: (id: string) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("apply_property_to_existing", { id })),
 	reorderProperties: (ids: string[]) => typedError<null, AppError>(__TAURI_INVOKE("reorder_properties", { ids })),
@@ -516,9 +518,10 @@ export type EdgeReason =
 { kind: "mention"; from: string; count: number } | 
 /**
  *  The other card is a value of card `from`'s link property `label`
- *  (empty when the property is gone).
+ *  (empty when the property is gone); with the relation the property
+ *  carries, if any (the other card is that relation of `from`).
  */
-{ kind: "property"; from: string; label: string } | 
+{ kind: "property"; from: string; label: string; relationTypeId: string | null } | 
 /**
  *  A relation drawn in a tree: `from` is `relation_type_id` of `to`
  *  (« Gilraen : parent de Aragorn »); `None`: a link without a type.
@@ -759,6 +762,11 @@ export type PropertyDefinition = {
 	kind: PropertyKind,
 	/**  For links: card types allowed as targets (empty: any). */
 	targetTypeIds: string[],
+	/**
+	 *  For links: the relation each chosen card is of the card holding the
+	 *  property (« Parents » = parent of), ADR 0007. `None`: just a link.
+	 */
+	relationTypeId: string | null,
 	/**  For a type property: whether cards created before it show it too. */
 	appliesToExisting: boolean,
 	sortOrder: number,

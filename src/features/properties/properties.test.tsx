@@ -20,6 +20,7 @@ function definition(
     label,
     kind: "text",
     targetTypeIds: [],
+    relationTypeId: null,
     appliesToExisting: false,
     sortOrder: 0,
     createdAt: "2026-09-27T10:00:00Z",
@@ -67,6 +68,18 @@ beforeEach(() => {
         return typeProps.find((p) => p.id === args.id);
       case "count_property_values":
         return valueCount;
+      case "list_relation_types":
+        return [
+          {
+            id: "rel-parent",
+            builtin: "parent",
+            name: "",
+            icon: "arrow-up",
+            inverseId: "rel-child",
+            category: "family",
+            sortOrder: 0,
+          },
+        ];
       case "delete_property":
         typeProps = typeProps.filter((p) => p.id !== args.id);
         return null;
@@ -149,6 +162,26 @@ test("deleting a property says how many values would be lost", async () => {
   fireEvent.click(confirm);
 
   await waitFor(() => expect(callsOf("delete_property")[0]?.payload).toEqual({ id: "title" }));
+});
+
+test("a link property says the relation it carries", async () => {
+  typeProps = [definition("parents", "Parents", { kind: "cards", relationTypeId: "rel-parent" })];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Parents" }));
+
+  expect(await screen.findByLabelText("Relation")).toBeTruthy();
+  expect(
+    await screen.findByText(
+      "Chaque carte choisie dans « Parents » est parent de cette carte : les arbres et le Graph le savent.",
+    ),
+  ).toBeTruthy();
+});
+
+test("a text property has no relation to choose", async () => {
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Titre" }));
+  await screen.findByRole("button", { name: "Supprimer" });
+  expect(screen.queryByLabelText("Relation")).toBeNull();
 });
 
 test("a card shows its properties and saves numbers and texts", async () => {
