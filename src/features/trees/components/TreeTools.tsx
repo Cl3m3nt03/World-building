@@ -267,9 +267,16 @@ export function TreeTools({
         aria-label={t("trees.toolbar")}
         className="glass flex items-center gap-1 rounded-lg border border-border p-1 shadow-sm"
       >
-        <Button variant="ghost" size="sm" onClick={onAddNode}>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("trees.nodes.add")}
+          title={t("trees.nodes.add")}
+          onClick={onAddNode}
+        >
           <UserRoundPlus />
-          {t("trees.nodes.add")}
+          {/* A narrow window keeps the icons only (the name stays for screen readers). */}
+          <span className="max-xl:sr-only">{t("trees.nodes.add")}</span>
         </Button>
         <span aria-hidden className="mx-1 h-5 w-px bg-border" />
         {TOOLS.map(({ tool: value, icon: Icon, label }) => (
@@ -288,9 +295,15 @@ export function TreeTools({
         ))}
         {children}
         <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-        <Button variant="ghost" size="sm" onClick={onRecenter}>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("trees.recenter")}
+          title={t("trees.recenter")}
+          onClick={onRecenter}
+        >
           <Maximize />
-          {t("trees.recenter")}
+          <span className="max-xl:sr-only">{t("trees.recenter")}</span>
         </Button>
       </div>
     </div>

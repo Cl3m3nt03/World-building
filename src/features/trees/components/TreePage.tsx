@@ -176,11 +176,13 @@ function TreeEditor({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={t("trees.variants.addButton")}
+                  title={t("trees.variants.addButton")}
                   disabled={variants.add.isPending}
                   onClick={() => setAddingVariant(true)}
                 >
                   <Layers />
-                  {t("trees.variants.addButton")}
+                  <span className="max-xl:sr-only">{t("trees.variants.addButton")}</span>
                 </Button>
               </>
             }
