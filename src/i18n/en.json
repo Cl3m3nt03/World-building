@@ -663,6 +663,7 @@
   "canvases.viewLabel": "Canvas {{name}}",
   "canvases.hint": "Whiteboard: tools at the bottom, the tool's options above them, wheel to zoom.",
   "canvases.navigationHint": "Wheel or touchpad to zoom; hand tool, middle button or held space bar to move.",
+  "canvases.cards.missing": "Card not found",
   "canvases.tools.label": "Canvas tools",
   "canvases.tools.select": "Select",
   "canvases.tools.hand": "Hand",

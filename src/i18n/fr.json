@@ -663,6 +663,7 @@
   "canvases.viewLabel": "Canvas {{name}}",
   "canvases.hint": "Tableau blanc : outils en bas, options de l'outil au-dessus, molette pour zoomer.",
   "canvases.navigationHint": "Molette ou pavé tactile pour zoomer ; outil main, bouton du milieu ou barre d'espace enfoncée pour se déplacer.",
+  "canvases.cards.missing": "Carte introuvable",
   "canvases.tools.label": "Outils du canvas",
   "canvases.tools.select": "Sélection",
   "canvases.tools.hand": "Main",

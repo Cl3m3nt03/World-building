@@ -1,4 +1,4 @@
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { Maximize } from "lucide-react";
 import { lazy, Suspense, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { DocumentTitleField } from "@/components/DocumentTitleField";
 import { Button } from "@/components/ui/button";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import type { Canvas } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import { useCanvasEditor } from "../hooks/useCanvasEditor";
 import { useCanvas, useRenameCanvas } from "../hooks/useCanvases";
 import type { CanvasViewHandle } from "./CanvasView";
@@ -41,6 +42,8 @@ function CanvasEditor({ canvas }: { canvas: Canvas }) {
   const { t } = useTranslation();
   const view = useRef<CanvasViewHandle>(null);
   const editor = useCanvasEditor(canvas);
+  const navigate = useNavigate();
+  const { worldId } = useParams({ from: "/world/$worldId/world/canvas/$canvasId" });
   return (
     <article
       aria-label={canvas.title}
@@ -64,6 +67,7 @@ function CanvasEditor({ canvas }: { canvas: Canvas }) {
             canvas={canvas}
             label={t("canvases.viewLabel", { name: canvas.title })}
             onChange={editor.onChange}
+            onOpenCard={(cardId) => void navigate(documentRoute(worldId, "card", cardId))}
           />
         </Suspense>
       </div>
