@@ -323,12 +323,14 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     );
     if (!element) return null;
     const at = insertionIndex(all, frameId);
+    // Back to selecting first: the change of tool is then part of the same
+    // undo step (after, it would be a step of its own, undoing nothing seen).
+    excalidraw.setActiveTool({ type: "selection" });
     excalidraw.updateScene({
       elements: [...all.slice(0, at), element, ...all.slice(at)],
       appState: { selectedElementIds: { [element.id]: true } },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     });
-    excalidraw.setActiveTool({ type: "selection" });
     return element.id;
   }, []);
 
@@ -399,6 +401,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     const excalidraw = api.current;
     const element = excalidraw?.getSceneElements().find((each) => each.id === id);
     if (!excalidraw || !element) return;
+    editing.current = id;
     setEditingNote(id);
     excalidraw.updateScene({
       appState: {
@@ -410,29 +413,43 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     });
   }, []);
 
-  /** A note changed while written: in the scene at once, one undo step when done. */
+  /**
+   * What was written in a note (after a pause, or at the end): a step to
+   * undo. Excalidraw leaves out of its steps an element changed without
+   * one, so each piece of writing is a change of its own.
+   */
   const writeNote = useCallback((id: string, note: Note) => {
     const excalidraw = api.current;
     const element = excalidraw?.getSceneElementsIncludingDeleted().find((each) => each.id === id);
     if (!excalidraw || !element) return;
-    const next = newElementWith(element, { customData: note });
+    const next = newElementWith(element, {
+      customData: { ...noteOf(element.customData), ...note },
+    });
+    // Still written in: Excalidraw keeps the pointer in it.
+    const active =
+      editing.current === id
+        ? // biome-ignore lint/suspicious/noExplicitAny: Excalidraw's own embeddable type
+          { activeEmbeddable: { element: next as any, state: "active" as const } }
+        : null;
     excalidraw.updateScene({
       elements: excalidraw
         .getSceneElementsIncludingDeleted()
         .map((each) => (each.id === id ? next : each)),
-      // biome-ignore lint/suspicious/noExplicitAny: Excalidraw's own embeddable type
-      appState: { activeEmbeddable: { element: next as any, state: "active" } },
-      captureUpdate: CaptureUpdateAction.EVENTUALLY,
+      appState: active,
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     });
   }, []);
 
   const stopWriting = useCallback(() => {
     if (editing.current === null) return;
+    // Once only: Escape, the field's blur and Excalidraw's change all end it.
+    editing.current = null;
     setEditingNote(null);
+    // The note keeps the rest of what was written itself (NoteView), once
+    // no longer written in.
     api.current?.updateScene({
       appState: { activeEmbeddable: null },
-      // What was written becomes one step to undo.
-      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      captureUpdate: CaptureUpdateAction.EVENTUALLY,
     });
     section.current?.querySelector<HTMLElement>(".excalidraw")?.focus();
   }, []);
@@ -670,6 +687,10 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
         excalidrawAPI={(instance) => {
           api.current = instance;
           setReady(true);
+          // Builds for the end-to-end tests read the scene as Excalidraw holds it.
+          if (import.meta.env.VITE_E2E === "1") {
+            (window as unknown as { __bzExcalidraw?: unknown }).__bzExcalidraw = instance;
+          }
         }}
         theme={theme}
         langCode={i18n.language.startsWith("fr") ? "fr-FR" : "en"}
