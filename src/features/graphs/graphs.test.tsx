@@ -54,7 +54,24 @@ const DATA: GraphData = {
     { id: "arwen", title: "Arwen", typeId: null, imageAssetId: null, aliases: [] },
     { id: "gimli", title: "Gimli", typeId: null, imageAssetId: null, aliases: ["Fils de Glóin"] },
   ],
-  edges: [{ source: "aragorn", target: "arwen", weight: 2, reasons: [] }],
+  edges: [
+    {
+      source: "aragorn",
+      target: "arwen",
+      weight: 2,
+      reasons: [
+        { kind: "mention", from: "aragorn", count: 1 },
+        {
+          kind: "relation",
+          from: "aragorn",
+          to: "arwen",
+          relationTypeId: "rel-spouse",
+          treeId: "t1",
+          treeTitle: "Maison d'Elendil",
+        },
+      ],
+    },
+  ],
 };
 
 let calls: { command: string; payload: unknown }[];
@@ -126,6 +143,17 @@ beforeEach(() => {
         };
         return copy;
       }
+      case "list_relation_types":
+        return [
+          {
+            id: "rel-spouse",
+            builtin: "spouse",
+            name: "",
+            icon: "gem",
+            inverseId: "rel-spouse",
+            category: "couple",
+          },
+        ];
       case "graph_data":
         return data;
       case "list_card_types":
@@ -268,8 +296,15 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
   expect(
     within(linked)
       .getAllByRole("button")
-      .map((b) => b.textContent),
-  ).toEqual(["Arwen"]);
+      .map((b) => b.textContent || b.getAttribute("aria-label")),
+  ).toEqual(["Arwen", "Ouvrir Arwen"]);
+  // Why they are linked, in words.
+  await waitFor(() =>
+    expect(linked.textContent).toContain(
+      "Arwen : époux·se de Aragorn — arbre « Maison d'Elendil »",
+    ),
+  );
+  expect(linked.textContent).toContain("Aragorn la cite dans son texte");
 
   fireEvent.keyDown(list, { key: "End" });
   expect(options()[2]?.getAttribute("aria-selected")).toBe("true");
@@ -280,6 +315,18 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
   fireEvent.click(options()[1] as HTMLElement);
   fireEvent.keyDown(list, { key: "Enter" });
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/arwen"));
+});
+
+test("« À quoi sert le Graph ? » explains it from the toolbar", async () => {
+  stored = {
+    id: "g1",
+    title: "Royaume",
+    config: { filters: {}, settings: {}, pinned: [], viewport: null },
+  };
+  await renderAt("/world/demo/world/graph/g1");
+  fireEvent.click(await screen.findByRole("button", { name: "À quoi sert le Graph ?" }));
+  expect(await screen.findByText(/chaque point est une carte/)).toBeTruthy();
+  expect(screen.getByText(/une relation tracée dans un arbre/)).toBeTruthy();
 });
 
 test("the search finds cards by name or alias, without accents nor case", () => {
