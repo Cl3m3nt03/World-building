@@ -82,6 +82,23 @@ async function drag(from: { x: number; y: number }, to: { x: number; y: number }
 const handle = (name: string, side: "top" | "right" | "bottom" | "left") =>
   node(name).$(`.react-flow__handle-${side}.source`);
 
+/** A click in a corner of the tree's background: nothing stays selected. */
+async function clickPane() {
+  const pane = await $(".react-flow__pane");
+  const { width, height } = await pane.getSize();
+  // WebdriverIO's offsets start from the element's centre.
+  await pane.click({ x: -Math.floor(width / 2) + 12, y: -Math.floor(height / 2) + 12 });
+  await browser.pause(200);
+}
+
+/** « Recentrer »: the whole tree in the view. */
+async function recenter() {
+  await $(
+    `//*[@role="toolbar"][@aria-label="Outils de l'arbre"]//button[normalize-space()="Recentrer"]`,
+  ).click();
+  await browser.pause(400);
+}
+
 /** Names the empty node whose search is open. */
 async function name(label: string) {
   const search = await $('input[aria-label="Carte ou nom du nœud"]');
@@ -93,6 +110,9 @@ async function name(label: string) {
 
 /** Selects `from`, opens its « + » on `side`, picks `relation`, names the new node. */
 async function relative(from: string, side: string, relation: string, label: string) {
+  // In a small window, the view may have followed the last node added away
+  // from `from`: show the whole tree first, as a person would.
+  await recenter();
   await node(from).click();
   await $(`aria/Ajouter une relation ${side} ${from}`).click();
   await $(`//*[@role="menuitem"][normalize-space()="${relation}"]`).click();
@@ -134,6 +154,8 @@ describe("M6: the relation tree", () => {
     const before = await first();
     const couple = before.edges.find((e) => e.relationTypeId === "rel-spouse");
     if (!couple) throw new Error("no couple link");
+    await recenter();
+    await clickPane();
     const point = await $(`.react-flow__node-junction[data-id="junction:${couple.id}"]`);
     await drag(await centre(point), await centre(await handle("Aragorn", "top")));
     await $('//*[@role="menuitem"][normalize-space()="Enfant"]').click();
@@ -146,7 +168,8 @@ describe("M6: the relation tree", () => {
   });
 
   it("draws a link between two nodes and reconnects it to another", async () => {
-    await $(".react-flow__pane").click({ x: 10, y: 10 });
+    await clickPane();
+    await recenter();
     await node("Eldarion").moveTo();
     await drag(
       await centre(await handle("Eldarion", "right")),
@@ -171,7 +194,7 @@ describe("M6: the relation tree", () => {
   });
 
   it("writes a text over the tree", async () => {
-    await $(".react-flow__pane").click({ x: 10, y: 10 });
+    await clickPane();
     await $(
       '//*[@role="toolbar"][@aria-label="Outils de l\'arbre"]//button[@aria-label="Texte"]',
     ).click();
