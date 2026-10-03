@@ -519,6 +519,8 @@
   "wiki.empty.action": "Aller dans World",
   "wiki.page.home": "Accueil du wiki",
   "wiki.page.hidden": "Cette carte n'est pas visible dans le wiki.",
+  "wiki.map.onMap": "Sur cette map",
+  "wiki.map.hidden": "Cette map n'est pas visible dans le wiki.",
   "media.usage.inTrash": "{{where}} (à la corbeille)",
   "templates.use": "Utiliser le template « {{type}} »",
   "templates.apply": "Appliquer le template « {{type}} »",

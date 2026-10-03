@@ -519,6 +519,8 @@
   "wiki.empty.action": "Go to World",
   "wiki.page.home": "Wiki home",
   "wiki.page.hidden": "This card is not visible in the wiki.",
+  "wiki.map.onMap": "On this map",
+  "wiki.map.hidden": "This map is not visible in the wiki.",
   "media.usage.inTrash": "{{where}} (in the trash)",
   "templates.use": "Use the \"{{type}}\" template",
   "templates.apply": "Apply the \"{{type}}\" template",
