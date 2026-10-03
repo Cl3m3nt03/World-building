@@ -9,7 +9,7 @@ Offrir une vue d'ensemble de tout le monde et de ses connexions, pour comprendre
 ## Données affichées
 
 - **Nœuds** : les cartes, avec leur image et leur nom.
-- **Arêtes** : les entrées de la table des liens. Les mentions dans les textes et les propriétés de type lien alimentent le graph (`mention` et `property`). Il n'y a rien à dessiner à la main : le graph se construit tout seul.
+- **Arêtes** : les entrées de la table des liens. Les mentions dans les textes et les propriétés de type lien alimentent le graph (`mention` et `property`), ainsi que les relations tracées entre deux cartes dans les arbres (ADR 0007). Il n'y a rien à dessiner à la main : le graph se construit tout seul.
 - Plusieurs liens entre deux mêmes cartes sont fusionnés en une arête, dont l'épaisseur augmente avec le nombre de liens.
 
 ## Créer un graph
@@ -86,3 +86,5 @@ L'affichage doit rester fluide avec 5 000 nœuds et 20 000 arêtes. Le rendu pas
 - Mentionner une carte dans le texte d'une autre fait apparaître l'arête dans le graph.
 - Un nœud épinglé ne bouge plus quand on change la répulsion.
 - Une configuration sauvegardée se rouvre exactement à l'identique.
+
+**Réalisé en M7.5 (7.5.1)** : les relations tracées dans les arbres relient aussi les cartes dans le graph (ADR 0007). Elles viennent des arbres vivants, toutes variantes confondues, une fois par sens et par type de relation ; un enfant rattaché au lien d'un couple (jonction) est relié à chacun des deux ; un arbre à la corbeille ne compte plus. Chaque arête garde ses raisons : les citations (quelle fiche cite l'autre), les propriétés (leur nom), les relations (qui est quoi de qui, et dans quel arbre) ; son épaisseur en est le nombre. L'interface les montre à l'étape 7.5.5.

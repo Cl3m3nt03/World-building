@@ -1,0 +1,98 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT e.id AS \"id!\", v.tree_id AS \"tree_id!\", d.title AS \"tree_title!\",\n                  e.source_node_id, e.source_edge_id, e.target_node_id AS \"target_node_id!\",\n                  e.relation_type_id\n           FROM tree_edges e\n           JOIN tree_variants v ON v.id = e.variant_id\n           JOIN documents d ON d.id = v.tree_id AND d.trashed_at IS NULL\n           ORDER BY d.title COLLATE NOCASE, d.id, v.sort_order, e.sort_order",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "tree_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_variants",
+            "name": "tree_id"
+          }
+        }
+      },
+      {
+        "name": "tree_title!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "source_node_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "source_node_id"
+          }
+        }
+      },
+      {
+        "name": "source_edge_id",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "source_edge_id"
+          }
+        }
+      },
+      {
+        "name": "target_node_id!",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "target_node_id"
+          }
+        }
+      },
+      {
+        "name": "relation_type_id",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_edges",
+            "name": "relation_type_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "a5a0170227fa4555e66d5aea51b36f79977afdcba800d384f69ae28bd598772f"
+}

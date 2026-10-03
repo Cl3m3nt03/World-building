@@ -1,10 +1,11 @@
 //! Graphs (docs/features/04-graph.md, M5): the world's cards as nodes and
-//! their links (mentions, link properties) as edges, drawn by the front with
-//! a force simulation. Nothing is drawn by hand: the nodes and edges come
+//! their links (mentions, link properties, and since M7.5 the relations drawn
+//! in the trees, ADR 0007) as edges, drawn by the front with a force
+//! simulation. Nothing is drawn by hand: the nodes and edges come
 //! from the cards and the `links` table each time. A graph document keeps
 //! only its configuration (filters, settings, pinned nodes, framing).
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -137,6 +138,42 @@ pub struct GraphEdge {
     pub target: String,
     /// Number of links between the two cards (the edge's thickness).
     pub weight: u32,
+    /// Why the two cards are linked, each reason once.
+    pub reasons: Vec<EdgeReason>,
+}
+
+/// Where a link between two cards comes from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum EdgeReason {
+    /// Card `from` cites the other one in its texts, `count` times (one per
+    /// text holding the mention).
+    #[serde(rename_all = "camelCase")]
+    Mention { from: String, count: u32 },
+    /// The other card is a value of card `from`'s link property `label`
+    /// (empty when the property is gone).
+    #[serde(rename_all = "camelCase")]
+    Property { from: String, label: String },
+    /// A relation drawn in a tree: `from` is `relation_type_id` of `to`
+    /// (« Gilraen : parent de Aragorn »); `None`: a link without a type.
+    #[serde(rename_all = "camelCase")]
+    Relation {
+        from: String,
+        to: String,
+        relation_type_id: Option<String>,
+        tree_id: String,
+        tree_title: String,
+    },
+}
+
+impl EdgeReason {
+    /// How much this reason adds to the edge's weight.
+    fn weight(&self) -> u32 {
+        match self {
+            Self::Mention { count, .. } => *count,
+            Self::Property { .. } | Self::Relation { .. } => 1,
+        }
+    }
 }
 
 /// Everything a graph can draw: the live cards and their links.
@@ -329,10 +366,74 @@ pub async fn duplicate(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Gr
     get(pool, &copy).await
 }
 
+/// The relations drawn between two cards in the live trees (ADR 0007):
+/// `(from, to, relation type, tree id, tree title)`, once per direction and
+/// type (the first tree by title wins). A child hanging from the link of a
+/// couple (a junction) is related to both of them.
+fn tree_relations(
+    nodes: &[queries::TreeNodeRow],
+    edges: &[queries::TreeEdgeRow],
+) -> Vec<(String, String, Option<String>, String, String)> {
+    let cards: HashMap<&str, &str> = nodes
+        .iter()
+        .map(|node| (node.id.as_str(), node.card_id.as_str()))
+        .collect();
+    let by_id: HashMap<&str, &queries::TreeEdgeRow> =
+        edges.iter().map(|edge| (edge.id.as_str(), edge)).collect();
+    // The cards an edge starts from: its node's card, or both ends of the
+    // edge it hangs from (followed a few levels at most).
+    fn ends<'a>(
+        edge: &queries::TreeEdgeRow,
+        cards: &HashMap<&str, &'a str>,
+        by_id: &HashMap<&str, &queries::TreeEdgeRow>,
+        depth: u8,
+    ) -> Vec<&'a str> {
+        if let Some(node) = &edge.source_node_id {
+            return cards.get(node.as_str()).copied().into_iter().collect();
+        }
+        let Some(parent) = edge.source_edge_id.as_deref().and_then(|id| by_id.get(id)) else {
+            return Vec::new();
+        };
+        if depth > 8 {
+            return Vec::new();
+        }
+        let mut found = ends(parent, cards, by_id, depth + 1);
+        found.extend(cards.get(parent.target_node_id.as_str()).copied());
+        found
+    }
+    let mut seen = HashSet::new();
+    let mut relations = Vec::new();
+    for edge in edges {
+        let Some(&to) = cards.get(edge.target_node_id.as_str()) else {
+            continue;
+        };
+        for from in ends(edge, &cards, &by_id, 0) {
+            if from == to {
+                continue;
+            }
+            let key = (
+                from.to_owned(),
+                to.to_owned(),
+                edge.relation_type_id.clone(),
+            );
+            if seen.insert(key) {
+                relations.push((
+                    from.to_owned(),
+                    to.to_owned(),
+                    edge.relation_type_id.clone(),
+                    edge.tree_id.clone(),
+                    edge.tree_title.clone(),
+                ));
+            }
+        }
+    }
+    relations
+}
+
 /// The live cards and their links, one edge per pair of cards (whatever the
-/// direction) with the number of links as its weight.
+/// direction) with its reasons, and their count as its weight.
 pub async fn data(pool: &SqlitePool) -> AppResult<GraphData> {
-    let nodes = queries::nodes(pool)
+    let nodes: Vec<GraphNode> = queries::nodes(pool)
         .await?
         .into_iter()
         .map(|node| GraphNode {
@@ -343,23 +444,65 @@ pub async fn data(pool: &SqlitePool) -> AppResult<GraphData> {
             image_asset_id: node.image_asset_id,
         })
         .collect();
-    let mut pairs: BTreeMap<(String, String), u32> = BTreeMap::new();
-    for edge in queries::edges(pool).await? {
-        let key = if edge.source_id <= edge.target_id {
-            (edge.source_id, edge.target_id)
+    let live: HashSet<&str> = nodes.iter().map(|node| node.id.as_str()).collect();
+    let pair = |a: &str, b: &str| {
+        if a <= b {
+            (a.to_owned(), b.to_owned())
         } else {
-            (edge.target_id, edge.source_id)
-        };
+            (b.to_owned(), a.to_owned())
+        }
+    };
+    let mut pairs: BTreeMap<(String, String), Vec<EdgeReason>> = BTreeMap::new();
+    for edge in queries::edges(pool).await? {
         let count = u32::try_from(edge.count).unwrap_or(u32::MAX);
-        let weight = pairs.entry(key).or_default();
-        *weight = weight.saturating_add(count);
+        let reason = if edge.kind == "property" {
+            EdgeReason::Property {
+                from: edge.source_id.clone(),
+                label: edge.label.unwrap_or_default(),
+            }
+        } else {
+            EdgeReason::Mention {
+                from: edge.source_id.clone(),
+                count,
+            }
+        };
+        let reasons = pairs
+            .entry(pair(&edge.source_id, &edge.target_id))
+            .or_default();
+        // A property linking twice (two values) is still one reason.
+        if !reasons.contains(&reason) {
+            reasons.push(reason);
+        }
+    }
+    let tree_nodes = queries::tree_nodes(pool).await?;
+    let tree_edges = queries::tree_edges(pool).await?;
+    for (from, to, relation_type_id, tree_id, tree_title) in
+        tree_relations(&tree_nodes, &tree_edges)
+    {
+        // A card in the trash (or deleted) draws no edge.
+        if !live.contains(from.as_str()) || !live.contains(to.as_str()) {
+            continue;
+        }
+        pairs
+            .entry(pair(&from, &to))
+            .or_default()
+            .push(EdgeReason::Relation {
+                from,
+                to,
+                relation_type_id,
+                tree_id,
+                tree_title,
+            });
     }
     let edges = pairs
         .into_iter()
-        .map(|((source, target), weight)| GraphEdge {
+        .map(|((source, target), reasons)| GraphEdge {
             source,
             target,
-            weight,
+            weight: reasons
+                .iter()
+                .fold(0u32, |sum, reason| sum.saturating_add(reason.weight())),
+            reasons,
         })
         .collect();
     Ok(GraphData { nodes, edges })

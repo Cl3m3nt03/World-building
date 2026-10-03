@@ -507,6 +507,24 @@ export type DocumentTree = {
 	documents: TreeDocument[],
 };
 
+/**  Where a link between two cards comes from. */
+export type EdgeReason = 
+/**
+ *  Card `from` cites the other one in its texts, `count` times (one per
+ *  text holding the mention).
+ */
+{ kind: "mention"; from: string; count: number } | 
+/**
+ *  The other card is a value of card `from`'s link property `label`
+ *  (empty when the property is gone).
+ */
+{ kind: "property"; from: string; label: string } | 
+/**
+ *  A relation drawn in a tree: `from` is `relation_type_id` of `to`
+ *  (« Gilraen : parent de Aragorn »); `None`: a link without a type.
+ */
+{ kind: "relation"; from: string; to: string; relationTypeId: string | null; treeId: string; treeTitle: string };
+
 /**  Where an edge starts: a node, or another edge (a junction). */
 export type EdgeSource = { kind: "node"; id: string } | { kind: "edge"; id: string };
 
@@ -563,6 +581,8 @@ export type GraphEdge = {
 	target: string,
 	/**  Number of links between the two cards (the edge's thickness). */
 	weight: number,
+	/**  Why the two cards are linked, each reason once. */
+	reasons: EdgeReason[],
 };
 
 /**  Which cards the graph shows. No type: every card. */

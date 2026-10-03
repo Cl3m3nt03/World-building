@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT n.id AS \"id!\", n.card_id AS \"card_id!\"\n           FROM tree_nodes n\n           JOIN tree_variants v ON v.id = n.variant_id\n           JOIN documents d ON d.id = v.tree_id AND d.trashed_at IS NULL\n           WHERE n.card_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_nodes",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "card_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tree_nodes",
+            "name": "card_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "60921c8b4ef1ec3a937e521266f348eae9aab14882695c9a9cf71f0af2b30780"
+}

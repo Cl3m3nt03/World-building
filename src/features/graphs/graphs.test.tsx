@@ -54,7 +54,7 @@ const DATA: GraphData = {
     { id: "arwen", title: "Arwen", typeId: null, imageAssetId: null, aliases: [] },
     { id: "gimli", title: "Gimli", typeId: null, imageAssetId: null, aliases: ["Fils de Glóin"] },
   ],
-  edges: [{ source: "aragorn", target: "arwen", weight: 2 }],
+  edges: [{ source: "aragorn", target: "arwen", weight: 2, reasons: [] }],
 };
 
 let calls: { command: string; payload: unknown }[];
@@ -320,9 +320,9 @@ test("filters keep the cards of the chosen types (subtypes included), their link
       { id: "sauron", title: "Sauron", typeId: "character", imageAssetId: null, aliases: [] },
     ],
     edges: [
-      { source: "aragorn", target: "arwen", weight: 1 },
-      { source: "aragorn", target: "minas", weight: 1 },
-      { source: "gondor", target: "minas", weight: 1 },
+      { source: "aragorn", target: "arwen", weight: 1, reasons: [] },
+      { source: "aragorn", target: "minas", weight: 1, reasons: [] },
+      { source: "gondor", target: "minas", weight: 1, reasons: [] },
     ],
   };
   const ids = (shown: GraphData) => [

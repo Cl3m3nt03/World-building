@@ -229,7 +229,7 @@ test("shows the world's graph once cards are linked, with its search and filters
       { id: "arya", title: "Arya", typeId: "character", imageAssetId: null, aliases: [] },
       { id: "winterfell", title: "Winterfell", typeId: "place", imageAssetId: null, aliases: [] },
     ],
-    edges: [{ source: "arya", target: "winterfell", weight: 1 }],
+    edges: [{ source: "arya", target: "winterfell", weight: 1, reasons: [] }],
   };
   await renderHome();
   expect(
