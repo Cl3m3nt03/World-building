@@ -2,6 +2,8 @@ import { listen } from "@tauri-apps/api/event";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/globals.css";
+// Before any canvas opens: where Excalidraw finds its fonts.
+import "./features/canvases/excalidrawAssets";
 import { App } from "./app/App";
 import { initTheme } from "./app/theme";
 import { loadPreferences } from "./features/settings";

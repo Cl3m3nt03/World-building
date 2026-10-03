@@ -145,7 +145,7 @@ afterEach(() => {
 /** Picks `entry` in the sidebar's « New document » menu. */
 async function newDocument(entry: string) {
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre…)",
+    name: "Nouveau document (map, graph, arbre, canvas…)",
   });
   await act(async () => {
     trigger.focus();

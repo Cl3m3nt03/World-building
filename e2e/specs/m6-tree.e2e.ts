@@ -167,7 +167,7 @@ describe("M6: the relation tree", () => {
   it("builds three generations with the « + » only", async () => {
     await createWorld(WORLD);
     await openTab("World");
-    await $("aria/Nouveau document (map, graph, arbre…)").click();
+    await $("aria/Nouveau document (map, graph, arbre, canvas…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouvel arbre"]').click();
     // A click while the menu is still closing would only close it.
     await browser.waitUntil(async () => !(await $('[role="menu"]').isExisting()), {

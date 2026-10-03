@@ -127,17 +127,10 @@ describe("routing", () => {
     expect(router.state.location.pathname).toBe("/");
   });
 
-  test("creation tiles not available yet say so instead of doing nothing", async () => {
-    const router = await renderAt("/world/demo/world");
-    const canvas = screen.getByRole("button", { name: "Canvas" });
-    expect(canvas.getAttribute("aria-disabled")).toBe("true");
-    expect(
-      document.getElementById(canvas.getAttribute("aria-describedby") ?? "")?.textContent,
-    ).toBe("Bientôt disponible : arrive avec M7");
-    fireEvent.click(canvas);
-    expect(router.state.location.pathname).toBe("/world/demo/world");
-    // Cards (M2), maps (M4) and graphs (M5) exist: their tiles are real buttons.
-    for (const name of ["Carte", "Map", "Graph"]) {
+  test("every creation tile of the empty workspace is a real button", async () => {
+    await renderAt("/world/demo/world");
+    // Cards (M2), maps (M4), graphs (M5), trees (M6) and canvases (M7) exist.
+    for (const name of ["Carte", "Map", "Graph", "Arbre de relations", "Canvas"]) {
       expect(screen.getByRole("button", { name }).getAttribute("aria-disabled")).toBeNull();
     }
   });
