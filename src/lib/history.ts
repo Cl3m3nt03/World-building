@@ -1,5 +1,6 @@
 /**
- * Undo / redo of a map (M4 step 4.9): snapshots of its content. Changes of
+ * Undo / redo of a document's content (a map since M4 step 4.9, a tree's
+ * variant since M6 step 6.10): snapshots of its content. Changes of
  * the same field close together (typing a label, dragging a slider: the
  * same `group`) make one step; any other change is a step of its own. Pure,
  * tested in history.test.ts.
@@ -64,5 +65,15 @@ export function redo<T>(history: History<T>): History<T> {
     future,
     lastAt: Number.NEGATIVE_INFINITY,
     lastGroup: null,
+  };
+}
+
+/** The same history with every snapshot passed through `change` (nothing undoable). */
+export function rewrite<T>(history: History<T>, change: (content: T) => T): History<T> {
+  return {
+    ...history,
+    past: history.past.map(change),
+    present: change(history.present),
+    future: history.future.map(change),
   };
 }

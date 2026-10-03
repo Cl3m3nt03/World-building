@@ -658,6 +658,8 @@
   "trees.untitled": "Untitled tree",
   "trees.title": "Tree name",
   "trees.recenter": "Recenter",
+  "trees.history.undo": "Undo (Ctrl+Z)",
+  "trees.history.redo": "Redo (Ctrl+Y)",
   "trees.toolbar": "Tree tools",
   "trees.tools.select": "Select",
   "trees.tools.pan": "Hand (move the view)",

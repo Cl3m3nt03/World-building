@@ -71,6 +71,8 @@ Les types de relations personnalisés (nom, icône, et relation inverse éventue
 
 **Réalisé en M6 (6.9)** : « Relation personnalisée… » et la fenêtre « Gérer les relations… » (au bas de chaque liste des relations) décrivent une relation du monde : nom, icône, catégorie (famille, couple ou autre : la section où elle apparaît dans la liste) et relation inverse (aucune, elle-même pour une relation symétrique, ou une autre relation du monde ; gardée dans les deux sens). Les relations fournies sont listées sans pouvoir changer, et ne peuvent pas servir d'inverse (leurs paires restent). Une relation créée dans un arbre est proposée dans tous les arbres du monde. La supprimer demande confirmation en disant combien de liens l'utilisent : ils deviennent « sans type » dans tous les arbres, celui ouvert compris.
 
+**Réalisé en M6 (6.10)** : chaque modification est enregistrée après un court délai (la variante entière), en quittant l'arbre et avant la fermeture du monde ou de la fenêtre. Chaque variante a son historique (100 pas au plus, comme la map) : Ctrl+Z annule, Ctrl+Y ou Ctrl+Maj+Z rétablit, et les boutons Annuler / Rétablir de la barre du bas font de même ; les champs de texte gardent leur propre annulation. Un texte posé ne compte qu'une fois écrit (rien de vide n'est enregistré), et des déplacements au clavier rapprochés ne font qu'un pas. Supprimer une relation du monde l'efface aussi de l'historique. L'historique repart de zéro à l'ouverture de l'arbre.
+
 ## Modèle de données (indicatif)
 
 - `relation_types` : id, name, icon, inverse_id, category (famille / couple / autre / custom)
