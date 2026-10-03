@@ -1,3 +1,4 @@
+export { WikiCardPage } from "./components/WikiCardPage";
 export { WikiHome } from "./components/WikiHome";
 export { WikiLayout } from "./components/WikiLayout";
 export {

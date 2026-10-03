@@ -21,6 +21,8 @@ export type MentionWorld = {
   types: CardType[];
   preferences: WorldPreferences;
   open: (cardId: string) => void;
+  /** Whether a card can be opened from here (the wiki: a visible page); else its name only. */
+  canOpen?: ((cardId: string) => boolean) | undefined;
 };
 
 export const MentionContext = createContext<MentionWorld>({

@@ -3,9 +3,12 @@
  * Raw palette, prefixed --bz-* to avoid clashing with shadcn/ui semantic names
  * (ADR "--accent" is --bz-accent here; shadcn's --accent is the hover surface).
  * Light is the base, dark overrides it. The dark theme is the reference.
+ * The wiki (M8) takes the light or dark set from its own background
+ * (`data-wiki-scheme`), whatever the app's theme.
  */
 
-:root {
+:root,
+[data-wiki-scheme="light"] {
   --bz-bg: #f5efe3;
   --bz-backdrop-overlay: rgb(245 239 227 / 0.6);
   --bz-backdrop-gradient:
@@ -44,7 +47,8 @@
   --bz-blur-backdrop: 24px;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-wiki-scheme="dark"] {
   --bz-bg: #0b0e17;
   --bz-backdrop-overlay: rgb(8 10 20 / 0.55);
   --bz-backdrop-gradient:

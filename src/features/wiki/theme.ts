@@ -59,10 +59,28 @@ export function resolveTheme(theme: WikiTheme): WikiPreset {
   };
 }
 
+/** Relative luminance of a `#rrggbb` colour (WCAG), from 0 to 1. */
+export function luminance(hex: string): number {
+  const channel = (at: number) => {
+    const value = Number.parseInt(hex.slice(at, at + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+/**
+ * Whether the wiki is light or dark, from its background: the app's tokens
+ * under the wiki (type colours, controls) follow it, not the app's theme.
+ */
+export function themeScheme(theme: WikiTheme): "light" | "dark" {
+  return luminance(resolveTheme(theme).palette.background) < 0.2 ? "dark" : "light";
+}
+
 /** The CSS variables of a theme, for the wiki's root. */
 export function themeStyle(theme: WikiTheme): CSSProperties {
   const { palette, headingFont, bodyFont } = resolveTheme(theme);
   return {
+    colorScheme: themeScheme(theme),
     "--wiki-background": palette.background,
     "--wiki-surface": palette.surface,
     "--wiki-text": palette.text,

@@ -34,6 +34,43 @@
   --radius: var(--bz-radius-md);
 }
 
+/*
+ * The wiki (M8) has its own theme: under its root, the app's tokens take the
+ * wiki's colours, so the card editors it reuses (text, properties) match it.
+ * Both layers are set here: a variable is resolved where it is declared.
+ */
+[data-wiki] {
+  --bz-bg: var(--wiki-background);
+  --bz-surface: var(--wiki-surface);
+  --bz-surface-strong: var(--wiki-surface);
+  --bz-text: var(--wiki-text);
+  --bz-text-muted: var(--wiki-muted);
+  --bz-accent: var(--wiki-accent);
+  --bz-accent-foreground: var(--wiki-surface);
+  --bz-border: color-mix(in srgb, var(--wiki-text) 14%, transparent);
+  --bz-border-strong: color-mix(in srgb, var(--wiki-text) 24%, transparent);
+  --bz-hover: color-mix(in srgb, var(--wiki-text) 7%, transparent);
+  --bz-pill: color-mix(in srgb, var(--wiki-text) 9%, transparent);
+
+  --background: var(--bz-bg);
+  --foreground: var(--bz-text);
+  --card: var(--bz-surface);
+  --card-foreground: var(--bz-text);
+  --popover: var(--bz-surface-strong);
+  --popover-foreground: var(--bz-text);
+  --primary: var(--bz-accent);
+  --primary-foreground: var(--bz-accent-foreground);
+  --secondary: var(--bz-pill);
+  --secondary-foreground: var(--bz-text);
+  --muted: var(--bz-hover);
+  --muted-foreground: var(--bz-text-muted);
+  --accent: var(--bz-hover);
+  --accent-foreground: var(--bz-text);
+  --border: var(--bz-border);
+  --input: var(--bz-border-strong);
+  --ring: var(--bz-accent);
+}
+
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Space Mono", ui-monospace, monospace;
@@ -494,4 +531,10 @@ div.leaflet-container {
    toolbar's tooltips say what to do instead. */
 .bz-canvas .excalidraw .HintViewer {
   display: none;
+}
+
+/* The wiki's titles take its heading font, in its pages as in the card text. */
+[data-wiki] :is(h1, h2, h3),
+[data-wiki] .prose-bz :is(h1, h2, h3) {
+  font-family: var(--wiki-heading-font);
 }

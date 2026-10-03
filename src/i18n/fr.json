@@ -517,6 +517,8 @@
   "wiki.empty.title": "Le wiki n'a pas encore de page",
   "wiki.empty.description": "Dans World, faites un clic droit sur une carte ou une map, puis « Visible dans le wiki » : elle aura sa page ici.",
   "wiki.empty.action": "Aller dans World",
+  "wiki.page.home": "Accueil du wiki",
+  "wiki.page.hidden": "Cette carte n'est pas visible dans le wiki.",
   "media.usage.inTrash": "{{where}} (à la corbeille)",
   "templates.use": "Utiliser le template « {{type}} »",
   "templates.apply": "Appliquer le template « {{type}} »",
