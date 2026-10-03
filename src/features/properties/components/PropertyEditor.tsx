@@ -12,13 +12,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRelationTypes } from "@/features/trees/hooks/useTrees";
+import { relationName } from "@/features/trees/relations";
 import type { CardType, PropertyDefinition, PropertyKind } from "@/lib/bindings";
 import {
   useDeleteProperty,
   usePropertyValueCount,
   useRenameProperty,
   useSetPropertyKind,
+  useSetPropertyRelation,
 } from "../hooks/useProperties";
+
+/** The Select's value for « just a link » (a Select item cannot be empty). */
+const NO_RELATION = "none";
 
 /** Kinds a property can have. */
 export const PROPERTY_KINDS: PropertyKind[] = ["text", "number", "card", "cards"];
@@ -55,6 +61,10 @@ export function PropertyEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const rename = useRenameProperty();
   const setKind = useSetPropertyKind();
+  const setRelation = useSetPropertyRelation();
+  const relationTypes = useRelationTypes();
+  const relationId = useId();
+  const chosenRelation = relationTypes.data?.find((type) => type.id === property.relationTypeId);
   const remove = useDeleteProperty();
   const valueCount = usePropertyValueCount(confirmDelete ? property.id : null);
   const labelId = useId();
@@ -69,7 +79,7 @@ export function PropertyEditor({
     }
   };
 
-  const error = rename.error ?? setKind.error ?? remove.error;
+  const error = rename.error ?? setKind.error ?? setRelation.error ?? remove.error;
 
   return (
     <Popover
@@ -93,6 +103,8 @@ export function PropertyEditor({
             value={label}
             maxLength={80}
             autoFocus
+            // The name comes selected: typing replaces « New property ».
+            onFocus={(event) => event.currentTarget.select()}
             onChange={(event) => setLabel(event.target.value)}
             onBlur={saveLabel}
             onKeyDown={(event) => {
@@ -159,6 +171,44 @@ export function PropertyEditor({
                 })}
             </div>
           </fieldset>
+        )}
+        {isLink(property.kind) && (
+          <div className="flex flex-col gap-1">
+            <label htmlFor={relationId} className="text-xs font-bold text-muted-foreground">
+              {t("properties.relation")}
+            </label>
+            <Select
+              value={property.relationTypeId ?? NO_RELATION}
+              onValueChange={(value) =>
+                setRelation.mutate({
+                  id: property.id,
+                  relationTypeId: value === NO_RELATION ? null : value,
+                })
+              }
+            >
+              <SelectTrigger id={relationId} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_RELATION}>{t("properties.relationNone")}</SelectItem>
+                {(relationTypes.data ?? []).map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {relationName(type, t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {property.relationTypeId
+                ? t("properties.relationHint", {
+                    name: property.label,
+                    relation: chosenRelation
+                      ? relationName(chosenRelation, t).toLocaleLowerCase()
+                      : "",
+                  })
+                : t("properties.relationNoneHint")}
+            </p>
+          </div>
         )}
         {error && <AppErrorMessage error={error} />}
         {confirmDelete ? (

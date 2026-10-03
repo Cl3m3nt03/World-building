@@ -12,6 +12,8 @@ pub struct DefinitionRow {
     pub label: String,
     pub kind: String,
     pub target_type_ids: String,
+    /// A relation type, for a link property that is a relation.
+    pub relation_type_id: Option<String>,
     pub applies_to_existing: i64,
     pub sort_order: i64,
     pub created_at: String,
@@ -20,14 +22,16 @@ pub struct DefinitionRow {
 pub async fn insert(pool: &SqlitePool, row: &DefinitionRow) -> AppResult<()> {
     sqlx::query!(
         "INSERT INTO property_definitions (id, type_id, card_id, label, kind, target_type_ids,
-                                           applies_to_existing, sort_order, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                           relation_type_id, applies_to_existing, sort_order,
+                                           created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         row.id,
         row.type_id,
         row.card_id,
         row.label,
         row.kind,
         row.target_type_ids,
+        row.relation_type_id,
         row.applies_to_existing,
         row.sort_order,
         row.created_at,
@@ -40,7 +44,7 @@ pub async fn insert(pool: &SqlitePool, row: &DefinitionRow) -> AppResult<()> {
 pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Option<DefinitionRow>> {
     Ok(sqlx::query_as!(
         DefinitionRow,
-        "SELECT id, type_id, card_id, label, kind, target_type_ids, applies_to_existing,
+        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,
                 sort_order, created_at
          FROM property_definitions WHERE id = ?",
         id
@@ -53,7 +57,7 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Option<DefinitionRow>
 pub async fn of_type(pool: &SqlitePool, type_id: &str) -> AppResult<Vec<DefinitionRow>> {
     Ok(sqlx::query_as!(
         DefinitionRow,
-        "SELECT id, type_id, card_id, label, kind, target_type_ids, applies_to_existing,
+        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,
                 sort_order, created_at
          FROM property_definitions WHERE type_id = ?
          ORDER BY sort_order, created_at",
@@ -67,7 +71,7 @@ pub async fn of_type(pool: &SqlitePool, type_id: &str) -> AppResult<Vec<Definiti
 pub async fn of_card(pool: &SqlitePool, card_id: &str) -> AppResult<Vec<DefinitionRow>> {
     Ok(sqlx::query_as!(
         DefinitionRow,
-        "SELECT id, type_id, card_id, label, kind, target_type_ids, applies_to_existing,
+        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,
                 sort_order, created_at
          FROM property_definitions WHERE card_id = ?
          ORDER BY sort_order, created_at",
@@ -81,6 +85,22 @@ pub async fn set_label(pool: &SqlitePool, id: &str, label: &str) -> AppResult<()
     sqlx::query!(
         "UPDATE property_definitions SET label = ? WHERE id = ?",
         label,
+        id
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Sets the relation a link property carries (`None`: none).
+pub async fn set_relation(
+    pool: &SqlitePool,
+    id: &str,
+    relation_type_id: Option<&str>,
+) -> AppResult<()> {
+    sqlx::query!(
+        "UPDATE property_definitions SET relation_type_id = ? WHERE id = ?",
+        relation_type_id,
         id
     )
     .execute(pool)
@@ -213,8 +233,10 @@ pub async fn copy_definition(
 ) -> AppResult<()> {
     sqlx::query!(
         "INSERT INTO property_definitions (id, type_id, card_id, label, kind, target_type_ids,
-                                           applies_to_existing, sort_order, created_at)
-         SELECT ?, NULL, ?, label, kind, target_type_ids, applies_to_existing, sort_order, ?
+                                           relation_type_id, applies_to_existing, sort_order,
+                                           created_at)
+         SELECT ?, NULL, ?, label, kind, target_type_ids, relation_type_id, applies_to_existing,
+                sort_order, ?
          FROM property_definitions WHERE id = ?",
         id,
         card_id,

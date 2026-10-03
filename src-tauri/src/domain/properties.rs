@@ -12,6 +12,7 @@ use crate::db;
 use crate::db::properties::{self as queries, DefinitionRow};
 use crate::domain::documents::now;
 use crate::domain::links::{self, LinkKind};
+use crate::domain::trees;
 use crate::domain::{card_types, cards};
 use crate::error::{AppError, AppResult};
 
@@ -82,6 +83,9 @@ pub struct PropertyDefinition {
     pub kind: PropertyKind,
     /// For links: card types allowed as targets (empty: any).
     pub target_type_ids: Vec<String>,
+    /// For links: the relation each chosen card is of the card holding the
+    /// property (« Parents » = parent of), ADR 0007. `None`: just a link.
+    pub relation_type_id: Option<String>,
     /// For a type property: whether cards created before it show it too.
     pub applies_to_existing: bool,
     pub sort_order: i32,
@@ -106,6 +110,7 @@ impl TryFrom<DefinitionRow> for PropertyDefinition {
         Ok(Self {
             kind: PropertyKind::parse(&row.kind)?,
             target_type_ids: serde_json::from_str(&row.target_type_ids).unwrap_or_default(),
+            relation_type_id: row.relation_type_id,
             applies_to_existing: row.applies_to_existing != 0,
             sort_order: i32::try_from(row.sort_order).unwrap_or(i32::MAX),
             id: row.id,
@@ -230,6 +235,7 @@ pub async fn create(
         label: validate_label(label)?,
         kind: kind.as_str().into(),
         target_type_ids: "[]".into(),
+        relation_type_id: None,
         applies_to_existing: 0,
         sort_order: order,
         created_at: now(),
@@ -266,6 +272,39 @@ pub async fn set_kind(
         links::remove_detail(pool, LinkKind::Property, id).await?;
     }
     queries::set_kind(pool, id, kind.as_str(), &targets).await?;
+    // Only a link is a relation.
+    if matches!(kind, PropertyKind::Text | PropertyKind::Number) {
+        queries::set_relation(pool, id, None).await?;
+    }
+    get(pool, id).await
+}
+
+/// Makes a link property a relation of the world, or just a link again
+/// (`None`): each chosen card is then `relation_type_id` of the card holding
+/// the property (ADR 0007).
+pub async fn set_relation(
+    pool: &SqlitePool,
+    id: &str,
+    relation_type_id: Option<&str>,
+) -> AppResult<PropertyDefinition> {
+    let property = get(pool, id).await?;
+    if let Some(relation) = relation_type_id {
+        if !matches!(property.kind, PropertyKind::Card | PropertyKind::Cards) {
+            return Err(AppError::InvalidInput(
+                "only a link property can be a relation".into(),
+            ));
+        }
+        if !trees::relation_types(pool)
+            .await?
+            .iter()
+            .any(|known| known.id == relation)
+        {
+            return Err(AppError::InvalidInput(format!(
+                "relation type not found: {relation}"
+            )));
+        }
+    }
+    queries::set_relation(pool, id, relation_type_id).await?;
     get(pool, id).await
 }
 

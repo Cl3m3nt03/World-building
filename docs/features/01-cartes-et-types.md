@@ -152,3 +152,5 @@ En bas de chaque carte, une section « Cité dans » liste les documents qui la 
 - Une propriété lien vers une autre carte apparaît dans les rétroliens de la carte cible.
 - Appliquer un template guidé à une carte qui a déjà du contenu ne détruit rien.
 - La fiche 5e calcule les modificateurs à partir des caractéristiques.
+
+**Réalisé en M7.5 (7.5.3)** : une propriété de lien (vers une ou plusieurs cartes) peut porter une relation du monde (ADR 0007, migration 0016) : dans sa fenêtre, « Relation » propose « Aucune (simple lien) » et les relations du monde (Parent, Enfant, Conjoint… et celles qu'on a créées). Réglée sur *parent de*, une propriété « Parents » dit que chaque carte choisie est parent de la carte qui la porte ; la fenêtre le rappelle en clair. Le Graph le sait (le lien porte la relation), et les arbres s'en servent pour partir des relations connues (7.5.4). Changer la propriété en texte ou en nombre lui retire sa relation ; supprimer une relation du monde laisse ses propriétés en simples liens. Le nom d'une nouvelle propriété arrive sélectionné : on tape directement le sien.

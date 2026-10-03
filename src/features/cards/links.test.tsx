@@ -91,6 +91,7 @@ const BIRTHPLACE: PropertyDefinition = {
   label: "Lieu de naissance",
   kind: "card",
   targetTypeIds: ["place"],
+  relationTypeId: null,
   appliesToExisting: true,
   sortOrder: 0,
   createdAt: "2026-09-27T09:00:00Z",

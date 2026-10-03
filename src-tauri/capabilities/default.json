@@ -91,6 +91,7 @@
     "allow-create-property",
     "allow-rename-property",
     "allow-set-property-kind",
+    "allow-set-property-relation",
     "allow-apply-property-to-existing",
     "allow-reorder-properties",
     "allow-count-property-values",

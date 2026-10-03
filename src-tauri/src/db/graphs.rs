@@ -35,6 +35,8 @@ pub struct EdgeRow {
     pub kind: String,
     /// The property's name, for a link property (if it still exists).
     pub label: Option<String>,
+    /// The relation the property carries, if any.
+    pub relation_type_id: Option<String>,
     pub count: i64,
 }
 
@@ -156,7 +158,8 @@ pub async fn edges(pool: &SqlitePool) -> AppResult<Vec<EdgeRow>> {
     Ok(sqlx::query_as!(
         EdgeRow,
         r#"SELECT l.source_id AS "source_id!", l.target_id AS "target_id!", l.kind AS "kind!",
-                  p.label AS "label?", COUNT(*) AS "count!: i64"
+                  p.label AS "label?", p.relation_type_id AS "relation_type_id?",
+                  COUNT(*) AS "count!: i64"
            FROM links l
            JOIN cards cs ON cs.document_id = l.source_id
            JOIN documents ds ON ds.id = l.source_id AND ds.trashed_at IS NULL
