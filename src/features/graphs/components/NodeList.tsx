@@ -1,10 +1,12 @@
-import { Pin, PinOff } from "lucide-react";
+import { ExternalLink, Pin, PinOff } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { typeColor, typeIcon } from "@/features/card-types";
-import type { CardType, GraphEdge, GraphNode } from "@/lib/bindings";
+import { relationName } from "@/features/trees/relations";
+import type { CardType, EdgeReason, GraphEdge, GraphNode, RelationType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
+import { describeReason, relationNamer } from "../reasons";
 
 type Props = {
   nodes: GraphNode[];
@@ -15,6 +17,8 @@ type Props = {
   onOpen: (id: string) => void;
   pinned: ReadonlyMap<string, unknown>;
   onTogglePin: (id: string) => void;
+  /** The world's relation types, to name the relations of the links. */
+  relationTypes?: readonly RelationType[];
 };
 
 /**
@@ -32,19 +36,36 @@ export function NodeList({
   onOpen,
   pinned,
   onTogglePin,
+  relationTypes = [],
 }: Props) {
   const { t } = useTranslation();
   const list = useRef<HTMLDivElement>(null);
   const sorted = useMemo(() => [...nodes].sort((a, b) => a.title.localeCompare(b.title)), [nodes]);
+  // The selected card's neighbours, each with why they are linked.
   const neighbours = useMemo(() => {
     if (!selectedId) return [];
-    const ids = new Set<string>();
+    const reasons = new Map<string, EdgeReason[]>();
     for (const edge of edges) {
-      if (edge.source === selectedId) ids.add(edge.target);
-      if (edge.target === selectedId) ids.add(edge.source);
+      if (edge.source === selectedId) reasons.set(edge.target, edge.reasons);
+      if (edge.target === selectedId) reasons.set(edge.source, edge.reasons);
     }
-    return sorted.filter((node) => ids.has(node.id));
+    return sorted
+      .filter((node) => reasons.has(node.id))
+      .map((node) => ({ node, reasons: reasons.get(node.id) ?? [] }));
   }, [edges, selectedId, sorted]);
+  const titles = useMemo(() => new Map(nodes.map((node) => [node.id, node.title])), [nodes]);
+  const nameRelation = useMemo(
+    () => relationNamer(relationTypes, (type) => relationName(type, t)),
+    [relationTypes, t],
+  );
+  const say = (reason: EdgeReason, neighbour: string) =>
+    describeReason(
+      reason,
+      [selectedId ?? "", neighbour],
+      (id) => titles.get(id) ?? "?",
+      nameRelation,
+      t,
+    );
   const selected = sorted.find((node) => node.id === selectedId) ?? null;
   const current = sorted.findIndex((node) => node.id === selectedId);
 
@@ -148,16 +169,37 @@ export function NodeList({
           {neighbours.length === 0 ? (
             <p className="text-xs text-muted-foreground">{t("graphs.list.isolated")}</p>
           ) : (
-            <ul className="flex flex-wrap gap-1 pt-1">
-              {neighbours.map((node) => (
-                <li key={node.id}>
-                  <button
-                    type="button"
-                    onClick={() => onSelect(node.id)}
-                    className="rounded-sm bg-accent/50 px-1.5 py-0.5 text-xs hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
-                  >
-                    {node.title}
-                  </button>
+            <ul className="flex max-h-64 flex-col gap-1.5 overflow-y-auto pt-1">
+              {neighbours.map(({ node, reasons }) => (
+                <li
+                  key={node.id}
+                  className="flex flex-col gap-0.5 rounded-sm bg-accent/30 px-1.5 py-1"
+                >
+                  <span className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onSelect(node.id)}
+                      className="truncate rounded-sm text-left text-xs font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      {node.title}
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="ml-auto"
+                      aria-label={t("graphs.list.open", { name: node.title })}
+                      title={t("graphs.list.open", { name: node.title })}
+                      onClick={() => onOpen(node.id)}
+                    >
+                      <ExternalLink />
+                    </Button>
+                  </span>
+                  <ul className="flex flex-col text-[11px] leading-snug text-muted-foreground">
+                    {reasons.map((reason) => {
+                      const text = say(reason, node.id);
+                      return <li key={text}>{text}</li>;
+                    })}
+                  </ul>
                 </li>
               ))}
             </ul>

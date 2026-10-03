@@ -7,6 +7,7 @@ import { DocumentTitleField } from "@/components/DocumentTitleField";
 import { Button } from "@/components/ui/button";
 import { useCardTypes } from "@/features/card-types";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
+import { useRelationTypes } from "@/features/trees/hooks/useTrees";
 import type { CardType, Graph, GraphData } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { visibleGraph } from "../filters";
@@ -16,6 +17,7 @@ import { searchNodes } from "../search";
 import { resolveSettings } from "../settings";
 import { GraphCanvas, type GraphCanvasHandle } from "./GraphCanvas";
 import { GraphFilters } from "./GraphFilters";
+import { GraphHelp } from "./GraphHelp";
 import { GraphSearch } from "./GraphSearch";
 import { GraphSettingsPanel } from "./GraphSettingsPanel";
 import { NodeList } from "./NodeList";
@@ -60,6 +62,7 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
   const [query, setQuery] = useState("");
 
   const typesById = useMemo(() => new Map(types.map((type) => [type.id, type])), [types]);
+  const relationTypes = useRelationTypes();
   const settings = useMemo(() => resolveSettings(config.settings), [config.settings]);
   const typeIds = useMemo(() => config.filters.typeIds ?? [], [config.filters.typeIds]);
   const shown = useMemo(
@@ -183,6 +186,7 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
                   }))
                 }
               />
+              <GraphHelp />
               <SaveGraphAs
                 pending={saveAs.isPending}
                 error={saveAs.error}
@@ -207,6 +211,7 @@ function GraphEditor({ graph, data, types }: { graph: Graph; data: GraphData; ty
               onOpen={open}
               pinned={pinned}
               onTogglePin={togglePin}
+              relationTypes={relationTypes.data ?? []}
             />
           </aside>
         </div>
