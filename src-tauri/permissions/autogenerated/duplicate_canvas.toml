@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-duplicate-canvas"
+description = "Enables the duplicate_canvas command without any pre-configured scope."
+commands.allow = ["duplicate_canvas"]
+
+[[permission]]
+identifier = "deny-duplicate-canvas"
+description = "Denies the duplicate_canvas command without any pre-configured scope."
+commands.deny = ["duplicate_canvas"]

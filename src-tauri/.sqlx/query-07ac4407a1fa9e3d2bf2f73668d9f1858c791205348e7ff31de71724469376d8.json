@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE canvases SET scene = ?, app_state = ? WHERE document_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "07ac4407a1fa9e3d2bf2f73668d9f1858c791205348e7ff31de71724469376d8"
+}
