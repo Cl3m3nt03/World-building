@@ -59,14 +59,21 @@ pub fn check(scene: &str, app_state: &str) -> AppResult<Vec<String>> {
             "a canvas state holds at most {MAX_APP_STATE_BYTES} bytes"
         )));
     }
-    // Images are assets: their bytes never go in the database.
-    if scene.contains("\"dataURL\"") || scene.contains("data:image/") {
+    let scene: Value =
+        serde_json::from_str(scene).map_err(|error| invalid(format!("canvas scene: {error}")))?;
+    // Images are assets: their bytes never go in the database. Excalidraw
+    // keeps them in `files` (each with a `dataURL`); what is written in the
+    // scene (a text about "data:image/…") is not looked at.
+    let files = scene.get("files");
+    if holds_image_data(&scene)
+        || files.is_some_and(|files| {
+            !files.is_null() && files.as_object().is_none_or(|f| !f.is_empty())
+        })
+    {
         return Err(invalid(
             "a canvas scene keeps no image data, only asset ids",
         ));
     }
-    let scene: Value =
-        serde_json::from_str(scene).map_err(|error| invalid(format!("canvas scene: {error}")))?;
     let elements = scene
         .get("elements")
         .and_then(Value::as_array)
@@ -98,6 +105,15 @@ pub fn check(scene: &str, app_state: &str) -> AppResult<Vec<String>> {
         }
     }
     Ok(assets.into_iter().collect())
+}
+
+/// Whether a `dataURL` key is anywhere in `value`.
+fn holds_image_data(value: &Value) -> bool {
+    match value {
+        Value::Object(map) => map.contains_key("dataURL") || map.values().any(holds_image_data),
+        Value::Array(items) => items.iter().any(holds_image_data),
+        _ => false,
+    }
 }
 
 async fn insert_canvas(
