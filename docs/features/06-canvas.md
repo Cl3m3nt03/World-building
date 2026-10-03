@@ -55,6 +55,8 @@ Le canvas est sauvegardé automatiquement. La scène Excalidraw est stockée en 
 
 **Réalisé en M7 (7.7)** : le nuage et la bulle rejoignent les formes, après la flèche, la ligne, le rectangle, l'ellipse et le losange. On les pose comme les autres : appuyer, tirer la boîte (un cadre pointillé la montre pendant le geste), relâcher ; un simple clic en pose un de taille moyenne. Ils prennent le style choisi (couleur, épaisseur, trait, tracé) ; sélectionnés, ils se colorent et se remplissent comme une forme, se redimensionnent et s'annulent. Excalidraw ne les ayant pas, ce sont des lignes fermées : un nuage festonné tout autour, une bulle aux coins arrondis avec sa pointe en bas à gauche.
 
+**Réalisé en M7 (7.8)** : l'outil « Section » trace un cadre (ceux d'Excalidraw), nommé « Section 1 », « Section 2 »… dans la langue de l'app ; un double-clic sur son nom le renomme. Ce qu'on dessine, déplace ou pose dedans en fait partie, y compris une carte glissée de la sidebar, un document inséré, une note, un nuage ou une bulle : la section l'emporte quand on la déplace, et le masque à ses bords. Supprimer une section supprime ce qu'elle contient (`Ctrl+Z` rend le tout).
+
 ## Modèle de données (indicatif)
 
 - `canvases` : document_id, scene (JSON Excalidraw sans les binaires), app_state (JSON : cadrage, grille)
