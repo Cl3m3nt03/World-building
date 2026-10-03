@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.7.0](https://github.com/Cl3m3nt03/World-building/compare/v0.6.0...v0.7.0) (2026-10-03)
+
+
+### Fonctionnalités
+
+* **canvas:** cloud and speech bubble shapes ([#291](https://github.com/Cl3m3nt03/World-building/issues/291)) ([21c370e](https://github.com/Cl3m3nt03/World-building/commit/21c370e16f8923073afa0730945d3c497146c468)), closes [#274](https://github.com/Cl3m3nt03/World-building/issues/274)
+* **canvas:** create, open and browse a canvas with Excalidraw ([#284](https://github.com/Cl3m3nt03/World-building/issues/284)) ([927e154](https://github.com/Cl3m3nt03/World-building/commit/927e1549ebabd3d43eecbafb8d9a68081ab5e960)), closes [#269](https://github.com/Cl3m3nt03/World-building/issues/269)
+* **canvas:** drop cards from the sidebar as live thumbnails ([#286](https://github.com/Cl3m3nt03/World-building/issues/286)) ([98e8d33](https://github.com/Cl3m3nt03/World-building/commit/98e8d330f2738f58e346078ff5bebfb3e2ae52ad)), closes [#271](https://github.com/Cl3m3nt03/World-building/issues/271)
+* **canvas:** images from the media library, pasted or dropped ([#293](https://github.com/Cl3m3nt03/World-building/issues/293)) ([5e63850](https://github.com/Cl3m3nt03/World-building/commit/5e63850fbe2972c367434aa45edcbdb9ccc7b571)), closes [#276](https://github.com/Cl3m3nt03/World-building/issues/276)
+* **canvas:** insert a card, map, graph or tree from the toolbar ([#287](https://github.com/Cl3m3nt03/World-building/issues/287)) ([9339b97](https://github.com/Cl3m3nt03/World-building/commit/9339b97ecf86a7e0cc2290a541c7c424726d8300)), closes [#272](https://github.com/Cl3m3nt03/World-building/issues/272)
+* **canvas:** named sections that carry what is inside ([#292](https://github.com/Cl3m3nt03/World-building/issues/292)) ([b0217c1](https://github.com/Cl3m3nt03/World-building/commit/b0217c149ec4c73c618e0be5a4823ac749cafa39)), closes [#275](https://github.com/Cl3m3nt03/World-building/issues/275)
+* **canvas:** notes written in place, on coloured ruled paper ([#290](https://github.com/Cl3m3nt03/World-building/issues/290)) ([789d059](https://github.com/Cl3m3nt03/World-building/commit/789d0597bc493779f8eeaf4dbc97460cb6d92960)), closes [#273](https://github.com/Cl3m3nt03/World-building/issues/273)
+* **canvas:** store canvases, their Excalidraw scene and the images they show ([#281](https://github.com/Cl3m3nt03/World-building/issues/281)) ([972fc15](https://github.com/Cl3m3nt03/World-building/commit/972fc15b8a9802d3d7348ae540a25a200bf13176))
+* **canvas:** the board's toolbar and style options over Excalidraw ([#285](https://github.com/Cl3m3nt03/World-building/issues/285)) ([5f0221b](https://github.com/Cl3m3nt03/World-building/commit/5f0221bd25277117fe500ea3fd82c746b4b0f859)), closes [#270](https://github.com/Cl3m3nt03/World-building/issues/270)
+
+
+### Corrections
+
+* **canvas:** hide Excalidraw's half-translated hint line ([#301](https://github.com/Cl3m3nt03/World-building/issues/301)) ([f18b5ce](https://github.com/Cl3m3nt03/World-building/commit/f18b5ceb631b3888c197b9c27339f866408e2a10)), closes [#299](https://github.com/Cl3m3nt03/World-building/issues/299)
+* **canvas:** keep the toolbar in a narrow window ([#296](https://github.com/Cl3m3nt03/World-building/issues/296)) ([bc1b09f](https://github.com/Cl3m3nt03/World-building/commit/bc1b09f700a1917a8d2e345ac06b464fbc524987)), closes [#295](https://github.com/Cl3m3nt03/World-building/issues/295)
+* **canvas:** keys pressed on the toolbar stay with the toolbar ([#300](https://github.com/Cl3m3nt03/World-building/issues/300)) ([4359a91](https://github.com/Cl3m3nt03/World-building/commit/4359a91ac54a06b71558c33f1b4b1c5150d7514f)), closes [#298](https://github.com/Cl3m3nt03/World-building/issues/298)
+* **canvas:** look for image data in the scene's structure, not its text ([#289](https://github.com/Cl3m3nt03/World-building/issues/289)) ([8670ea5](https://github.com/Cl3m3nt03/World-building/commit/8670ea53636a6ce5e3fe06e9d87c63cdd5003341)), closes [#288](https://github.com/Cl3m3nt03/World-building/issues/288)
+* **canvas:** undo and redo cover what BuilderZ adds, one step each ([#294](https://github.com/Cl3m3nt03/World-building/issues/294)) ([3efd66e](https://github.com/Cl3m3nt03/World-building/commit/3efd66eb8af8a44279eb6b9daf630fd70f4ff780)), closes [#277](https://github.com/Cl3m3nt03/World-building/issues/277)
+
 ## [0.6.0](https://github.com/Cl3m3nt03/World-building/compare/v0.5.0...v0.6.0) (2026-10-03)
 
 
