@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
+  Globe,
   Image as ImageIcon,
   ImageOff,
   MapPinPlus,
@@ -25,6 +26,7 @@ import { useCardTypes } from "@/features/card-types";
 import { CardPicker, useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import { ImagePickerDialog } from "@/features/media";
+import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { MapPin, MapZone, Map as WorldMap } from "@/lib/bindings";
 import { useMapEditor } from "../hooks/useMapEditor";
 import { useMap, useRenameMap, useSetMapBackground } from "../hooks/useMaps";
@@ -125,6 +127,9 @@ function MapEditor({ map }: { map: WorldMap }) {
   const [pickingBackground, setPickingBackground] = useState(false);
   const setBackground = useSetMapBackground(map.id);
   const data = map;
+  const wikiPages = useWikiPages();
+  const setWikiVisible = useSetWikiVisible();
+  const inWiki = wikiPages.data?.some((page) => page.id === map.id) ?? false;
 
   const cardsById = useMemo(
     () => new Map((cards.data ?? []).map((card) => [card.id, card])),
@@ -406,6 +411,16 @@ function MapEditor({ map }: { map: WorldMap }) {
         <Button variant="secondary" size="sm" onClick={() => view.current?.recenter()}>
           <Maximize />
           {t("maps.recenter")}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-pressed={inWiki}
+          className="aria-pressed:bg-secondary"
+          onClick={() => setWikiVisible.mutate({ id: map.id, visible: !inWiki })}
+        >
+          <Globe />
+          {t("sidebar.document.wiki")}
         </Button>
       </header>
       {data.backgroundAssetId === null && (

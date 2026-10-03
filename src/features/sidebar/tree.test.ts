@@ -36,6 +36,7 @@ function doc(
     createdAt: "2026-10-01T00:00:00Z",
     typeId: "character",
     imageAssetId: null,
+    wikiVisible: false,
   };
 }
 
@@ -371,6 +372,15 @@ describe("viewTree", () => {
       "    d:crypt",
     ]);
     expect(show({ kinds: ["map"] })).toEqual([]);
+  });
+
+  it("keeps only the documents visible in the wiki when asked", () => {
+    const shown = buildTree({
+      ...world,
+      documents: world.documents.map((d) => (d.id === "bran" ? { ...d, wikiVisible: true } : d)),
+    });
+    const result = viewTree(shown, { ...DEFAULT_VIEW, wikiOnly: true });
+    expect(outline(result.roots)).toEqual(["d:bran"]);
   });
 
   it("sorts by name or by creation date, folders first, and reverses", () => {

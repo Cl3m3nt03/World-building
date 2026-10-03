@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ChevronDown, ImagePlus, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
+import { ChevronDown, Globe, ImagePlus, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
@@ -7,6 +7,7 @@ import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuRadioGroup,
@@ -16,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
+import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import { useCurrentWorld } from "@/features/world";
 import type { Card, CardType } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
@@ -277,6 +279,9 @@ export function CardPage() {
   const types = useCardTypes();
   useMarkOpened(cardId);
   const trash = useTrashCard(cardId);
+  const wikiPages = useWikiPages();
+  const setWikiVisible = useSetWikiVisible();
+  const inWiki = wikiPages.data?.some((page) => page.id === cardId) ?? false;
   // Live cards, for the mentions (current names, dead references).
   const allCards = useCardList(false);
   const trashedCards = useCardList(true);
@@ -322,6 +327,15 @@ export function CardPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuCheckboxItem
+                  checked={inWiki}
+                  onCheckedChange={(checked) =>
+                    setWikiVisible.mutate({ id: cardId, visible: checked === true })
+                  }
+                >
+                  <Globe />
+                  {t("sidebar.document.wiki")}
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuItem
                   disabled={template.length === 0}
                   onSelect={() => blocksRef.current?.applyTemplate()}

@@ -933,6 +933,8 @@ export type SidebarView = {
 	typeIds?: string[],
 	sort?: SortBy,
 	reversed?: boolean,
+	/**  Only the documents visible in the wiki (M8). */
+	wikiOnly?: boolean,
 };
 
 export type SortBy = "manual" | "name" | "created";
@@ -1002,6 +1004,8 @@ export type TreeDocument = {
 	/**  For a card: its type and image. */
 	typeId: string | null,
 	imageAssetId: string | null,
+	/**  Marked « Visible dans le wiki » (cards and maps, M8). */
+	wikiVisible: boolean,
 };
 
 export type TreeEdge = {

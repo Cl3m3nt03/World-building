@@ -38,6 +38,8 @@ pub struct SidebarView {
     pub type_ids: Vec<String>,
     pub sort: SortBy,
     pub reversed: bool,
+    /// Only the documents visible in the wiki (M8).
+    pub wiki_only: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Type)]

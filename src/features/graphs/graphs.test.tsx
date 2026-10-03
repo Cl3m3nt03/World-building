@@ -118,6 +118,7 @@ beforeEach(() => {
               createdAt: "2026-10-02T10:00:00Z",
               typeId: null,
               imageAssetId: null,
+              wikiVisible: false,
             },
           ],
         };

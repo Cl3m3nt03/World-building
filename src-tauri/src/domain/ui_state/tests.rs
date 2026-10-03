@@ -30,6 +30,7 @@ async fn the_sidebar_state_is_saved_and_bounded() {
             type_ids: vec!["character".into()],
             sort: SortBy::Name,
             reversed: true,
+            wiki_only: true,
         },
     };
 

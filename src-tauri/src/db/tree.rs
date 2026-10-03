@@ -30,6 +30,7 @@ pub struct TreeDocumentRow {
     pub created_at: String,
     pub type_id: Option<String>,
     pub image_asset_id: Option<String>,
+    pub wiki_visible: i64,
 }
 
 /// Where a document is, and whether it is in the trash.
@@ -61,7 +62,7 @@ pub async fn live_documents(pool: &SqlitePool) -> AppResult<Vec<TreeDocumentRow>
     Ok(sqlx::query_as!(
         TreeDocumentRow,
         r#"SELECT d.id AS "id!", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,
-                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id
+                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id, d.wiki_visible
            FROM documents d LEFT JOIN cards c ON c.document_id = d.id
            WHERE d.trashed_at IS NULL
            ORDER BY d.sort_order, d.created_at"#
