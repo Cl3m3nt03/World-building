@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ChevronDown, Globe, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
+import { BookOpen, ChevronDown, Globe, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, CardType } from "@/lib/bindings";
+import { wikiCardRoute } from "@/lib/documentRoute";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
 import type { BlockEditorHandle } from "../blocks/BlockEditor";
@@ -286,6 +287,13 @@ export function CardPage() {
                   <Globe />
                   {t("sidebar.document.wiki")}
                 </DropdownMenuCheckboxItem>
+                <DropdownMenuItem
+                  disabled={!inWiki}
+                  onSelect={() => void navigate(wikiCardRoute(worldId, cardId))}
+                >
+                  <BookOpen />
+                  {t("wiki.openInWiki")}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={template.length === 0}
                   onSelect={() => blocksRef.current?.applyTemplate()}

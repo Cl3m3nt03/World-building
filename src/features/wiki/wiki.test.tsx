@@ -6,7 +6,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { AppSettings, WikiPage, WikiSettings, WorldInfo } from "@/lib/bindings";
+import type {
+  AppSettings,
+  CardType,
+  SearchHit,
+  WikiPage,
+  WikiSettings,
+  WorldInfo,
+} from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const WORLD: WorldInfo = {
@@ -43,6 +50,61 @@ function page(id: string, image: string | null = null, aliases: string[] = []): 
 let wiki: WikiSettings;
 let pages: WikiPage[];
 let saved: WikiSettings[];
+let searched: string[];
+
+const TYPES: CardType[] = [
+  {
+    id: "character",
+    parentId: null,
+    name: "Personnage",
+    icon: "user",
+    color: "blue",
+    guidedTemplate: [],
+    orientation: "portrait",
+    canvasFormat: "standard",
+    sortOrder: 0,
+  },
+];
+
+/** What the world's search finds: Aragorn by an alias, Arwen by her text, Gollum (no page). */
+const HITS: SearchHit[] = [
+  {
+    id: "Aragorn",
+    kind: "card",
+    title: [{ text: "Aragorn", matched: false }],
+    typeId: null,
+    imageAssetId: null,
+    match: {
+      kind: "alias",
+      alias: [
+        { text: "Grands", matched: true },
+        { text: "-Pas", matched: false },
+      ],
+    },
+  },
+  {
+    id: "Gollum",
+    kind: "card",
+    title: [{ text: "Gollum", matched: false }],
+    typeId: null,
+    imageAssetId: null,
+    match: { kind: "name" },
+  },
+  {
+    id: "Arwen",
+    kind: "card",
+    title: [{ text: "Arwen", matched: false }],
+    typeId: null,
+    imageAssetId: null,
+    match: {
+      kind: "content",
+      excerpt: [
+        { text: "…l'étoile du ", matched: false },
+        { text: "grand", matched: true },
+      ],
+    },
+  },
+];
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -55,7 +117,10 @@ beforeEach(() => {
     theme: { preset: "parchment" },
   };
   pages = [page("Aragorn", "aragorn.png", ["Grands-Pas"]), page("Arwen"), page("Minas Tirith")];
+  pages[1] = { ...(pages[1] as WikiPage), typeId: "character" };
+  pages.push({ ...page("Arda"), kind: "map" });
   saved = [];
+  searched = [];
   mockIPC((command, args) => {
     switch (command) {
       case "current_world":
@@ -72,7 +137,10 @@ beforeEach(() => {
         return wiki;
       }
       case "list_card_types":
-        return [];
+        return TYPES;
+      case "search_documents":
+        searched.push((args as { query: string }).query);
+        return HITS;
       case "list_assets":
         return [];
       default:
@@ -138,14 +206,44 @@ test("the description is saved when left", async () => {
   await waitFor(() => expect(saved.at(-1)?.description).toBe("Un monde.\n\nDeux paragraphes."));
 });
 
-test("the search finds pages by name or alias", async () => {
+test("the search finds pages by name, alias or text, and only pages", async () => {
   await renderWiki();
   const search = await screen.findByRole("searchbox", { name: "Rechercher dans Eldefleur…" });
-  fireEvent.change(search, { target: { value: "grands" } });
-  const results = screen.getByRole("list", { name: "Pages trouvées" });
-  expect(within(results).getByRole("link", { name: "Aragorn" })).toBeTruthy();
-  fireEvent.change(search, { target: { value: "zzz" } });
-  expect(screen.getByText("Aucune page ne correspond.")).toBeTruthy();
+  fireEvent.change(search, { target: { value: "grand" } });
+  const results = await screen.findByRole("list", { name: "Pages trouvées" });
+  expect(searched).toContain("grand");
+  expect(
+    within(results)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["AragornGrands-Pas", "Arwen…l'étoile du grand"]);
+  expect(
+    within(results)
+      .getByRole("link", { name: /Aragorn/ })
+      .getAttribute("href"),
+  ).toBe("/world/demo/wiki/card/Aragorn");
+});
+
+test("the bar: pages by type then maps, back, and « Ouvrir dans World » on a page", async () => {
+  const router = await renderWiki();
+  const bar = await screen.findByRole("navigation", { name: "Navigation du wiki" });
+  expect(within(bar).queryByRole("link", { name: "Ouvrir dans World" })).toBeNull();
+  await act(async () => {
+    fireEvent.pointerDown(within(bar).getByRole("button", { name: "Pages" }), { button: 0 });
+  });
+  const menu = await screen.findByRole("menu");
+  expect(
+    within(menu)
+      .getAllByRole("group")
+      .map((group) => group.firstChild?.textContent),
+  ).toEqual(["Personnage", "Sans type", "Maps"]);
+  fireEvent.click(within(menu).getByRole("menuitem", { name: "Arwen" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/wiki/card/Arwen"));
+
+  const world = await within(bar).findByRole("link", { name: "Ouvrir dans World" });
+  expect(world.getAttribute("href")).toBe("/world/demo/world/card/Arwen");
+  fireEvent.click(within(bar).getByRole("button", { name: "Retour" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/wiki"));
 });
 
 test("« Modifier la grille » adds, removes and keeps the order", async () => {

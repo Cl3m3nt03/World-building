@@ -1,26 +1,7 @@
 import type { WikiPage } from "@/lib/bindings";
-import { fold } from "@/lib/text";
 
-/** Most pages the home page's search lists. */
+/** Most pages the wiki's search lists. */
 export const MAX_RESULTS = 8;
-
-/**
- * The pages whose name or an alias contains `query` (accents and case
- * ignored): names first, then aliases, each by name. An empty query finds
- * nothing.
- */
-export function searchPages(pages: readonly WikiPage[], query: string): WikiPage[] {
-  const wanted = fold(query.trim());
-  if (wanted === "") return [];
-  const byName: WikiPage[] = [];
-  const byAlias: WikiPage[] = [];
-  for (const page of pages) {
-    if (fold(page.title).includes(wanted)) byName.push(page);
-    else if (page.aliases.some((alias) => fold(alias).includes(wanted))) byAlias.push(page);
-  }
-  const byTitle = (a: WikiPage, b: WikiPage) => a.title.localeCompare(b.title);
-  return [...byName.sort(byTitle), ...byAlias.sort(byTitle)].slice(0, MAX_RESULTS);
-}
 
 /**
  * The featured pages, in their order. An id whose page is no longer in the
