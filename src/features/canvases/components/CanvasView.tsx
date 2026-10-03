@@ -26,6 +26,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useResolvedTheme } from "@/app/theme";
 import { ImagePickerDialog, mediaKeys } from "@/features/media";
@@ -196,6 +197,10 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const theme = useResolvedTheme();
   const api = useRef<ExcalidrawImperativeAPI | null>(null);
   const [ready, setReady] = useState(false);
+  // Excalidraw's container, and whether it shows its narrow (« mobile »)
+  // interface: it then has no footer, the toolbar goes in the container.
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const [narrow, setNarrow] = useState(false);
   const queryClient = useQueryClient();
   const [pickingImage, setPickingImage] = useState(false);
   // Images whose bytes are being read from the media library.
@@ -664,6 +669,19 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     [addElement, viewCentre],
   );
 
+  useEffect(() => {
+    const element = ready
+      ? section.current?.querySelector<HTMLElement>(".excalidraw-container")
+      : null;
+    if (!element) return;
+    setContainer(element);
+    const follow = () => setNarrow(element.classList.contains("excalidraw--mobile"));
+    follow();
+    const observer = new MutationObserver(follow);
+    observer.observe(element, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [ready]);
+
   // The images of the scene as it opens.
   useEffect(() => {
     if (ready && api.current) loadImages(api.current.getSceneElements());
@@ -675,6 +693,20 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
       api.current?.scrollToContent(elements, { fitToViewport: true, animate: true });
     },
   }));
+
+  const tools = (
+    <CanvasToolbar
+      {...toolbar}
+      shape={shape}
+      onTool={setTool}
+      onStyle={setStyle}
+      onRemove={remove}
+      onInsert={insert}
+      onNote={addNote}
+      onImages={() => setPickingImage(true)}
+      onNoteStyle={setNoteStyle}
+    />
+  );
 
   return (
     <section
@@ -761,19 +793,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
           <MainMenu.DefaultItems.ClearCanvas />
           <MainMenu.DefaultItems.Help />
         </MainMenu>
-        <Footer>
-          <CanvasToolbar
-            {...toolbar}
-            shape={shape}
-            onTool={setTool}
-            onStyle={setStyle}
-            onRemove={remove}
-            onInsert={insert}
-            onNote={addNote}
-            onImages={() => setPickingImage(true)}
-            onNoteStyle={setNoteStyle}
-          />
-        </Footer>
+        {!narrow && <Footer>{tools}</Footer>}
       </Excalidraw>
       {drawing && (
         <div
@@ -787,6 +807,14 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
           }}
         />
       )}
+      {narrow &&
+        container &&
+        createPortal(
+          <div className="bz-canvas-narrow-tools pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
+            {tools}
+          </div>,
+          container,
+        )}
       <ImagePickerDialog
         open={pickingImage}
         onOpenChange={setPickingImage}
