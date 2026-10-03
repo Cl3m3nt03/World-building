@@ -20,7 +20,7 @@ import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
 import { sidebarStateQuery } from "@/features/sidebar";
 import { TreePage } from "@/features/trees";
-import { WikiHome, WikiLayout } from "@/features/wiki";
+import { WikiCardPage, WikiHome, WikiLayout } from "@/features/wiki";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -36,6 +36,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *     /tree/$treeId            a relation tree, in the workspace (M6)
  *     /canvas/$canvasId        a canvas, in the workspace (M7)
  *   /world/$worldId/wiki       Wiki tab: its home page (M8)
+ *     /card/$cardId            a card's page in the wiki
  *   /world/$worldId/quill      Quill tab
  *   /world/$worldId/media      Media library (reached from Home)
  */
@@ -145,6 +146,13 @@ const wikiHomeRoute = createRoute({
   component: WikiHome,
 });
 
+/** A card's page in the wiki (M8). */
+const wikiCardRoute = createRoute({
+  getParentRoute: () => wikiRoute,
+  path: "card/$cardId",
+  component: WikiCardPage,
+});
+
 const quillRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "quill",
@@ -172,7 +180,7 @@ export const routeTree = rootRoute.addChildren([
       treeRoute,
       canvasRoute,
     ]),
-    wikiRoute.addChildren([wikiHomeRoute]),
+    wikiRoute.addChildren([wikiHomeRoute, wikiCardRoute]),
     quillRoute,
     mediaRoute,
   ]),

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ExternalLink, Map as MapIcon, RefreshCw } from "lucide-react";
 import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ import { MapView, type MapViewHandle } from "@/features/maps/components/MapView"
 import { useMap } from "@/features/maps/hooks/useMaps";
 import { hiddenLayers } from "@/features/maps/layers";
 import { commands } from "@/lib/bindings";
+import { useDocumentLink } from "@/lib/documentLinks";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
 import type { MapBlock } from "./model";
@@ -100,7 +101,7 @@ export function MapBlockView({
 
 function MapPreview({ mapId, onChange }: { mapId: string; onChange: () => void }) {
   const { t } = useTranslation();
-  const { worldId } = useParams({ from: "/world/$worldId" });
+  const link = useDocumentLink()("map", mapId);
   const map = useMap(mapId);
   const view = useRef<MapViewHandle>(null);
   const content = map.data?.content;
@@ -130,12 +131,14 @@ function MapPreview({ mapId, onChange }: { mapId: string; onChange: () => void }
       <div className="flex items-center gap-2">
         <MapIcon aria-hidden className="size-4 text-muted-foreground" />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{map.data.title}</span>
-        <Button asChild variant="secondary" size="xs">
-          <Link to="/world/$worldId/world/map/$mapId" params={{ worldId, mapId }}>
-            <ExternalLink />
-            {t("blocks.map.open")}
-          </Link>
-        </Button>
+        {link && (
+          <Button asChild variant="secondary" size="xs">
+            <Link {...link}>
+              <ExternalLink />
+              {t("blocks.map.open")}
+            </Link>
+          </Button>
+        )}
         <Button variant="ghost" size="xs" onClick={onChange}>
           <RefreshCw />
           {t("blocks.map.change")}

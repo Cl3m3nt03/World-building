@@ -1,5 +1,9 @@
+export { Backlinks } from "./components/Backlinks";
+export { CardContent } from "./components/CardContent";
+export { CardImage } from "./components/CardImage";
 export { CardPage } from "./components/CardPage";
 export { CardPicker } from "./components/CardPicker";
+export { CardProperties } from "./components/CardProperties";
 export {
   CreateCardContextMenu,
   CreateCardMenu,

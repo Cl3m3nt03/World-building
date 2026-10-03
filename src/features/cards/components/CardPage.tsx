@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ChevronDown, Globe, ImagePlus, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
+import { ChevronDown, Globe, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
@@ -16,27 +16,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
-import { useCurrentWorld } from "@/features/world";
 import type { Card, CardType } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
-import { BlockEditor, type BlockEditorHandle } from "../blocks/BlockEditor";
-import { DEFAULT_PREFERENCES, MentionContext } from "../blocks/mentions/MentionContext";
+import type { BlockEditorHandle } from "../blocks/BlockEditor";
 import { effectiveTemplate } from "../blocks/template";
 import {
   useCard,
-  useCardList,
   useMarkOpened,
   useRenameCard,
   useSetCardAliases,
-  useSetCardImage,
   useSetCardType,
   useTrashCard,
 } from "../hooks/useCards";
 import { typeLabel } from "../typeLabel";
 import { Backlinks } from "./Backlinks";
+import { CardContent } from "./CardContent";
+import { CardImage } from "./CardImage";
 import { CardProperties } from "./CardProperties";
 
 /** Delay before a typed title is saved. */
@@ -227,49 +224,6 @@ function Aliases({ card }: { card: Card }) {
   );
 }
 
-function CardImage({ card, type }: { card: Card; type: CardType | undefined }) {
-  const { t } = useTranslation();
-  const setImage = useSetCardImage(card.id);
-  const [picking, setPicking] = useState(false);
-  const landscape = type?.orientation === "landscape";
-
-  return (
-    <div className={cn("flex shrink-0 flex-col gap-2", landscape ? "w-72" : "w-44")}>
-      <button
-        type="button"
-        onClick={() => setPicking(true)}
-        aria-label={card.imageAssetId ? t("cards.changeImage") : t("cards.chooseImage")}
-        className={cn(
-          "group relative overflow-hidden rounded-xl border border-border bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-          landscape ? "aspect-video" : "aspect-[3/4]",
-        )}
-      >
-        {card.imageAssetId ? (
-          <AssetImage assetId={card.imageAssetId} alt="" className="size-full object-cover" />
-        ) : (
-          <span className="flex size-full flex-col items-center justify-center gap-1 text-xs text-muted-foreground group-hover:text-foreground">
-            <ImagePlus aria-hidden className="size-6" />
-            {t("cards.chooseImage")}
-          </span>
-        )}
-      </button>
-      {card.imageAssetId && (
-        <Button variant="ghost" size="sm" onClick={() => setImage.mutate(null)}>
-          <X />
-          {t("cards.removeImage")}
-        </Button>
-      )}
-      {setImage.isError && <AppErrorMessage error={setImage.error} />}
-      <ImagePickerDialog
-        open={picking}
-        onOpenChange={setPicking}
-        selectedId={card.imageAssetId}
-        onPick={(assetId) => setImage.mutate(assetId)}
-      />
-    </div>
-  );
-}
-
 /** A card, opened in the World tab: image, title, type, aliases. */
 export function CardPage() {
   const { t } = useTranslation();
@@ -282,10 +236,6 @@ export function CardPage() {
   const wikiPages = useWikiPages();
   const setWikiVisible = useSetWikiVisible();
   const inWiki = wikiPages.data?.some((page) => page.id === cardId) ?? false;
-  // Live cards, for the mentions (current names, dead references).
-  const allCards = useCardList(false);
-  const trashedCards = useCardList(true);
-  const { data: world } = useCurrentWorld();
   const all = types.data ?? [];
   const blocksRef = useRef<BlockEditorHandle>(null);
 
@@ -368,27 +318,16 @@ export function CardPage() {
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
       </header>
-      <MentionContext.Provider
-        value={{
-          cards: allCards.data ?? [],
-          trashed: trashedCards.data ?? [],
-          types: all,
-          preferences: world?.preferences ?? DEFAULT_PREFERENCES,
-          open: (id) =>
-            void navigate({
-              to: "/world/$worldId/world/card/$cardId",
-              params: { worldId, cardId: id },
-            }),
-        }}
-      >
-        <BlockEditor
-          key={card.data.id}
-          ref={blocksRef}
-          cardId={card.data.id}
-          template={template}
-          templateName={templateSource?.name ?? ""}
-        />
-      </MentionContext.Provider>
+      <CardContent
+        ref={blocksRef}
+        card={card.data}
+        open={(id) =>
+          void navigate({
+            to: "/world/$worldId/world/card/$cardId",
+            params: { worldId, cardId: id },
+          })
+        }
+      />
       <Backlinks cardId={card.data.id} />
     </article>
   );

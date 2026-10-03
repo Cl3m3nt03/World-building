@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { LayoutGrid, Map as MapIcon, Network, Share2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { type BacklinkVia, commands, type DocumentKind } from "@/lib/bindings";
-import { documentRoute } from "@/lib/documentRoute";
+import { useDocumentLink } from "@/lib/documentLinks";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
 
@@ -25,10 +25,13 @@ const KIND_ICONS: Partial<Record<DocumentKind, typeof Network>> = {
   canvas: LayoutGrid,
 };
 
-/** "Cited in" at the bottom of a card: the documents that cite it, and how. */
+/**
+ * "Cited in" at the bottom of a card: the documents that cite it, and how.
+ * Those that cannot be opened where the card is shown are left out.
+ */
 export function Backlinks({ cardId }: { cardId: string }) {
   const { t } = useTranslation();
-  const { worldId } = useParams({ from: "/world/$worldId" });
+  const linkOf = useDocumentLink();
   const backlinks = useBacklinks(cardId);
   const types = useCardTypes();
 
@@ -37,6 +40,12 @@ export function Backlinks({ cardId }: { cardId: string }) {
       ? via.propertyLabel
       : t(`backlinks.via.${via.kind}`);
 
+  // Only the documents that can be opened here (in the wiki: visible pages).
+  const shown = backlinks.data?.flatMap((backlink) => {
+    const link = linkOf(backlink.sourceKind, backlink.sourceId);
+    return link ? [{ backlink, link }] : [];
+  });
+
   return (
     <section
       aria-label={t("backlinks.title")}
@@ -44,18 +53,18 @@ export function Backlinks({ cardId }: { cardId: string }) {
     >
       <h2 className="text-sm font-bold text-muted-foreground">{t("backlinks.title")}</h2>
       {backlinks.error && <AppErrorMessage error={backlinks.error} />}
-      {backlinks.data?.length === 0 ? (
+      {shown?.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("backlinks.none")}</p>
       ) : (
         <ul className="flex flex-col gap-1">
-          {backlinks.data?.map((backlink) => {
+          {shown?.map(({ backlink, link }) => {
             const type = types.data?.find((candidate) => candidate.id === backlink.sourceTypeId);
             const KindIcon = KIND_ICONS[backlink.sourceKind];
             const Icon = KindIcon ?? typeIcon(type?.icon ?? "shapes");
             return (
               <li key={backlink.sourceId}>
                 <Link
-                  {...documentRoute(worldId, backlink.sourceKind, backlink.sourceId)}
+                  {...link}
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <Icon

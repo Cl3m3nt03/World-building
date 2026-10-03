@@ -8,10 +8,12 @@ import { useMentionWorld } from "./MentionContext";
  * A mention in a text block. It shows the card's current name (renaming the
  * card updates it) and opens the card on click. A mention of a card in the
  * trash or deleted shows the name it had, struck through, as a dead reference.
+ * Where the card cannot be opened (in the wiki, a card without a page), the
+ * mention is its name only.
  */
 export function MentionView({ node }: ReactNodeViewProps) {
   const { t } = useTranslation();
-  const { cards, trashed, types, open } = useMentionWorld();
+  const { cards, trashed, types, open, canOpen } = useMentionWorld();
   const id = typeof node.attrs.id === "string" ? node.attrs.id : "";
   const savedLabel = typeof node.attrs.label === "string" ? node.attrs.label : "";
   const card = cards.find((candidate) => candidate.id === id);
@@ -31,6 +33,14 @@ export function MentionView({ node }: ReactNodeViewProps) {
     );
   }
 
+  if (canOpen && !canOpen(card.id)) {
+    // Not a page here: the name, without a link.
+    return (
+      <NodeViewWrapper as="span" className="mention mention-plain">
+        {card.title}
+      </NodeViewWrapper>
+    );
+  }
   const type = types.find((candidate) => candidate.id === card.typeId);
   const Icon = typeIcon(type?.icon ?? "shapes");
   return (

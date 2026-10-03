@@ -1,6 +1,6 @@
-import { Link as RouterLink, useParams } from "@tanstack/react-router";
+import { Link as RouterLink } from "@tanstack/react-router";
 import { Plus, Settings2, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   useSetPropertyValue,
 } from "@/features/properties";
 import type { CardProperty, PropertyValue } from "@/lib/bindings";
+import { type DocumentLink, useDocumentLink } from "@/lib/documentLinks";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { useCardList } from "../hooks/useCards";
 import { CardPicker } from "./CardPicker";
@@ -42,6 +43,35 @@ function linkedIds(value: PropertyValue | null): string[] {
   if (value?.kind === "card") return [value.value];
   if (value?.kind === "cards") return value.value;
   return [];
+}
+
+/** A linked card: a link to its page, or its name only (`link` is `null`). */
+function LinkedCard({
+  link,
+  title,
+  icon,
+}: {
+  link: DocumentLink | null;
+  title: string;
+  icon: ReactNode;
+}) {
+  if (!link) {
+    return (
+      <span className="flex items-center gap-1.5">
+        {icon}
+        {title}
+      </span>
+    );
+  }
+  return (
+    <RouterLink
+      {...link}
+      className="flex items-center gap-1.5 rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {icon}
+      {title}
+    </RouterLink>
+  );
 }
 
 type FieldProps = { cardId: string; property: CardProperty; inputId: string };
@@ -98,7 +128,7 @@ function TextValue({ cardId, property, inputId }: FieldProps) {
 /** Link values as chips (each opens its card), with a picker to add or change. */
 function LinkValue({ cardId, property }: FieldProps) {
   const { t } = useTranslation();
-  const { worldId } = useParams({ from: "/world/$worldId" });
+  const linkOf = useDocumentLink();
   const setValue = useSetPropertyValue(cardId);
   const cards = useCardList(false);
   const types = useCardTypes();
@@ -130,18 +160,17 @@ function LinkValue({ cardId, property }: FieldProps) {
               className="flex items-center gap-1 rounded-full bg-secondary py-0.5 pr-0.5 pl-2.5 text-sm"
             >
               {target ? (
-                <RouterLink
-                  to="/world/$worldId/world/card/$cardId"
-                  params={{ worldId, cardId: id }}
-                  className="flex items-center gap-1.5 rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <Icon
-                    aria-hidden
-                    className="size-3.5"
-                    style={{ color: typeColor(type?.color ?? "slate") }}
-                  />
-                  {target.title}
-                </RouterLink>
+                <LinkedCard
+                  link={linkOf("card", id)}
+                  title={target.title}
+                  icon={
+                    <Icon
+                      aria-hidden
+                      className="size-3.5"
+                      style={{ color: typeColor(type?.color ?? "slate") }}
+                    />
+                  }
+                />
               ) : (
                 <span className="text-muted-foreground italic">{t("properties.missingCard")}</span>
               )}

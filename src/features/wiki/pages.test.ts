@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { WikiPage } from "@/lib/bindings";
 import { featuredPages, moveFeatured, searchPages } from "./pages";
-import { resolveTheme, themeStyle, WIKI_PRESETS } from "./theme";
+import { luminance, resolveTheme, themeScheme, themeStyle, WIKI_PRESETS } from "./theme";
 
 function page(id: string, aliases: string[] = []): WikiPage {
   return { id, kind: "card", title: id, typeId: null, imageAssetId: null, aliases };
@@ -46,5 +46,13 @@ describe("theme", () => {
     expect(themeStyle({ preset: "parchment", palette })).toMatchObject({
       "--wiki-accent": "#aa0000",
     });
+  });
+
+  test("the scheme follows the background", () => {
+    expect(luminance("#ffffff")).toBeCloseTo(1);
+    expect(luminance("#000000")).toBe(0);
+    expect(themeScheme({ preset: "parchment" })).toBe("light");
+    const palette = { ...WIKI_PRESETS.parchment.palette, background: "#14161f" };
+    expect(themeScheme({ preset: "parchment", palette })).toBe("dark");
   });
 });
