@@ -1,10 +1,8 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Maximize, UserRoundPlus } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { DocumentTitleField } from "@/components/DocumentTitleField";
-import { Button } from "@/components/ui/button";
 import { useCardTypes } from "@/features/card-types";
 import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
@@ -92,21 +90,6 @@ function TreeEditor({
             onOpenCard={(cardId) => void navigate(documentRoute(worldId, "card", cardId))}
           />
         )}
-        {/* The tools float at the bottom of the view, as on the board (docs/contexte.md). */}
-        <div
-          role="toolbar"
-          aria-label={t("trees.toolbar")}
-          className="glass absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-lg p-1 shadow-sm"
-        >
-          <Button variant="ghost" size="sm" onClick={() => view.current?.addNode()}>
-            <UserRoundPlus />
-            {t("trees.nodes.add")}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => view.current?.recenter()}>
-            <Maximize />
-            {t("trees.recenter")}
-          </Button>
-        </div>
       </div>
       <p className="text-xs text-muted-foreground">{t("trees.navigationHint")}</p>
     </article>

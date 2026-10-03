@@ -339,6 +339,16 @@ div.leaflet-container {
   border: 0;
 }
 
+/* Annotations are drawn over the tree; only they take the pointer, not
+   their layer (it covers the whole view). */
+.bz-tree .react-flow__viewport-portal {
+  pointer-events: none;
+}
+
+.bz-tree-erasing .bz-tree-annotations g {
+  cursor: cell;
+}
+
 /* Nodes draw their own frame (PersonNode). */
 .bz-tree .react-flow__node-person {
   border-radius: var(--radius);

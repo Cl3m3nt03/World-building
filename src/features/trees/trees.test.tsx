@@ -375,3 +375,41 @@ test("the world's own relations are offered next to the provided ones", async ()
   await waitFor(() => expect(savedContent()?.nodes).toHaveLength(2));
   expect((savedContent()?.nodes[1]?.y ?? 0) < 0).toBe(true);
 });
+
+test("the text tool writes a free text where the tree is clicked; the eraser removes it", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  await renderAt("/world/demo/world/tree/t1");
+  await screen.findByText("Nouveau personnage");
+
+  fireEvent.click(screen.getByRole("button", { name: "Texte" }));
+  expect(screen.getByRole("toolbar", { name: "Options du texte" })).toBeTruthy();
+  const pane = document.querySelector(".react-flow__pane") as HTMLElement;
+  fireEvent.pointerDown(pane, { button: 0, clientX: 40, clientY: 40 });
+  const field = await screen.findByLabelText("Texte libre");
+  fireEvent.change(field, { target: { value: "Minas Tirith" } });
+  fireEvent.keyDown(field, { key: "Enter" });
+  await waitFor(() =>
+    expect(savedContent()?.annotations).toEqual([
+      {
+        kind: "text",
+        id: expect.any(String),
+        x: expect.any(Number),
+        y: expect.any(Number),
+        text: "Minas Tirith",
+        color: "ink",
+        size: 20,
+      },
+    ]),
+  );
+
+  // Draw › eraser, then a click on the text removes it.
+  fireEvent.click(screen.getByRole("button", { name: "Dessin" }));
+  fireEvent.click(screen.getByRole("button", { name: "Gomme" }));
+  fireEvent.pointerDown(
+    screen.getByRole("button", { name: "Texte « Minas Tirith »", hidden: true }),
+    {
+      button: 0,
+    },
+  );
+  await waitFor(() => expect(savedContent()?.annotations).toEqual([]));
+});
