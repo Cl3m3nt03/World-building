@@ -17,13 +17,15 @@ import { documentRoute } from "@/lib/documentRoute";
 import { cn } from "@/lib/utils";
 import { useWikiPages, useWikiSettings } from "../hooks/useWiki";
 import { pageRoute } from "../links";
+import { ExportDialog } from "./ExportDialog";
 import { PageIcon } from "./PageIcon";
 import { WIKI_BUTTON, WIKI_FOCUS } from "./styles";
 import { WikiSearch } from "./WikiSearch";
 
 /**
  * The wiki's bar, above its pages: back, the wiki's name (its home page),
- * the pages by type, the search, and, on a page, the same document in World.
+ * the pages by type, the search, « Exporter le wiki », and, on a page, the
+ * same document in World.
  */
 export function WikiBar() {
   const { t } = useTranslation();
@@ -69,6 +71,7 @@ export function WikiBar() {
       <PagesMenu />
       <div className="ml-auto flex items-center gap-2">
         <WikiSearch variant="bar" placeholder={t("wiki.bar.search")} />
+        <ExportDialog />
         {current && (
           <Link {...current} className={WIKI_BUTTON}>
             <ExternalLink aria-hidden />

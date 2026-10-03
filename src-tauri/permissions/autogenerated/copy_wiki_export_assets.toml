@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-copy-wiki-export-assets"
+description = "Enables the copy_wiki_export_assets command without any pre-configured scope."
+commands.allow = ["copy_wiki_export_assets"]
+
+[[permission]]
+identifier = "deny-copy-wiki-export-assets"
+description = "Denies the copy_wiki_export_assets command without any pre-configured scope."
+commands.deny = ["copy_wiki_export_assets"]

@@ -28,6 +28,13 @@ Le contenu d'une carte est un JSON de blocs, dont le texte est un document TipTa
 - Une commande Rust reçoit le dossier choisi et les fichiers par lots, vérifie les chemins (relatifs, sans `..`), écrit, copie les assets et les polices utilisés depuis le monde, et émet des événements de progression.
 - Le site n'appelle rien sur le réseau : polices et images sont dans le dossier.
 
+**Précisions à la réalisation (8.8)** :
+
+- Le dossier du site est créé par le Rust (`<titre du wiki> - wiki` dans le dossier choisi) et gardé côté Rust : les écritures suivantes ne peuvent aller que là.
+- La progression est donnée lot par lot : le front envoie les fichiers par lots de 20 et les images par lots de 10, et chaque appel au Rust fait avancer la barre. Pas d'événements à part : l'export n'avance que par ces appels.
+- Les polices utilisées par le thème (titres et texte, sous-ensembles latins) sont dans `fonts.css`, en `data:` : le front les lit depuis l'app, aucune copie binaire côté Rust.
+- Les images du site s'appellent `assets/<16 premiers caractères du hash>.<extension>` : les chemins restent sous les 260 caractères de Windows, même dans un dossier profond (un navigateur n'ouvre pas une image au-delà). Le Rust et le front nomment pareil (tests des deux côtés).
+
 ## Conséquences
 
 - La spec est respectée dans son but : le Rust fait tout l'accès disque et la progression ; le HTML vient du rendu partagé. La spec 07 le précise.

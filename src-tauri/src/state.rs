@@ -17,6 +17,9 @@ pub struct AppState {
     pub world: Mutex<Option<OpenWorld>>,
     /// The library shared by the worlds, opened on first use (ADR 0006).
     library: Mutex<Option<Library>>,
+    /// The folder of the wiki being exported (M8, ADR 0008): the export's
+    /// files are written there only.
+    pub wiki_export: Mutex<Option<PathBuf>>,
 }
 
 impl AppState {
@@ -26,6 +29,7 @@ impl AppState {
             settings: Mutex::new(settings),
             world: Mutex::new(None),
             library: Mutex::new(None),
+            wiki_export: Mutex::new(None),
         }
     }
 
