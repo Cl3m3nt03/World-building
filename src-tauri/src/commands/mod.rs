@@ -16,4 +16,5 @@ pub mod properties;
 pub mod relation_trees;
 pub mod settings;
 pub mod tree;
+pub mod wiki;
 pub mod world;

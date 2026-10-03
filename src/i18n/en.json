@@ -482,6 +482,7 @@
   "media.usage.cardBlock": "image block of the card \"{{name}}\"",
   "media.usage.mapBackground": "background of the map \"{{name}}\"",
   "media.usage.canvasImage": "image on the canvas “{{name}}”",
+  "media.usage.wikiBanner": "banner of the wiki",
   "media.usage.inTrash": "{{where}} (in the trash)",
   "templates.use": "Use the \"{{type}}\" template",
   "templates.apply": "Apply the \"{{type}}\" template",

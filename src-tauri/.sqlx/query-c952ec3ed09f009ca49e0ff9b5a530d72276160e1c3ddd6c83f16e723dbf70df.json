@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT title, description, banner_asset_id, featured, theme FROM wiki_settings WHERE id = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "title",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "wiki_settings",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "description",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "wiki_settings",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "name": "banner_asset_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "wiki_settings",
+            "name": "banner_asset_id"
+          }
+        }
+      },
+      {
+        "name": "featured",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "wiki_settings",
+            "name": "featured"
+          }
+        }
+      },
+      {
+        "name": "theme",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "wiki_settings",
+            "name": "theme"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "c952ec3ed09f009ca49e0ff9b5a530d72276160e1c3ddd6c83f16e723dbf70df"
+}

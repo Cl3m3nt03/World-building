@@ -121,6 +121,8 @@ pub enum AssetUsage {
         map_title: String,
         in_trash: bool,
     },
+    /// The banner of the wiki's home page (M8).
+    WikiBanner,
     /// An image on a canvas (M7).
     #[serde(rename_all = "camelCase")]
     CanvasImage {
@@ -140,6 +142,9 @@ pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsag
             map_title: row.title,
             in_trash: row.in_trash,
         });
+    }
+    if crate::db::wiki::is_banner(pool, id).await? {
+        usages.push(AssetUsage::WikiBanner);
     }
     for row in crate::db::canvases::using_asset(pool, id).await? {
         usages.push(AssetUsage::CanvasImage {
