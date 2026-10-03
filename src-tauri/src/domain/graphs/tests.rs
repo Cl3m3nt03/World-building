@@ -276,3 +276,136 @@ async fn a_graph_is_duplicated_trashed_and_deleted_like_a_document() {
             .unwrap();
     assert_eq!(left, 0);
 }
+
+/// A tree node standing for `card`.
+fn node(id: &str, card: Option<&str>) -> crate::domain::trees::TreeNode {
+    crate::domain::trees::TreeNode {
+        id: id.into(),
+        card_id: card.map(Into::into),
+        label: if card.is_some() {
+            String::new()
+        } else {
+            id.into()
+        },
+        x: 0.0,
+        y: 0.0,
+    }
+}
+
+/// A tree link from a node or from another link (a junction).
+fn tree_edge(
+    id: &str,
+    source: crate::domain::trees::EdgeSource,
+    target: &str,
+    relation: Option<&str>,
+) -> crate::domain::trees::TreeEdge {
+    crate::domain::trees::TreeEdge {
+        id: id.into(),
+        source,
+        target: target.into(),
+        relation_type_id: relation.map(Into::into),
+        line_style: crate::domain::trees::LineStyle::Solid,
+    }
+}
+
+#[tokio::test]
+async fn the_relations_of_the_trees_are_edges_with_their_reasons() {
+    use crate::domain::trees::{self, EdgeSource, VariantContent};
+    let fx = Fixture::new().await;
+    let arathorn = fx.card("Arathorn").await;
+    let gilraen = fx.card("Gilraen").await;
+    let aragorn = fx.card("Aragorn").await;
+    let arwen = fx.card("Arwen").await;
+    // Aragorn also cites Arathorn in a text.
+    fx.link(&aragorn, LinkKind::Mention, None, &[&arathorn])
+        .await;
+
+    // Arathorn and Gilraen are married; Aragorn hangs from their link.
+    let tree = trees::create(fx.pool(), "Maison d'Isildur", "Principale")
+        .await
+        .unwrap();
+    let content = VariantContent {
+        nodes: vec![
+            node("n1", Some(&arathorn)),
+            node("n2", Some(&gilraen)),
+            node("n3", Some(&aragorn)),
+            node("n4", None),
+        ],
+        edges: vec![
+            tree_edge(
+                "e1",
+                EdgeSource::Node("n1".into()),
+                "n2",
+                Some("rel-spouse"),
+            ),
+            tree_edge(
+                "e2",
+                EdgeSource::Edge("e1".into()),
+                "n3",
+                Some("rel-parent"),
+            ),
+            // A plain name is no card: no edge.
+            tree_edge("e3", EdgeSource::Node("n4".into()), "n3", None),
+        ],
+        annotations: vec![],
+    };
+    trees::save_variant(fx.pool(), &tree.variants[0].id, &content)
+        .await
+        .unwrap();
+    // A second variant repeats the marriage: still one reason.
+    trees::add_variant(fx.pool(), &tree.variants[0].id, "Autre")
+        .await
+        .unwrap();
+    // Another tree, in the trash: its relations do not count.
+    let gone = trees::create(fx.pool(), "Brouillon", "Principale")
+        .await
+        .unwrap();
+    let draft = VariantContent {
+        nodes: vec![node("a", Some(&aragorn)), node("b", Some(&arwen))],
+        edges: vec![tree_edge(
+            "x",
+            EdgeSource::Node("a".into()),
+            "b",
+            Some("rel-spouse"),
+        )],
+        annotations: vec![],
+    };
+    trees::save_variant(fx.pool(), &gone.variants[0].id, &draft)
+        .await
+        .unwrap();
+    documents::trash(fx.pool(), &gone.id).await.unwrap();
+
+    let data = data(fx.pool()).await.unwrap();
+    let edge = |a: &str, b: &str| {
+        data.edges
+            .iter()
+            .find(|e| (e.source == a && e.target == b) || (e.source == b && e.target == a))
+    };
+    let married = edge(&arathorn, &gilraen).expect("marriage");
+    assert_eq!(married.weight, 1);
+    assert_eq!(
+        married.reasons,
+        [EdgeReason::Relation {
+            from: arathorn.clone(),
+            to: gilraen.clone(),
+            relation_type_id: Some("rel-spouse".into()),
+            tree_id: tree.id.clone(),
+            tree_title: "Maison d'Isildur".into(),
+        }]
+    );
+    // The junction relates the child to both parents.
+    assert!(edge(&gilraen, &aragorn).is_some());
+    let father = edge(&arathorn, &aragorn).expect("father");
+    assert_eq!(father.weight, 2);
+    assert!(father.reasons.contains(&EdgeReason::Mention {
+        from: aragorn.clone(),
+        count: 1,
+    }));
+    assert!(father.reasons.iter().any(|r| matches!(r,
+        EdgeReason::Relation { from, to, relation_type_id: Some(t), .. }
+            if *from == arathorn && *to == aragorn && t == "rel-parent")));
+    assert!(
+        edge(&aragorn, &arwen).is_none(),
+        "a trashed tree draws nothing"
+    );
+}
