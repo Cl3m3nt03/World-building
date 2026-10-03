@@ -67,7 +67,7 @@ function CanvasEditor({ canvas }: { canvas: Canvas }) {
             canvas={canvas}
             label={t("canvases.viewLabel", { name: canvas.title })}
             onChange={editor.onChange}
-            onOpenCard={(cardId) => void navigate(documentRoute(worldId, "card", cardId))}
+            onOpenDocument={(kind, id) => void navigate(documentRoute(worldId, kind, id))}
           />
         </Suspense>
       </div>
