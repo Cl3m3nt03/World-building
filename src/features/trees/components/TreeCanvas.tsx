@@ -83,10 +83,19 @@ const JUNCTION_HANDLES = (["top", "right", "bottom", "left"] as const).map((side
 /** A node of the view: a person, or the middle of a link (where junctions start). */
 type TreeNodeType = PersonNodeType | JunctionNodeType;
 const EDGE_TYPES = { relation: RelationEdge };
-/** Framing of every node: a small tree is not blown up past its real size. */
-const FIT_VIEW = { padding: 0.2, maxZoom: 1 };
+/**
+ * Framing of every node: a small tree is not blown up past its real size,
+ * and nothing hides under the tools at the bottom or lacks room for its
+ * « + » and bar above.
+ */
+const FIT_VIEW = {
+  padding: { top: "110px", bottom: "120px", x: "60px" },
+  maxZoom: 1,
+} as const;
 /** Space between a node and its bar: room for the « + » above it (as on the board). */
 const TOOLBAR_OFFSET = 44;
+/** Room kept around a node brought into view (px): its bar above, the tools below. */
+const REVEAL_MARGIN = { top: 110, bottom: 90, side: 50 };
 /** Arrows move the view this far, in px. */
 const KEY_PAN = 60;
 /** A new node is moved right by this much while it would cover another one. */
@@ -190,7 +199,32 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
   const [nodes, setNodes] = useState<PersonNodeType[]>(fromContent);
   // A node just added: selected once it shows.
   const toSelect = useRef<string | null>(null);
+  /**
+   * Moves the view (same zoom) so that a node at `at` shows with room for
+   * its bar above and the tools below, when it does not already.
+   */
+  const reveal = (at: { x: number; y: number }) => {
+    const box = wrapper.current?.getBoundingClientRect();
+    if (!box) return;
+    const topLeft = flow.flowToScreenPosition(at);
+    const bottomRight = flow.flowToScreenPosition({ x: at.x + NODE_WIDTH, y: at.y + NODE_HEIGHT });
+    const shown =
+      topLeft.x >= box.left + REVEAL_MARGIN.side &&
+      bottomRight.x <= box.right - REVEAL_MARGIN.side &&
+      topLeft.y >= box.top + REVEAL_MARGIN.top &&
+      bottomRight.y <= box.bottom - REVEAL_MARGIN.bottom;
+    if (shown) return;
+    void flow.setCenter(at.x + NODE_WIDTH / 2, at.y + NODE_HEIGHT / 2, {
+      zoom: flow.getZoom(),
+      duration: 200,
+    });
+  };
+  const revealRef = useRef(reveal);
+  revealRef.current = reveal;
   useEffect(() => {
+    // A node just added is brought into view (its bar above it, the tools below).
+    const added = toSelect.current && fromContent.find((node) => node.id === toSelect.current);
+    if (added) revealRef.current(added.position);
     setNodes((shown) => {
       const wanted = toSelect.current;
       toSelect.current = null;
