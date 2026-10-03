@@ -2,7 +2,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -155,6 +155,31 @@ beforeEach(() => {
         variants.splice(index + 1, 0, copy);
         stored = { ...stored, variants };
         return stored;
+      }
+      case "update_relation_type": {
+        const { id, input } = payload as {
+          id: string;
+          input: RelationType & { symmetric: boolean };
+        };
+        relationTypes = relationTypes.map((type) =>
+          type.id === id
+            ? {
+                ...type,
+                name: input.name,
+                icon: input.icon,
+                category: input.category,
+                inverseId: input.symmetric ? id : input.inverseId,
+              }
+            : type,
+        );
+        return relationTypes.find((type) => type.id === id);
+      }
+      case "relation_type_uses":
+        return 1;
+      case "delete_relation_type": {
+        const { id } = payload as { id: string };
+        relationTypes = relationTypes.filter((type) => type.id !== id);
+        return null;
       }
       case "list_relation_types":
         return relationTypes;
@@ -364,7 +389,7 @@ test("« Skip for now » links without a type; « Custom relation… » names a 
   expect(calls).toContainEqual({
     command: "create_relation_type",
     payload: {
-      input: { name: "Rival", icon: "link", category: "custom", inverseId: null, symmetric: false },
+      input: { name: "Rival", icon: "link", category: "other", inverseId: null, symmetric: false },
     },
   });
   expect(savedContent()?.edges[1]?.relationTypeId).toBe("rel-new");
@@ -390,6 +415,7 @@ test("the world's own relations are offered next to the provided ones", async ()
     "Mentor",
     "Relation personnalisée…",
     "Passer pour l'instant",
+    "Gérer les relations…",
   ]);
   // From the bar, a parent goes above (no « + » was picked).
   fireEvent.click(screen.getByRole("menuitem", { name: "Parent" }));
@@ -465,4 +491,62 @@ test("« Ajouter une variante » names a copy of the current one; each variant i
     expect(screen.getByRole("tab", { name: "Tome 1" }).getAttribute("aria-selected")).toBe("true"),
   );
   expect(screen.getByRole("application", { name: "Arbre Lignée, variante Tome 1" })).toBeTruthy();
+});
+
+test("« Gérer les relations… » changes a relation of the world, and deleting one used leaves its links without a type", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  const content = stored.variants[0]?.content;
+  if (content) {
+    content.nodes = [
+      { id: "n1", cardId: null, label: "Gandalf", x: 0, y: 0 },
+      { id: "n2", cardId: null, label: "Frodon", x: 300, y: 0 },
+    ];
+    content.edges = [
+      {
+        id: "e1",
+        source: { kind: "node", id: "n1" },
+        target: "n2",
+        relationTypeId: "rel-mentor",
+        lineStyle: "solid",
+      },
+    ];
+  }
+  await renderAt("/world/demo/world/tree/t1");
+  fireEvent.click(await screen.findByText("Gandalf"));
+  const button = await screen.findByRole("button", { name: "Ajouter une relation" });
+  await act(async () => {
+    button.focus();
+    fireEvent.keyDown(button, { key: "Enter" });
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Gérer les relations…" }));
+  const dialog = await screen.findByRole("dialog", { name: "Relations du monde" });
+
+  fireEvent.click(within(dialog).getByRole("button", { name: "Mentor" }));
+  fireEvent.change(within(dialog).getByLabelText("Nom de la relation"), {
+    target: { value: "Maître" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Enregistrer" }));
+  await waitFor(() =>
+    expect(calls).toContainEqual({
+      command: "update_relation_type",
+      payload: {
+        id: "rel-mentor",
+        input: {
+          name: "Maître",
+          icon: "heart",
+          category: "other",
+          inverseId: null,
+          symmetric: false,
+        },
+      },
+    }),
+  );
+
+  fireEvent.click(await within(dialog).findByRole("button", { name: "Supprimer la relation" }));
+  const confirm = await screen.findByRole("dialog", { name: "Supprimer la relation « Maître » ?" });
+  expect(
+    within(confirm).getByText("Elle est utilisée par 1 lien : il deviendra « sans type »."),
+  ).toBeTruthy();
+  fireEvent.click(within(confirm).getByRole("button", { name: "Supprimer la relation" }));
+  await waitFor(() => expect(savedContent()?.edges[0]?.relationTypeId).toBeNull());
 });

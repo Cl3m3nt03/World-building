@@ -119,6 +119,7 @@ export const PersonNode = memo(function PersonNode({
             key={direction}
             side={direction}
             relationTypes={actions.relationTypes}
+            onManage={actions.manageRelations}
             onPick={(type) => actions.addRelative(id, direction, type)}
           >
             <button

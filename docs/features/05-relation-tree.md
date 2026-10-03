@@ -69,6 +69,8 @@ Les types de relations personnalisés (nom, icône, et relation inverse éventue
 
 **Réalisé en M6 (6.8)** : « Ajouter une variante », dans la barre du bas, demande un nom (« Variante 2 » proposé) et crée une copie de la variante affichée, ouverte aussitôt (ce qui attendait d'être enregistré l'est avant la copie). Dès qu'il y a deux variantes, leurs onglets apparaissent au-dessus de la barre, comme sur le board : un clic (ou les flèches, Début, Fin) passe de l'une à l'autre sans bouger la vue, pour comparer ; un double clic renomme ; « + » en ajoute une. La variante affichée a un menu : Renommer, Dupliquer (« … (copie) »), Déplacer à gauche ou à droite, Supprimer la variante (après confirmation ; pas la dernière). On réordonne aussi les onglets en les glissant. Chaque variante s'édite et s'enregistre seule.
 
+**Réalisé en M6 (6.9)** : « Relation personnalisée… » et la fenêtre « Gérer les relations… » (au bas de chaque liste des relations) décrivent une relation du monde : nom, icône, catégorie (famille, couple ou autre : la section où elle apparaît dans la liste) et relation inverse (aucune, elle-même pour une relation symétrique, ou une autre relation du monde ; gardée dans les deux sens). Les relations fournies sont listées sans pouvoir changer, et ne peuvent pas servir d'inverse (leurs paires restent). Une relation créée dans un arbre est proposée dans tous les arbres du monde. La supprimer demande confirmation en disant combien de liens l'utilisent : ils deviennent « sans type » dans tous les arbres, celui ouvert compris.
+
 ## Modèle de données (indicatif)
 
 - `relation_types` : id, name, icon, inverse_id, category (famille / couple / autre / custom)

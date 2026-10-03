@@ -15,6 +15,8 @@ export type TreeActions = {
   removeEdge: (id: string) => void;
   /** Adds an empty node below link `edgeId`'s middle, hung from it by `type` (a junction). */
   addJunctionRelative: (edgeId: string, type: RelationType | null) => void;
+  /** Opens the window managing the world's relation types. */
+  manageRelations: () => void;
   /** The link whose relation list is open (a link just drawn opens it). */
   relationMenuFor: string | null;
   setRelationMenuFor: (id: string | null) => void;

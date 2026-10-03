@@ -750,9 +750,15 @@ async fn check_input(
     }
     if let Some(inverse) = &input.inverse_id
         && Some(inverse.as_str()) != id
-        && queries::relation_type(pool, inverse).await?.is_none()
     {
-        return Err(invalid(format!("unknown relation type: {inverse}")));
+        match queries::relation_type(pool, inverse).await? {
+            None => return Err(invalid(format!("unknown relation type: {inverse}"))),
+            // Pairing would undo a provided pair (parent ↔ child).
+            Some(row) if row.builtin.is_some() => {
+                return Err(invalid("a provided relation type cannot be an inverse"));
+            }
+            Some(_) => {}
+        }
     }
     Ok(name)
 }
