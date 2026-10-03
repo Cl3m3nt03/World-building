@@ -53,6 +53,8 @@ Le canvas est sauvegardé automatiquement. La scène Excalidraw est stockée en 
 
 **Réalisé en M7 (7.6)** : l'outil « Notes » pose un post-it au milieu de la vue et on y écrit aussitôt : le titre (Entrée passe au texte), puis le texte, sur plusieurs lignes. Échap ou un clic ailleurs termine ; ce qui a été écrit s'annule d'un seul `Ctrl+Z`. Un double-clic sur une note (ou son icône de lien) permet d'y réécrire. Sélectionnée, une note se règle dans la barre d'options : sa couleur (jaune, rose, violet, bleu, vert, blanc) et son papier (ligné, quadrillé, pointé ou uni). Une note est du papier : elle garde ses couleurs dans le thème sombre, comme sur le board. Elle se déplace, se redimensionne et se supprime comme tout élément ; son titre et son texte sont enregistrés avec la scène.
 
+**Réalisé en M7 (7.7)** : le nuage et la bulle rejoignent les formes, après la flèche, la ligne, le rectangle, l'ellipse et le losange. On les pose comme les autres : appuyer, tirer la boîte (un cadre pointillé la montre pendant le geste), relâcher ; un simple clic en pose un de taille moyenne. Ils prennent le style choisi (couleur, épaisseur, trait, tracé) ; sélectionnés, ils se colorent et se remplissent comme une forme, se redimensionnent et s'annulent. Excalidraw ne les ayant pas, ce sont des lignes fermées : un nuage festonné tout autour, une bulle aux coins arrondis avec sa pointe en bas à gauche.
+
 ## Modèle de données (indicatif)
 
 - `canvases` : document_id, scene (JSON Excalidraw sans les binaires), app_state (JSON : cadrage, grille)

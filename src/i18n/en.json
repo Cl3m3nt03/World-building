@@ -701,6 +701,8 @@
   "canvases.shapes.rectangle": "Rectangle",
   "canvases.shapes.ellipse": "Ellipse",
   "canvases.shapes.diamond": "Diamond",
+  "canvases.shapes.cloud": "Cloud",
+  "canvases.shapes.bubble": "Bubble",
   "canvases.options.label": "Tool options",
   "canvases.options.strokeColor": "Colour",
   "canvases.options.backgroundColor": "Fill colour",

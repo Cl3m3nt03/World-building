@@ -19,10 +19,29 @@ export type ToolType =
   | "diamond"
   | "arrow"
   | "line"
-  | "frame";
+  | "frame"
+  // BuilderZ's own shapes (7.7), drawn as closed lines.
+  | "cloud"
+  | "bubble";
 
 /** The shapes, in the order of the board. */
-export const SHAPES = ["arrow", "line", "rectangle", "ellipse", "diamond"] as const;
+export const SHAPES = [
+  "arrow",
+  "line",
+  "rectangle",
+  "ellipse",
+  "diamond",
+  "cloud",
+  "bubble",
+] as const;
+
+/** The shapes Excalidraw does not have: BuilderZ draws them (shapes.ts). */
+export const OWN_SHAPES = ["cloud", "bubble"] as const;
+export type OwnShape = (typeof OWN_SHAPES)[number];
+
+export function isOwnShape(tool: string): tool is OwnShape {
+  return (OWN_SHAPES as readonly string[]).includes(tool);
+}
 export type Shape = (typeof SHAPES)[number];
 
 export function isShape(tool: string): tool is Shape {
@@ -97,14 +116,23 @@ export const CURRENT_ITEM: Record<StyleKey, string> = {
   fontSize: "currentItemFontSize",
 };
 
-/** The styles that mean something for an element (or a tool) of this type. */
+/**
+ * The styles that mean something for an element (or a tool) of this type.
+ * `loop` is a closed line (a cloud, a bubble): filled like a shape.
+ */
 export function stylesOf(type: string): StyleKey[] {
   if (type === "freedraw") return ["strokeColor", "strokeWidth"];
   if (type === "text") return ["strokeColor", "fontSize"];
   if (type === "arrow" || type === "line") {
     return ["strokeColor", "strokeWidth", "strokeStyle", "roughness"];
   }
-  if (type === "rectangle" || type === "ellipse" || type === "diamond") {
+  if (
+    type === "rectangle" ||
+    type === "ellipse" ||
+    type === "diamond" ||
+    type === "loop" ||
+    isOwnShape(type)
+  ) {
     return [
       "strokeColor",
       "backgroundColor",

@@ -1,12 +1,14 @@
 import {
   ArrowUpRight,
   Circle,
+  Cloud,
   Diamond,
   Eraser,
   Frame,
   Hand,
   ImagePlus,
   LayoutGrid,
+  MessageCircle,
   Minus,
   MousePointer2,
   Pencil,
@@ -81,6 +83,8 @@ const SHAPE_ICONS: Record<Shape, typeof Square> = {
   rectangle: Square,
   ellipse: Circle,
   diamond: Diamond,
+  cloud: Cloud,
+  bubble: MessageCircle,
 };
 
 /** A tool of the bar: pressed while active; its name and shortcut as tooltip. */
@@ -93,7 +97,7 @@ function ToolButton({
   children,
 }: {
   label: string;
-  shortcut?: string;
+  shortcut?: string | undefined;
   pressed?: boolean;
   disabled?: boolean;
   onClick?: () => void;
@@ -589,8 +593,8 @@ export function CanvasToolbar({
   );
 }
 
-/** Excalidraw's keys for the shapes. */
-const SHAPE_KEYS: Record<Shape, string> = {
+/** Excalidraw's keys for its shapes (the cloud and the bubble have none). */
+const SHAPE_KEYS: Partial<Record<Shape, string>> = {
   arrow: "A",
   line: "L",
   rectangle: "R",

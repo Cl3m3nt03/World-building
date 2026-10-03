@@ -42,9 +42,12 @@ import {
 } from "../embeds";
 import type { KeptState, SceneElement } from "../hooks/useCanvasEditor";
 import { isNoteLink, NEW_NOTE, NOTE_LINK, NOTE_SIZE, type Note, noteOf } from "../notes";
+import { boxOf, bubblePoints, cloudPoints, DEFAULT_SHAPE_SIZE, MIN_SHAPE_SIZE } from "../shapes";
 import {
   CURRENT_ITEM,
+  isOwnShape,
   isShape,
+  type OwnShape,
   optionsFor,
   type Shape,
   type Style,
@@ -108,19 +111,40 @@ function currentStyle(state: AppState): Style {
   };
 }
 
-/** The selected elements (a text bound to a shape follows it, it is not listed). */
+/** Whether a line closes on itself (a cloud, a bubble): it is filled like a shape. */
+function isLoop(element: ExcalidrawElement): boolean {
+  if (element.type !== "line") return false;
+  const first = element.points[0];
+  const last = element.points.at(-1);
+  return (
+    element.points.length > 2 &&
+    first !== undefined &&
+    last !== undefined &&
+    first[0] === last[0] &&
+    first[1] === last[1]
+  );
+}
+
+/**
+ * The selected elements (a text bound to a shape follows it, it is not
+ * listed); a closed line is styled as a « loop ».
+ */
 function selectedOf(
   elements: readonly ExcalidrawElement[],
   state: AppState,
 ): readonly StyledElement[] {
-  return elements.filter(
-    (element) => state.selectedElementIds[element.id] && !element.isDeleted,
-  ) as unknown as StyledElement[];
+  return elements
+    .filter((element) => state.selectedElementIds[element.id] && !element.isDeleted)
+    .map((element) =>
+      isLoop(element) ? { ...element, type: "loop" } : element,
+    ) as unknown as StyledElement[];
 }
 
 /** What the toolbar shows for this state of Excalidraw. */
 function toolbarState(elements: readonly ExcalidrawElement[], state: AppState): ToolbarState {
-  const tool = state.activeTool.type;
+  // BuilderZ's own shapes are Excalidraw « custom » tools.
+  const tool =
+    state.activeTool.type === "custom" ? state.activeTool.customType : state.activeTool.type;
   const selected = tool === "selection" ? selectedOf(elements, state) : [];
   const options = optionsFor(tool, selected);
   const current = currentStyle(state);
@@ -154,6 +178,14 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const { t, i18n } = useTranslation();
   const theme = useResolvedTheme();
   const api = useRef<ExcalidrawImperativeAPI | null>(null);
+  const [ready, setReady] = useState(false);
+  // The box of a cloud or bubble being drawn, in the section's pixels.
+  const [drawing, setDrawing] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const section = useRef<HTMLElement>(null);
   const [toolbar, setToolbar] = useState<ToolbarState>({
     tool: "selection",
@@ -167,7 +199,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const [shape, setShape] = useState<Shape>("rectangle");
 
   const setTool = useCallback((type: ToolType) => {
-    api.current?.setActiveTool({ type });
+    api.current?.setActiveTool(isOwnShape(type) ? { type: "custom", customType: type } : { type });
   }, []);
 
   const setStyle = useCallback(<K extends StyleKey>(key: K, value: Style[K]) => {
@@ -433,6 +465,91 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     };
   }, [place, startWriting]);
 
+  // --- The cloud and the bubble ---------------------------------------------
+  // Drawn like Excalidraw's shapes: press, drag the box, release (a click
+  // places one of the default size). They become closed lines in the
+  // current style, selected.
+  useEffect(() => {
+    const excalidraw = api.current;
+    const box = section.current;
+    if (!ready || !excalidraw || !box) return;
+    let start: { clientX: number; clientY: number } | null = null;
+    const shapeOf = (tool: AppState["activeTool"]): OwnShape | null =>
+      tool.type === "custom" && isOwnShape(tool.customType) ? tool.customType : null;
+    const track = (event: PointerEvent) => {
+      if (!start) return;
+      const rect = box.getBoundingClientRect();
+      const corner = boxOf(
+        { x: start.clientX, y: start.clientY },
+        { x: event.clientX, y: event.clientY },
+      );
+      setDrawing({ ...corner, x: corner.x - rect.left, y: corner.y - rect.top });
+    };
+    const offDown = excalidraw.onPointerDown((tool, _, event) => {
+      if (!shapeOf(tool) || event.button !== 0) return;
+      start = { clientX: event.clientX, clientY: event.clientY };
+      window.addEventListener("pointermove", track);
+    });
+    const offUp = excalidraw.onPointerUp((tool, _, event) => {
+      const shape = shapeOf(tool);
+      window.removeEventListener("pointermove", track);
+      setDrawing(null);
+      if (!shape || !start) return;
+      const state = excalidraw.getAppState();
+      const from = viewportCoordsToSceneCoords(start, state);
+      const to = viewportCoordsToSceneCoords(
+        { clientX: event.clientX, clientY: event.clientY },
+        state,
+      );
+      start = null;
+      let area = boxOf(from, to);
+      if (area.width < MIN_SHAPE_SIZE || area.height < MIN_SHAPE_SIZE) {
+        area = {
+          x: from.x - DEFAULT_SHAPE_SIZE.width / 2,
+          y: from.y - DEFAULT_SHAPE_SIZE.height / 2,
+          ...DEFAULT_SHAPE_SIZE,
+        };
+      }
+      const points = (shape === "cloud" ? cloudPoints : bubblePoints)(area.width, area.height);
+      const [element] = restoreElements(
+        [
+          {
+            type: "line",
+            id: crypto.randomUUID(),
+            x: area.x,
+            y: area.y,
+            width: area.width,
+            height: area.height,
+            points,
+            strokeColor: state.currentItemStrokeColor,
+            backgroundColor: state.currentItemBackgroundColor,
+            fillStyle: state.currentItemFillStyle,
+            strokeWidth: state.currentItemStrokeWidth,
+            strokeStyle: state.currentItemStrokeStyle,
+            roughness: state.currentItemRoughness,
+            opacity: state.currentItemOpacity,
+            roundness: null,
+            // biome-ignore lint/suspicious/noExplicitAny: Excalidraw restores what it reads
+          } as any,
+        ],
+        null,
+      );
+      if (!element) return;
+      excalidraw.updateScene({
+        elements: [...excalidraw.getSceneElementsIncludingDeleted(), element],
+        appState: { selectedElementIds: { [element.id]: true } },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+      // As after Excalidraw's own shapes: back to selecting.
+      excalidraw.setActiveTool({ type: "selection" });
+    });
+    return () => {
+      offDown();
+      offUp();
+      window.removeEventListener("pointermove", track);
+    };
+  }, [ready]);
+
   useImperativeHandle(ref, () => ({
     recenter: () => {
       const elements = api.current?.getSceneElements() ?? [];
@@ -444,12 +561,13 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     <section
       ref={section}
       aria-label={label}
-      className="bz-canvas size-full overflow-hidden rounded-lg"
+      className="bz-canvas relative size-full overflow-hidden rounded-lg"
     >
       <Excalidraw
         initialData={data}
         excalidrawAPI={(instance) => {
           api.current = instance;
+          setReady(true);
         }}
         theme={theme}
         langCode={i18n.language.startsWith("fr") ? "fr-FR" : "en"}
@@ -529,6 +647,18 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
           />
         </Footer>
       </Excalidraw>
+      {drawing && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute rounded-md border-2 border-dashed border-primary"
+          style={{
+            left: drawing.x,
+            top: drawing.y,
+            width: drawing.width,
+            height: drawing.height,
+          }}
+        />
+      )}
       <span className="sr-only">{t("canvases.hint")}</span>
     </section>
   );
