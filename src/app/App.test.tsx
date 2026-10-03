@@ -135,10 +135,10 @@ describe("routing", () => {
     }
   });
 
-  test("the Wiki and Quill tabs explain what is coming", async () => {
-    await renderAt("/world/demo/wiki");
-    expect(screen.getByText(/Le wiki présentera votre monde/)).toBeTruthy();
-    expect(screen.getByText("Bientôt disponible : arrive avec M8")).toBeTruthy();
+  test("the Quill tab explains what is coming", async () => {
+    await renderAt("/world/demo/quill");
+    expect(screen.getByText(/Quill servira à écrire vos histoires/)).toBeTruthy();
+    expect(screen.getByText("Bientôt disponible : arrive avec M9")).toBeTruthy();
   });
 
   test("an unknown route shows the not-found screen", async () => {

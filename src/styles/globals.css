@@ -60,6 +60,15 @@
   --color-surface-strong: var(--bz-surface-strong);
   --color-border-strong: var(--bz-border-strong);
 
+  /* The wiki's own theme (M8): set on the wiki's root, never on the app. */
+  --color-wiki-background: var(--wiki-background);
+  --color-wiki-surface: var(--wiki-surface);
+  --color-wiki-text: var(--wiki-text);
+  --color-wiki-muted: var(--wiki-muted);
+  --color-wiki-accent: var(--wiki-accent);
+  --font-wiki-heading: var(--wiki-heading-font);
+  --font-wiki-body: var(--wiki-body-font);
+
   --radius-sm: var(--bz-radius-sm);
   --radius-md: var(--bz-radius-md);
   --radius-lg: var(--bz-radius-lg);
