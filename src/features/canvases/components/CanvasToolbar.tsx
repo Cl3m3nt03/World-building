@@ -307,6 +307,27 @@ function StyleOption({
   }
 }
 
+/** Keys that work the bar's own controls (press a button, move in a group). */
+const BAR_KEYS = new Set([
+  "Enter",
+  " ",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+]);
+
+/**
+ * The bar sits inside Excalidraw, which reads the keyboard there too: these
+ * keys stay with the bar (Enter would also edit the selected element, arrows
+ * would move it). Excalidraw's letter shortcuts still go through.
+ */
+function keepKeys(event: React.KeyboardEvent) {
+  if (BAR_KEYS.has(event.key)) event.stopPropagation();
+}
+
 /**
  * Options shown together behind one button (as on the board, the bar stays
  * short): the fill (colour and pattern) and the line (stroke and look).
@@ -490,6 +511,7 @@ export function CanvasToolbar({
       {showOptions && (
         <div
           role="toolbar"
+          onKeyDown={keepKeys}
           aria-label={t("canvases.options.label")}
           className="glass pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-1 rounded-lg border border-border p-1 shadow-sm"
         >
@@ -521,6 +543,7 @@ export function CanvasToolbar({
       )}
       <div
         role="toolbar"
+        onKeyDown={keepKeys}
         aria-label={t("canvases.tools.label")}
         className="glass pointer-events-auto flex items-center gap-1 rounded-lg border border-border p-1 shadow-sm"
       >
