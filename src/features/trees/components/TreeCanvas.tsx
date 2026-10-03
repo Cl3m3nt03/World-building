@@ -225,14 +225,17 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
   const revealRef = useRef(reveal);
   revealRef.current = reveal;
   useEffect(() => {
-    // A node just added is brought into view (its bar above it, the tools below).
-    const added = toSelect.current && fromContent.find((node) => node.id === toSelect.current);
-    if (added) revealRef.current(added.position);
-    setNodes((shown) => {
-      const wanted = toSelect.current;
+    // Read once, here: the node just added, if it is in this content.
+    const wanted = toSelect.current;
+    const added = wanted ? fromContent.find((node) => node.id === wanted) : undefined;
+    if (added) {
       toSelect.current = null;
-      const selected = wanted
-        ? new Set([wanted])
+      // Brought into view (its bar above it, the tools below).
+      revealRef.current(added.position);
+    }
+    setNodes((shown) => {
+      const selected = added
+        ? new Set([added.id])
         : new Set(shown.filter((node) => node.selected).map((node) => node.id));
       return fromContent.map((node) =>
         selected.has(node.id) ? { ...node, selected: true } : node,
@@ -346,16 +349,16 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
   const addRelativeTo = useCallback(
     (nodeId: string, direction: Direction, type: RelationType | null) => {
       let created: string | null = null;
-      // The change runs at once (useTreeEditor): the new node's id is known here.
+      // The change runs at once (useTreeEditor). The node to select is noted
+      // inside it: a pick in a menu renders at once (Radix's flushSync), and
+      // the effect selecting the new node would run before the line after.
       onChange((previous) => {
         const result = addRelative(previous, nodeId, direction, type?.id ?? null);
         created = result.nodeId;
+        toSelect.current = created;
         return result.content;
       });
-      if (created) {
-        toSelect.current = created;
-        setPicking(created);
-      }
+      if (created) setPicking(created);
     },
     [onChange],
   );
@@ -380,14 +383,15 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
         const middle: Point | undefined = geometry.get(edgeId)?.middle;
         if (!middle) return;
         let created: string | null = null;
+        // The node to select is noted inside the change (see addRelativeTo).
         onChange((previous) => {
           const result = addJunctionRelative(previous, edgeId, middle, type?.id ?? null);
           created = result.nodeId;
+          toSelect.current = created;
           return result.content;
         });
         if (created) {
           setSelectedEdges(new Set());
-          toSelect.current = created;
           setPicking(created);
         }
       },
