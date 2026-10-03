@@ -1,27 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
-import { WIKI_BUTTON, WIKI_FOCUS } from "./styles";
-
-/** Back to the wiki's home page, above a page. */
-export function HomeLink() {
-  const { t } = useTranslation();
-  const { worldId } = useParams({ from: "/world/$worldId" });
-  return (
-    <Link
-      to="/world/$worldId/wiki"
-      params={{ worldId }}
-      className={cn(
-        "flex items-center gap-1.5 self-start rounded text-sm text-wiki-muted hover:text-wiki-text [&_svg]:size-4",
-        WIKI_FOCUS,
-      )}
-    >
-      <ArrowLeft aria-hidden />
-      {t("wiki.page.home")}
-    </Link>
-  );
-}
+import { WIKI_BUTTON } from "./styles";
 
 /** A document without a page in the wiki (hidden since, or never shown). */
 export function NotInWiki({ message }: { message: string }) {

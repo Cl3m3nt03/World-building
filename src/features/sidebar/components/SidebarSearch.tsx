@@ -4,8 +4,9 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { Marked } from "@/components/Marked";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import type { SearchHit, TextPart } from "@/lib/bindings";
+import type { SearchHit } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { cn } from "@/lib/utils";
 import { useSearch } from "../hooks/useSearch";
@@ -191,20 +192,5 @@ export function SidebarSearch({ children, actions }: Props) {
         children
       )}
     </>
-  );
-}
-
-/** A text with its matched words highlighted. */
-function Marked({ parts }: { parts: TextPart[] }) {
-  return parts.map((part, index) =>
-    part.matched ? (
-      // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one text never move.
-      <mark key={index} className="rounded-sm bg-primary/25 px-px text-foreground">
-        {part.text}
-      </mark>
-    ) : (
-      // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one text never move.
-      <span key={index}>{part.text}</span>
-    ),
   );
 }

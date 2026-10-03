@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { WikiPage } from "@/lib/bindings";
-import { featuredPages, moveFeatured, searchPages } from "./pages";
+import { featuredPages, moveFeatured } from "./pages";
 import { luminance, resolveTheme, themeScheme, themeStyle, WIKI_PRESETS } from "./theme";
 
 function page(id: string, aliases: string[] = []): WikiPage {
@@ -8,15 +8,6 @@ function page(id: string, aliases: string[] = []): WikiPage {
 }
 
 const PAGES = [page("Aragorn", ["Grands-Pas"]), page("Arwen"), page("Éowyn"), page("Minas Tirith")];
-
-describe("searchPages", () => {
-  test("finds names then aliases, accents and case ignored", () => {
-    expect(searchPages(PAGES, "  ").map((p) => p.id)).toEqual([]);
-    expect(searchPages(PAGES, "ar").map((p) => p.id)).toEqual(["Aragorn", "Arwen"]);
-    expect(searchPages(PAGES, "eow").map((p) => p.id)).toEqual(["Éowyn"]);
-    expect(searchPages(PAGES, "grands").map((p) => p.id)).toEqual(["Aragorn"]);
-  });
-});
 
 describe("featured pages", () => {
   test("skip the ids that are no longer pages, in their order", () => {

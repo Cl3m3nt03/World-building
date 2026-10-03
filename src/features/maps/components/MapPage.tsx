@@ -1,5 +1,6 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
+  BookOpen,
   Globe,
   Image as ImageIcon,
   ImageOff,
@@ -28,6 +29,7 @@ import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import { ImagePickerDialog } from "@/features/media";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { MapPin, MapZone, Map as WorldMap } from "@/lib/bindings";
+import { wikiMapRoute } from "@/lib/documentRoute";
 import { useMapEditor } from "../hooks/useMapEditor";
 import { useMap, useRenameMap, useSetMapBackground } from "../hooks/useMaps";
 import { hiddenLayers } from "../layers";
@@ -422,6 +424,14 @@ function MapEditor({ map }: { map: WorldMap }) {
           <Globe />
           {t("sidebar.document.wiki")}
         </Button>
+        {inWiki && (
+          <Button asChild variant="ghost" size="sm">
+            <Link {...wikiMapRoute(worldId, map.id)}>
+              <BookOpen />
+              {t("wiki.openInWiki")}
+            </Link>
+          </Button>
+        )}
       </header>
       {data.backgroundAssetId === null && (
         <p role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">

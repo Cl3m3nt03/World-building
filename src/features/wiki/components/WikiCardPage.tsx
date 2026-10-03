@@ -13,7 +13,7 @@ import {
 import { wikiCardRoute } from "@/lib/documentRoute";
 import { useWikiPages } from "../hooks/useWiki";
 import { useWikiLinks } from "../links";
-import { HomeLink, NotInWiki } from "./PageParts";
+import { NotInWiki } from "./PageParts";
 
 /**
  * A card's page in the wiki (docs/features/07-wiki.md): its image, type,
@@ -47,7 +47,6 @@ export function WikiCardPage() {
   return (
     <article aria-label={card.data.title} className="scrollbar-thin h-full overflow-y-auto">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 p-6">
-        <HomeLink />
         <div className="grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           <div className="md:sticky md:top-0 md:self-start">
             <CardImage card={card.data} type={type} className="w-full" />

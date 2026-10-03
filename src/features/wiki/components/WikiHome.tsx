@@ -1,24 +1,24 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { BookOpen, ImagePlus, Search, X } from "lucide-react";
-import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
+import { BookOpen, ImagePlus, X } from "lucide-react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { useCurrentWorld } from "@/features/world";
-import type { WikiPage, WikiSettings } from "@/lib/bindings";
+import type { WikiSettings } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { useSaveWikiSettings, useWikiPages, useWikiSettings } from "../hooks/useWiki";
-import { pageRoute } from "../links";
-import { featuredPages, searchPages } from "../pages";
+import { featuredPages } from "../pages";
 import { FeaturedGrid } from "./FeaturedGrid";
-import { PageIcon } from "./PageIcon";
-import { WIKI_BUTTON, WIKI_FIELD, WIKI_FOCUS } from "./styles";
+import { WIKI_BUTTON, WIKI_FIELD } from "./styles";
 import { WikiHero } from "./WikiHero";
+import { WikiSearch } from "./WikiSearch";
 
 /**
  * The wiki's home page (docs/features/07-wiki.md): on the left, the large
  * image of the featured pages; on the right, the banner, the title and the
- * description written in place, the search among the pages, and the grid
+ * description written in place, the search among the pages (name, alias or
+ * text), and the grid
  * of featured pages.
  */
 export function WikiHome() {
@@ -80,7 +80,7 @@ export function WikiHome() {
           <EmptyWiki />
         ) : (
           <>
-            <PageSearch pages={pages.data} title={title} />
+            <WikiSearch variant="home" placeholder={t("wiki.home.search", { title })} />
             <FeaturedGrid
               pages={pages.data}
               featured={current.featured}
@@ -205,64 +205,6 @@ function TextField({
     className: cn(WIKI_FIELD, className),
   };
   return multiline ? <textarea rows={2} {...props} /> : <input {...props} />;
-}
-
-/** The search among the pages: by name or alias. */
-function PageSearch({ pages, title }: { pages: WikiPage[]; title: string }) {
-  const { t } = useTranslation();
-  const { worldId } = useParams({ from: "/world/$worldId" });
-  const [query, setQuery] = useState("");
-  const listId = useId();
-  const results = searchPages(pages, query);
-  const searching = query.trim() !== "";
-
-  return (
-    <search className="relative flex flex-col gap-1.5">
-      <div className="relative">
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-wiki-muted"
-        />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") setQuery("");
-          }}
-          placeholder={t("wiki.home.search", { title })}
-          aria-label={t("wiki.home.search", { title })}
-          aria-controls={searching ? listId : undefined}
-          className="h-9 w-full rounded-md border border-wiki-text/15 bg-wiki-surface pr-3 pl-9 text-sm text-wiki-text outline-none placeholder:text-wiki-muted focus-visible:border-wiki-accent focus-visible:ring-3 focus-visible:ring-wiki-accent/30"
-        />
-      </div>
-      {searching &&
-        (results.length === 0 ? (
-          <p className="px-1 text-sm text-wiki-muted">{t("wiki.home.noResult")}</p>
-        ) : (
-          <ul
-            id={listId}
-            aria-label={t("wiki.home.results")}
-            className="flex flex-col rounded-md border border-wiki-text/10 bg-wiki-surface p-1"
-          >
-            {results.map((page) => (
-              <li key={page.id}>
-                <Link
-                  {...pageRoute(worldId, page)}
-                  className={cn(
-                    "flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-wiki-background",
-                    WIKI_FOCUS,
-                  )}
-                >
-                  <PageIcon page={page} className="size-4" />
-                  <span className="truncate">{page.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ))}
-    </search>
-  );
 }
 
 /** No page yet: how to make one. */
