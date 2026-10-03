@@ -34,3 +34,8 @@ export function documentRoute(worldId: string, kind: DocumentKind, id: string) {
 export function wikiCardRoute(worldId: string, cardId: string) {
   return { to: "/world/$worldId/wiki/card/$cardId", params: { worldId, cardId } } as const;
 }
+
+/** A map's page in the wiki (M8). */
+export function wikiMapRoute(worldId: string, mapId: string) {
+  return { to: "/world/$worldId/wiki/map/$mapId", params: { worldId, mapId } } as const;
+}

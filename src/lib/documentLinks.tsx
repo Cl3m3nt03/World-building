@@ -1,9 +1,12 @@
 import { useParams } from "@tanstack/react-router";
 import { createContext, useCallback, useContext } from "react";
 import type { DocumentKind } from "./bindings";
-import { documentRoute, type wikiCardRoute } from "./documentRoute";
+import { documentRoute, type wikiCardRoute, type wikiMapRoute } from "./documentRoute";
 
-export type DocumentLink = ReturnType<typeof documentRoute> | ReturnType<typeof wikiCardRoute>;
+export type DocumentLink =
+  | ReturnType<typeof documentRoute>
+  | ReturnType<typeof wikiCardRoute>
+  | ReturnType<typeof wikiMapRoute>;
 
 /** Where a document opens, or `null`: shown as plain text, not as a link. */
 export type DocumentLinkResolver = (
