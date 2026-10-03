@@ -355,3 +355,36 @@ pub async fn relation_type_ids(pool: &SqlitePool) -> AppResult<Vec<String>> {
             .await?,
     )
 }
+
+/// The tree a variant belongs to, inside a transaction.
+pub async fn tree_of_variant_in(
+    tx: &mut Transaction<'_, Sqlite>,
+    variant_id: &str,
+) -> AppResult<Option<String>> {
+    Ok(
+        sqlx::query_scalar!("SELECT tree_id FROM tree_variants WHERE id = ?", variant_id)
+            .fetch_optional(&mut **tx)
+            .await?,
+    )
+}
+
+/// Rewrites the `tree` links of the tree `tree_id`: one to each card shown
+/// on one of its variants (ADR 0007).
+pub async fn refresh_links(tx: &mut Transaction<'_, Sqlite>, tree_id: &str) -> AppResult<()> {
+    sqlx::query!(
+        "DELETE FROM links WHERE source_id = ? AND kind = 'tree'",
+        tree_id
+    )
+    .execute(&mut **tx)
+    .await?;
+    sqlx::query!(
+        "INSERT OR IGNORE INTO links (source_id, target_id, kind, detail)
+         SELECT DISTINCT v.tree_id, n.card_id, 'tree', ''
+         FROM tree_nodes n JOIN tree_variants v ON v.id = n.variant_id
+         WHERE v.tree_id = ? AND n.card_id IS NOT NULL",
+        tree_id
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}

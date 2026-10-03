@@ -255,7 +255,31 @@ test("cited in lists the cards that cite this one, and how", async () => {
   );
 });
 
+test("cited in lists the trees that show this card, and opens them", async () => {
+  backlinks = [
+    {
+      sourceId: "isildur-house",
+      sourceKind: "tree",
+      sourceTitle: "Maison d'Isildur",
+      sourceTypeId: null,
+      via: [{ kind: "tree", propertyLabel: null }],
+    },
+  ];
+  const router = await renderAt("/world/demo/world/card/minas");
+
+  const section = await screen.findByRole("region", { name: "Cité dans" });
+  const link = await waitFor(() => {
+    const found = section.querySelector("a");
+    expect(found?.textContent).toBe("Maison d'Isildurarbre de relations");
+    return found as HTMLAnchorElement;
+  });
+  fireEvent.click(link);
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/world/demo/world/tree/isildur-house"),
+  );
+});
+
 test("no backlink: says so", async () => {
   await renderAt("/world/demo/world/card/gondor");
-  expect(await screen.findByText("Aucune carte ne cite celle-ci pour l'instant.")).toBeTruthy();
+  expect(await screen.findByText("Rien ne cite cette carte pour l'instant.")).toBeTruthy();
 });

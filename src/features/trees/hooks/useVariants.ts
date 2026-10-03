@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { commands, type RelationTree } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
+import { invalidateWorldLinks } from "./useTreeEditor";
 import { treeKeys } from "./useTrees";
 
 type Editor = {
@@ -22,6 +23,7 @@ export function useVariants(treeId: string, editor: Editor) {
   const set = (tree: RelationTree) => {
     queryClient.setQueryData(key, tree);
     editor.resetVariants(tree);
+    invalidateWorldLinks(queryClient);
   };
 
   /** A copy of variant `copyOf` named `name`, right after it. */

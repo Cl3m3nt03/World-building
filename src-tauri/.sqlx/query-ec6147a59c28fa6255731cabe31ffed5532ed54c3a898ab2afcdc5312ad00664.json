@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO links (source_id, target_id, kind, detail)\n         SELECT DISTINCT v.tree_id, n.card_id, 'tree', ''\n         FROM tree_nodes n JOIN tree_variants v ON v.id = n.variant_id\n         WHERE v.tree_id = ? AND n.card_id IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ec6147a59c28fa6255731cabe31ffed5532ed54c3a898ab2afcdc5312ad00664"
+}

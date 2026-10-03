@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
+import { LayoutGrid, Map as MapIcon, Network, Share2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { type BacklinkVia, commands } from "@/lib/bindings";
+import { type BacklinkVia, commands, type DocumentKind } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
@@ -15,6 +16,14 @@ export function useBacklinks(cardId: string) {
     queryFn: () => unwrap(commands.cardBacklinks(cardId)),
   });
 }
+
+/** The icon of a document that is not a card (a card shows its type's). */
+const KIND_ICONS: Partial<Record<DocumentKind, typeof Network>> = {
+  map: MapIcon,
+  graph: Share2,
+  tree: Network,
+  canvas: LayoutGrid,
+};
 
 /** "Cited in" at the bottom of a card: the documents that cite it, and how. */
 export function Backlinks({ cardId }: { cardId: string }) {
@@ -41,7 +50,8 @@ export function Backlinks({ cardId }: { cardId: string }) {
         <ul className="flex flex-col gap-1">
           {backlinks.data?.map((backlink) => {
             const type = types.data?.find((candidate) => candidate.id === backlink.sourceTypeId);
-            const Icon = typeIcon(type?.icon ?? "shapes");
+            const KindIcon = KIND_ICONS[backlink.sourceKind];
+            const Icon = KindIcon ?? typeIcon(type?.icon ?? "shapes");
             return (
               <li key={backlink.sourceId}>
                 <Link
@@ -51,7 +61,7 @@ export function Backlinks({ cardId }: { cardId: string }) {
                   <Icon
                     aria-hidden
                     className="size-4 shrink-0"
-                    style={{ color: typeColor(type?.color ?? "slate") }}
+                    style={KindIcon ? undefined : { color: typeColor(type?.color ?? "slate") }}
                   />
                   <span className="truncate">{backlink.sourceTitle}</span>
                   <span className="truncate text-xs text-muted-foreground">

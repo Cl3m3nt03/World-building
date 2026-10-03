@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM links WHERE source_id = ? AND kind = 'tree'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "4a1209afb05b51ed0127b59d5e4f3d121572daf1532dd921c3f90449cfdf47cc"
+}

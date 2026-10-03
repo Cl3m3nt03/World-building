@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { documentKeys } from "@/features/cards";
 import { commands, type RelationTree, type VariantContent } from "@/lib/bindings";
 import {
   type History,
@@ -12,6 +13,15 @@ import {
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { treeKeys } from "./useTrees";
+
+/**
+ * A tree's cards and relations are links of the world (ADR 0007): « Cited
+ * in » of the cards and the graph read them again.
+ */
+export function invalidateWorldLinks(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
+  void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "graph-data"] });
+}
 
 /** Delay of inactivity before a change of a variant is saved. */
 const SAVE_DELAY_MS = 600;
@@ -40,7 +50,7 @@ export function useTreeEditor(tree: RelationTree) {
   const save = useMutation({
     mutationFn: ({ variantId, content }: { variantId: string; content: VariantContent }) =>
       unwrap(commands.saveTreeVariant(variantId, content)),
-    onSuccess: (_, { variantId, content }) =>
+    onSuccess: (_, { variantId, content }) => {
       queryClient.setQueryData<RelationTree>(treeKeys.detail(tree.id), (old) =>
         old
           ? {
@@ -50,7 +60,9 @@ export function useTreeEditor(tree: RelationTree) {
               ),
             }
           : old,
-      ),
+      );
+      invalidateWorldLinks(queryClient);
+    },
   });
 
   const flush = useCallback(() => {

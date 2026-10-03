@@ -652,7 +652,9 @@ export type LinkKind =
 /**  The card is the value of a link property. */
 "property" | 
 /**  The card is pinned on a map. */
-"mapPin";
+"mapPin" | 
+/**  The card is shown in a relation tree (ADR 0007). */
+"tree";
 
 /**  A map as seen by the front. */
 export type Map = {

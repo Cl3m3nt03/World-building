@@ -21,6 +21,8 @@ pub enum LinkKind {
     Property,
     /// The card is pinned on a map.
     MapPin,
+    /// The card is shown in a relation tree (ADR 0007).
+    Tree,
 }
 
 impl LinkKind {
@@ -29,6 +31,7 @@ impl LinkKind {
             Self::Mention => "mention",
             Self::Property => "property",
             Self::MapPin => "map_pin",
+            Self::Tree => "tree",
         }
     }
 
@@ -37,6 +40,7 @@ impl LinkKind {
             "mention" => Self::Mention,
             "property" => Self::Property,
             "map_pin" => Self::MapPin,
+            "tree" => Self::Tree,
             other => return Err(AppError::Internal(format!("unknown link kind: {other}"))),
         })
     }

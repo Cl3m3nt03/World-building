@@ -87,3 +87,5 @@ Les types de relations personnalisés (nom, icône, et relation inverse éventue
 - On construit une famille de trois générations en n'utilisant que les « + ».
 - On crée une jonction entre un couple et un enfant.
 - Modifier une variante ne modifie pas les autres.
+
+**Réalisé en M7.5 (7.5.2)** : un arbre cite les cartes qu'il montre, comme une map cite ses pins (ADR 0007, lien `tree`, migration 0015) : « Cité dans » d'une carte liste les arbres où elle figure, dans n'importe quelle variante, avec leur icône ; un clic ouvre l'arbre. Les liens sont réécrits à chaque enregistrement de l'arbre, d'une variante ajoutée ou supprimée ; un arbre à la corbeille n'apparaît plus. Les arbres déjà dessinés citent leurs cartes dès la mise à jour. Depuis 7.5.1, ses relations entre cartes relient aussi ces cartes dans le Graph.

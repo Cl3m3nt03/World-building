@@ -402,6 +402,10 @@ async fn write_content(
         };
         queries::insert_annotation(tx, variant_id, &row, order as i64).await?;
     }
+    // The cards shown on the tree's variants: its `tree` links.
+    if let Some(tree_id) = queries::tree_of_variant_in(tx, variant_id).await? {
+        queries::refresh_links(tx, &tree_id).await?;
+    }
     Ok(())
 }
 
@@ -665,6 +669,7 @@ pub async fn delete_variant(pool: &SqlitePool, id: &str) -> AppResult<()> {
     }
     let mut tx = db::begin_write(pool).await?;
     queries::delete_variant(&mut tx, id).await?;
+    queries::refresh_links(&mut tx, &tree_id).await?;
     tx.commit().await?;
     Ok(())
 }
