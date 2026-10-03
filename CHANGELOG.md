@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0](https://github.com/Cl3m3nt03/World-building/compare/v0.8.0...v1.0.0) (2026-10-03)
+
+
+### Fonctionnalités
+
+* **wiki:** add a card's page to the wiki ([#331](https://github.com/Cl3m3nt03/World-building/issues/331)) ([d94d90a](https://github.com/Cl3m3nt03/World-building/commit/d94d90afd9f7f314e2aea1f41659fb973f3fd163)), closes [#319](https://github.com/Cl3m3nt03/World-building/issues/319)
+* **wiki:** add a map's page to the wiki ([#332](https://github.com/Cl3m3nt03/World-building/issues/332)) ([6525813](https://github.com/Cl3m3nt03/World-building/commit/65258130dbfc485b229b27848b1118056feaea2b)), closes [#320](https://github.com/Cl3m3nt03/World-building/issues/320)
+* **wiki:** add the site style ([#334](https://github.com/Cl3m3nt03/World-building/issues/334)) ([92c510a](https://github.com/Cl3m3nt03/World-building/commit/92c510a9e8335999590c326949c72c9a8c771514)), closes [#322](https://github.com/Cl3m3nt03/World-building/issues/322)
+* **wiki:** add the wiki's home page ([#330](https://github.com/Cl3m3nt03/World-building/issues/330)) ([cbb12af](https://github.com/Cl3m3nt03/World-building/commit/cbb12afe802085ffcdfe7521ad56832641fc8599)), closes [#318](https://github.com/Cl3m3nt03/World-building/issues/318)
+* **wiki:** export the wiki as a static site ([#335](https://github.com/Cl3m3nt03/World-building/issues/335)) ([e2b92b0](https://github.com/Cl3m3nt03/World-building/commit/e2b92b00ac1a74fc2bf038bda92b1433ae8f8530)), closes [#323](https://github.com/Cl3m3nt03/World-building/issues/323)
+* **wiki:** mark cards and maps visible in the wiki ([#328](https://github.com/Cl3m3nt03/World-building/issues/328)) ([6e791d3](https://github.com/Cl3m3nt03/World-building/commit/6e791d306a7f89fe9194d628376a783d4836a694)), closes [#317](https://github.com/Cl3m3nt03/World-building/issues/317)
+* **wiki:** navigate the wiki ([#333](https://github.com/Cl3m3nt03/World-building/issues/333)) ([c53061b](https://github.com/Cl3m3nt03/World-building/commit/c53061b6a222c62bb3b7741740047af4e1910528)), closes [#321](https://github.com/Cl3m3nt03/World-building/issues/321)
+* **wiki:** store which documents have a page, and the wiki settings ([#327](https://github.com/Cl3m3nt03/World-building/issues/327)) ([7ad175f](https://github.com/Cl3m3nt03/World-building/commit/7ad175f1cc44225a78a90d2aab639400a0d302b0)), closes [#316](https://github.com/Cl3m3nt03/World-building/issues/316)
+
+
+### Documentation
+
+* **roadmap:** record the M8 recette ([#337](https://github.com/Cl3m3nt03/World-building/issues/337)) ([b5c2917](https://github.com/Cl3m3nt03/World-building/commit/b5c2917bd05c1964f03927dd554d9e77299e7c88)), closes [#325](https://github.com/Cl3m3nt03/World-building/issues/325)
+
 ## [0.8.0](https://github.com/Cl3m3nt03/World-building/compare/v0.7.0...v0.8.0) (2026-10-03)
 
 
