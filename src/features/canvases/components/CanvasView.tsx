@@ -12,9 +12,11 @@ import {
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import type {
   AppState,
+  BinaryFileData,
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
 } from "@excalidraw/excalidraw/types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   type Ref,
   useCallback,
@@ -26,8 +28,10 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useResolvedTheme } from "@/app/theme";
-import type { Canvas } from "@/lib/bindings";
+import { ImagePickerDialog, mediaKeys } from "@/features/media";
+import { type Canvas, commands } from "@/lib/bindings";
 import { CARD_DROP_EVENT, type CardDropDetail } from "@/lib/cardDrop";
+import { unwrap } from "@/lib/ipc";
 import {
   type Embed,
   type EmbedKind,
@@ -41,6 +45,7 @@ import {
   placeAt,
 } from "../embeds";
 import type { KeptState, SceneElement } from "../hooks/useCanvasEditor";
+import { missingFiles, naturalSize, placedSize, readAsset } from "../images";
 import { isNoteLink, NEW_NOTE, NOTE_LINK, NOTE_SIZE, type Note, noteOf } from "../notes";
 import {
   type FrameLike,
@@ -103,6 +108,11 @@ function initialData(canvas: Canvas): ExcalidrawInitialDataState {
     >,
     scrollToContent: !framed,
   };
+}
+
+/** An image's bytes as Excalidraw keeps them (its ids and types are branded strings). */
+function fileData(id: string, dataURL: string, mimeType: string): BinaryFileData {
+  return { id, dataURL, mimeType, created: Date.now() } as unknown as BinaryFileData;
 }
 
 /** The style of the next element, from Excalidraw's state. */
@@ -186,6 +196,10 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
   const theme = useResolvedTheme();
   const api = useRef<ExcalidrawImperativeAPI | null>(null);
   const [ready, setReady] = useState(false);
+  const queryClient = useQueryClient();
+  const [pickingImage, setPickingImage] = useState(false);
+  // Images whose bytes are being read from the media library.
+  const loading = useRef(new Set<string>());
   // The box of a cloud or bubble being drawn, in the section's pixels.
   const [drawing, setDrawing] = useState<{
     x: number;
@@ -579,6 +593,65 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     };
   }, [ready, addElement]);
 
+  // --- Images ----------------------------------------------------------------
+  /** Gives Excalidraw the bytes of the images it shows, read from the media library. */
+  const loadImages = useCallback((elements: readonly ExcalidrawElement[]) => {
+    const excalidraw = api.current;
+    if (!excalidraw) return;
+    const known = new Set([...Object.keys(excalidraw.getFiles()), ...loading.current]);
+    for (const id of missingFiles(elements as unknown as { type: string }[], known)) {
+      loading.current.add(id);
+      readAsset(id)
+        .then(({ dataURL, mimeType }) => excalidraw.addFiles([fileData(id, dataURL, mimeType)]))
+        // An asset deleted from the media library: Excalidraw shows its empty image.
+        .catch(() => undefined)
+        .finally(() => loading.current.delete(id));
+    }
+  }, []);
+
+  /**
+   * An image pasted (Ctrl+V) or dropped from the PC: imported into the
+   * world's media library first; its asset id becomes the element's file id.
+   */
+  const importImage = useCallback(
+    async (file: File) => {
+      const data = Array.from(new Uint8Array(await file.arrayBuffer()));
+      const { asset } = await unwrap(commands.importAssetData(file.name || "image", data));
+      void queryClient.invalidateQueries({ queryKey: mediaKeys.all() });
+      return asset.id;
+    },
+    [queryClient],
+  );
+
+  /** An image of the media library, placed in the middle of the view at its size. */
+  const placeImage = useCallback(
+    async (assetId: string) => {
+      const excalidraw = api.current;
+      const point = viewCentre();
+      if (!excalidraw || !point) return;
+      const { dataURL, mimeType } = await readAsset(assetId);
+      excalidraw.addFiles([fileData(assetId, dataURL, mimeType)]);
+      const natural = await naturalSize(dataURL);
+      const size = placedSize(natural.width, natural.height);
+      addElement({
+        type: "image",
+        fileId: assetId,
+        status: "saved",
+        scale: [1, 1],
+        x: point.x - size.width / 2,
+        y: point.y - size.height / 2,
+        ...size,
+      });
+      section.current?.querySelector<HTMLElement>(".excalidraw")?.focus();
+    },
+    [addElement, viewCentre],
+  );
+
+  // The images of the scene as it opens.
+  useEffect(() => {
+    if (ready && api.current) loadImages(api.current.getSceneElements());
+  }, [ready, loadImages]);
+
   useImperativeHandle(ref, () => ({
     recenter: () => {
       const elements = api.current?.getSceneElements() ?? [];
@@ -607,6 +680,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
             appState as unknown as KeptState,
           );
           nameSections(elements, appState);
+          loadImages(elements);
           if (editing.current && appState.activeEmbeddable?.element.id !== editing.current) {
             stopWriting();
           }
@@ -646,6 +720,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
           const embed = embedOf(element.link);
           return embed ? <DocumentThumbnail embed={embed} /> : null;
         }}
+        generateIdForFile={importImage}
         UIOptions={{
           canvasActions: {
             loadScene: false,
@@ -654,8 +729,9 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
             toggleTheme: false,
             changeViewBackgroundColor: false,
           },
-          // Images come from the world's media library (step 7.9).
-          tools: { image: false },
+          // Kept on: Excalidraw takes pasted and dropped images only with it.
+          // Its button is hidden with its toolbar; ours opens the media library.
+          tools: { image: true },
         }}
       >
         {/* Only what makes sense in BuilderZ (no file, no link to excalidraw.com). */}
@@ -673,6 +749,7 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
             onRemove={remove}
             onInsert={insert}
             onNote={addNote}
+            onImages={() => setPickingImage(true)}
             onNoteStyle={setNoteStyle}
           />
         </Footer>
@@ -689,6 +766,12 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
           }}
         />
       )}
+      <ImagePickerDialog
+        open={pickingImage}
+        onOpenChange={setPickingImage}
+        title={t("canvases.images.pick")}
+        onPick={(assetId) => void placeImage(assetId)}
+      />
       <span className="sr-only">{t("canvases.hint")}</span>
     </section>
   );

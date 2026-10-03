@@ -73,6 +73,8 @@ type Props = ToolbarState & {
   onInsert: (embed: Embed) => void;
   /** Places a new note in the middle of the view, to write in. */
   onNote: () => void;
+  /** Opens the media library to place an image. */
+  onImages: () => void;
   /** Sets the colour or paper of the selected notes. */
   onNoteStyle: (patch: Partial<Pick<Note, "color" | "pattern">>) => void;
 };
@@ -398,13 +400,13 @@ export function CanvasToolbar({
   onRemove,
   onInsert,
   onNote,
+  onImages,
   onNoteStyle,
   note,
 }: Props) {
   const { t } = useTranslation();
   const drawing = tool === "freedraw" || tool === "eraser";
   const shaping = isShape(tool);
-  const soon = t("canvases.tools.soon");
   const ShapeIcon = SHAPE_ICONS[shape];
 
   const subTools = drawing ? (
@@ -585,7 +587,7 @@ export function CanvasToolbar({
         >
           <Frame />
         </ToolButton>
-        <ToolButton label={`${t("canvases.tools.images")} (${soon})`} disabled>
+        <ToolButton label={t("canvases.tools.images")} onClick={onImages}>
           <ImagePlus />
         </ToolButton>
       </div>

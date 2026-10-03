@@ -22,8 +22,8 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost; img-src 'self' data: blob: bzasset: http://bzasset.localhost bzlibrary: http://bzlibrary.localhost bztiles: http://bztiles.localhost bzthumb: http://bzthumb.localhost; media-src 'self' bzasset: http://bzasset.localhost; style-src 'self' 'unsafe-inline'; font-src 'self'",
-      "devCsp": "default-src 'self'; connect-src ipc: http://ipc.localhost ws://localhost:1420; img-src 'self' data: blob: bzasset: http://bzasset.localhost bzlibrary: http://bzlibrary.localhost bztiles: http://bztiles.localhost bzthumb: http://bzthumb.localhost; media-src 'self' bzasset: http://bzasset.localhost; style-src 'self' 'unsafe-inline'; font-src 'self'"
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost bzasset: http://bzasset.localhost; img-src 'self' data: blob: bzasset: http://bzasset.localhost bzlibrary: http://bzlibrary.localhost bztiles: http://bztiles.localhost bzthumb: http://bzthumb.localhost; media-src 'self' bzasset: http://bzasset.localhost; style-src 'self' 'unsafe-inline'; font-src 'self'",
+      "devCsp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost ws://localhost:1420 bzasset: http://bzasset.localhost; img-src 'self' data: blob: bzasset: http://bzasset.localhost bzlibrary: http://bzlibrary.localhost bztiles: http://bztiles.localhost bzthumb: http://bzthumb.localhost; media-src 'self' bzasset: http://bzasset.localhost; style-src 'self' 'unsafe-inline'; font-src 'self'"
     }
   },
   "bundle": {
