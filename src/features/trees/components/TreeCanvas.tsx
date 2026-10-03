@@ -12,9 +12,11 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
+  useStore,
 } from "@xyflow/react";
 import { ExternalLink, GitBranchPlus, Replace, Trash2, UserRoundPlus } from "lucide-react";
 import {
+  type CSSProperties,
   forwardRef,
   type KeyboardEvent,
   type ReactNode,
@@ -190,6 +192,7 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
 ) {
   const { t } = useTranslation();
   const flow = useReactFlow();
+  const zoom = useStore((state) => state.transform[2]);
   const wrapper = useRef<HTMLDivElement>(null);
   const fromContent = useMemo(
     () => toFlowNodes(content, cardsById, typesById),
@@ -608,6 +611,8 @@ const TreeFlow = forwardRef<TreeCanvasHandle, Props>(function TreeFlow(
       tabIndex={0}
       onKeyDown={onKeyDown}
       onPointerDownCapture={onPointerDownCapture}
+      // Attach points keep a grab area of the same size on screen (globals.css).
+      style={{ "--bz-zoom": zoom } as CSSProperties}
       className={cn(
         "bz-tree relative size-full rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         tool === "draw" && "cursor-crosshair",
