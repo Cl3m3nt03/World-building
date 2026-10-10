@@ -73,7 +73,7 @@ export function NoteMargin({ editor, storyId, notes, box, openId, onOpen }: Prop
                 aria-label={t("quill.notes.open", {
                   note: snippet.length > SNIPPET ? `${snippet.slice(0, SNIPPET)}…` : snippet,
                 })}
-                className="absolute -right-9 flex size-7 items-center justify-center rounded-md text-primary outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="absolute -right-8 flex size-7 items-center justify-center rounded-md text-primary outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
                 style={{ top: top(from) }}
               >
                 <MessageSquareText aria-hidden className="size-4" />

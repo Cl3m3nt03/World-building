@@ -47,7 +47,9 @@ type Props = {
 
 /**
  * The bar under the text (board: « Play », « Audio », « Write »,
- * « Publish », and the devices of the preview when publishing).
+ * « Publish », and the devices of the preview when publishing). It fits its
+ * column (a `center` container): without room, labels give way to icons
+ * (named for screen readers, with a tooltip).
  */
 export function ModeBar({ mode, modes, onMode, template, onTemplate }: Props) {
   const { t } = useTranslation();
@@ -64,9 +66,16 @@ export function ModeBar({ mode, modes, onMode, template, onTemplate }: Props) {
             {(["web", "mobile", "ereader"] as const).map((item) => {
               const Icon = TEMPLATE_ICONS[item];
               return (
-                <ToggleGroupItem key={item} value={item} className="gap-1.5 px-2.5">
+                <ToggleGroupItem
+                  key={item}
+                  value={item}
+                  title={t(`quill.reader.templates.${item}`)}
+                  className="gap-1.5 px-2.5"
+                >
                   <Icon aria-hidden />
-                  {t(`quill.reader.templates.${item}`)}
+                  <span className="sr-only @3xl/center:not-sr-only">
+                    {t(`quill.reader.templates.${item}`)}
+                  </span>
                 </ToggleGroupItem>
               );
             })}
@@ -83,9 +92,14 @@ export function ModeBar({ mode, modes, onMode, template, onTemplate }: Props) {
         {modes.map((item) => {
           const Icon = MODE_ICONS[item];
           return (
-            <ToggleGroupItem key={item} value={item} className="gap-1.5 px-2.5">
+            <ToggleGroupItem
+              key={item}
+              value={item}
+              title={t(`quill.modes.${item}`)}
+              className="gap-1.5 px-2.5"
+            >
               <Icon aria-hidden />
-              {t(`quill.modes.${item}`)}
+              <span className="sr-only @lg/center:not-sr-only">{t(`quill.modes.${item}`)}</span>
             </ToggleGroupItem>
           );
         })}

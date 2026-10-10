@@ -217,7 +217,9 @@ export function PlayView({ chapter, draftId }: Props) {
           className="reader-page scrollbar-thin h-full overflow-y-auto outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <section className="reader-chapter reader-playing">
-            <h1 className="reader-chapter-title">{chapter.title}</h1>
+            <header className="reader-opening">
+              <h1 className="reader-chapter-title">{chapter.title}</h1>
+            </header>
             {doc && <BookText doc={doc} />}
           </section>
         </div>

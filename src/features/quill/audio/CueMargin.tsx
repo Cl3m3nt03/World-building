@@ -84,7 +84,7 @@ export function CueMargin({ editor, draftId, cues, box, openId, onOpen }: Props)
               <button
                 type="button"
                 aria-label={t(`quill.audio.open.${cue.kind}`, { name })}
-                className="absolute -right-9 flex size-7 items-center justify-center rounded-md text-primary outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="absolute -right-8 flex size-7 items-center justify-center rounded-md text-primary outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
                 style={{ top: at }}
               >
                 <Icon aria-hidden className="size-4" />
