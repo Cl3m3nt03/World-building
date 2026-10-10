@@ -95,6 +95,15 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
       return t("media.usage.worldTheme", { name: usage.worldName });
     }
     if (usage.kind === "wikiBanner") return t("media.usage.wikiBanner");
+    if (usage.kind === "storyCover") {
+      return t("media.usage.storyCover", { name: usage.storyTitle });
+    }
+    if (usage.kind === "chapterHeader") {
+      return t("media.usage.chapterHeader", {
+        name: usage.chapterTitle,
+        story: usage.storyTitle,
+      });
+    }
     const where =
       usage.kind === "mapBackground"
         ? t("media.usage.mapBackground", { name: usage.mapTitle })
@@ -135,11 +144,15 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
                     usage.kind === "worldTheme" ||
                     usage.kind === "wikiBanner"
                       ? usage.kind
-                      : usage.kind === "mapBackground"
-                        ? `${usage.kind}-${usage.mapId}`
-                        : usage.kind === "canvasImage"
-                          ? `${usage.kind}-${usage.canvasId}`
-                          : `${usage.kind}-${usage.cardId}`
+                      : usage.kind === "storyCover"
+                        ? `${usage.kind}-${usage.storyId}`
+                        : usage.kind === "chapterHeader"
+                          ? `${usage.kind}-${usage.chapterId}`
+                          : usage.kind === "mapBackground"
+                            ? `${usage.kind}-${usage.mapId}`
+                            : usage.kind === "canvasImage"
+                              ? `${usage.kind}-${usage.canvasId}`
+                              : `${usage.kind}-${usage.cardId}`
                   }
                 >
                   {describeUsage(usage)}

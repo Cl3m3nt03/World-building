@@ -36,10 +36,9 @@ pub enum BookFinish {
     Paper,
 }
 
-/// How the book looks: its colour and the finish of its cover. Read with
-/// tolerance: a missing or unknown field takes its default.
+/// How the book looks: its colour and the finish of its cover.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase")]
 pub struct BookStyle {
     /// CSS `#rrggbb`.
     pub color: String,
@@ -67,7 +66,7 @@ pub enum TitlePosition {
 
 /// The cover: an image of the media library, and where the title sits.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Type)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase")]
 pub struct Cover {
     pub asset_id: Option<String>,
     pub title_position: TitlePosition,
@@ -183,13 +182,52 @@ fn to_json<T: Serialize>(value: &T) -> AppResult<String> {
     serde_json::to_string(value).map_err(|error| AppError::Internal(error.to_string()))
 }
 
+/// A stored book style, read with tolerance: a missing or unknown field
+/// takes its default.
+pub fn read_style(json: &str) -> BookStyle {
+    let value: Value = serde_json::from_str(json).unwrap_or_default();
+    let default = BookStyle::default();
+    let color = value
+        .get("color")
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+        .filter(|color| {
+            check_style(&BookStyle {
+                color: color.clone(),
+                finish: BookFinish::Cloth,
+            })
+            .is_ok()
+        })
+        .unwrap_or(default.color);
+    let finish = value
+        .get("finish")
+        .and_then(|finish| serde_json::from_value(finish.clone()).ok())
+        .unwrap_or_default();
+    BookStyle { color, finish }
+}
+
+/// A stored cover, read with tolerance like the book style.
+pub fn read_cover(json: &str) -> Cover {
+    let value: Value = serde_json::from_str(json).unwrap_or_default();
+    Cover {
+        asset_id: value
+            .get("assetId")
+            .and_then(Value::as_str)
+            .filter(|id| assets::is_valid_id(id))
+            .map(str::to_owned),
+        title_position: value
+            .get("titlePosition")
+            .and_then(|position| serde_json::from_value(position.clone()).ok())
+            .unwrap_or_default(),
+    }
+}
+
 fn story_of(row: StoryListRow) -> Story {
     Story {
         id: row.id,
         title: row.title,
-        // Read with tolerance: an unreadable value gives the defaults.
-        book_style: serde_json::from_str(&row.book_style).unwrap_or_default(),
-        cover: serde_json::from_str(&row.cover).unwrap_or_default(),
+        book_style: read_style(&row.book_style),
+        cover: read_cover(&row.cover),
         chapter_count: count(row.chapter_count),
         word_count: count(row.word_count),
         created_at: row.created_at,

@@ -123,6 +123,19 @@ pub enum AssetUsage {
     },
     /// The banner of the wiki's home page (M8).
     WikiBanner,
+    /// The cover of a story (Quill, M9).
+    #[serde(rename_all = "camelCase")]
+    StoryCover {
+        story_id: String,
+        story_title: String,
+    },
+    /// The image over a chapter's text (Quill, M9).
+    #[serde(rename_all = "camelCase")]
+    ChapterHeader {
+        chapter_id: String,
+        chapter_title: String,
+        story_title: String,
+    },
     /// An image on a canvas (M7).
     #[serde(rename_all = "camelCase")]
     CanvasImage {
@@ -145,6 +158,19 @@ pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsag
     }
     if crate::db::wiki::is_banner(pool, id).await? {
         usages.push(AssetUsage::WikiBanner);
+    }
+    for row in crate::db::quill::covers_using(pool, id).await? {
+        usages.push(AssetUsage::StoryCover {
+            story_id: row.id,
+            story_title: row.story_title,
+        });
+    }
+    for row in crate::db::quill::headers_using(pool, id).await? {
+        usages.push(AssetUsage::ChapterHeader {
+            chapter_id: row.id,
+            chapter_title: row.title,
+            story_title: row.story_title,
+        });
     }
     for row in crate::db::canvases::using_asset(pool, id).await? {
         usages.push(AssetUsage::CanvasImage {

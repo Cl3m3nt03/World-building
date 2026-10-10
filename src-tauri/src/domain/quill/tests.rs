@@ -264,9 +264,36 @@ async fn a_story_is_updated_then_deleted_with_its_links() {
 
 #[test]
 fn styles_are_read_with_tolerance() {
-    let style: BookStyle = serde_json::from_str(r#"{"finish":"paper","extra":1}"#).unwrap();
+    let style = read_style(r#"{"finish":"paper","color":"red","extra":1}"#);
     assert_eq!(style.color, BookStyle::default().color);
     assert_eq!(style.finish, BookFinish::Paper);
-    let cover: Cover = serde_json::from_str("{}").unwrap();
-    assert_eq!(cover, Cover::default());
+    assert_eq!(read_style("not json"), BookStyle::default());
+    assert_eq!(read_cover("{}"), Cover::default());
+    let cover = read_cover(r#"{"assetId":"../x","titlePosition":"top"}"#);
+    assert_eq!(cover.asset_id, None);
+    assert_eq!(cover.title_position, TitlePosition::Top);
+}
+
+#[tokio::test]
+async fn the_media_library_knows_covers_and_headers() {
+    use crate::domain::media::{AssetUsage, card_usages};
+    let (_dir, world) = world().await;
+    let image = format!("{}.png", "c".repeat(64));
+    let mut story = new_story("Récit");
+    story.cover.asset_id = Some(image.clone());
+    let outline = create(&world.pool, &story).await.unwrap();
+    let chapter = &outline.chapters[0];
+    set_chapter_header(&world.pool, &chapter.id, Some(&image))
+        .await
+        .unwrap();
+    let usages = card_usages(&world.pool, &image).await.unwrap();
+    assert!(usages.contains(&AssetUsage::StoryCover {
+        story_id: outline.story.id.clone(),
+        story_title: "Récit".into(),
+    }));
+    assert!(usages.contains(&AssetUsage::ChapterHeader {
+        chapter_id: chapter.id.clone(),
+        chapter_title: "Chapitre 1".into(),
+        story_title: "Récit".into(),
+    }));
 }

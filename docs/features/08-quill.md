@@ -18,6 +18,8 @@ Quill sert à écrire des chapitres, des nouvelles, des romans ou des scénarios
 - Créer une histoire se fait sur un écran de configuration : titre, style de livre et couverture. (La vue 3D arrive en M10 ; en M9, un aperçu 2D suffit.)
 - Après la création, on accède à « Chapitre 1 ».
 
+**Réalisé en M9 (9.2)** : l'onglet Quill liste les histoires sous forme de livres en 2D (couleur, finition en toile, cuir ou papier, illustration encadrée par la reliure, titre en haut, au milieu ou en bas), avec leurs nombres de chapitres et de mots. « Nouvelle histoire » ouvre l'écran du livre : titre, neuf couleurs proposées ou une autre au choix, finition, illustration de la médiathèque, position du titre, avec l'aperçu du livre qui suit les réglages. Créer ouvre « Chapitre 1 ». Le menu d'une histoire propose « Modifier le livre » (même écran) et « Supprimer l'histoire », qui demande une confirmation et annonce ce qui sera perdu. La médiathèque sait qu'une image est la couverture d'une histoire ou l'en-tête d'un chapitre.
+
 ### Espace d'écriture
 
 L'écran se divise en trois colonnes :

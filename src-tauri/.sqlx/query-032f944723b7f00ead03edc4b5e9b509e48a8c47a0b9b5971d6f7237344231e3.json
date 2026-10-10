@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", title, title AS \"story_title!\"\n           FROM stories WHERE json_extract(cover, '$.assetId') = ?\n           ORDER BY title COLLATE NOCASE",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "story_title!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "title"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "032f944723b7f00ead03edc4b5e9b509e48a8c47a0b9b5971d6f7237344231e3"
+}
