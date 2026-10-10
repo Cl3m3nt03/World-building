@@ -40,15 +40,21 @@ import { Input } from "@/components/ui/input";
 import { type Chapter, commands, type StoryOutline } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { DraftList } from "../drafts/DraftList";
 import { useChapterChange } from "../hooks/useQuill";
 
-type Props = { outline: StoryOutline; currentId: string };
+type Props = {
+  outline: StoryOutline;
+  currentId: string;
+  /** The draft shown in the editor. */
+  openDraftId: string;
+};
 
 /**
  * The writing space's left column: the story and its chapters, created,
  * renamed, reordered (drag, or Space then arrows) and deleted.
  */
-export function ChapterList({ outline, currentId }: Props) {
+export function ChapterList({ outline, currentId, openDraftId }: Props) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
   const navigate = useNavigate();
@@ -151,6 +157,7 @@ export function ChapterList({ outline, currentId }: Props) {
                 key={chapter.id}
                 chapter={chapter}
                 current={chapter.id === currentId}
+                openDraftId={openDraftId}
                 renaming={renaming === chapter.id}
                 onRename={() => setRenaming(chapter.id)}
                 onRenamed={() => setRenaming(null)}
@@ -201,6 +208,7 @@ export function ChapterList({ outline, currentId }: Props) {
 function ChapterRow({
   chapter,
   current,
+  openDraftId,
   renaming,
   onRename,
   onRenamed,
@@ -208,6 +216,7 @@ function ChapterRow({
 }: {
   chapter: Chapter;
   current: boolean;
+  openDraftId: string;
   renaming: boolean;
   onRename: () => void;
   onRenamed: () => void;
@@ -226,74 +235,74 @@ function ChapterRow({
         transform: CSS.Transform.toString(sortable.transform),
         transition: sortable.transition,
       }}
-      className={cn(
-        "group flex items-center gap-1",
-        sortable.isDragging && "relative z-10 opacity-70",
-      )}
+      className={cn("flex flex-col gap-1", sortable.isDragging && "relative z-10 opacity-70")}
     >
-      {renaming ? (
-        <Input
-          aria-label={t("quill.chapterName")}
-          defaultValue={chapter.title}
-          maxLength={200}
-          autoFocus
-          onFocus={(event) => event.currentTarget.select()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.currentTarget.blur();
-            if (event.key === "Escape") {
-              event.currentTarget.value = chapter.title;
-              event.currentTarget.blur();
-            }
-          }}
-          onBlur={(event) => {
-            const title = event.currentTarget.value.trim();
-            if (title && title !== chapter.title) rename.mutate(title);
-            onRenamed();
-          }}
-          className="h-8"
-        />
-      ) : (
-        <Link
-          to="/world/$worldId/quill/story/$storyId/chapter/$chapterId"
-          params={{ worldId, storyId: chapter.storyId, chapterId: chapter.id }}
-          {...sortable.listeners}
-          aria-describedby={sortable.attributes["aria-describedby"]}
-          aria-current={current ? "page" : undefined}
-          onDoubleClick={onRename}
-          className="flex min-w-0 flex-1 flex-col rounded-md px-2 py-1.5 text-sm outline-none select-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-accent aria-[current=page]:font-medium"
-        >
-          <span className="truncate">{chapter.title}</span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {t("quill.words", { count: chapter.wordCount })}
-          </span>
-        </Link>
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label={t("quill.chapterActions", { name: chapter.title })}
-            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+      <div className="group flex items-center gap-1">
+        {renaming ? (
+          <Input
+            aria-label={t("quill.chapterName")}
+            defaultValue={chapter.title}
+            maxLength={200}
+            autoFocus
+            onFocus={(event) => event.currentTarget.select()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+              if (event.key === "Escape") {
+                event.currentTarget.value = chapter.title;
+                event.currentTarget.blur();
+              }
+            }}
+            onBlur={(event) => {
+              const title = event.currentTarget.value.trim();
+              if (title && title !== chapter.title) rename.mutate(title);
+              onRenamed();
+            }}
+            className="h-8"
+          />
+        ) : (
+          <Link
+            to="/world/$worldId/quill/story/$storyId/chapter/$chapterId"
+            params={{ worldId, storyId: chapter.storyId, chapterId: chapter.id }}
+            {...sortable.listeners}
+            aria-describedby={sortable.attributes["aria-describedby"]}
+            aria-current={current ? "page" : undefined}
+            onDoubleClick={onRename}
+            className="flex min-w-0 flex-1 flex-col rounded-md px-2 py-1.5 text-sm outline-none select-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-accent aria-[current=page]:font-medium"
           >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={onRename}>
-            <Pencil />
-            {t("quill.renameChapter")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            disabled={!onDelete}
-            onSelect={() => onDelete?.()}
-          >
-            <Trash2 />
-            {t("quill.deleteChapter")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <span className="truncate">{chapter.title}</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {t("quill.words", { count: chapter.wordCount })}
+            </span>
+          </Link>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={t("quill.chapterActions", { name: chapter.title })}
+              className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={onRename}>
+              <Pencil />
+              {t("quill.renameChapter")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={!onDelete}
+              onSelect={() => onDelete?.()}
+            >
+              <Trash2 />
+              {t("quill.deleteChapter")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {current && <DraftList chapter={chapter} openId={openDraftId} />}
     </li>
   );
 }

@@ -50,6 +50,8 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *     /story/$storyId          a story → its first chapter
  *       /edit                  its book
  *       /chapter/$chapterId    a chapter, in the writing space
+ *         /draft/$draftId      one of its other drafts
+ *         /compare/$l/$r       two of its drafts side by side
  *   /world/$worldId/media      Media library (reached from Home)
  */
 
@@ -213,6 +215,20 @@ const chapterRoute = createRoute({
   component: WritingSpace,
 });
 
+/** A draft of a chapter that is not its current one (M9). */
+const draftRoute = createRoute({
+  getParentRoute: () => storyRoute,
+  path: "chapter/$chapterId/draft/$draftId",
+  component: WritingSpace,
+});
+
+/** Two drafts of a chapter, side by side (M9). */
+const compareRoute = createRoute({
+  getParentRoute: () => storyRoute,
+  path: "chapter/$chapterId/compare/$leftId/$rightId",
+  component: WritingSpace,
+});
+
 const mediaRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "media",
@@ -236,7 +252,13 @@ export const routeTree = rootRoute.addChildren([
     quillRoute.addChildren([
       quillIndexRoute,
       newStoryRoute,
-      storyRoute.addChildren([storyIndexRoute, editStoryRoute, chapterRoute]),
+      storyRoute.addChildren([
+        storyIndexRoute,
+        editStoryRoute,
+        chapterRoute,
+        draftRoute,
+        compareRoute,
+      ]),
     ]),
     mediaRoute,
   ]),
