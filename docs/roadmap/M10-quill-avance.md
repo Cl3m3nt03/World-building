@@ -30,9 +30,9 @@
   - sons d'un brouillon et d'une histoire : créer, modifier, supprimer ;
   - réglages de lecture : lire et enregistrer, avec lecture tolérante et valeurs par défaut ;
   - copier un brouillon copie ses sons et renomme leurs ancres ;
-  - la médiathèque sait qu'un son est utilisé par un chapitre et refuse de le supprimer
+  - la médiathèque montre qu'un fichier est le son d'un chapitre (« Utilisé par »)
 
-**Critères d'acceptation** : un son créé sur un brouillon est copié avec lui ; un fichier audio utilisé ne peut pas être supprimé.
+**Critères d'acceptation** : un son créé sur un brouillon est copié avec lui ; un fichier audio utilisé le dit avant d'être supprimé.
 
 ## 10.2 — Couverture en 3D (#363)
 **Branche** : `feat/quill-cover-3d` · **Dépend de** : 10.1

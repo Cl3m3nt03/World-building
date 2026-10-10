@@ -27,7 +27,7 @@ La stack (ADR 0001) a déjà retenu Three.js pour la couverture 3D, la Web Audio
    - Une **ambiance** se joue du premier au dernier paragraphe marqué, puis s'éteint en fondu. Elle tourne en boucle si on le demande.
    - La marque suit le texte quand on écrit autour.
    - Copier un brouillon copie ses sons et renomme leurs ancres, comme pour les notes.
-   - Supprimer un son retire sa marque. Supprimer un fichier de la médiathèque est refusé tant qu'un son l'utilise : il apparaît dans « Utilisé par », comme une couverture.
+   - Supprimer un son retire sa marque. Comme pour une couverture, la médiathèque montre les sons d'un fichier dans « Utilisé par » avant de le supprimer ; un son dont le fichier a disparu est signalé dans le texte et ignoré à la lecture.
 2. **Les réglages de lecture sont ceux de l'histoire.**
    - Ils tiennent dans une colonne `stories.reader_settings` (JSON lu avec tolérance, valeurs par défaut sinon). Ils couvrent le thème de page, le mode de lecture (défilement ou pages), le fond, la police et la mise en page des chapitres.
    - La prévisualisation et les trois exports les utilisent : ce qu'on règle est ce qu'on obtient.
