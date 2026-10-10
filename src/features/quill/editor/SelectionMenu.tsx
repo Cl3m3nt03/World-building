@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Link2, SquarePlus } from "lucide-react";
+import { Link2, MessageSquarePlus, SquarePlus } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -19,9 +19,17 @@ type Passage = { from: number; to: number; text: string; rect: DOMRect };
 /**
  * The menu over a selected passage (docs/features/08-quill.md): « Créer une
  * carte » (the passage becomes its name and a mention of it) and « Lier à une
- * carte » (the passage becomes a mention of the card chosen).
+ * carte » (the passage becomes a mention of the card chosen) and « Ajouter une
+ * note » (a note anchored to the passage).
  */
-export function SelectionMenu({ editor }: { editor: Editor }) {
+export function SelectionMenu({
+  editor,
+  onAddNote,
+}: {
+  editor: Editor;
+  /** Adds a note on the passage `from`–`to`. */
+  onAddNote: (from: number, to: number) => void;
+}) {
   const { t } = useTranslation();
   const [passage, setPassage] = useState<Passage | null>(null);
   const [action, setAction] = useState<"create" | "link" | null>(null);
@@ -92,6 +100,19 @@ export function SelectionMenu({ editor }: { editor: Editor }) {
         >
           <Link2 />
           {t("quill.selection.link")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            const { from, to } = editor.state.selection;
+            onAddNote(from, to);
+          }}
+        >
+          <MessageSquarePlus />
+          {t("quill.selection.note")}
         </Button>
       </BubbleMenu>
       {passage &&

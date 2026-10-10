@@ -4,7 +4,7 @@ use sqlx::SqlitePool;
 use tauri::State;
 
 use crate::domain::quill::{
-    self, Chapter, Draft, DraftInfo, NewStory, Story, StoryOutline, StoryPatch,
+    self, Chapter, Draft, DraftInfo, NewStory, Note, Story, StoryNote, StoryOutline, StoryPatch,
 };
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
@@ -171,4 +171,37 @@ pub async fn save_draft(
     content: String,
 ) -> AppResult<DraftInfo> {
     quill::save_draft(&pool(&state, "save_draft").await?, &id, &content).await
+}
+
+/// Adds a note to a draft.
+#[tauri::command]
+#[specta::specta]
+pub async fn create_note(
+    state: State<'_, AppState>,
+    draft_id: String,
+    body: String,
+) -> AppResult<Note> {
+    quill::create_note(&pool(&state, "create_note").await?, &draft_id, &body).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_note(state: State<'_, AppState>, id: String, body: String) -> AppResult<Note> {
+    quill::update_note(&pool(&state, "update_note").await?, &id, &body).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_note(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    quill::delete_note(&pool(&state, "delete_note").await?, &id).await
+}
+
+/// The notes of a story, by chapter.
+#[tauri::command]
+#[specta::specta]
+pub async fn story_notes(
+    state: State<'_, AppState>,
+    story_id: String,
+) -> AppResult<Vec<StoryNote>> {
+    quill::story_notes(&pool(&state, "story_notes").await?, &story_id).await
 }

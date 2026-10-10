@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", draft_id, body, created_at, updated_at\n           FROM chapter_notes WHERE draft_id = ? ORDER BY created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "draft_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "draft_id"
+          }
+        }
+      },
+      {
+        "name": "body",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "body"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "221a65b06618b2aadf5cabda4305d532dbae127682c390e4d750d15b25e2f161"
+}

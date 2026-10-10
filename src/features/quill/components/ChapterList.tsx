@@ -37,24 +37,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { type Chapter, commands, type StoryOutline } from "@/lib/bindings";
+import { type Chapter, commands, type StoryNote, type StoryOutline } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { DraftList } from "../drafts/DraftList";
 import { useChapterChange } from "../hooks/useQuill";
+import { NotesList } from "../notes/NotesList";
 
 type Props = {
   outline: StoryOutline;
   currentId: string;
   /** The draft shown in the editor. */
   openDraftId: string;
+  /** Opens a note's passage. */
+  onOpenNote: (note: StoryNote) => void;
 };
 
 /**
  * The writing space's left column: the story and its chapters, created,
  * renamed, reordered (drag, or Space then arrows) and deleted.
  */
-export function ChapterList({ outline, currentId, openDraftId }: Props) {
+export function ChapterList({ outline, currentId, openDraftId, onOpenNote }: Props) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
   const navigate = useNavigate();
@@ -188,6 +191,7 @@ export function ChapterList({ outline, currentId, openDraftId }: Props) {
         <Plus />
         {t("quill.newChapter")}
       </Button>
+      <NotesList outline={outline} onOpen={onOpenNote} />
       <DeleteChapterDialog
         chapter={deleting}
         onClose={() => setDeleting(null)}

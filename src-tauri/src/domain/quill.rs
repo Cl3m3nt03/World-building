@@ -12,13 +12,19 @@ use uuid::Uuid;
 
 use crate::db;
 use crate::db::quill::{
-    self as queries, ChapterRow, DraftInfoRow, DraftRow, StoryListRow, StoryRow,
+    self as queries, ChapterRow, DraftInfoRow, DraftRow, NoteRow, StoryListRow, StoryRow,
 };
 use crate::domain::content;
 use crate::domain::documents::{now, validate_title};
 use crate::domain::links::{self, LinkKind};
 use crate::error::{AppError, AppResult};
 use crate::world::assets;
+
+/// Longest note, in characters.
+pub const MAX_NOTE_CHARS: usize = 20_000;
+
+/// The mark that anchors a note to its passage, in a draft's content.
+pub const NOTE_MARK: &str = "note";
 
 /// Largest draft, in bytes of JSON.
 pub const MAX_DRAFT_BYTES: usize = 8 * 1024 * 1024;
@@ -583,19 +589,37 @@ pub async fn create_draft(
 ) -> AppResult<Chapter> {
     let mut tx = db::begin_write(pool).await?;
     chapter_row(&mut tx, chapter_id).await?;
-    let content_json = match copy_of {
+    let (content_json, notes) = match copy_of {
         Some(source) => {
             let source = draft_row(&mut tx, source).await?;
             if source.chapter_id != chapter_id {
                 return Err(invalid("a draft is copied within its chapter"));
             }
-            source.content
+            // The copy has its own notes: new ids, in the text as in the table.
+            let notes = queries::draft_notes(&mut *tx, &source.id).await?;
+            let renamed: Vec<(String, String)> = notes
+                .iter()
+                .map(|note| (note.id.clone(), Uuid::new_v4().to_string()))
+                .collect();
+            let content = rename_note_marks(&source.content, &renamed)?;
+            (content, notes.into_iter().zip(renamed).collect::<Vec<_>>())
         }
-        None => EMPTY_DRAFT.to_owned(),
+        None => (EMPTY_DRAFT.to_owned(), Vec::new()),
     };
     let order = i64::try_from(queries::chapter_drafts(&mut *tx, chapter_id).await?.len())
         .unwrap_or(i64::MAX);
-    insert_draft(&mut tx, chapter_id, name, &content_json, order).await?;
+    let draft_id = insert_draft(&mut tx, chapter_id, name, &content_json, order).await?;
+    for (note, (_, new_id)) in notes {
+        queries::insert_note(
+            &mut *tx,
+            &NoteRow {
+                id: new_id,
+                draft_id: draft_id.clone(),
+                ..note
+            },
+        )
+        .await?;
+    }
     queries::touch_chapter(&mut *tx, chapter_id, &now()).await?;
     tx.commit().await?;
     chapter(pool, chapter_id).await
@@ -665,6 +689,134 @@ pub async fn save_draft(pool: &SqlitePool, id: &str, content_json: &str) -> AppR
         word_count: count(words),
         updated_at: now,
     })
+}
+
+/// A note on a passage of a draft.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Note {
+    pub id: String,
+    pub draft_id: String,
+    pub body: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// A note of a story, with its draft and chapter (the list of notes).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct StoryNote {
+    pub id: String,
+    pub draft_id: String,
+    pub draft_name: String,
+    pub chapter_id: String,
+    pub chapter_title: String,
+    pub body: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+fn note_of(row: NoteRow) -> Note {
+    Note {
+        id: row.id,
+        draft_id: row.draft_id,
+        body: row.body,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+    }
+}
+
+fn check_note(body: &str) -> AppResult<()> {
+    if body.chars().count() > MAX_NOTE_CHARS {
+        return Err(invalid(format!(
+            "a note holds at most {MAX_NOTE_CHARS} characters"
+        )));
+    }
+    Ok(())
+}
+
+/// `content` with the note marks' ids changed as `renamed` (old, new) says.
+fn rename_note_marks(content: &str, renamed: &[(String, String)]) -> AppResult<String> {
+    if renamed.is_empty() {
+        return Ok(content.to_owned());
+    }
+    let mut doc: Value =
+        serde_json::from_str(content).map_err(|error| invalid(format!("draft: {error}")))?;
+    fn walk(node: &mut Value, renamed: &[(String, String)]) {
+        if let Some(marks) = node.get_mut("marks").and_then(Value::as_array_mut) {
+            for mark in marks {
+                if mark.get("type").and_then(Value::as_str) == Some(NOTE_MARK)
+                    && let Some(id) = mark.pointer_mut("/attrs/noteId")
+                    && let Some((_, new)) = renamed
+                        .iter()
+                        .find(|(old, _)| Some(old.as_str()) == id.as_str())
+                {
+                    *id = Value::String(new.clone());
+                }
+            }
+        }
+        if let Some(children) = node.get_mut("content").and_then(Value::as_array_mut) {
+            for child in children {
+                walk(child, renamed);
+            }
+        }
+    }
+    walk(&mut doc, renamed);
+    serde_json::to_string(&doc).map_err(|error| AppError::Internal(error.to_string()))
+}
+
+/// Adds a note to a draft (its mark is put on the passage by the front).
+pub async fn create_note(pool: &SqlitePool, draft_id: &str, body: &str) -> AppResult<Note> {
+    check_note(body)?;
+    let mut tx = db::begin_write(pool).await?;
+    draft_row(&mut tx, draft_id).await?;
+    let now = now();
+    let row = NoteRow {
+        id: Uuid::new_v4().to_string(),
+        draft_id: draft_id.to_owned(),
+        body: body.to_owned(),
+        created_at: now.clone(),
+        updated_at: now,
+    };
+    queries::insert_note(&mut *tx, &row).await?;
+    tx.commit().await?;
+    Ok(note_of(row))
+}
+
+pub async fn update_note(pool: &SqlitePool, id: &str, body: &str) -> AppResult<Note> {
+    check_note(body)?;
+    if !queries::update_note(pool, id, body, &now()).await? {
+        return Err(invalid(format!("note not found: {id}")));
+    }
+    let row = queries::note(pool, id)
+        .await?
+        .ok_or_else(|| invalid(format!("note not found: {id}")))?;
+    Ok(note_of(row))
+}
+
+pub async fn delete_note(pool: &SqlitePool, id: &str) -> AppResult<()> {
+    if !queries::delete_note(pool, id).await? {
+        return Err(invalid(format!("note not found: {id}")));
+    }
+    Ok(())
+}
+
+/// The notes of a story, by chapter, then draft, then creation.
+pub async fn story_notes(pool: &SqlitePool, story_id: &str) -> AppResult<Vec<StoryNote>> {
+    Ok(queries::story_notes(pool, story_id)
+        .await?
+        .into_iter()
+        .map(|row| StoryNote {
+            id: row.id,
+            draft_id: row.draft_id,
+            draft_name: row.draft_name,
+            chapter_id: row.chapter_id,
+            chapter_title: row.chapter_title,
+            body: row.body,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+        })
+        .collect())
 }
 
 #[cfg(test)]

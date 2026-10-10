@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO chapter_notes (id, draft_id, body, created_at, updated_at)\n         VALUES (?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "4cff522ed99257298ef40fff15d16a055993f1797ab75736d4f89306fdc1daad"
+}

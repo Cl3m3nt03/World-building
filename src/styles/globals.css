@@ -548,3 +548,10 @@ div.leaflet-container {
 .quill-text img.ProseMirror-selectednode {
   outline: 3px solid var(--bz-accent);
 }
+
+/* A passage with a note in a Quill chapter (M9). */
+.quill-text .quill-note {
+  background: color-mix(in srgb, var(--bz-accent) 14%, transparent);
+  border-bottom: 2px dotted var(--bz-accent);
+  border-radius: 2px;
+}
