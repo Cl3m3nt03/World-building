@@ -247,3 +247,121 @@ async fn the_epub_has_its_structure_cover_and_chapters() {
     assert!(opf.contains("La Chute &amp; le Roi"), "{opf}");
     assert!(opf.contains("cover-image"), "{opf}");
 }
+
+#[test]
+fn typst_strings_hold_any_text() {
+    assert_eq!(
+        pdf::string(r##"Il dit "#roi" \ $x$"##),
+        "\"Il dit \\\"#roi\\\" \\\\ $x$\""
+    );
+    assert_eq!(pdf::string("a\nb"), r#""a\nb""#);
+}
+
+#[tokio::test]
+async fn the_pdf_is_made_with_its_cover_and_chapters() {
+    let (dir, world, id) = story_with_two_chapters().await;
+    let outline = quill::outline(&world.pool, &id).await.unwrap();
+    // A text that would break a careless Typst source.
+    let tricky = serde_json::json!({ "type": "doc", "content": [
+        { "type": "heading", "attrs": { "level": 1 }, "content": [text("Le #roi [sic]")] },
+        { "type": "paragraph", "content": [
+            { "type": "text", "text": r##"Un "*gras*" $5 @ami "##, "marks": [{ "type": "bold" }] },
+            { "type": "hardBreak" },
+            { "type": "text", "text": r"\ fin _", "marks": [{ "type": "italic" }, { "type": "code" }] }
+        ] },
+        { "type": "blockquote", "content": [{ "type": "paragraph", "content": [text("Rien ne dure.")] }] },
+        { "type": "orderedList", "content": [{ "type": "listItem", "content": [{ "type": "paragraph", "content": [text("un")] }] }] },
+        { "type": "horizontalRule" }
+    ] });
+    quill::save_draft(
+        &world.pool,
+        &outline.chapters[1].current_draft_id,
+        &tricky.to_string(),
+    )
+    .await
+    .unwrap();
+    let chosen: Vec<ExportChapter> = outline
+        .chapters
+        .iter()
+        .map(|chapter| ExportChapter {
+            chapter_id: chapter.id.clone(),
+            draft_id: chapter.current_draft_id.clone(),
+        })
+        .collect();
+    let mut png = Vec::new();
+    image::DynamicImage::new_rgb8(4, 6)
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .unwrap();
+    let book = load(
+        &world.pool,
+        &world.assets_dir(),
+        &id,
+        &chosen,
+        "fr",
+        Some(png),
+    )
+    .await
+    .unwrap();
+    let path = target(
+        &dir.path().join("La Chute").to_string_lossy(),
+        ExportFormat::Pdf,
+    )
+    .unwrap();
+    write(&book, ExportFormat::Pdf, &path).unwrap();
+    let bytes = std::fs::read(&path).unwrap();
+    assert!(bytes.starts_with(b"%PDF-"));
+    // Cover, title, contents, then the two chapters.
+    let marker = b"/Type /Page\n";
+    let alt = b"/Type/Page";
+    let pages = bytes.windows(marker.len()).filter(|w| *w == marker).count()
+        + bytes.windows(alt.len()).filter(|w| *w == alt).count();
+    assert!(pages >= 5, "{pages} pages");
+}
+
+#[tokio::test]
+async fn the_pdf_opens_on_its_cover() {
+    let (_dir, world, id) = story_with_two_chapters().await;
+    let outline = quill::outline(&world.pool, &id).await.unwrap();
+    let chosen = vec![ExportChapter {
+        chapter_id: outline.chapters[0].id.clone(),
+        draft_id: outline.chapters[0].current_draft_id.clone(),
+    }];
+    // A red cover.
+    let mut png = Vec::new();
+    image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
+        20,
+        30,
+        image::Rgb([200, 30, 40]),
+    ))
+    .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+    .unwrap();
+    let book = load(
+        &world.pool,
+        &world.assets_dir(),
+        &id,
+        &chosen,
+        "fr",
+        Some(png),
+    )
+    .await
+    .unwrap();
+    let document = pdf::compile(&book).unwrap();
+    let pages = document.pages();
+    // The cover, the title page, the chapter (no contents for one chapter).
+    assert_eq!(pages.len(), 3);
+    let options = typst_render::RenderOptions::default();
+    let cover = typst_render::render(&pages[0], &options);
+    let middle = cover.pixel(cover.width() / 2, cover.height() / 2).unwrap();
+    assert_eq!((middle.red(), middle.green(), middle.blue()), (200, 30, 40));
+    // BZ_PDF_PAGES=<folder>: the pages as PNG, to look at them.
+    if let Ok(folder) = std::env::var("BZ_PDF_PAGES") {
+        for (index, page) in pages.iter().enumerate() {
+            let png = typst_render::render(page, &options).encode_png().unwrap();
+            std::fs::write(
+                Path::new(&folder).join(format!("page-{}.png", index + 1)),
+                png,
+            )
+            .unwrap();
+        }
+    }
+}

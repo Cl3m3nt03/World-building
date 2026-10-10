@@ -1364,5 +1364,7 @@
   "quill.export.run": "Export",
   "quill.export.running": "Exporting…",
   "quill.export.saveTitle": "Save the book",
-  "quill.export.done": "Book written: {{path}}"
+  "quill.export.done": "Book written: {{path}}",
+  "quill.export.formats.pdf": "PDF",
+  "quill.export.formatHints.pdf": "To print or share: numbered A5 pages. A font missing on the PC is replaced by a close one."
 }

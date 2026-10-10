@@ -1364,5 +1364,7 @@
   "quill.export.run": "Exporter",
   "quill.export.running": "Export…",
   "quill.export.saveTitle": "Enregistrer le livre",
-  "quill.export.done": "Livre écrit : {{path}}"
+  "quill.export.done": "Livre écrit : {{path}}",
+  "quill.export.formats.pdf": "PDF",
+  "quill.export.formatHints.pdf": "Pour imprimer ou partager : pages A5 numérotées. Une police absente du PC est remplacée par une proche."
 }

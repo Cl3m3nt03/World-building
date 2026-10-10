@@ -153,6 +153,17 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - le thème, le fond, la police et la taille des réglages de lecture.
 - Les polices ne sont pas embarquées : la liseuse prend la sienne si elle ne les a pas.
 
+**Réalisé en M10 (10.7)** : l'export **PDF** (Typst, compilé dans l'app, sans outil externe).
+- Pages A5 :
+  - la couverture en pleine page ;
+  - une page de titre ;
+  - la table des matières (s'il y a plusieurs chapitres) ;
+  - chaque chapitre sur une nouvelle page, un peu plus bas ou sous son image d'en-tête ;
+  - les pages numérotées en pied à partir du premier chapitre.
+- Le texte est justifié, avec retrait de première ligne, titres, citations, listes, séparateurs et images.
+- La police est celle des réglages si le PC l'a, sinon une proche (Georgia, Garamond…) ou Libertinus Serif, embarquée par Typst. Le fond et la taille du texte suivent aussi les réglages.
+- Une image illisible est laissée de côté plutôt que de faire échouer le livre.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order
