@@ -123,9 +123,8 @@ export function cardEntities(source: EntitySource, onChip: ChipListener) {
             const nameEnd = range.from + (found.to - found.from);
             const linked = linkInto(state, range.from, nameEnd, found.entity, animate);
             if (!linked) return null;
-            // The typed character (space, punctuation) goes where it was typed,
-            // after the mention and the words that followed it, if any.
-            linked.tr.insertText(typed, linked.tr.mapping.map(range.to));
+            // The typed character (space, punctuation) is already in the text:
+            // TipTap (3.31.4 and later) inserts it before running the rule.
           },
         }),
       ];

@@ -69,6 +69,8 @@ function outline(of: Story): StoryOutline {
 let stories: Story[];
 let created: NewStory[];
 let deleted: string[];
+let saved: { id: string; content: string }[];
+let renamed: { id: string; title: string }[];
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -76,6 +78,8 @@ beforeEach(() => {
   stories = [story("s1", "La Chute d'Eldefleur")];
   created = [];
   deleted = [];
+  saved = [];
+  renamed = [];
   mockIPC((command, payload) => {
     const args = payload as Record<string, unknown>;
     switch (command) {
@@ -106,6 +110,38 @@ beforeEach(() => {
         return null;
       case "list_assets":
         return [];
+      case "get_draft":
+        return {
+          id: args.id,
+          chapterId: "s1-c1",
+          name: "Brouillon 1",
+          content: JSON.stringify({
+            type: "doc",
+            content: [
+              { type: "paragraph", content: [{ type: "text", text: "Il était une fois" }] },
+            ],
+          }),
+          wordCount: 4,
+          updatedAt: "",
+        };
+      case "save_draft":
+        saved.push(args as { id: string; content: string });
+        return { id: args.id, name: "Brouillon 1", wordCount: 6, updatedAt: "" };
+      case "create_chapter": {
+        created.push(args as never);
+        return {
+          id: "s1-c2",
+          storyId: "s1",
+          title: args.title,
+          currentDraftId: "d2",
+          headerAssetId: null,
+          wordCount: 0,
+          drafts: [{ id: "d2", name: "Brouillon 1", wordCount: 0, updatedAt: "" }],
+        };
+      }
+      case "rename_chapter":
+        renamed.push(args as { id: string; title: string });
+        return null;
       default:
         return null;
     }
@@ -166,7 +202,9 @@ test("a new story is set up, created, and opens on its first chapter", async () 
   await waitFor(() =>
     expect(router.state.location.pathname).toBe("/world/demo/quill/story/s2/chapter/s2-c1"),
   );
-  expect(await screen.findByRole("heading", { level: 1, name: "Chapitre 1" })).toBeTruthy();
+  expect(
+    ((await screen.findByRole("textbox", { name: "Titre du chapitre" })) as HTMLInputElement).value,
+  ).toBe("Chapitre 1");
 });
 
 test("a story opens on its first chapter", async () => {
@@ -190,4 +228,35 @@ test("deleting a story asks first", async () => {
   fireEvent.click(within(dialog).getByRole("button", { name: "Supprimer définitivement" }));
   await waitFor(() => expect(deleted).toEqual(["s1"]));
   expect(await screen.findByText("Aucune histoire pour l'instant")).toBeTruthy();
+});
+
+test("the writing space saves the text, counts the words and manages chapters", async () => {
+  const router = await renderAt("/world/demo/quill/story/s1/chapter/s1-c1");
+  const text = await screen.findByRole("textbox", { name: "Texte du chapitre" });
+  await waitFor(() => expect(text.textContent).toBe("Il était une fois"));
+  expect(screen.getByText("4 mots dans ce chapitre · 1204 dans l'histoire")).toBeTruthy();
+
+  // Typed text: counted at once, saved half a second later.
+  const editor = (text as HTMLElement & { editor: import("@tiptap/react").Editor }).editor;
+  act(() => {
+    editor.commands.insertContentAt(editor.state.doc.content.size - 1, " deux mondes");
+  });
+  expect(screen.getByText("6 mots dans ce chapitre · 1206 dans l'histoire")).toBeTruthy();
+  await waitFor(() => expect(saved).toHaveLength(1));
+  expect(saved[0]?.id).toBe("d1");
+  expect(JSON.parse(saved[0]?.content ?? "{}").content[0].content[0].text).toBe(
+    "Il était une fois deux mondes",
+  );
+
+  // The title, written in place.
+  const title = screen.getByRole("textbox", { name: "Titre du chapitre" });
+  fireEvent.change(title, { target: { value: "Le départ" } });
+  fireEvent.blur(title);
+  await waitFor(() => expect(renamed).toEqual([{ id: "s1-c1", title: "Le départ" }]));
+
+  // A new chapter opens.
+  fireEvent.click(screen.getByRole("button", { name: "Nouveau chapitre" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/world/demo/quill/story/s1/chapter/s1-c2"),
+  );
 });

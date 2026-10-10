@@ -538,3 +538,13 @@ div.leaflet-container {
 [data-wiki] .prose-bz :is(h1, h2, h3) {
   font-family: var(--wiki-heading-font);
 }
+
+/* Images of the media library in a Quill chapter (M9). */
+.quill-text img {
+  max-width: 100%;
+  margin: 0.75rem auto;
+  border-radius: var(--bz-radius-md);
+}
+.quill-text img.ProseMirror-selectednode {
+  outline: 3px solid var(--bz-accent);
+}
