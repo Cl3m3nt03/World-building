@@ -109,15 +109,42 @@ pub async fn replace_in(
     Ok(())
 }
 
+/// What cites a card: a document of the world, or a Quill chapter (ADR 0009).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum BacklinkSource {
+    Card,
+    Map,
+    Graph,
+    Canvas,
+    Tree,
+    Chapter,
+}
+
+impl From<DocumentKind> for BacklinkSource {
+    fn from(kind: DocumentKind) -> Self {
+        match kind {
+            DocumentKind::Card => Self::Card,
+            DocumentKind::Map => Self::Map,
+            DocumentKind::Graph => Self::Graph,
+            DocumentKind::Canvas => Self::Canvas,
+            DocumentKind::Tree => Self::Tree,
+        }
+    }
+}
+
 /// A document that cites a card, and how ("cited in" at the bottom of a card).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Backlink {
     pub source_id: String,
-    pub source_kind: DocumentKind,
+    pub source_kind: BacklinkSource,
     pub source_title: String,
     /// For a card: its type.
     pub source_type_id: Option<String>,
+    /// For a chapter: its story.
+    pub story_id: Option<String>,
+    pub story_title: Option<String>,
     /// How the source cites the card: mentions, link properties (by label)…
     pub via: Vec<BacklinkVia>,
 }
@@ -131,7 +158,7 @@ pub struct BacklinkVia {
 }
 
 /// Live documents citing `target_id`, by title, each once with every way
-/// it cites the card.
+/// it cites the card; then the Quill chapters citing it, by story.
 pub async fn backlinks(pool: &SqlitePool, target_id: &str) -> AppResult<Vec<Backlink>> {
     let mut backlinks: Vec<Backlink> = Vec::new();
     for row in queries::backlinks(pool, target_id).await? {
@@ -146,10 +173,34 @@ pub async fn backlinks(pool: &SqlitePool, target_id: &str) -> AppResult<Vec<Back
                 }
             }
             _ => backlinks.push(Backlink {
-                source_kind: DocumentKind::parse(&row.source_kind)?,
+                source_kind: DocumentKind::parse(&row.source_kind)?.into(),
                 source_id: row.source_id,
                 source_title: row.source_title,
                 source_type_id: row.source_type_id,
+                story_id: None,
+                story_title: None,
+                via: vec![via],
+            }),
+        }
+    }
+    for row in queries::chapter_backlinks(pool, target_id).await? {
+        let via = BacklinkVia {
+            kind: LinkKind::parse(&row.link_kind)?,
+            property_label: None,
+        };
+        match backlinks.last_mut() {
+            Some(last) if last.source_id == row.source_id => {
+                if !last.via.contains(&via) {
+                    last.via.push(via);
+                }
+            }
+            _ => backlinks.push(Backlink {
+                source_kind: BacklinkSource::Chapter,
+                source_id: row.source_id,
+                source_title: row.source_title,
+                source_type_id: None,
+                story_id: Some(row.story_id),
+                story_title: Some(row.story_title),
                 via: vec![via],
             }),
         }

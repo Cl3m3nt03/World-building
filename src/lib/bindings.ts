@@ -447,13 +447,19 @@ export type AssetUsage =
 /**  A document that cites a card, and how ("cited in" at the bottom of a card). */
 export type Backlink = {
 	sourceId: string,
-	sourceKind: DocumentKind,
+	sourceKind: BacklinkSource,
 	sourceTitle: string,
 	/**  For a card: its type. */
 	sourceTypeId: string | null,
+	/**  For a chapter: its story. */
+	storyId: string | null,
+	storyTitle: string | null,
 	/**  How the source cites the card: mentions, link properties (by label)… */
 	via: BacklinkVia[],
 };
+
+/**  What cites a card: a document of the world, or a Quill chapter (ADR 0009). */
+export type BacklinkSource = "card" | "map" | "graph" | "canvas" | "tree" | "chapter";
 
 export type BacklinkVia = {
 	kind: LinkKind,

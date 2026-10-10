@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
+import { useCardTypes } from "@/features/card-types";
+import { DEFAULT_PREFERENCES, MentionContext, useCardList } from "@/features/cards";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
+import { useCurrentWorld } from "@/features/world";
 import { type Chapter, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
+import { cn } from "@/lib/utils";
 import { CompareView } from "../drafts/CompareView";
 import { ChapterEditor } from "../editor/ChapterEditor";
 import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
+import { CardPanel } from "../world/CardPanel";
 import { ChapterList } from "./ChapterList";
 
 /**
@@ -24,6 +29,11 @@ export function WritingSpace() {
   const storyId = params.storyId ?? "";
   const chapterId = params.chapterId ?? "";
   const outline = useStoryOutline(storyId);
+  const [openCard, setOpenCard] = useState<string | null>(null);
+  const cards = useCardList(false);
+  const trashed = useCardList(true);
+  const types = useCardTypes();
+  const { data: world } = useCurrentWorld();
 
   if (outline.error) {
     return (
@@ -43,7 +53,14 @@ export function WritingSpace() {
     params.leftId && params.rightId ? { left: params.leftId, right: params.rightId } : null;
 
   return (
-    <div className="glass grid h-full grid-cols-[15rem_minmax(0,1fr)] gap-6 rounded-lg p-4">
+    <div
+      className={cn(
+        "glass grid h-full gap-6 rounded-lg p-4",
+        openCard
+          ? "grid-cols-[15rem_minmax(0,1fr)_minmax(18rem,26rem)]"
+          : "grid-cols-[15rem_minmax(0,1fr)]",
+      )}
+    >
       <ChapterList
         outline={outline.data}
         currentId={chapterId}
@@ -52,13 +69,32 @@ export function WritingSpace() {
       {chapter && compared ? (
         <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
       ) : chapter ? (
-        <ChapterView
-          key={chapter.id}
-          chapter={chapter}
-          draftId={draftId}
-          storyWords={outline.data.story.wordCount}
-        />
+        <MentionContext.Provider
+          value={{
+            cards: cards.data ?? [],
+            trashed: trashed.data ?? [],
+            types: types.data ?? [],
+            preferences: world?.preferences ?? DEFAULT_PREFERENCES,
+            open: setOpenCard,
+          }}
+        >
+          <ChapterView
+            key={chapter.id}
+            chapter={chapter}
+            draftId={draftId}
+            storyWords={outline.data.story.wordCount}
+            onOpenCard={setOpenCard}
+          />
+        </MentionContext.Provider>
       ) : null}
+      {openCard && (
+        <CardPanel
+          key={openCard}
+          cardId={openCard}
+          onOpen={setOpenCard}
+          onClose={() => setOpenCard(null)}
+        />
+      )}
     </div>
   );
 }
@@ -67,10 +103,12 @@ function ChapterView({
   chapter,
   draftId,
   storyWords,
+  onOpenCard,
 }: {
   chapter: Chapter;
   draftId: string;
   storyWords: number;
+  onOpenCard: (cardId: string) => void;
 }) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -143,6 +181,7 @@ function ChapterView({
             draftId={draftId}
             onWords={setWords}
             onHeader={() => setPicking(true)}
+            onOpenCard={onOpenCard}
           />
         </div>
       </div>

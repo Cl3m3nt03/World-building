@@ -22,6 +22,21 @@ export type DocumentLinkResolver = (
  */
 export const DocumentLinkContext = createContext<DocumentLinkResolver>(documentRoute);
 
+/**
+ * Whether Quill chapters show where documents citing a card are listed
+ * ("Cité dans"), opening in Quill. The wiki hides them: stories are not
+ * pages of the wiki.
+ */
+export const ChapterLinksContext = createContext(true);
+
+/** Where a chapter of a story opens: its page in Quill. */
+export function chapterRoute(worldId: string, storyId: string, chapterId: string) {
+  return {
+    to: "/world/$worldId/quill/story/$storyId/chapter/$chapterId",
+    params: { worldId, storyId, chapterId },
+  } as const;
+}
+
 /** The link of a document of the open world, or `null` (plain text). */
 export function useDocumentLink() {
   const { worldId } = useParams({ from: "/world/$worldId" });

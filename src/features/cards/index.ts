@@ -1,4 +1,6 @@
 export { normalize, rows } from "./blocks/layout";
+export { DEFAULT_PREFERENCES, MentionContext } from "./blocks/mentions/MentionContext";
+export { useWorldInText, WorldInTextOverlay } from "./blocks/mentions/useWorldInText";
 export type { Block } from "./blocks/model";
 export { parseContent } from "./blocks/model";
 export * as statsRules from "./blocks/stats/rules";

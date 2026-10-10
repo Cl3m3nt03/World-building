@@ -140,6 +140,8 @@ beforeEach(() => {
       sourceKind: "card",
       sourceTitle: "Gondor",
       sourceTypeId: "character",
+      storyId: null,
+      storyTitle: null,
       via: [{ kind: "mention", propertyLabel: null }],
     },
     {
@@ -147,6 +149,8 @@ beforeEach(() => {
       sourceKind: "card",
       sourceTitle: "Minas Tirith",
       sourceTypeId: "character",
+      storyId: null,
+      storyTitle: null,
       via: [{ kind: "mention", propertyLabel: null }],
     },
   ];

@@ -297,3 +297,43 @@ async fn the_media_library_knows_covers_and_headers() {
         story_title: "Récit".into(),
     }));
 }
+
+#[tokio::test]
+async fn a_chapter_is_cited_in_the_card_it_mentions() {
+    use crate::domain::card_types::{self, NewCardType};
+    use crate::domain::cards;
+    use crate::domain::links::{BacklinkSource, backlinks};
+    let (_dir, world) = world().await;
+    let kind = card_types::create(
+        &world.pool,
+        NewCardType {
+            parent_id: None,
+            name: "Personnage".into(),
+            icon: "user".into(),
+            color: "blue".into(),
+        },
+    )
+    .await
+    .unwrap();
+    let card = cards::create(&world.pool, &kind.id, "Aragorn")
+        .await
+        .unwrap();
+    let outline = create(&world.pool, &new_story("Récit")).await.unwrap();
+    let chapter = &outline.chapters[0];
+    save_draft(
+        &world.pool,
+        &chapter.current_draft_id,
+        &doc("Ami de ", Some(&card.id)),
+    )
+    .await
+    .unwrap();
+    let cited = backlinks(&world.pool, &card.id).await.unwrap();
+    assert_eq!(cited.len(), 1);
+    assert_eq!(cited[0].source_kind, BacklinkSource::Chapter);
+    assert_eq!(cited[0].source_title, "Chapitre 1");
+    assert_eq!(
+        cited[0].story_id.as_deref(),
+        Some(outline.story.id.as_str())
+    );
+    assert_eq!(cited[0].story_title.as_deref(), Some("Récit"));
+}

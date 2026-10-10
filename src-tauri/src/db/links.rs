@@ -137,3 +137,33 @@ pub async fn copy_from(
     }
     Ok(())
 }
+
+/// A Quill chapter citing a card (ADR 0009).
+pub struct ChapterBacklinkRow {
+    pub source_id: String,
+    pub source_title: String,
+    pub story_id: String,
+    pub story_title: String,
+    pub link_kind: String,
+}
+
+/// Links to `target_id` whose source is a Quill chapter, by story then
+/// chapter order.
+pub async fn chapter_backlinks(
+    pool: &SqlitePool,
+    target_id: &str,
+) -> AppResult<Vec<ChapterBacklinkRow>> {
+    Ok(sqlx::query_as!(
+        ChapterBacklinkRow,
+        r#"SELECT l.source_id, c.title AS source_title, s.id AS "story_id!", s.title AS story_title,
+                  l.kind AS link_kind
+           FROM links l
+           JOIN chapters c ON c.id = l.source_id
+           JOIN stories s ON s.id = c.story_id
+           WHERE l.target_id = ?
+           ORDER BY s.sort_order, s.created_at, c.sort_order, l.kind"#,
+        target_id
+    )
+    .fetch_all(pool)
+    .await?)
+}

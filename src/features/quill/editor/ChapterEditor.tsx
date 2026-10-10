@@ -3,14 +3,17 @@ import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { useWorldInText, WorldInTextOverlay } from "@/features/cards";
 import { ImagePickerDialog } from "@/features/media";
 import { commands, type Draft, type DraftInfo, type StoryOutline } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { quillKeys } from "../hooks/useQuill";
+import { CardPreview } from "../world/CardPreview";
 import { EditorToolbar } from "./EditorToolbar";
 import { quillExtensions, type SlashCommand } from "./extensions";
 import { createListStore } from "./listStore";
+import { SelectionMenu } from "./SelectionMenu";
 import { SlashMenu } from "./SlashMenu";
 import { countWords } from "./words";
 
@@ -24,7 +27,18 @@ type Props = {
   onWords: (words: number) => void;
   /** Opens the chapter's header image picker. */
   onHeader: () => void;
+  /** Opens a card of the world next to the text. */
+  onOpenCard: (cardId: string) => void;
 };
+
+/** The card named where the pointer is: a mention, or a name detected in the text. */
+function cardIdAt(target: EventTarget | null): string | null {
+  const element = target instanceof Element ? target : null;
+  const detected = element?.closest(".entity-detected[data-card-id]");
+  if (detected) return detected.getAttribute("data-card-id");
+  const href = element?.closest("a.mention-link")?.getAttribute("href") ?? "";
+  return href.startsWith("#card-") ? href.slice("#card-".length) : null;
+}
 
 /** The outline as a draft save left it: its words in its chapter and story. */
 function withSaved(outline: StoryOutline, saved: DraftInfo): StoryOutline {
@@ -47,7 +61,7 @@ function withSaved(outline: StoryOutline, saved: DraftInfo): StoryOutline {
  * commands. It is saved half a second after the last change, before the
  * world or the window closes, and Ctrl+Z undoes.
  */
-export function ChapterEditor({ storyId, draftId, onWords, onHeader }: Props) {
+export function ChapterEditor({ storyId, draftId, onWords, onHeader, onOpenCard }: Props) {
   const queryClient = useQueryClient();
   const draft = useQuery({
     queryKey: quillKeys.draft(draftId),
@@ -77,6 +91,7 @@ export function ChapterEditor({ storyId, draftId, onWords, onHeader }: Props) {
       saveError={save.error}
       onWords={onWords}
       onHeader={onHeader}
+      onOpenCard={onOpenCard}
     />
   );
 }
@@ -87,20 +102,25 @@ function LoadedEditor({
   saveError,
   onWords,
   onHeader,
+  onOpenCard,
 }: {
   initial: string;
   onSave: (content: string) => Promise<void>;
   saveError: unknown;
   onWords: (words: number) => void;
   onHeader: () => void;
+  onOpenCard: (cardId: string) => void;
 }) {
   const { t } = useTranslation();
+  const worldInText = useWorldInText("");
+  const [preview, setPreview] = useState<{ cardId: string; rect: DOMRect } | null>(null);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [slash] = useState(createListStore<SlashCommand>);
   const [picking, setPicking] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pending = useRef<string | null>(null);
-  const callbacks = useRef({ onSave, onWords });
-  callbacks.current = { onSave, onWords };
+  const callbacks = useRef({ onSave, onWords, onOpenCard });
+  callbacks.current = { onSave, onWords, onOpenCard };
 
   const flush = () => {
     clearTimeout(timer.current);
@@ -113,12 +133,15 @@ function LoadedEditor({
   usePendingSave(flush);
 
   const editor = useEditor({
-    extensions: quillExtensions({
-      placeholder: t("quill.editor.placeholder"),
-      slash,
-      slashLabel: (command) => t(`quill.slash.${command}`),
-      pickImage: () => setPicking(true),
-    }),
+    extensions: [
+      ...quillExtensions({
+        placeholder: t("quill.editor.placeholder"),
+        slash,
+        slashLabel: (command) => t(`quill.slash.${command}`),
+        pickImage: () => setPicking(true),
+      }),
+      ...worldInText.extensions,
+    ],
     content: JSON.parse(initial) as JSONContent,
     editorProps: {
       attributes: {
@@ -129,6 +152,7 @@ function LoadedEditor({
           "prose-bz quill-text min-h-[50vh] rounded-md px-2 py-1 text-base leading-relaxed outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
       },
     },
+    onBlur: worldInText.hideChip,
     onCreate: ({ editor: created }) => callbacks.current.onWords(countWords(created.getText())),
     onUpdate: ({ editor: current }) => {
       callbacks.current.onWords(countWords(current.getText()));
@@ -137,6 +161,40 @@ function LoadedEditor({
       timer.current = setTimeout(() => void flush(), SAVE_DELAY_MS);
     },
   });
+
+  // A card's name in the text: its preview on hover, opened on click.
+  useEffect(() => {
+    const dom = editor?.view.dom;
+    if (!dom) return;
+    const over = (event: MouseEvent) => {
+      const id = cardIdAt(event.target);
+      clearTimeout(previewTimer.current);
+      if (!id) {
+        setPreview(null);
+        return;
+      }
+      const rect = (event.target as Element).getBoundingClientRect();
+      previewTimer.current = setTimeout(() => setPreview({ cardId: id, rect }), 350);
+    };
+    const leave = () => {
+      clearTimeout(previewTimer.current);
+      setPreview(null);
+    };
+    const click = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const id = target?.closest(".entity-detected[data-card-id]")?.getAttribute("data-card-id");
+      if (id) callbacks.current.onOpenCard(id);
+    };
+    dom.addEventListener("mouseover", over);
+    dom.addEventListener("mouseleave", leave);
+    dom.addEventListener("click", click);
+    return () => {
+      clearTimeout(previewTimer.current);
+      dom.removeEventListener("mouseover", over);
+      dom.removeEventListener("mouseleave", leave);
+      dom.removeEventListener("click", click);
+    };
+  }, [editor]);
 
   // Leaving the chapter saves what was typed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: flush reads refs only
@@ -149,6 +207,9 @@ function LoadedEditor({
         <EditorToolbar editor={editor} onImage={() => setPicking(true)} onHeader={onHeader} />
       </div>
       <EditorContent editor={editor} />
+      {preview && <CardPreview cardId={preview.cardId} rect={preview.rect} />}
+      <WorldInTextOverlay editor={editor} overlay={worldInText.overlay} />
+      <SelectionMenu editor={editor} />
       {saveError ? <AppErrorMessage error={saveError} /> : null}
       <SlashMenu store={slash} />
       <ImagePickerDialog

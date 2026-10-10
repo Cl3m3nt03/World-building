@@ -236,6 +236,8 @@ test("cited in lists the cards that cite this one, and how", async () => {
       sourceKind: "card",
       sourceTitle: "Aragorn",
       sourceTypeId: "character",
+      storyId: null,
+      storyTitle: null,
       via: [
         { kind: "property", propertyLabel: "Lieu de naissance" },
         { kind: "mention", propertyLabel: null },
@@ -263,6 +265,8 @@ test("cited in lists the trees that show this card, and opens them", async () =>
       sourceKind: "tree",
       sourceTitle: "Maison d'Isildur",
       sourceTypeId: null,
+      storyId: null,
+      storyTitle: null,
       via: [{ kind: "tree", propertyLabel: null }],
     },
   ];
@@ -278,6 +282,28 @@ test("cited in lists the trees that show this card, and opens them", async () =>
   await waitFor(() =>
     expect(router.state.location.pathname).toBe("/world/demo/world/tree/isildur-house"),
   );
+});
+
+test("cited in lists the Quill chapters that mention this card, and opens them", async () => {
+  backlinks = [
+    {
+      sourceId: "c2",
+      sourceKind: "chapter",
+      sourceTitle: "Chapitre 2",
+      sourceTypeId: null,
+      storyId: "s1",
+      storyTitle: "La Chute",
+      via: [{ kind: "mention", propertyLabel: null }],
+    },
+  ];
+  await renderAt("/world/demo/world/card/minas");
+  const section = await screen.findByRole("region", { name: "Cité dans" });
+  const link = await waitFor(() => {
+    const found = section.querySelector("a");
+    expect(found?.textContent).toBe("Chapitre 2 — La Chutemention");
+    return found as HTMLAnchorElement;
+  });
+  expect(link.getAttribute("href")).toBe("/world/demo/quill/story/s1/chapter/c2");
 });
 
 test("no backlink: says so", async () => {
