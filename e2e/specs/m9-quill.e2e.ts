@@ -8,7 +8,8 @@
 
 import { createWorld, openCard, openTab, sidebarItem } from "../helpers";
 
-const WORLD = "Eldefleur";
+// Each spec has its own world: they share one BUILDERZ_HOME.
+const WORLD = "Gondolin";
 const STORY = "La Chute";
 
 type Invoke = { invoke: (command: string, args?: object) => Promise<unknown> };
