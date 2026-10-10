@@ -724,6 +724,7 @@ div.leaflet-container {
 /* The line the reading with sound is at (10.5). */
 .reader-chapter [data-block][data-reading] {
   background: color-mix(in srgb, var(--bz-accent) 18%, transparent);
+  box-shadow: 0 0 0 0.35em color-mix(in srgb, var(--bz-accent) 18%, transparent);
   border-radius: 4px;
 }
 
@@ -742,4 +743,16 @@ div.leaflet-container {
 
 [data-quill-mode="audio"] .quill-sound[data-cue-kind="ambience"] {
   background: color-mix(in srgb, var(--bz-accent) 14%, transparent);
+}
+
+/* The reading with sound: a line is clicked to go there. */
+.reader-playing [data-block] {
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reader-playing [data-block] {
+    transition: none;
+  }
 }

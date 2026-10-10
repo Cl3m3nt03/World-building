@@ -37,7 +37,7 @@ export function readMode(value: unknown): Mode {
 
 type Props = {
   mode: Mode;
-  /** The modes offered (the others come with M10's later steps). */
+  /** The modes offered, in this order. */
   modes: Mode[];
   onMode: (mode: Mode) => void;
   /** In the publish mode: the device the book is previewed on. */

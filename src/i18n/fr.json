@@ -1338,5 +1338,19 @@
   "quill.audio.empty": "Aucun son. Sélectionnez un passage pour y placer un effet sonore ou une ambiance.",
   "quill.audio.hint": "Sélectionnez un passage du texte pour y placer un son.",
   "quill.audio.erased": "Passage effacé ({{name}})",
-  "quill.audio.item": "{{kind}} · {{name}}"
+  "quill.audio.item": "{{kind}} · {{name}}",
+  "quill.play.label": "Lecture de « {{title}} »",
+  "quill.play.controls": "Lecture",
+  "quill.play.start": "Revenir au début",
+  "quill.play.previous": "Ligne précédente",
+  "quill.play.next": "Ligne suivante",
+  "quill.play.play": "Lire",
+  "quill.play.pause": "Pause",
+  "quill.play.line": "Ligne {{line}} sur {{count}}",
+  "quill.play.speed": "{{speed}} mots/min",
+  "quill.play.volume": "Volume général",
+  "quill.play.mute": "Couper le son",
+  "quill.play.unmute": "Remettre le son",
+  "quill.play.missing_one": "{{count}} son introuvable",
+  "quill.play.missing_other": "{{count}} sons introuvables"
 }

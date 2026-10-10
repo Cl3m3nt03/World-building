@@ -19,6 +19,7 @@ import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
 import type { WritingStyle } from "../panel/layout";
 import { PanelContext, usePanelLayout } from "../panel/PanelContext";
 import { WorldPanel, type WorldPanelHandle } from "../panel/WorldPanel";
+import { PlayView } from "../play/PlayView";
 import { ReaderStyle } from "../reader/ReaderStyle";
 import { ReaderView, type Template } from "../reader/ReaderView";
 import { useReaderSettings } from "../reader/settings";
@@ -104,6 +105,8 @@ export function WritingSpace() {
       template={template}
       chapterId={chapterId}
     />
+  ) : mode === "play" && chapter ? (
+    <PlayView key={draftId} chapter={chapter} draftId={draftId} />
   ) : chapter && compared ? (
     <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
   ) : chapter ? (
@@ -158,7 +161,7 @@ export function WritingSpace() {
         <div className="flex shrink-0 justify-center">
           <ModeBar
             mode={mode}
-            modes={["write", "audio", "publish"]}
+            modes={["write", "audio", "play", "publish"]}
             onMode={setMode}
             template={template}
             onTemplate={setTemplate}
