@@ -122,6 +122,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::quill::create_audio_cue,
         commands::quill::update_audio_cue,
         commands::quill::delete_audio_cue,
+        commands::quill::export_story,
         commands::graphs::create_graph,
         commands::graphs::get_graph,
         commands::graphs::save_graph,

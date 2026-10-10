@@ -21,7 +21,7 @@ use crate::error::{AppError, AppResult};
 use crate::world::assets;
 
 mod audio;
-mod reader;
+pub mod reader;
 
 pub use audio::{
     AudioCue, CUE_ATTR, CUE_MARK, CueKind, CuePatch, create_cue, delete_cue, draft_cues, update_cue,

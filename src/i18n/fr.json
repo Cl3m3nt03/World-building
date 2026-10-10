@@ -1352,5 +1352,17 @@
   "quill.play.mute": "Couper le son",
   "quill.play.unmute": "Remettre le son",
   "quill.play.missing_one": "{{count}} son introuvable",
-  "quill.play.missing_other": "{{count}} sons introuvables"
+  "quill.play.missing_other": "{{count}} sons introuvables",
+  "quill.export.format": "Format",
+  "quill.export.formats.epub": "ePub",
+  "quill.export.formatHints.epub": "Pour les liseuses et les applis de lecture.",
+  "quill.export.chapters": "Chapitres",
+  "quill.export.all": "Tout cocher",
+  "quill.export.none": "Tout décocher",
+  "quill.export.draftOf": "Brouillon de {{chapter}}",
+  "quill.export.currentDraft": "{{name}} (courant)",
+  "quill.export.run": "Exporter",
+  "quill.export.running": "Export…",
+  "quill.export.saveTitle": "Enregistrer le livre",
+  "quill.export.done": "Livre écrit : {{path}}"
 }
