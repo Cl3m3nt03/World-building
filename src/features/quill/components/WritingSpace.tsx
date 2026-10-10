@@ -12,6 +12,7 @@ import { type Chapter, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { CompareView } from "../drafts/CompareView";
+import { draftRoute } from "../drafts/routes";
 import { ChapterEditor } from "../editor/ChapterEditor";
 import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
 import { CardPanel } from "../world/CardPanel";
@@ -30,6 +31,8 @@ export function WritingSpace() {
   const chapterId = params.chapterId ?? "";
   const outline = useStoryOutline(storyId);
   const [openCard, setOpenCard] = useState<string | null>(null);
+  const [focusNote, setFocusNote] = useState<{ id: string; key: number } | null>(null);
+  const navigate = useNavigate();
   const cards = useCardList(false);
   const trashed = useCardList(true);
   const types = useCardTypes();
@@ -65,6 +68,12 @@ export function WritingSpace() {
         outline={outline.data}
         currentId={chapterId}
         openDraftId={compared?.right ?? draftId}
+        onOpenNote={(note) => {
+          const target = outline.data?.chapters.find((item) => item.id === note.chapterId);
+          if (!target || !params.worldId) return;
+          void navigate(draftRoute(params.worldId, target, note.draftId));
+          setFocusNote({ id: note.id, key: Date.now() });
+        }}
       />
       {chapter && compared ? (
         <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
@@ -84,6 +93,7 @@ export function WritingSpace() {
             draftId={draftId}
             storyWords={outline.data.story.wordCount}
             onOpenCard={setOpenCard}
+            focusNote={focusNote}
           />
         </MentionContext.Provider>
       ) : null}
@@ -104,11 +114,13 @@ function ChapterView({
   draftId,
   storyWords,
   onOpenCard,
+  focusNote,
 }: {
   chapter: Chapter;
   draftId: string;
   storyWords: number;
   onOpenCard: (cardId: string) => void;
+  focusNote: { id: string; key: number } | null;
 }) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -182,6 +194,7 @@ function ChapterView({
             onWords={setWords}
             onHeader={() => setPicking(true)}
             onOpenCard={onOpenCard}
+            focusNote={focusNote}
           />
         </div>
       </div>

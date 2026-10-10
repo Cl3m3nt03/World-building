@@ -9,6 +9,9 @@ import { commands, type Draft, type DraftInfo, type StoryOutline } from "@/lib/b
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { quillKeys } from "../hooks/useQuill";
+import { NoteMargin } from "../notes/NoteMargin";
+import { notePositions } from "../notes/noteMark";
+import { useCreateNote, useStoryNotes } from "../notes/useNotes";
 import { CardPreview } from "../world/CardPreview";
 import { EditorToolbar } from "./EditorToolbar";
 import { quillExtensions, type SlashCommand } from "./extensions";
@@ -29,6 +32,8 @@ type Props = {
   onHeader: () => void;
   /** Opens a card of the world next to the text. */
   onOpenCard: (cardId: string) => void;
+  /** A note to show (from the list of notes); `key` changes at each request. */
+  focusNote: { id: string; key: number } | null;
 };
 
 /** The card named where the pointer is: a mention, or a name detected in the text. */
@@ -61,7 +66,14 @@ function withSaved(outline: StoryOutline, saved: DraftInfo): StoryOutline {
  * commands. It is saved half a second after the last change, before the
  * world or the window closes, and Ctrl+Z undoes.
  */
-export function ChapterEditor({ storyId, draftId, onWords, onHeader, onOpenCard }: Props) {
+export function ChapterEditor({
+  storyId,
+  draftId,
+  onWords,
+  onHeader,
+  onOpenCard,
+  focusNote,
+}: Props) {
   const queryClient = useQueryClient();
   const draft = useQuery({
     queryKey: quillKeys.draft(draftId),
@@ -86,6 +98,9 @@ export function ChapterEditor({ storyId, draftId, onWords, onHeader, onOpenCard 
   if (!draft.data) return null;
   return (
     <LoadedEditor
+      storyId={storyId}
+      draftId={draftId}
+      focusNote={focusNote}
       initial={draft.data.content}
       onSave={(content) => save.mutateAsync(content).then(() => undefined)}
       saveError={save.error}
@@ -97,6 +112,9 @@ export function ChapterEditor({ storyId, draftId, onWords, onHeader, onOpenCard 
 }
 
 function LoadedEditor({
+  storyId,
+  draftId,
+  focusNote,
   initial,
   onSave,
   saveError,
@@ -104,6 +122,9 @@ function LoadedEditor({
   onHeader,
   onOpenCard,
 }: {
+  storyId: string;
+  draftId: string;
+  focusNote: { id: string; key: number } | null;
   initial: string;
   onSave: (content: string) => Promise<void>;
   saveError: unknown;
@@ -113,6 +134,11 @@ function LoadedEditor({
 }) {
   const { t } = useTranslation();
   const worldInText = useWorldInText("");
+  const box = useRef<HTMLDivElement>(null);
+  const [openNote, setOpenNote] = useState<string | null>(null);
+  const notes = useStoryNotes(storyId);
+  const createNote = useCreateNote(storyId);
+  const draftNotes = (notes.data ?? []).filter((note) => note.draftId === draftId);
   const [preview, setPreview] = useState<{ cardId: string; rect: DOMRect } | null>(null);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [slash] = useState(createListStore<SlashCommand>);
@@ -196,6 +222,36 @@ function LoadedEditor({
     };
   }, [editor]);
 
+  // A note asked for from the list: its passage shown, the note open.
+  useEffect(() => {
+    if (!focusNote || !editor || editor.isDestroyed) return;
+    const place = notePositions(editor).find((item) => item.noteId === focusNote.id);
+    if (!place) return;
+    // No focus taken: the note's popover gets it (the editor would close it).
+    editor.chain().setTextSelection({ from: place.from, to: place.to }).scrollIntoView().run();
+    setOpenNote(focusNote.id);
+  }, [focusNote, editor]);
+
+  /** A new note on the passage: made, its mark put, and opened to be written. */
+  const addNote = (from: number, to: number) => {
+    if (!editor) return;
+    createNote.mutate(
+      { draftId, body: "" },
+      {
+        onSuccess: (note) => {
+          editor
+            .chain()
+            .focus()
+            .setTextSelection({ from, to })
+            .setMark("note", { noteId: note.id })
+            .setTextSelection(to)
+            .run();
+          setOpenNote(note.id);
+        },
+      },
+    );
+  };
+
   // Leaving the chapter saves what was typed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: flush reads refs only
   useEffect(() => () => void flush(), []);
@@ -206,10 +262,21 @@ function LoadedEditor({
       <div className="sticky top-0 z-10">
         <EditorToolbar editor={editor} onImage={() => setPicking(true)} onHeader={onHeader} />
       </div>
-      <EditorContent editor={editor} />
+      <div ref={box} className="relative">
+        <EditorContent editor={editor} />
+        <NoteMargin
+          editor={editor}
+          storyId={storyId}
+          notes={draftNotes}
+          box={box}
+          openId={openNote}
+          onOpen={setOpenNote}
+        />
+      </div>
+      {createNote.error && <AppErrorMessage error={createNote.error} />}
       {preview && <CardPreview cardId={preview.cardId} rect={preview.rect} />}
       <WorldInTextOverlay editor={editor} overlay={worldInText.overlay} />
-      <SelectionMenu editor={editor} />
+      <SelectionMenu editor={editor} onAddNote={addNote} />
       {saveError ? <AppErrorMessage error={saveError} /> : null}
       <SlashMenu store={slash} />
       <ImagePickerDialog

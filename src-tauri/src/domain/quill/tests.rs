@@ -337,3 +337,55 @@ async fn a_chapter_is_cited_in_the_card_it_mentions() {
     );
     assert_eq!(cited[0].story_title.as_deref(), Some("Récit"));
 }
+
+#[tokio::test]
+async fn notes_are_made_listed_changed_copied_with_their_draft_and_deleted() {
+    let (_dir, world) = world().await;
+    let outline = create(&world.pool, &new_story("Récit")).await.unwrap();
+    let chapter = &outline.chapters[0];
+    let draft_id = chapter.current_draft_id.clone();
+    let note = create_note(&world.pool, &draft_id, "À vérifier")
+        .await
+        .unwrap();
+    let content = serde_json::json!({
+        "type": "doc",
+        "content": [{ "type": "paragraph", "content": [
+            { "type": "text", "text": "Le roi", "marks": [{ "type": "note", "attrs": { "noteId": note.id } }] }
+        ] }]
+    })
+    .to_string();
+    save_draft(&world.pool, &draft_id, &content).await.unwrap();
+
+    let changed = update_note(&world.pool, &note.id, "Vérifié").await.unwrap();
+    assert_eq!(changed.body, "Vérifié");
+    assert!(
+        update_note(&world.pool, &note.id, &"x".repeat(MAX_NOTE_CHARS + 1))
+            .await
+            .is_err()
+    );
+
+    // A copy of the draft has its own copy of the note, its mark renamed.
+    let chapter = create_draft(&world.pool, &chapter.id, "Copie", Some(&draft_id))
+        .await
+        .unwrap();
+    let copy = draft(&world.pool, &chapter.drafts[1].id).await.unwrap();
+    let notes = story_notes(&world.pool, &outline.story.id).await.unwrap();
+    assert_eq!(notes.len(), 2);
+    let copied = notes.iter().find(|n| n.draft_id == copy.id).unwrap();
+    assert_ne!(copied.id, note.id);
+    assert_eq!(copied.body, "Vérifié");
+    assert_eq!(copied.chapter_title, "Chapitre 1");
+    assert_eq!(copied.draft_name, "Copie");
+    assert!(copy.content.contains(&copied.id) && !copy.content.contains(&note.id));
+
+    delete_note(&world.pool, &note.id).await.unwrap();
+    assert!(delete_note(&world.pool, &note.id).await.is_err());
+    // A deleted draft takes its notes.
+    delete_draft(&world.pool, &copy.id).await.unwrap();
+    assert!(
+        story_notes(&world.pool, &outline.story.id)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+}

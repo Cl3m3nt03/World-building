@@ -411,3 +411,103 @@ pub async fn headers_using(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<Q
     .fetch_all(pool)
     .await?)
 }
+
+// Notes.
+
+pub struct NoteRow {
+    pub id: String,
+    pub draft_id: String,
+    pub body: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// A note with where it is: its draft and chapter.
+pub struct StoryNoteRow {
+    pub id: String,
+    pub draft_id: String,
+    pub draft_name: String,
+    pub chapter_id: String,
+    pub chapter_title: String,
+    pub body: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+pub async fn insert_note(ex: impl SqliteExecutor<'_>, row: &NoteRow) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO chapter_notes (id, draft_id, body, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)",
+        row.id,
+        row.draft_id,
+        row.body,
+        row.created_at,
+        row.updated_at
+    )
+    .execute(ex)
+    .await?;
+    Ok(())
+}
+
+pub async fn note(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<Option<NoteRow>> {
+    Ok(sqlx::query_as!(
+        NoteRow,
+        r#"SELECT id AS "id!", draft_id, body, created_at, updated_at
+           FROM chapter_notes WHERE id = ?"#,
+        id
+    )
+    .fetch_optional(ex)
+    .await?)
+}
+
+pub async fn draft_notes(ex: impl SqliteExecutor<'_>, draft_id: &str) -> AppResult<Vec<NoteRow>> {
+    Ok(sqlx::query_as!(
+        NoteRow,
+        r#"SELECT id AS "id!", draft_id, body, created_at, updated_at
+           FROM chapter_notes WHERE draft_id = ? ORDER BY created_at"#,
+        draft_id
+    )
+    .fetch_all(ex)
+    .await?)
+}
+
+/// The notes of a story, by chapter order, then draft order, then creation.
+pub async fn story_notes(pool: &SqlitePool, story_id: &str) -> AppResult<Vec<StoryNoteRow>> {
+    Ok(sqlx::query_as!(
+        StoryNoteRow,
+        r#"SELECT n.id AS "id!", n.draft_id, d.name AS draft_name, c.id AS "chapter_id!",
+                  c.title AS chapter_title, n.body, n.created_at, n.updated_at
+           FROM chapter_notes n
+           JOIN drafts d ON d.id = n.draft_id
+           JOIN chapters c ON c.id = d.chapter_id
+           WHERE c.story_id = ?
+           ORDER BY c.sort_order, d.sort_order, n.created_at"#,
+        story_id
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
+pub async fn update_note(
+    ex: impl SqliteExecutor<'_>,
+    id: &str,
+    body: &str,
+    now: &str,
+) -> AppResult<bool> {
+    let done = sqlx::query!(
+        "UPDATE chapter_notes SET body = ?, updated_at = ? WHERE id = ?",
+        body,
+        now,
+        id
+    )
+    .execute(ex)
+    .await?;
+    Ok(done.rows_affected() > 0)
+}
+
+pub async fn delete_note(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<bool> {
+    let done = sqlx::query!("DELETE FROM chapter_notes WHERE id = ?", id)
+        .execute(ex)
+        .await?;
+    Ok(done.rows_affected() > 0)
+}

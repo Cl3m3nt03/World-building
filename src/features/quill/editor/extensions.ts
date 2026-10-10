@@ -5,6 +5,7 @@ import { type Editor, Extension, mergeAttributes, type Range } from "@tiptap/rea
 import StarterKit from "@tiptap/starter-kit";
 import Suggestion from "@tiptap/suggestion";
 import { assetUrl } from "@/lib/assets";
+import { NoteMark } from "../notes/noteMark";
 import type { ListStore } from "./listStore";
 
 /** What "/" offers at the start of a line. */
@@ -150,6 +151,7 @@ export function quillExtensions({ placeholder, slash, slashLabel, pickImage }: O
     FontFamily,
     FontSize,
     AssetImage,
+    NoteMark,
     Placeholder.configure({ placeholder }),
     slashCommands(slash, slashLabel, pickImage),
   ];

@@ -188,6 +188,12 @@ export const commands = {
 	deleteDraft: (id: string) => typedError<Chapter, AppError>(__TAURI_INVOKE("delete_draft", { id })),
 	/**  Saves a draft's content (a TipTap document as JSON). */
 	saveDraft: (id: string, content: string) => typedError<DraftInfo, AppError>(__TAURI_INVOKE("save_draft", { id, content })),
+	/**  Adds a note to a draft. */
+	createNote: (draftId: string, body: string) => typedError<Note, AppError>(__TAURI_INVOKE("create_note", { draftId, body })),
+	updateNote: (id: string, body: string) => typedError<Note, AppError>(__TAURI_INVOKE("update_note", { id, body })),
+	deleteNote: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_note", { id })),
+	/**  The notes of a story, by chapter. */
+	storyNotes: (storyId: string) => typedError<StoryNote[], AppError>(__TAURI_INVOKE("story_notes", { storyId })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -866,6 +872,15 @@ export type NewStory = {
 	draftName: string,
 };
 
+/**  A note on a passage of a draft. */
+export type Note = {
+	id: string,
+	draftId: string,
+	body: string,
+	createdAt: string,
+	updatedAt: string,
+};
+
 /**  Shape of the card's image. */
 export type Orientation = "portrait" | "landscape";
 
@@ -1074,6 +1089,18 @@ export type Story = {
 	chapterCount: number,
 	/**  Words of the chapters' current drafts. */
 	wordCount: number,
+	createdAt: string,
+	updatedAt: string,
+};
+
+/**  A note of a story, with its draft and chapter (the list of notes). */
+export type StoryNote = {
+	id: string,
+	draftId: string,
+	draftName: string,
+	chapterId: string,
+	chapterTitle: string,
+	body: string,
 	createdAt: string,
 	updatedAt: string,
 };

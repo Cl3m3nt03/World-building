@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT n.id AS \"id!\", n.draft_id, d.name AS draft_name, c.id AS \"chapter_id!\",\n                  c.title AS chapter_title, n.body, n.created_at, n.updated_at\n           FROM chapter_notes n\n           JOIN drafts d ON d.id = n.draft_id\n           JOIN chapters c ON c.id = d.chapter_id\n           WHERE c.story_id = ?\n           ORDER BY c.sort_order, d.sort_order, n.created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "draft_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "draft_id"
+          }
+        }
+      },
+      {
+        "name": "draft_name",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drafts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "chapter_id!",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapters",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "chapter_title",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapters",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "body",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "body"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter_notes",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "bd17a03d26927b32f680a77bec090b1ab68f61f930c87ae767a69f36a3131adf"
+}

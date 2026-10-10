@@ -19,6 +19,7 @@ export const quillKeys = {
   stories: () => [...quillKeys.all(), "stories"] as const,
   outline: (id: string) => [...quillKeys.all(), "outline", id] as const,
   draft: (id: string) => [...quillKeys.all(), "draft", id] as const,
+  notes: (storyId: string) => [...quillKeys.all(), "notes", storyId] as const,
 };
 
 export function useStories() {

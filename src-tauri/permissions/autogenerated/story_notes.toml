@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-story-notes"
+description = "Enables the story_notes command without any pre-configured scope."
+commands.allow = ["story_notes"]
+
+[[permission]]
+identifier = "deny-story-notes"
+description = "Denies the story_notes command without any pre-configured scope."
+commands.deny = ["story_notes"]
