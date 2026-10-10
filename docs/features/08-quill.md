@@ -107,6 +107,14 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - mise en page des chapitres : image au-dessus, titre sur l'image ou sans image ;
   - vitesse de lecture : 60 à 600 mots par minute, 200 au départ.
 
+**Réalisé en M10 (10.2)** : l'écran du livre (création et « Modifier le livre ») montre le livre en 3D (Three.js).
+- Le livre a des plats, un dos et un bloc de pages crème. La couverture reprend celle de l'aperçu 2D : couleur, finition, illustration encadrée, titre à sa place. Le titre est aussi écrit le long du dos.
+- Le cuir brille, la toile est mate.
+- Il est vu de trois quarts, le dos visible. On le tourne en le tirant, ou au clavier avec les flèches (gauche et droite pour le tourner, haut et bas pour l'incliner). Double-clic ou Début le remet en place.
+- Sans animation si l'utilisateur les réduit.
+- Chaque réglage se voit aussitôt.
+- Sans WebGL, l'aperçu 2D reste, et la liste des histoires garde l'aperçu 2D.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order

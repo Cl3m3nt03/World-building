@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImagePickerDialog } from "@/features/media";
 import type { BookFinish, BookStyle, Cover, TitlePosition } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
-import { BOOK_COLORS, BookCover } from "./BookCover";
+import { Book3D } from "../cover/Book3D";
+import { BOOK_COLORS } from "./BookCover";
 
 export type StoryFormValue = { title: string; bookStyle: BookStyle; cover: Cover };
 
@@ -62,12 +63,11 @@ export function StoryForm({ initial, mode, pending, error, onSubmit, onCancel }:
       className="glass mx-auto grid h-full max-w-4xl gap-8 overflow-y-auto rounded-lg p-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
     >
       <div className="flex items-center justify-center">
-        <BookCover
-          large
+        <Book3D
           title={value.title.trim() || t("quill.form.titlePlaceholder")}
           bookStyle={value.bookStyle}
           cover={value.cover}
-          className="w-full max-w-72"
+          className="w-full max-w-80"
         />
       </div>
       <div className="flex flex-col gap-5">
