@@ -17,12 +17,14 @@ use crate::error::{AppError, AppResult};
 use crate::world::assets;
 
 pub mod epub;
+pub mod pdf;
 
 /// The formats a story is exported to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub enum ExportFormat {
     Epub,
+    Pdf,
 }
 
 impl ExportFormat {
@@ -30,6 +32,7 @@ impl ExportFormat {
     pub fn extension(self) -> &'static str {
         match self {
             Self::Epub => "epub",
+            Self::Pdf => "pdf",
         }
     }
 }
@@ -381,6 +384,7 @@ pub fn target(path: &str, format: ExportFormat) -> AppResult<std::path::PathBuf>
 pub fn write(book: &Book, format: ExportFormat, path: &Path) -> AppResult<()> {
     let bytes = match format {
         ExportFormat::Epub => epub::write(book)?,
+        ExportFormat::Pdf => pdf::write(book)?,
     };
     if let Some(parent) = path.parent()
         && !parent.as_os_str().is_empty()
