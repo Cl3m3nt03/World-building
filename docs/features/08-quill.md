@@ -1,6 +1,6 @@
 # 08 — Quill (écriture)
 
-**Milestones** : M9 (écriture) et M10 (avancé) · **Figma** : node `14:880`
+**Milestones** : M9 (écriture) et M10 (avancé) · **Figma** : node `14:880` · **Roadmap** : `docs/roadmap/M9-quill.md` · **Décision** : ADR 0009 (données, liens des chapitres)
 
 ## Objectif
 
