@@ -136,6 +136,13 @@ pub enum AssetUsage {
         chapter_title: String,
         story_title: String,
     },
+    /// A sound in a chapter's text (Quill, M10).
+    #[serde(rename_all = "camelCase")]
+    ChapterSound {
+        chapter_id: String,
+        chapter_title: String,
+        story_title: String,
+    },
     /// An image on a canvas (M7).
     #[serde(rename_all = "camelCase")]
     CanvasImage {
@@ -145,8 +152,8 @@ pub enum AssetUsage {
     },
 }
 
-/// Where an asset is used: map backgrounds, canvas images, card images and
-/// image blocks (a card using it both ways is listed twice).
+/// Where an asset is used: map backgrounds, canvas images, covers, chapter
+/// headers and sounds, card images and image blocks (a card using it both ways is listed twice).
 pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsage>> {
     let mut usages = Vec::new();
     for row in crate::db::maps::using_asset(pool, id).await? {
@@ -167,6 +174,13 @@ pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsag
     }
     for row in crate::db::quill::headers_using(pool, id).await? {
         usages.push(AssetUsage::ChapterHeader {
+            chapter_id: row.id,
+            chapter_title: row.title,
+            story_title: row.story_title,
+        });
+    }
+    for row in crate::db::quill::sounds_using(pool, id).await? {
+        usages.push(AssetUsage::ChapterSound {
             chapter_id: row.id,
             chapter_title: row.title,
             story_title: row.story_title,

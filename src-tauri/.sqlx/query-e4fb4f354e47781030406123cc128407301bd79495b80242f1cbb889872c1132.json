@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT reader_settings FROM stories WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "reader_settings",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "reader_settings"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e4fb4f354e47781030406123cc128407301bd79495b80242f1cbb889872c1132"
+}

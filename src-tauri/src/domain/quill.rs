@@ -20,6 +20,14 @@ use crate::domain::links::{self, LinkKind};
 use crate::error::{AppError, AppResult};
 use crate::world::assets;
 
+mod audio;
+mod reader;
+
+pub use audio::{
+    AudioCue, CUE_ATTR, CUE_MARK, CueKind, CuePatch, create_cue, delete_cue, draft_cues, update_cue,
+};
+pub use reader::{ReaderSettings, reader_settings, save_reader_settings};
+
 /// Longest note, in characters.
 pub const MAX_NOTE_CHARS: usize = 20_000;
 
@@ -592,22 +600,33 @@ pub async fn create_draft(
 ) -> AppResult<Chapter> {
     let mut tx = db::begin_write(pool).await?;
     chapter_row(&mut tx, chapter_id).await?;
-    let (content_json, notes) = match copy_of {
+    let (content_json, notes, cues) = match copy_of {
         Some(source) => {
             let source = draft_row(&mut tx, source).await?;
             if source.chapter_id != chapter_id {
                 return Err(invalid("a draft is copied within its chapter"));
             }
-            // The copy has its own notes: new ids, in the text as in the table.
+            // The copy has its own notes and sounds: new ids, in the text as
+            // in the tables.
             let notes = queries::draft_notes(&mut *tx, &source.id).await?;
             let renamed: Vec<(String, String)> = notes
                 .iter()
                 .map(|note| (note.id.clone(), Uuid::new_v4().to_string()))
                 .collect();
-            let content = rename_note_marks(&source.content, &renamed)?;
-            (content, notes.into_iter().zip(renamed).collect::<Vec<_>>())
+            let cues = queries::draft_cues(&mut *tx, &source.id).await?;
+            let renamed_cues: Vec<(String, String)> = cues
+                .iter()
+                .map(|cue| (cue.id.clone(), Uuid::new_v4().to_string()))
+                .collect();
+            let content = rename_marks(&source.content, NOTE_MARK, "noteId", &renamed)?;
+            let content = rename_marks(&content, CUE_MARK, CUE_ATTR, &renamed_cues)?;
+            (
+                content,
+                notes.into_iter().zip(renamed).collect::<Vec<_>>(),
+                cues.into_iter().zip(renamed_cues).collect::<Vec<_>>(),
+            )
         }
-        None => (EMPTY_DRAFT.to_owned(), Vec::new()),
+        None => (EMPTY_DRAFT.to_owned(), Vec::new(), Vec::new()),
     };
     let order = i64::try_from(queries::chapter_drafts(&mut *tx, chapter_id).await?.len())
         .unwrap_or(i64::MAX);
@@ -619,6 +638,17 @@ pub async fn create_draft(
                 id: new_id,
                 draft_id: draft_id.clone(),
                 ..note
+            },
+        )
+        .await?;
+    }
+    for (cue, (_, new_id)) in cues {
+        queries::insert_cue(
+            &mut *tx,
+            &db::quill::CueRow {
+                id: new_id,
+                draft_id: draft_id.clone(),
+                ..cue
             },
         )
         .await?;
@@ -738,18 +768,25 @@ fn check_note(body: &str) -> AppResult<()> {
     Ok(())
 }
 
-/// `content` with the note marks' ids changed as `renamed` (old, new) says.
-fn rename_note_marks(content: &str, renamed: &[(String, String)]) -> AppResult<String> {
+/// `content` with the ids held by the `attr` of its `mark` marks changed as
+/// `renamed` (old, new) says: notes and sounds of a copied draft.
+fn rename_marks(
+    content: &str,
+    mark: &str,
+    attr: &str,
+    renamed: &[(String, String)],
+) -> AppResult<String> {
     if renamed.is_empty() {
         return Ok(content.to_owned());
     }
     let mut doc: Value =
         serde_json::from_str(content).map_err(|error| invalid(format!("draft: {error}")))?;
-    fn walk(node: &mut Value, renamed: &[(String, String)]) {
+    let pointer = format!("/attrs/{attr}");
+    fn walk(node: &mut Value, kind: &str, pointer: &str, renamed: &[(String, String)]) {
         if let Some(marks) = node.get_mut("marks").and_then(Value::as_array_mut) {
             for mark in marks {
-                if mark.get("type").and_then(Value::as_str) == Some(NOTE_MARK)
-                    && let Some(id) = mark.pointer_mut("/attrs/noteId")
+                if mark.get("type").and_then(Value::as_str) == Some(kind)
+                    && let Some(id) = mark.pointer_mut(pointer)
                     && let Some((_, new)) = renamed
                         .iter()
                         .find(|(old, _)| Some(old.as_str()) == id.as_str())
@@ -760,11 +797,11 @@ fn rename_note_marks(content: &str, renamed: &[(String, String)]) -> AppResult<S
         }
         if let Some(children) = node.get_mut("content").and_then(Value::as_array_mut) {
             for child in children {
-                walk(child, renamed);
+                walk(child, kind, pointer, renamed);
             }
         }
     }
-    walk(&mut doc, renamed);
+    walk(&mut doc, mark, &pointer, renamed);
     serde_json::to_string(&doc).map_err(|error| AppError::Internal(error.to_string()))
 }
 

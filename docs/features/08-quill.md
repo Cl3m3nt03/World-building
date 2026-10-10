@@ -94,6 +94,19 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - **ePub**.
 - L'audio n'est pas exportable en PDF ni en DOCX. Un export « liseuse HTML avec audio » pourra être envisagé plus tard.
 
+**Réalisé en M10 (10.1)** : le socle de données, sans interface pour l'instant (migration 0019, ADR 0010).
+- Un brouillon a ses **sons** : un effet ou une ambiance, un fichier audio de la médiathèque (refusé si ce n'en est pas un), un volume de 0 à 100 (80 au départ) et une boucle (oui pour une ambiance). Chaque son est ancré par une marque `audioCue` dans le texte.
+- Copier un brouillon copie ses sons et renomme leurs marques. Supprimer un brouillon, un chapitre ou une histoire supprime les leurs.
+- La médiathèque montre « son dans « Chapitre 1 » (Mon histoire) » avant de supprimer un fichier utilisé.
+- Une histoire a ses **réglages de lecture**, lus avec tolérance :
+  - thème de page : clair, sombre ou sépia ;
+  - mode : défilement ou pages ;
+  - fond `#rrggbb` ou celui du thème ;
+  - police ;
+  - taille du texte ;
+  - mise en page des chapitres : image au-dessus, titre sur l'image ou sans image ;
+  - vitesse de lecture : 60 à 600 mots par minute, 200 au départ.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order

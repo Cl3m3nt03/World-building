@@ -198,6 +198,15 @@ export const commands = {
 	writingPanel: (storyId: string) => typedError<string, AppError>(__TAURI_INVOKE("writing_panel", { storyId })),
 	/**  Keeps a story's world panel layout. */
 	saveWritingPanel: (storyId: string, layout: string) => typedError<null, AppError>(__TAURI_INVOKE("save_writing_panel", { storyId, layout })),
+	/**  A story's reading settings (M10). */
+	readerSettings: (storyId: string) => typedError<ReaderSettings, AppError>(__TAURI_INVOKE("reader_settings", { storyId })),
+	saveReaderSettings: (storyId: string, settings: ReaderSettings) => typedError<ReaderSettings, AppError>(__TAURI_INVOKE("save_reader_settings", { storyId, settings })),
+	/**  The sounds of a draft (M10). */
+	draftAudioCues: (draftId: string) => typedError<AudioCue[], AppError>(__TAURI_INVOKE("draft_audio_cues", { draftId })),
+	/**  Adds a sound to a draft; the front marks its passage. */
+	createAudioCue: (draftId: string, kind: CueKind, assetId: string) => typedError<AudioCue, AppError>(__TAURI_INVOKE("create_audio_cue", { draftId, kind, assetId })),
+	updateAudioCue: (id: string, patch: CuePatch) => typedError<AudioCue, AppError>(__TAURI_INVOKE("update_audio_cue", { id, patch })),
+	deleteAudioCue: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_audio_cue", { id })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -451,8 +460,25 @@ export type AssetUsage =
 { kind: "storyCover"; storyId: string; storyTitle: string } | 
 /**  The image over a chapter's text (Quill, M9). */
 { kind: "chapterHeader"; chapterId: string; chapterTitle: string; storyTitle: string } | 
+/**  A sound in a chapter's text (Quill, M10). */
+{ kind: "chapterSound"; chapterId: string; chapterTitle: string; storyTitle: string } | 
 /**  An image on a canvas (M7). */
 { kind: "canvasImage"; canvasId: string; canvasTitle: string; inTrash: boolean };
+
+/**  A sound on a passage of a draft. */
+export type AudioCue = {
+	id: string,
+	draftId: string,
+	kind: CueKind,
+	/**  An audio asset; None once its file was deleted. */
+	assetId: string | null,
+	/**  0 to 100. */
+	volume: number,
+	/**  An ambience starts again when it ends. */
+	looped: boolean,
+	createdAt: string,
+	updatedAt: string,
+};
 
 /**  A document that cites a card, and how ("cited in" at the bottom of a card). */
 export type Backlink = {
@@ -571,10 +597,32 @@ export type Chapter = {
 	drafts: DraftInfo[],
 };
 
+/**  Where a chapter's header image goes. */
+export type ChapterLayout = 
+/**  The image, then the title under it. */
+"imageAbove" | 
+/**  The title written over the image. */
+"titleOver" | 
+/**  The title alone, without the image. */
+"noImage";
+
 /**  The cover: an image of the media library, and where the title sits. */
 export type Cover = {
 	assetId: string | null,
 	titlePosition: TitlePosition,
+};
+
+export type CueKind = 
+/**  Played once when the reading reaches the passage. */
+"effect" | 
+/**  Heard from the passage's first paragraph to its last. */
+"ambience";
+
+/**  What changes on a sound; None keeps the current value. */
+export type CuePatch = {
+	assetId: string | null,
+	volume: number | null,
+	looped: boolean | null,
 };
 
 export type Document = {
@@ -888,6 +936,8 @@ export type Note = {
 /**  Shape of the card's image. */
 export type Orientation = "portrait" | "landscape";
 
+export type PageTheme = "light" | "dark" | "sepia";
+
 /**  A node kept in place, whatever the forces and the moves of the view. */
 export type PinnedNode = {
 	cardId: string,
@@ -957,6 +1007,26 @@ export type RadioMode =
 "repeatOne" | 
 /**  Picks a random track. */
 "shuffle";
+
+/**  How a story reads. */
+export type ReaderSettings = {
+	theme: PageTheme,
+	mode: ReadingMode,
+	/**  CSS `#rrggbb`, or None for the theme's own page colour. */
+	background: string | null,
+	/**  A font key of the app's free fonts (as for the wiki). */
+	font: string,
+	textSize: TextSize,
+	chapterLayout: ChapterLayout,
+	/**  The pace of the reading with sound (« Lecture »). */
+	wordsPerMinute: number,
+};
+
+export type ReadingMode = 
+/**  One long page that scrolls. */
+"scroll" | 
+/**  Pages turned one by one. */
+"pages";
 
 /**  A document opened recently, for the Home tab. */
 export type RecentDocument = {
@@ -1133,6 +1203,8 @@ export type TextPart = {
 	text: string,
 	matched: boolean,
 };
+
+export type TextSize = "small" | "medium" | "large";
 
 export type TextStyle = {
 	font: string,

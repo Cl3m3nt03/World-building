@@ -98,8 +98,8 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
     if (usage.kind === "storyCover") {
       return t("media.usage.storyCover", { name: usage.storyTitle });
     }
-    if (usage.kind === "chapterHeader") {
-      return t("media.usage.chapterHeader", {
+    if (usage.kind === "chapterHeader" || usage.kind === "chapterSound") {
+      return t(`media.usage.${usage.kind}`, {
         name: usage.chapterTitle,
         story: usage.storyTitle,
       });
@@ -146,7 +146,7 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
                       ? usage.kind
                       : usage.kind === "storyCover"
                         ? `${usage.kind}-${usage.storyId}`
-                        : usage.kind === "chapterHeader"
+                        : usage.kind === "chapterHeader" || usage.kind === "chapterSound"
                           ? `${usage.kind}-${usage.chapterId}`
                           : usage.kind === "mapBackground"
                             ? `${usage.kind}-${usage.mapId}`

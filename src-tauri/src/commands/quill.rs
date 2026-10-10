@@ -4,7 +4,8 @@ use sqlx::SqlitePool;
 use tauri::State;
 
 use crate::domain::quill::{
-    self, Chapter, Draft, DraftInfo, NewStory, Note, Story, StoryNote, StoryOutline, StoryPatch,
+    self, AudioCue, Chapter, CueKind, CuePatch, Draft, DraftInfo, NewStory, Note, ReaderSettings,
+    Story, StoryNote, StoryOutline, StoryPatch,
 };
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
@@ -227,4 +228,73 @@ pub async fn save_writing_panel(
         &layout,
     )
     .await
+}
+
+/// A story's reading settings (M10).
+#[tauri::command]
+#[specta::specta]
+pub async fn reader_settings(
+    state: State<'_, AppState>,
+    story_id: String,
+) -> AppResult<ReaderSettings> {
+    quill::reader_settings(&pool(&state, "reader_settings").await?, &story_id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn save_reader_settings(
+    state: State<'_, AppState>,
+    story_id: String,
+    settings: ReaderSettings,
+) -> AppResult<ReaderSettings> {
+    quill::save_reader_settings(
+        &pool(&state, "save_reader_settings").await?,
+        &story_id,
+        &settings,
+    )
+    .await
+}
+
+/// The sounds of a draft (M10).
+#[tauri::command]
+#[specta::specta]
+pub async fn draft_audio_cues(
+    state: State<'_, AppState>,
+    draft_id: String,
+) -> AppResult<Vec<AudioCue>> {
+    quill::draft_cues(&pool(&state, "draft_audio_cues").await?, &draft_id).await
+}
+
+/// Adds a sound to a draft; the front marks its passage.
+#[tauri::command]
+#[specta::specta]
+pub async fn create_audio_cue(
+    state: State<'_, AppState>,
+    draft_id: String,
+    kind: CueKind,
+    asset_id: String,
+) -> AppResult<AudioCue> {
+    quill::create_cue(
+        &pool(&state, "create_audio_cue").await?,
+        &draft_id,
+        kind,
+        &asset_id,
+    )
+    .await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_audio_cue(
+    state: State<'_, AppState>,
+    id: String,
+    patch: CuePatch,
+) -> AppResult<AudioCue> {
+    quill::update_cue(&pool(&state, "update_audio_cue").await?, &id, &patch).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_audio_cue(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    quill::delete_cue(&pool(&state, "delete_audio_cue").await?, &id).await
 }
