@@ -485,6 +485,7 @@
   "media.usage.wikiBanner": "banner of the wiki",
   "media.usage.storyCover": "cover of the story “{{name}}”",
   "media.usage.chapterHeader": "header of “{{name}}” ({{story}})",
+  "media.usage.chapterSound": "sound in “{{name}}” ({{story}})",
   "quill.title": "Stories",
   "quill.subtitle": "Write your chapters next to your world.",
   "quill.newStory": "New story",

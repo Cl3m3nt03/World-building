@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT c.id AS \"id!\", c.title, s.title AS story_title\n           FROM audio_cues a\n           JOIN drafts d ON d.id = a.draft_id\n           JOIN chapters c ON c.id = d.chapter_id\n           JOIN stories s ON s.id = c.story_id\n           WHERE a.asset_id = ?\n           ORDER BY s.title COLLATE NOCASE, c.sort_order",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapters",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapters",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "story_title",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "title"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fe160f26df58befe470a9d91933144c66210c195efa7b1fefc4b19d28f07ebfc"
+}

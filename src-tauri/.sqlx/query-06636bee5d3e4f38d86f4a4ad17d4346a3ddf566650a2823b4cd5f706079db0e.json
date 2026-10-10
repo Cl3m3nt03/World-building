@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE audio_cues SET asset_id = ?, volume = ?, looped = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "06636bee5d3e4f38d86f4a4ad17d4346a3ddf566650a2823b4cd5f706079db0e"
+}

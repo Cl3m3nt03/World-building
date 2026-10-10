@@ -417,3 +417,171 @@ async fn the_world_panel_layout_is_kept_per_story() {
     delete(&world.pool, &id).await.unwrap();
     assert!(panel(&world.pool, &id).await.is_err());
 }
+
+async fn asset(pool: &SqlitePool, letter: char, kind: &str) -> String {
+    let id = format!("{}.bin", letter.to_string().repeat(64));
+    crate::db::assets::insert_if_absent(
+        pool,
+        &crate::db::assets::AssetRow {
+            id: id.clone(),
+            name: format!("{kind} {letter}"),
+            kind: kind.into(),
+            mime: format!("{kind}/x"),
+            size: 1,
+            width: None,
+            height: None,
+            created_at: now(),
+        },
+    )
+    .await
+    .unwrap();
+    id
+}
+
+#[tokio::test]
+async fn sounds_are_made_changed_copied_with_their_draft_and_deleted() {
+    use crate::domain::media::{AssetUsage, card_usages};
+    let (_dir, world) = world().await;
+    let outline = create(&world.pool, &new_story("Récit")).await.unwrap();
+    let chapter = &outline.chapters[0];
+    let draft_id = chapter.current_draft_id.clone();
+    let rain = asset(&world.pool, 'a', "audio").await;
+    let bell = asset(&world.pool, 'b', "audio").await;
+    let image = asset(&world.pool, 'c', "image").await;
+
+    let effect = create_cue(&world.pool, &draft_id, CueKind::Effect, &bell)
+        .await
+        .unwrap();
+    let ambience = create_cue(&world.pool, &draft_id, CueKind::Ambience, &rain)
+        .await
+        .unwrap();
+    assert!(!effect.looped && ambience.looped);
+    assert_eq!(effect.volume, 80);
+    // Only an audio file of the library makes a sound.
+    assert!(
+        create_cue(&world.pool, &draft_id, CueKind::Effect, &image)
+            .await
+            .is_err()
+    );
+    assert!(
+        create_cue(&world.pool, &draft_id, CueKind::Effect, "../x")
+            .await
+            .is_err()
+    );
+
+    let changed = update_cue(
+        &world.pool,
+        &effect.id,
+        &CuePatch {
+            volume: Some(40),
+            asset_id: Some(rain.clone()),
+            looped: None,
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        (changed.volume, changed.asset_id.as_deref()),
+        (40, Some(rain.as_str()))
+    );
+    let too_loud = CuePatch {
+        volume: Some(101),
+        ..CuePatch::default()
+    };
+    assert!(
+        update_cue(&world.pool, &effect.id, &too_loud)
+            .await
+            .is_err()
+    );
+
+    // The media library knows the chapter uses the sound (once).
+    let usages = card_usages(&world.pool, &rain).await.unwrap();
+    assert_eq!(
+        usages,
+        vec![AssetUsage::ChapterSound {
+            chapter_id: chapter.id.clone(),
+            chapter_title: "Chapitre 1".into(),
+            story_title: "Récit".into(),
+        }]
+    );
+
+    // A copy of the draft has its own sounds, their marks renamed.
+    let content = serde_json::json!({
+        "type": "doc",
+        "content": [{ "type": "paragraph", "content": [
+            { "type": "text", "text": "La pluie", "marks": [{ "type": CUE_MARK, "attrs": { CUE_ATTR: ambience.id } }] }
+        ] }]
+    })
+    .to_string();
+    save_draft(&world.pool, &draft_id, &content).await.unwrap();
+    let chapter = create_draft(&world.pool, &chapter.id, "Copie", Some(&draft_id))
+        .await
+        .unwrap();
+    let copy = draft(&world.pool, &chapter.drafts[1].id).await.unwrap();
+    let copied = draft_cues(&world.pool, &copy.id).await.unwrap();
+    assert_eq!(copied.len(), 2);
+    let copied_ambience = copied
+        .iter()
+        .find(|cue| cue.kind == CueKind::Ambience)
+        .unwrap();
+    assert_ne!(copied_ambience.id, ambience.id);
+    assert!(copy.content.contains(&copied_ambience.id) && !copy.content.contains(&ambience.id));
+
+    delete_cue(&world.pool, &effect.id).await.unwrap();
+    assert!(delete_cue(&world.pool, &effect.id).await.is_err());
+    assert_eq!(draft_cues(&world.pool, &draft_id).await.unwrap().len(), 1);
+    // A deleted draft takes its sounds.
+    delete_draft(&world.pool, &copy.id).await.unwrap();
+    assert!(draft_cues(&world.pool, &copy.id).await.unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn reading_settings_are_kept_per_story_and_read_with_tolerance() {
+    let (_dir, world) = world().await;
+    let outline = create(&world.pool, &new_story("Récit")).await.unwrap();
+    let id = &outline.story.id;
+    assert_eq!(
+        reader_settings(&world.pool, id).await.unwrap(),
+        ReaderSettings::default()
+    );
+    let settings = ReaderSettings {
+        theme: reader::PageTheme::Sepia,
+        mode: reader::ReadingMode::Pages,
+        background: Some("#f4ecd8".into()),
+        font: "lora".into(),
+        text_size: reader::TextSize::Large,
+        chapter_layout: reader::ChapterLayout::TitleOver,
+        words_per_minute: 250,
+    };
+    save_reader_settings(&world.pool, id, &settings)
+        .await
+        .unwrap();
+    assert_eq!(reader_settings(&world.pool, id).await.unwrap(), settings);
+
+    for bad in [
+        ReaderSettings {
+            background: Some("red".into()),
+            ..settings.clone()
+        },
+        ReaderSettings {
+            font: "../x".into(),
+            ..settings.clone()
+        },
+        ReaderSettings {
+            words_per_minute: 5,
+            ..settings.clone()
+        },
+    ] {
+        assert!(save_reader_settings(&world.pool, id, &bad).await.is_err());
+    }
+    assert!(reader_settings(&world.pool, "nope").await.is_err());
+
+    let read = reader::read_settings(
+        r#"{"theme":"sepia","mode":"flip","background":"blue","wordsPerMinute":9999,"x":1}"#,
+    );
+    assert_eq!(read.theme, reader::PageTheme::Sepia);
+    assert_eq!(read.mode, reader::ReadingMode::Scroll);
+    assert_eq!(read.background, None);
+    assert_eq!(read.words_per_minute, reader::MAX_WORDS_PER_MINUTE);
+    assert_eq!(reader::read_settings("not json"), ReaderSettings::default());
+}

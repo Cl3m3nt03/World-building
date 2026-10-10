@@ -539,3 +539,126 @@ pub async fn save_panel(
     .await?;
     Ok(())
 }
+
+// Reading settings (migration 0019).
+
+/// A story's reading settings (JSON), or None when there is no such story.
+pub async fn reader_settings(
+    ex: impl SqliteExecutor<'_>,
+    story_id: &str,
+) -> AppResult<Option<String>> {
+    Ok(
+        sqlx::query_scalar!("SELECT reader_settings FROM stories WHERE id = ?", story_id)
+            .fetch_optional(ex)
+            .await?,
+    )
+}
+
+/// Keeps a story's reading settings; false when there is no such story.
+pub async fn save_reader_settings(
+    ex: impl SqliteExecutor<'_>,
+    story_id: &str,
+    settings: &str,
+) -> AppResult<bool> {
+    let done = sqlx::query!(
+        "UPDATE stories SET reader_settings = ? WHERE id = ?",
+        settings,
+        story_id
+    )
+    .execute(ex)
+    .await?;
+    Ok(done.rows_affected() > 0)
+}
+
+// Sounds (migration 0019).
+
+pub struct CueRow {
+    pub id: String,
+    pub draft_id: String,
+    pub kind: String,
+    pub asset_id: Option<String>,
+    pub volume: i64,
+    pub looped: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+pub async fn insert_cue(ex: impl SqliteExecutor<'_>, row: &CueRow) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO audio_cues (id, draft_id, kind, asset_id, volume, looped, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        row.id,
+        row.draft_id,
+        row.kind,
+        row.asset_id,
+        row.volume,
+        row.looped,
+        row.created_at,
+        row.updated_at
+    )
+    .execute(ex)
+    .await?;
+    Ok(())
+}
+
+pub async fn cue(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<Option<CueRow>> {
+    Ok(sqlx::query_as!(
+        CueRow,
+        r#"SELECT id, draft_id, kind, asset_id, volume, looped AS "looped: bool",
+                  created_at, updated_at
+           FROM audio_cues WHERE id = ?"#,
+        id
+    )
+    .fetch_optional(ex)
+    .await?)
+}
+
+pub async fn draft_cues(ex: impl SqliteExecutor<'_>, draft_id: &str) -> AppResult<Vec<CueRow>> {
+    Ok(sqlx::query_as!(
+        CueRow,
+        r#"SELECT id, draft_id, kind, asset_id, volume, looped AS "looped: bool",
+                  created_at, updated_at
+           FROM audio_cues WHERE draft_id = ? ORDER BY created_at, id"#,
+        draft_id
+    )
+    .fetch_all(ex)
+    .await?)
+}
+
+pub async fn update_cue(ex: impl SqliteExecutor<'_>, row: &CueRow) -> AppResult<bool> {
+    let done = sqlx::query!(
+        "UPDATE audio_cues SET asset_id = ?, volume = ?, looped = ?, updated_at = ? WHERE id = ?",
+        row.asset_id,
+        row.volume,
+        row.looped,
+        row.updated_at,
+        row.id
+    )
+    .execute(ex)
+    .await?;
+    Ok(done.rows_affected() > 0)
+}
+
+pub async fn delete_cue(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<bool> {
+    let done = sqlx::query!("DELETE FROM audio_cues WHERE id = ?", id)
+        .execute(ex)
+        .await?;
+    Ok(done.rows_affected() > 0)
+}
+
+/// The chapters with a sound of the asset, in any of their drafts.
+pub async fn sounds_using(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<QuillUserRow>> {
+    Ok(sqlx::query_as!(
+        QuillUserRow,
+        r#"SELECT DISTINCT c.id AS "id!", c.title, s.title AS story_title
+           FROM audio_cues a
+           JOIN drafts d ON d.id = a.draft_id
+           JOIN chapters c ON c.id = d.chapter_id
+           JOIN stories s ON s.id = c.story_id
+           WHERE a.asset_id = ?
+           ORDER BY s.title COLLATE NOCASE, c.sort_order"#,
+        asset_id
+    )
+    .fetch_all(pool)
+    .await?)
+}

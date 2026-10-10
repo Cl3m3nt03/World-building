@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-reader-settings"
+description = "Enables the save_reader_settings command without any pre-configured scope."
+commands.allow = ["save_reader_settings"]
+
+[[permission]]
+identifier = "deny-save-reader-settings"
+description = "Denies the save_reader_settings command without any pre-configured scope."
+commands.deny = ["save_reader_settings"]

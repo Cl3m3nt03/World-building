@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO audio_cues (id, draft_id, kind, asset_id, volume, looped, created_at, updated_at)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "aa4450d7bda705984d3baaa866911ee165d04ee5b6c07393fd93ccd010fdf1d2"
+}
