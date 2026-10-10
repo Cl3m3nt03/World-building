@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-current-draft"
+description = "Enables the set_current_draft command without any pre-configured scope."
+commands.allow = ["set_current_draft"]
+
+[[permission]]
+identifier = "deny-set-current-draft"
+description = "Denies the set_current_draft command without any pre-configured scope."
+commands.deny = ["set_current_draft"]

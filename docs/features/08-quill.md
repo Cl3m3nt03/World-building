@@ -10,6 +10,8 @@ Quill sert à écrire des chapitres, des nouvelles, des romans ou des scénarios
 
 ## M9 — Écriture
 
+**Réalisé en M9 (9.1)** : le socle de données, sans interface pour l'instant (migration 0018, ADR 0009). Une histoire (titre, style de livre : couleur `#rrggbb` et finition toile, cuir ou papier ; couverture : image de la médiathèque et position du titre en haut, au milieu ou en bas) naît avec « Chapitre 1 » et son premier brouillon, qui est le brouillon courant. Les chapitres se créent, se renomment, se réordonnent, reçoivent une image d'en-tête et se suppriment, mais une histoire en garde toujours un. Les brouillons se créent vides ou par copie d'un brouillon du même chapitre, se renomment, deviennent courants et se suppriment, mais un chapitre en garde toujours un ; si le brouillon courant disparaît, le premier autre prend sa place. Le Rust vérifie le contenu (un document TipTap de 8 Mo au plus), en tire le texte et le nombre de mots. Le chapitre cite les cartes mentionnées par son brouillon courant (table des liens). Supprimer une histoire ou un chapitre supprime ses liens. Les notes ont leur table ; leur ancre sera une marque dans le texte (9.6).
+
 ### Histoires
 
 - L'onglet Quill liste les histoires du monde.

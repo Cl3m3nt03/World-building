@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-story-outline"
+description = "Enables the story_outline command without any pre-configured scope."
+commands.allow = ["story_outline"]
+
+[[permission]]
+identifier = "deny-story-outline"
+description = "Denies the story_outline command without any pre-configured scope."
+commands.deny = ["story_outline"]

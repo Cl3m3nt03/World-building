@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-stories"
+description = "Enables the list_stories command without any pre-configured scope."
+commands.allow = ["list_stories"]
+
+[[permission]]
+identifier = "deny-list-stories"
+description = "Denies the list_stories command without any pre-configured scope."
+commands.deny = ["list_stories"]

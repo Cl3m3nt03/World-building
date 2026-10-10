@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE chapters SET sort_order = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "99b1ca52f91942a19103f9b4313dd2ae9453fa0d0094f697be27396fb544ecfd"
+}

@@ -1,0 +1,100 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT s.id AS \"id!\", s.title, s.book_style, s.cover, s.created_at, s.updated_at,\n                  (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) AS \"chapter_count!: i64\",\n                  (SELECT COALESCE(SUM(d.word_count), 0) FROM chapters c\n                     JOIN drafts d ON d.id = c.current_draft_id\n                     WHERE c.story_id = s.id) AS \"word_count!: i64\"\n           FROM stories s ORDER BY s.sort_order, s.created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "book_style",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "book_style"
+          }
+        }
+      },
+      {
+        "name": "cover",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "cover"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "name": "chapter_count!: i64",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "word_count!: i64",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "65ae5e8e7905f0b1b7e784ff44a3f9258ef1d7bfd40d51825b991bf410587ba9"
+}

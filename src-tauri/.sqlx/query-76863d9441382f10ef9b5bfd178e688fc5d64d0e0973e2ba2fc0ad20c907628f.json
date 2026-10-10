@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE stories SET updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "76863d9441382f10ef9b5bfd178e688fc5d64d0e0973e2ba2fc0ad20c907628f"
+}

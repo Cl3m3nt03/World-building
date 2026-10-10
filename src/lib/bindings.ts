@@ -165,6 +165,29 @@ export const commands = {
 	 *  copied (an image deleted meanwhile is skipped).
 	 */
 	copyWikiExportAssets: (ids: string[]) => typedError<number, AppError>(__TAURI_INVOKE("copy_wiki_export_assets", { ids })),
+	/**  The world's stories, in their order. */
+	listStories: () => typedError<Story[], AppError>(__TAURI_INVOKE("list_stories")),
+	/**  A story and its chapters, with their drafts. */
+	storyOutline: (id: string) => typedError<StoryOutline, AppError>(__TAURI_INVOKE("story_outline", { id })),
+	/**  Creates a story with its first chapter and draft. */
+	createStory: (story: NewStory) => typedError<StoryOutline, AppError>(__TAURI_INVOKE("create_story", { story })),
+	updateStory: (id: string, patch: StoryPatch) => typedError<Story, AppError>(__TAURI_INVOKE("update_story", { id, patch })),
+	/**  Deletes a story for good, with all it holds. */
+	deleteStory: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_story", { id })),
+	createChapter: (storyId: string, title: string, draftName: string) => typedError<Chapter, AppError>(__TAURI_INVOKE("create_chapter", { storyId, title, draftName })),
+	renameChapter: (id: string, title: string) => typedError<Chapter, AppError>(__TAURI_INVOKE("rename_chapter", { id, title })),
+	setChapterHeader: (id: string, assetId: string | null) => typedError<Chapter, AppError>(__TAURI_INVOKE("set_chapter_header", { id, assetId })),
+	moveChapter: (id: string, index: number) => typedError<StoryOutline, AppError>(__TAURI_INVOKE("move_chapter", { id, index })),
+	deleteChapter: (id: string) => typedError<StoryOutline, AppError>(__TAURI_INVOKE("delete_chapter", { id })),
+	/**  A draft with its content. */
+	getDraft: (id: string) => typedError<Draft, AppError>(__TAURI_INVOKE("get_draft", { id })),
+	/**  Adds a draft to a chapter: empty, or a copy of `copy_of`. */
+	createDraft: (chapterId: string, name: string, copyOf: string | null) => typedError<Chapter, AppError>(__TAURI_INVOKE("create_draft", { chapterId, name, copyOf })),
+	renameDraft: (id: string, name: string) => typedError<Chapter, AppError>(__TAURI_INVOKE("rename_draft", { id, name })),
+	setCurrentDraft: (id: string) => typedError<Chapter, AppError>(__TAURI_INVOKE("set_current_draft", { id })),
+	deleteDraft: (id: string) => typedError<Chapter, AppError>(__TAURI_INVOKE("delete_draft", { id })),
+	/**  Saves a draft's content (a TipTap document as JSON). */
+	saveDraft: (id: string, content: string) => typedError<DraftInfo, AppError>(__TAURI_INVOKE("save_draft", { id, content })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -434,6 +457,19 @@ export type BacklinkVia = {
 	propertyLabel: string | null,
 };
 
+/**  The finish of a book's cover. */
+export type BookFinish = "cloth" | "leather" | "paper";
+
+/**
+ *  How the book looks: its colour and the finish of its cover. Read with
+ *  tolerance: a missing or unknown field takes its default.
+ */
+export type BookStyle = {
+	/**  CSS `#rrggbb`. */
+	color?: string,
+	finish?: BookFinish,
+};
+
 /**
  *  A canvas as seen by the front. The scene and the state are JSON texts,
  *  read and written by Excalidraw.
@@ -506,6 +542,24 @@ export type CardTypePatch = {
 	canvasFormat?: CanvasFormat | null,
 };
 
+/**  A chapter, with its drafts in their order. */
+export type Chapter = {
+	id: string,
+	storyId: string,
+	title: string,
+	currentDraftId: string,
+	headerAssetId: string | null,
+	/**  Words of the current draft. */
+	wordCount: number,
+	drafts: DraftInfo[],
+};
+
+/**  The cover: an image of the media library, and where the title sits. */
+export type Cover = {
+	assetId?: string | null,
+	titlePosition?: TitlePosition,
+};
+
 export type Document = {
 	id: string,
 	kind: DocumentKind,
@@ -534,6 +588,24 @@ export type DocumentKind = "card" | "map" | "graph" | "canvas" | "tree";
 export type DocumentTree = {
 	folders: Folder[],
 	documents: TreeDocument[],
+};
+
+/**  A draft with its content (a TipTap document, as JSON). */
+export type Draft = {
+	id: string,
+	chapterId: string,
+	name: string,
+	content: string,
+	wordCount: number,
+	updatedAt: string,
+};
+
+/**  A draft, without its content. */
+export type DraftInfo = {
+	id: string,
+	name: string,
+	wordCount: number,
+	updatedAt: string,
 };
 
 /**  Where a link between two cards comes from. */
@@ -775,6 +847,18 @@ export type NewCardType = {
 	color: string,
 };
 
+/**
+ *  What the story creation screen sends. The names of the first chapter and
+ *  draft are translated by the front.
+ */
+export type NewStory = {
+	title: string,
+	bookStyle: BookStyle,
+	cover: Cover,
+	chapterTitle: string,
+	draftName: string,
+};
+
 /**  Shape of the card's image. */
 export type Orientation = "portrait" | "landscape";
 
@@ -974,6 +1058,32 @@ export type StorageUsage = {
 	limit: number | null,
 };
 
+/**  A story, as listed in the Quill tab. */
+export type Story = {
+	id: string,
+	title: string,
+	bookStyle: BookStyle,
+	cover: Cover,
+	chapterCount: number,
+	/**  Words of the chapters' current drafts. */
+	wordCount: number,
+	createdAt: string,
+	updatedAt: string,
+};
+
+/**  A story and its chapters in their order: the writing space's left column. */
+export type StoryOutline = {
+	story: Story,
+	chapters: Chapter[],
+};
+
+/**  Changes to a story; a field left out stays. */
+export type StoryPatch = {
+	title?: string | null,
+	bookStyle?: BookStyle | null,
+	cover?: Cover | null,
+};
+
 /**  A section of a guided template: a title and a question to help write it. */
 export type TemplateSection = {
 	title: string,
@@ -998,6 +1108,9 @@ export type TextStyle = {
 };
 
 export type Theme = "light" | "dark" | "system";
+
+/**  Where the title sits on the cover. */
+export type TitlePosition = "top" | "middle" | "bottom";
 
 /**  Something drawn over the tree. */
 export type TreeAnnotation = 

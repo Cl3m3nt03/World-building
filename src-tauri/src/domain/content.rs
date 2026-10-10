@@ -147,6 +147,20 @@ fn node_mentions(node: &Value, out: &mut Vec<String>) {
     }
 }
 
+/// Plain text of one TipTap document (a Quill draft).
+pub fn doc_text(doc: &Value) -> String {
+    let mut out = String::new();
+    node_text(doc, &mut out);
+    out.trim_end().to_owned()
+}
+
+/// Cards mentioned (`@`) in one TipTap document, in order of first mention.
+pub fn doc_mentions(doc: &Value) -> Vec<String> {
+    let mut out = Vec::new();
+    node_mentions(doc, &mut out);
+    out
+}
+
 /// Cards mentioned (`@`) in the text blocks, in order of first mention.
 pub fn mentions(blocks: &[Value]) -> Vec<String> {
     let mut out = Vec::new();

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE stories SET title = ?, book_style = ?, cover = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "2cdc87c3e275d14043aca274385f4fec583731b461ea60e2dabb673c219b0ebc"
+}
