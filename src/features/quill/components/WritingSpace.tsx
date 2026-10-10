@@ -11,6 +11,7 @@ import { useCurrentWorld } from "@/features/world";
 import { type Chapter, commands, type StoryNote } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { CueList } from "../audio/CueList";
 import { CompareView } from "../drafts/CompareView";
 import { draftRoute } from "../drafts/routes";
 import { ChapterEditor } from "../editor/ChapterEditor";
@@ -54,6 +55,7 @@ export function WritingSpace() {
     requestAnimationFrame(() => panel.current?.openCard(cardId));
   };
   const [focusNote, setFocusNote] = useState<{ id: string; key: number } | null>(null);
+  const [focusCue, setFocusCue] = useState<{ id: string; key: number } | null>(null);
   const navigate = useNavigate();
   const cards = useCardList(false);
   const trashed = useCardList(true);
@@ -121,6 +123,8 @@ export function WritingSpace() {
         storyWords={outline.data.story.wordCount}
         onOpenCard={openCard}
         focusNote={focusNote}
+        audio={mode === "audio"}
+        focusCue={focusCue}
         writingStyle={panelLayout.layout?.style ?? "world"}
         panelShown={showPanel}
         onTogglePanel={() => setShowPanel((shown) => !shown)}
@@ -134,7 +138,9 @@ export function WritingSpace() {
     <div
       className={cn(
         "glass grid h-full gap-4 rounded-lg p-4",
-        publishing || (showPanel && panelLayout.layout)
+        publishing ||
+          (mode === "audio" && chapter && !compared) ||
+          (showPanel && panelLayout.layout)
           ? // The text keeps the larger part; the panel shares the room.
             "grid-cols-[13rem_minmax(0,3fr)_minmax(18rem,2fr)] xl:grid-cols-[15rem_minmax(0,3fr)_minmax(20rem,2fr)]"
           : "grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]",
@@ -147,18 +153,28 @@ export function WritingSpace() {
         onOpenNote={openNote}
       />
       <div className="flex min-h-0 min-w-0 flex-col gap-2">
-        <div className="flex min-h-0 flex-1 flex-col">{center}</div>
+        {/* A grid: the chapter, the comparison or the preview fills the height. */}
+        <div className="grid min-h-0 flex-1">{center}</div>
         <div className="flex shrink-0 justify-center">
           <ModeBar
             mode={mode}
-            modes={["write", "publish"]}
+            modes={["write", "audio", "publish"]}
             onMode={setMode}
             template={template}
             onTemplate={setTemplate}
           />
         </div>
       </div>
-      {publishing ? (
+      {mode === "audio" && chapter && !compared ? (
+        <aside
+          aria-label={t("quill.audio.panel")}
+          className="scrollbar-thin flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
+        >
+          <h2 className="pt-4 pl-4 font-heading text-lg font-bold">{t("quill.audio.panel")}</h2>
+          <p className="px-4 pt-1 text-xs text-muted-foreground">{t("quill.audio.hint")}</p>
+          <CueList draftId={draftId} onOpen={(id) => setFocusCue({ id, key: Date.now() })} />
+        </aside>
+      ) : publishing ? (
         <aside
           aria-label={t("quill.reader.panel")}
           className="scrollbar-thin flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
@@ -193,6 +209,8 @@ function ChapterView({
   storyWords,
   onOpenCard,
   focusNote,
+  audio,
+  focusCue,
   writingStyle,
   panelShown,
   onTogglePanel,
@@ -204,6 +222,8 @@ function ChapterView({
   storyWords: number;
   onOpenCard: (cardId: string) => void;
   focusNote: { id: string; key: number } | null;
+  audio: boolean;
+  focusCue: { id: string; key: number } | null;
   writingStyle: WritingStyle;
   panelShown: boolean;
   onTogglePanel: () => void;
@@ -242,7 +262,7 @@ function ChapterView({
       >
         {panelShown ? <PanelRightClose /> : <PanelRightOpen />}
       </Button>
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-2">
+      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto pr-2">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
           {chapter.headerAssetId && (
             <div className="group relative">
@@ -298,6 +318,8 @@ function ChapterView({
             onHeader={() => setPicking(true)}
             onOpenCard={onOpenCard}
             focusNote={focusNote}
+            audio={audio}
+            focusCue={focusCue}
           />
         </div>
       </div>

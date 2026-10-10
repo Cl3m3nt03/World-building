@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Link2, MessageSquarePlus, SquarePlus } from "lucide-react";
+import { AudioLines, Link2, MessageSquarePlus, Music2, SquarePlus } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CardPicker, documentKeys, typeLabel } from "@/features/cards";
-import { commands } from "@/lib/bindings";
+import { type CueKind, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 
 /** The passage the menu acts on, kept while a picker is open (the editor loses the focus). */
@@ -20,15 +20,19 @@ type Passage = { from: number; to: number; text: string; rect: DOMRect };
  * The menu over a selected passage (docs/features/08-quill.md): « Créer une
  * carte » (the passage becomes its name and a mention of it) and « Lier à une
  * carte » (the passage becomes a mention of the card chosen) and « Ajouter une
- * note » (a note anchored to the passage).
+ * note » (a note anchored to the passage). In the Audio mode (M10), it offers
+ * a sound instead: « Effet sonore » or « Ambiance » on the passage.
  */
 export function SelectionMenu({
   editor,
   onAddNote,
+  onAddSound,
 }: {
   editor: Editor;
   /** Adds a note on the passage `from`–`to`. */
   onAddNote: (from: number, to: number) => void;
+  /** The Audio mode: adds a sound of `kind` on the passage `from`–`to`. */
+  onAddSound?: ((kind: CueKind, from: number, to: number) => void) | undefined;
 }) {
   const { t } = useTranslation();
   const [passage, setPassage] = useState<Passage | null>(null);
@@ -81,39 +85,63 @@ export function SelectionMenu({
         options={{ placement: "bottom-start", offset: 6 }}
         className="glass z-50 flex items-center gap-1 rounded-lg p-1 shadow-lg"
       >
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => take("create")}
-        >
-          <SquarePlus />
-          {t("quill.selection.create")}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => take("link")}
-        >
-          <Link2 />
-          {t("quill.selection.link")}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => {
-            const { from, to } = editor.state.selection;
-            onAddNote(from, to);
-          }}
-        >
-          <MessageSquarePlus />
-          {t("quill.selection.note")}
-        </Button>
+        {onAddSound ? (
+          (["effect", "ambience"] as const).map((kind) => {
+            const Icon = kind === "effect" ? Music2 : AudioLines;
+            return (
+              <Button
+                key={kind}
+                type="button"
+                size="sm"
+                variant="ghost"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  const { from, to } = editor.state.selection;
+                  onAddSound(kind, from, to);
+                }}
+              >
+                <Icon />
+                {t(`quill.audio.add.${kind}`)}
+              </Button>
+            );
+          })
+        ) : (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => take("create")}
+            >
+              <SquarePlus />
+              {t("quill.selection.create")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => take("link")}
+            >
+              <Link2 />
+              {t("quill.selection.link")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                const { from, to } = editor.state.selection;
+                onAddNote(from, to);
+              }}
+            >
+              <MessageSquarePlus />
+              {t("quill.selection.note")}
+            </Button>
+          </>
+        )}
       </BubbleMenu>
       {passage &&
         action === "link" &&

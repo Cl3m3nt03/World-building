@@ -5,6 +5,7 @@ import { type Editor, Extension, mergeAttributes, type Range } from "@tiptap/rea
 import StarterKit from "@tiptap/starter-kit";
 import Suggestion from "@tiptap/suggestion";
 import { assetUrl } from "@/lib/assets";
+import { AudioCueMark } from "../audio/cueMark";
 import { NoteMark } from "../notes/noteMark";
 import type { ListStore } from "./listStore";
 
@@ -152,6 +153,7 @@ export function quillExtensions({ placeholder, slash, slashLabel, pickImage }: O
     FontSize,
     AssetImage,
     NoteMark,
+    AudioCueMark,
     Placeholder.configure({ placeholder }),
     slashCommands(slash, slashLabel, pickImage),
   ];

@@ -64,7 +64,7 @@ pub struct AudioCue {
 
 /// What changes on a sound; None keeps the current value.
 #[derive(Debug, Clone, Default, Deserialize, Type)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct CuePatch {
     pub asset_id: Option<String>,
     pub volume: Option<u8>,
