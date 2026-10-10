@@ -29,6 +29,8 @@
   --bz-accent: var(--bz-world-accent-light, #a8741a);
   --bz-accent-foreground: var(--bz-world-accent-foreground-light, #fffaf0);
   --bz-danger: #c93a3f;
+  /* The bezel of the devices of Quill's reading preview (M10). */
+  --bz-device: #2a2724;
 
   /* Card type colors (icons, markers). Readable on the surfaces of each theme. */
   --bz-type-red: #b8323a;
@@ -52,6 +54,7 @@
 [data-theme="dark"],
 [data-wiki-scheme="dark"],
 [data-quill-scheme="dark"] {
+  --bz-device: #3b3f4b;
   --bz-bg: #0b0e17;
   --bz-backdrop-overlay: rgb(8 10 20 / 0.55);
   --bz-backdrop-gradient:

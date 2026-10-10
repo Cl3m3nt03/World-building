@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { DraftList } from "../drafts/DraftList";
 import { useChapterChange } from "../hooks/useQuill";
 import { NotesList } from "../notes/NotesList";
+import { readMode } from "./ModeBar";
 
 type Props = {
   outline: StoryOutline;
@@ -267,6 +268,11 @@ function ChapterRow({
           <Link
             to="/world/$worldId/quill/story/$storyId/chapter/$chapterId"
             params={{ worldId, storyId: chapter.storyId, chapterId: chapter.id }}
+            // Another chapter opens in the same mode (writing, publishing…).
+            search={(previous: { mode?: unknown }) => {
+              const mode = readMode(previous.mode);
+              return mode === "write" ? {} : { mode };
+            }}
             {...sortable.listeners}
             aria-describedby={sortable.attributes["aria-describedby"]}
             aria-current={current ? "page" : undefined}

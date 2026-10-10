@@ -594,3 +594,135 @@ div.leaflet-container {
   --dv-context-menu-color: var(--popover-foreground);
   font-family: inherit;
 }
+
+/*
+ * Quill's reading preview (M10): the page takes the story's reading settings
+ * (ReaderView sets the --reader-* variables), whatever the app's theme.
+ */
+.reader {
+  background: var(--reader-page);
+}
+
+.reader-page {
+  background: var(--reader-page);
+  color: var(--reader-text);
+  font-family: var(--reader-font);
+  font-size: var(--reader-size);
+  line-height: 1.65;
+}
+
+.reader-turns {
+  background: var(--reader-page);
+  color: var(--reader-muted);
+}
+
+.reader-cover,
+.reader-chapter {
+  padding: 2.5em 2em;
+  break-before: column;
+}
+
+.reader-cover {
+  display: flex;
+  min-height: 100%;
+  align-items: center;
+}
+
+.reader-chapter + .reader-chapter {
+  border-top: 1px solid color-mix(in srgb, var(--reader-muted) 30%, transparent);
+}
+
+[data-reader-template] .reader-chapter + .reader-chapter {
+  border-top: none;
+}
+
+.reader-opening {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-bottom: 1.5em;
+}
+
+.reader-chapter-title,
+.reader-chapter h2,
+.reader-chapter h3,
+.reader-chapter h4 {
+  font-family: var(--reader-font);
+}
+
+.reader-chapter-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.reader-over {
+  background: rgb(0 0 0 / 0.35);
+  color: #fffaf0;
+}
+
+.reader-chapter p {
+  margin: 0 0 0.9em;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.reader-chapter h2,
+.reader-chapter h3,
+.reader-chapter h4 {
+  margin: 1.4em 0 0.6em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.reader-chapter h2 {
+  font-size: 1.4em;
+}
+
+.reader-chapter h3 {
+  font-size: 1.2em;
+}
+
+/* A phone's narrow column: justified text would open wide gaps. */
+[data-reader-template="mobile"] .reader-chapter p {
+  text-align: start;
+}
+
+.reader-chapter blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 3px solid color-mix(in srgb, var(--reader-muted) 50%, transparent);
+  font-style: italic;
+}
+
+.reader-chapter hr {
+  margin: 1.5em auto;
+  width: 30%;
+  border: none;
+  border-top: 1px solid var(--reader-muted);
+}
+
+.reader-chapter ul,
+.reader-chapter ol {
+  margin: 0 0 0.9em 1.4em;
+  list-style: revert;
+}
+
+.reader-chapter figure {
+  margin: 1em 0;
+  break-inside: avoid;
+}
+
+.reader-chapter figure img {
+  max-width: 100%;
+  max-height: 60vh;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+
+/* The line the reading with sound is at (10.5). */
+.reader-chapter [data-block][data-reading] {
+  background: color-mix(in srgb, var(--bz-accent) 18%, transparent);
+  border-radius: 4px;
+}
