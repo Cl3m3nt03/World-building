@@ -40,6 +40,19 @@ async function storyId(): Promise<string> {
 
 const outline = async () => invoke<Outline>("story_outline", { id: await storyId() });
 
+/**
+ * Waits for the page's selection to be `text`. The editor reads a keyboard
+ * selection a beat after it changes (selectionchange): typing at once would
+ * hit the old one.
+ */
+async function waitForSelection(text: string) {
+  await browser.waitUntil(
+    async () => (await browser.execute(() => window.getSelection()?.toString() ?? "")) === text,
+    { timeoutMsg: `the selection is not "${text}"` },
+  );
+  await browser.pause(150);
+}
+
 /** Waits for the chapter's text, as the editor shows it, to include `text`. */
 async function waitForText(text: string) {
   await browser.waitUntil(async () => (await chapterText().getText()).includes(text), {
@@ -78,6 +91,7 @@ describe("M9: Quill", () => {
     await browser.keys("Enter");
     await browser.keys("Minas Tirith");
     await browser.keys(["Shift", "Home"]);
+    await waitForSelection("Minas Tirith");
     await $("button=Créer une carte").click();
     await $('//button[normalize-space()="Lieu"]').click();
     await chapterText()
@@ -107,6 +121,7 @@ describe("M9: Quill", () => {
     await chapterText().click();
     await browser.keys(["Control", "Home"]);
     await browser.keys(["Shift", "End"]);
+    await waitForSelection("Le roi entra dans la ville.");
     await browser.keys("La reine quitta la ville.");
     await browser.waitUntil(
       async () =>
