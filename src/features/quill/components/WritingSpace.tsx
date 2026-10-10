@@ -157,7 +157,7 @@ export function WritingSpace() {
         openDraftId={compared?.right ?? draftId}
         onOpenNote={openNote}
       />
-      <div className="flex min-h-0 min-w-0 flex-col gap-2">
+      <div className="@container/center flex min-h-0 min-w-0 flex-col gap-2">
         {/* A grid: the chapter, the comparison or the preview fills the height. */}
         <div className="grid min-h-0 flex-1">{center}</div>
         <div className="flex shrink-0 justify-center">
