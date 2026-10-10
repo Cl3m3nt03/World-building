@@ -16,6 +16,7 @@ use crate::domain::quill::{ReaderSettings, reader_settings};
 use crate::error::{AppError, AppResult};
 use crate::world::assets;
 
+pub mod docx;
 pub mod epub;
 pub mod pdf;
 
@@ -25,6 +26,7 @@ pub mod pdf;
 pub enum ExportFormat {
     Epub,
     Pdf,
+    Docx,
 }
 
 impl ExportFormat {
@@ -33,6 +35,7 @@ impl ExportFormat {
         match self {
             Self::Epub => "epub",
             Self::Pdf => "pdf",
+            Self::Docx => "docx",
         }
     }
 }
@@ -385,6 +388,7 @@ pub fn write(book: &Book, format: ExportFormat, path: &Path) -> AppResult<()> {
     let bytes = match format {
         ExportFormat::Epub => epub::write(book)?,
         ExportFormat::Pdf => pdf::write(book)?,
+        ExportFormat::Docx => docx::write(book)?,
     };
     if let Some(parent) = path.parent()
         && !parent.as_os_str().is_empty()

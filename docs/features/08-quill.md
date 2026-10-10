@@ -164,6 +164,15 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
 - La police est celle des réglages si le PC l'a, sinon une proche (Georgia, Garamond…) ou Libertinus Serif, embarquée par Typst. Le fond et la taille du texte suivent aussi les réglages.
 - Une image illisible est laissée de côté plutôt que de faire échouer le livre.
 
+**Réalisé en M10 (10.8)** : l'export **Word (DOCX)**.
+- Pages A5 comme le PDF :
+  - la couverture ;
+  - la page de titre ;
+  - chaque chapitre sur une nouvelle page, avec son image d'en-tête et son titre au style « Titre 1 » : le volet de navigation de Word liste les chapitres, et les titres du texte suivent en Titre 2 à 4 ;
+  - les pages numérotées.
+- Le texte est justifié avec retrait de première ligne ; gras, italique, barré, souligné, citations en retrait, listes, séparateurs et images (ajustées à la page) sont gardés.
+- La police des réglages est écrite ; Word la remplace s'il ne l'a pas.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order

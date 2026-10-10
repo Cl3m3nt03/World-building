@@ -365,3 +365,69 @@ async fn the_pdf_opens_on_its_cover() {
         }
     }
 }
+
+#[tokio::test]
+async fn the_docx_has_its_cover_chapters_and_styles() {
+    let (dir, world, id) = story_with_two_chapters().await;
+    let outline = quill::outline(&world.pool, &id).await.unwrap();
+    let chosen: Vec<ExportChapter> = outline
+        .chapters
+        .iter()
+        .map(|chapter| ExportChapter {
+            chapter_id: chapter.id.clone(),
+            draft_id: chapter.current_draft_id.clone(),
+        })
+        .collect();
+    let mut png = Vec::new();
+    image::DynamicImage::new_rgb8(40, 60)
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .unwrap();
+    let book = load(
+        &world.pool,
+        &world.assets_dir(),
+        &id,
+        &chosen,
+        "fr",
+        Some(png),
+    )
+    .await
+    .unwrap();
+    let path = target(
+        &dir.path().join("La Chute").to_string_lossy(),
+        ExportFormat::Docx,
+    )
+    .unwrap();
+    assert!(path.to_string_lossy().ends_with(".docx"));
+    write(&book, ExportFormat::Docx, &path).unwrap();
+
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(&path).unwrap()).unwrap();
+    let names: Vec<String> = zip.file_names().map(str::to_owned).collect();
+    assert!(
+        names.iter().any(|n| n == "[Content_Types].xml"),
+        "{names:?}"
+    );
+    assert!(
+        names.iter().any(|n| n.starts_with("word/media/")),
+        "no cover in {names:?}"
+    );
+    let mut document = String::new();
+    zip.by_name("word/document.xml")
+        .unwrap()
+        .read_to_string(&mut document)
+        .unwrap();
+    for text in [
+        "Chapitre 1",
+        "Chapitre 2",
+        "Il pleuvait &lt;fort&gt;.",
+        "Le soleil revint.",
+    ] {
+        assert!(document.contains(text), "{text} missing");
+    }
+    assert!(document.contains("w:val=\"Heading1\""));
+    let mut styles = String::new();
+    zip.by_name("word/styles.xml")
+        .unwrap()
+        .read_to_string(&mut styles)
+        .unwrap();
+    assert!(styles.contains("Heading 1"));
+}
