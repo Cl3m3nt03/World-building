@@ -322,7 +322,7 @@ function LoadedEditor({
         <EditorToolbar editor={editor} onImage={() => setPicking(true)} onHeader={onHeader} />
       </div>
       {/* Room on the right for the margin's icons (notes, sounds), at any width. */}
-      <div ref={box} className="relative mr-10" data-quill-mode={audio ? "audio" : "write"}>
+      <div ref={box} className="relative mr-8" data-quill-mode={audio ? "audio" : "write"}>
         <EditorContent editor={editor} />
         {audio ? (
           <CueMargin
