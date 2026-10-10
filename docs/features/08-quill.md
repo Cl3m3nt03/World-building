@@ -131,6 +131,17 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
 - Les marques suivent le texte et restent après relance ; un son dont le fichier a disparu est dit « Son introuvable ».
 - Les icônes de marge (notes et sons) ont leur place à droite du texte à toute largeur : le texte ne défile plus de côté.
 
+**Réalisé en M10 (10.5)** : le mode **Lecture** de la barre.
+- Le chapitre s'y lit comme dans l'aperçu (réglages de lecture de l'histoire), la ligne en cours mise en avant et gardée à l'écran.
+- « Lire » avance d'une ligne (un paragraphe, un titre, une citation…) à l'autre au rythme réglé : 60 à 600 mots par minute, gardé avec l'histoire, au moins une seconde et demie par ligne.
+- Les sons (Web Audio API) :
+  - un effet sonne quand sa première ligne arrive ;
+  - une ambiance monte en fondu sur la première ligne de sa section, s'éteint en fondu après la dernière, et tourne en boucle si on l'a demandé ;
+  - chacun a son volume ;
+  - la pause les suspend et reprendre ne rejoue pas l'effet de la ligne.
+- Boutons : début, ligne précédente, lire ou pause, ligne suivante, « Ligne 3 sur 12 », vitesse, volume général, couper le son. Au clavier : Espace, flèches, Début. Un clic sur une ligne y va, avec ses sons.
+- Les sons sans fichier sont signalés et sautés.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order
