@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.0](https://github.com/Cl3m3nt03/World-building/compare/v1.0.0...v1.1.0) (2026-10-10)
+
+
+### Fonctionnalités
+
+* **quill:** add the focus timer ([#358](https://github.com/Cl3m3nt03/World-building/issues/358)) ([649a9cf](https://github.com/Cl3m3nt03/World-building/commit/649a9cf571a505b9b7df7913fe0a84355d3d9e79)), closes [#345](https://github.com/Cl3m3nt03/World-building/issues/345)
+* **quill:** add the world panel ([#357](https://github.com/Cl3m3nt03/World-building/issues/357)) ([fb0ed6e](https://github.com/Cl3m3nt03/World-building/commit/fb0ed6e8076d4f622ca66427b59e26b58f2a4b2a)), closes [#344](https://github.com/Cl3m3nt03/World-building/issues/344)
+* **quill:** anchor notes to passages ([#356](https://github.com/Cl3m3nt03/World-building/issues/356)) ([9654f2c](https://github.com/Cl3m3nt03/World-building/commit/9654f2c38bb974ecd0740a4266c29ca88b9b6014)), closes [#343](https://github.com/Cl3m3nt03/World-building/issues/343)
+* **quill:** bring the world into the text ([#355](https://github.com/Cl3m3nt03/World-building/issues/355)) ([d1ced19](https://github.com/Cl3m3nt03/World-building/commit/d1ced1900ded364d721b90690135367339c30639)), closes [#342](https://github.com/Cl3m3nt03/World-building/issues/342)
+* **quill:** list the stories and set up a story's book ([#350](https://github.com/Cl3m3nt03/World-building/issues/350)) ([ba0b49c](https://github.com/Cl3m3nt03/World-building/commit/ba0b49ca8ccedb8c448192e89ae5d241aed8d237)), closes [#339](https://github.com/Cl3m3nt03/World-building/issues/339)
+* **quill:** store stories, chapters and drafts ([#349](https://github.com/Cl3m3nt03/World-building/issues/349)) ([8f8c020](https://github.com/Cl3m3nt03/World-building/commit/8f8c020c65c08532a3710b6fe687d2fad684d007)), closes [#338](https://github.com/Cl3m3nt03/World-building/issues/338)
+* **quill:** switch between drafts and compare them ([#354](https://github.com/Cl3m3nt03/World-building/issues/354)) ([a3949f8](https://github.com/Cl3m3nt03/World-building/commit/a3949f8f2a9da5181d88929265e492d0881bffc6)), closes [#341](https://github.com/Cl3m3nt03/World-building/issues/341)
+* **quill:** write a chapter in the writing space ([#353](https://github.com/Cl3m3nt03/World-building/issues/353)) ([4bf7c48](https://github.com/Cl3m3nt03/World-building/commit/4bf7c486d6e1b0d678692d0c3668caa4e9d9a0a1)), closes [#340](https://github.com/Cl3m3nt03/World-building/issues/340)
+
+
+### Corrections
+
+* **quill:** give the text the larger part of a narrow window ([#361](https://github.com/Cl3m3nt03/World-building/issues/361)) ([203cd11](https://github.com/Cl3m3nt03/World-building/commit/203cd1138076f9008b00b2e61ecbfe347da7457d)), closes [#360](https://github.com/Cl3m3nt03/World-building/issues/360)
+
 ## [1.0.0](https://github.com/Cl3m3nt03/World-building/compare/v0.8.0...v1.0.0) (2026-10-03)
 
 
