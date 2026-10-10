@@ -67,6 +67,8 @@
     "allow-create-audio-cue",
     "allow-update-audio-cue",
     "allow-delete-audio-cue",
+    "allow-export-story",
+    "dialog:allow-save",
     "allow-create-graph",
     "allow-get-graph",
     "allow-save-graph",

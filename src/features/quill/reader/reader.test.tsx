@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { expect, test } from "vitest";
 import { readMode } from "../components/ModeBar";
 import { BookText, blockTexts } from "./BookText";
+import { fileName } from "./ExportPanel";
 import { DEFAULT_READER, PAGE_THEMES, pageColors, readerFont } from "./settings";
 
 const doc = {
@@ -57,4 +58,9 @@ test("the mode of the writing space is read from the address", () => {
   expect(readMode("publish")).toBe("publish");
   expect(readMode("nope")).toBe("write");
   expect(readMode(undefined)).toBe("write");
+});
+
+test("an exported file is named after the story, without what Windows refuses", () => {
+  expect(fileName("La Chute : le Roi?")).toBe("La Chute  le Roi");
+  expect(fileName("  <>  ")).toBe("story");
 });

@@ -65,6 +65,7 @@ const COMMANDS: &[&str] = &[
     "create_audio_cue",
     "update_audio_cue",
     "delete_audio_cue",
+    "export_story",
     "create_graph",
     "get_graph",
     "save_graph",

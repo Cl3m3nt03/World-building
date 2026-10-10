@@ -207,6 +207,8 @@ export const commands = {
 	createAudioCue: (draftId: string, kind: CueKind, assetId: string) => typedError<AudioCue, AppError>(__TAURI_INVOKE("create_audio_cue", { draftId, kind, assetId })),
 	updateAudioCue: (id: string, patch: CuePatch) => typedError<AudioCue, AppError>(__TAURI_INVOKE("update_audio_cue", { id, patch })),
 	deleteAudioCue: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_audio_cue", { id })),
+	/**  Exports a story to a file (ePub); returns the path written. */
+	exportStory: (request: StoryExport) => typedError<string, AppError>(__TAURI_INVOKE("export_story", { request })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -696,6 +698,15 @@ export type EdgeReason =
 /**  Where an edge starts: a node, or another edge (a junction). */
 export type EdgeSource = { kind: "node"; id: string } | { kind: "edge"; id: string };
 
+/**  A chapter to export, and the draft to take its text from. */
+export type ExportChapter = {
+	chapterId: string,
+	draftId: string,
+};
+
+/**  The formats a story is exported to. */
+export type ExportFormat = "epub";
+
 export type Folder = {
 	id: string,
 	/**  Enclosing folder; `None` at the root. */
@@ -1165,6 +1176,20 @@ export type Story = {
 	wordCount: number,
 	createdAt: string,
 	updatedAt: string,
+};
+
+/**
+ *  What an export asks for (M10): the chapters and their drafts, the format,
+ *  the file chosen, the app's language and the cover drawn by the front
+ *  (a PNG in base64).
+ */
+export type StoryExport = {
+	storyId: string,
+	chapters: ExportChapter[],
+	format: ExportFormat,
+	path: string,
+	language: string,
+	coverPng: string | null,
 };
 
 /**  A note of a story, with its draft and chapter (the list of notes). */

@@ -4,6 +4,7 @@ import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCardTypes } from "@/features/card-types";
 import { DEFAULT_PREFERENCES, MentionContext, useCardList } from "@/features/cards";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
@@ -20,6 +21,7 @@ import type { WritingStyle } from "../panel/layout";
 import { PanelContext, usePanelLayout } from "../panel/PanelContext";
 import { WorldPanel, type WorldPanelHandle } from "../panel/WorldPanel";
 import { PlayView } from "../play/PlayView";
+import { ExportPanel } from "../reader/ExportPanel";
 import { ReaderStyle } from "../reader/ReaderStyle";
 import { ReaderView, type Template } from "../reader/ReaderView";
 import { useReaderSettings } from "../reader/settings";
@@ -182,8 +184,22 @@ export function WritingSpace() {
           aria-label={t("quill.reader.panel")}
           className="scrollbar-thin flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
         >
-          <h2 className="pt-4 pl-4 font-heading text-lg font-bold">{t("quill.reader.style")}</h2>
-          <ReaderStyle settings={reader.settings} onChange={reader.change} error={reader.error} />
+          <Tabs defaultValue="style" className="gap-0">
+            <TabsList aria-label={t("quill.reader.panel")} className="mt-3 ml-4">
+              <TabsTrigger value="style">{t("quill.reader.style")}</TabsTrigger>
+              <TabsTrigger value="export">{t("quill.reader.export")}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="style">
+              <ReaderStyle
+                settings={reader.settings}
+                onChange={reader.change}
+                error={reader.error}
+              />
+            </TabsContent>
+            <TabsContent value="export">
+              <ExportPanel outline={outline.data} />
+            </TabsContent>
+          </Tabs>
         </aside>
       ) : (
         showPanel &&

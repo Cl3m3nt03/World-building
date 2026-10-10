@@ -142,6 +142,17 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
 - Boutons : début, ligne précédente, lire ou pause, ligne suivante, « Ligne 3 sur 12 », vitesse, volume général, couper le son. Au clavier : Espace, flèches, Début. Un clic sur une ligne y va, avec ses sons.
 - Les sons sans fichier sont signalés et sautés.
 
+**Réalisé en M10 (10.6)** : l'onglet **Export** du panneau Publier.
+- On choisit le format, ePub pour l'instant ; PDF et Word suivent en 10.7 et 10.8.
+- Les chapitres sont tous cochés au départ (« Tout cocher » ou « Tout décocher »), et pour chacun le brouillon (le courant par défaut, marqué d'une étoile).
+- « Exporter » demande où enregistrer le livre (nommé d'après l'histoire), puis l'écrit et dit où.
+- Le Rust lit les chapitres dans un **modèle de livre** commun aux trois formats (ADR 0010), où les mentions deviennent leur texte et où notes et sons ne passent pas. Il en fait un ePub 3 :
+  - la couverture, dessinée comme le livre et envoyée en PNG ;
+  - une table des matières ;
+  - une page par chapitre, avec son image d'en-tête si la mise en page en a une, et les images du texte ;
+  - le thème, le fond, la police et la taille des réglages de lecture.
+- Les polices ne sont pas embarquées : la liseuse prend la sienne si elle ne les a pas.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order

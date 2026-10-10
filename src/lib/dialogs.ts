@@ -1,4 +1,10 @@
-import { type OpenDialogOptions, type OpenDialogReturn, open } from "@tauri-apps/plugin-dialog";
+import {
+  type OpenDialogOptions,
+  type OpenDialogReturn,
+  open,
+  type SaveDialogOptions,
+  save,
+} from "@tauri-apps/plugin-dialog";
 
 type DialogAnswer = string | string[] | null;
 
@@ -23,4 +29,13 @@ export async function openDialog<T extends OpenDialogOptions>(
     if (answer !== undefined) return answer as OpenDialogReturn<T>;
   }
   return open(options);
+}
+
+/** Native "save as" dialog: the path chosen, or null (same E2E queue as above). */
+export async function saveDialog(options: SaveDialogOptions): Promise<string | null> {
+  if (import.meta.env.VITE_E2E === "1") {
+    const answer = window.__bzE2eDialogAnswers?.shift();
+    if (answer !== undefined) return typeof answer === "string" ? answer : null;
+  }
+  return save(options);
 }

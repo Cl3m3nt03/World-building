@@ -1352,5 +1352,17 @@
   "quill.play.mute": "Mute",
   "quill.play.unmute": "Unmute",
   "quill.play.missing_one": "{{count}} sound not found",
-  "quill.play.missing_other": "{{count}} sounds not found"
+  "quill.play.missing_other": "{{count}} sounds not found",
+  "quill.export.format": "Format",
+  "quill.export.formats.epub": "ePub",
+  "quill.export.formatHints.epub": "For e-readers and reading apps.",
+  "quill.export.chapters": "Chapters",
+  "quill.export.all": "Check all",
+  "quill.export.none": "Uncheck all",
+  "quill.export.draftOf": "Draft of {{chapter}}",
+  "quill.export.currentDraft": "{{name}} (current)",
+  "quill.export.run": "Export",
+  "quill.export.running": "Exporting…",
+  "quill.export.saveTitle": "Save the book",
+  "quill.export.done": "Book written: {{path}}"
 }

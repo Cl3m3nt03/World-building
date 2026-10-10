@@ -3,6 +3,7 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
+use crate::domain::book::{self, ExportChapter, ExportFormat};
 use crate::domain::quill::{
     self, AudioCue, Chapter, CueKind, CuePatch, Draft, DraftInfo, NewStory, Note, ReaderSettings,
     Story, StoryNote, StoryOutline, StoryPatch,
@@ -297,4 +298,56 @@ pub async fn update_audio_cue(
 #[specta::specta]
 pub async fn delete_audio_cue(state: State<'_, AppState>, id: String) -> AppResult<()> {
     quill::delete_cue(&pool(&state, "delete_audio_cue").await?, &id).await
+}
+
+/// What an export asks for (M10): the chapters and their drafts, the format,
+/// the file chosen, the app's language and the cover drawn by the front
+/// (a PNG in base64).
+#[derive(Debug, Clone, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct StoryExport {
+    pub story_id: String,
+    pub chapters: Vec<ExportChapter>,
+    pub format: ExportFormat,
+    pub path: String,
+    pub language: String,
+    pub cover_png: Option<String>,
+}
+
+/// Exports a story to a file (ePub); returns the path written.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_story(state: State<'_, AppState>, request: StoryExport) -> AppResult<String> {
+    use base64::Engine;
+    let (pool, assets_dir) = state
+        .world
+        .lock()
+        .await
+        .as_ref()
+        .map(|world| (world.pool.clone(), world.assets_dir()))
+        .ok_or_else(|| AppError::NoWorldOpen("export_story".into()))?;
+    let cover = match &request.cover_png {
+        Some(data) => Some(
+            base64::engine::general_purpose::STANDARD
+                .decode(data)
+                .map_err(|error| AppError::InvalidInput(format!("cover: {error}")))?,
+        ),
+        None => None,
+    };
+    let path = book::target(&request.path, request.format)?;
+    let book = book::load(
+        &pool,
+        &assets_dir,
+        &request.story_id,
+        &request.chapters,
+        &request.language,
+        cover,
+    )
+    .await?;
+    let format = request.format;
+    let written = path.clone();
+    tokio::task::spawn_blocking(move || book::write(&book, format, &written))
+        .await
+        .map_err(|error| AppError::Internal(format!("export task failed: {error}")))??;
+    Ok(path.to_string_lossy().into_owned())
 }
