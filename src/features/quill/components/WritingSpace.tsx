@@ -1,5 +1,5 @@
-import { useParams } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -7,19 +7,22 @@ import { Button } from "@/components/ui/button";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { type Chapter, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
+import { CompareView } from "../drafts/CompareView";
 import { ChapterEditor } from "../editor/ChapterEditor";
 import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
 import { ChapterList } from "./ChapterList";
 
 /**
  * The writing space (docs/features/08-quill.md): the story's chapters on the
- * left, the chapter in the middle (header image, title, text), and the words
- * of the chapter and of the story. The world panel comes on the right (9.7).
+ * left, with the open chapter's drafts; in the middle, the chapter (header
+ * image, title, text of the draft shown) or two of its drafts compared; and
+ * the words of the chapter and of the story. The world panel comes on the
+ * right (9.7).
  */
 export function WritingSpace() {
-  const { storyId, chapterId } = useParams({
-    from: "/world/$worldId/quill/story/$storyId/chapter/$chapterId",
-  });
+  const params = useParams({ strict: false });
+  const storyId = params.storyId ?? "";
+  const chapterId = params.chapterId ?? "";
   const outline = useStoryOutline(storyId);
 
   if (outline.error) {
@@ -31,26 +34,58 @@ export function WritingSpace() {
   }
   if (!outline.data) return null;
   const chapter = outline.data.chapters.find((candidate) => candidate.id === chapterId);
+  // The draft shown: the one asked for if it is still there, else the current one.
+  const draftId =
+    chapter?.drafts.find((draft) => draft.id === params.draftId)?.id ??
+    chapter?.currentDraftId ??
+    "";
+  const compared =
+    params.leftId && params.rightId ? { left: params.leftId, right: params.rightId } : null;
 
   return (
     <div className="glass grid h-full grid-cols-[15rem_minmax(0,1fr)] gap-6 rounded-lg p-4">
-      <ChapterList outline={outline.data} currentId={chapterId} />
-      {chapter ? (
-        <ChapterView key={chapter.id} chapter={chapter} storyWords={outline.data.story.wordCount} />
+      <ChapterList
+        outline={outline.data}
+        currentId={chapterId}
+        openDraftId={compared?.right ?? draftId}
+      />
+      {chapter && compared ? (
+        <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
+      ) : chapter ? (
+        <ChapterView
+          key={chapter.id}
+          chapter={chapter}
+          draftId={draftId}
+          storyWords={outline.data.story.wordCount}
+        />
       ) : null}
     </div>
   );
 }
 
-function ChapterView({ chapter, storyWords }: { chapter: Chapter; storyWords: number }) {
+function ChapterView({
+  chapter,
+  draftId,
+  storyWords,
+}: {
+  chapter: Chapter;
+  draftId: string;
+  storyWords: number;
+}) {
   const { t } = useTranslation();
-  const [words, setWords] = useState(chapter.wordCount);
+  const { worldId } = useParams({ from: "/world/$worldId" });
+  const navigate = useNavigate();
+  const draft = chapter.drafts.find((candidate) => candidate.id === draftId);
+  const isCurrent = draftId === chapter.currentDraftId;
+  const [words, setWords] = useState(draft?.wordCount ?? 0);
   const [picking, setPicking] = useState(false);
   const header = useChapterChange((assetId: string | null) =>
     unwrap(commands.setChapterHeader(chapter.id, assetId)),
   );
-  // The story's words: the others as saved, this one as typed.
-  const total = storyWords - chapter.wordCount + words;
+  const makeCurrent = useChapterChange(() => unwrap(commands.setCurrentDraft(draftId)));
+  // The story's words: the others as saved, this one as typed. Only the
+  // current draft counts for the story.
+  const total = isCurrent ? storyWords - chapter.wordCount + words : storyWords;
 
   return (
     <article aria-label={chapter.title} className="flex min-h-0 flex-col">
@@ -76,9 +111,36 @@ function ChapterView({ chapter, storyWords }: { chapter: Chapter; storyWords: nu
           )}
           <ChapterTitle chapter={chapter} />
           {header.error && <AppErrorMessage error={header.error} />}
+          {!isCurrent && draft && (
+            <div
+              role="note"
+              className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm"
+            >
+              <span className="flex-1">{t("quill.drafts.notCurrent", { name: draft.name })}</span>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={makeCurrent.isPending}
+                onClick={() =>
+                  makeCurrent.mutate(undefined, {
+                    onSuccess: () =>
+                      void navigate({
+                        to: "/world/$worldId/quill/story/$storyId/chapter/$chapterId",
+                        params: { worldId, storyId: chapter.storyId, chapterId: chapter.id },
+                      }),
+                  })
+                }
+              >
+                <Star />
+                {t("quill.drafts.makeCurrent")}
+              </Button>
+            </div>
+          )}
+          {makeCurrent.error && <AppErrorMessage error={makeCurrent.error} />}
           <ChapterEditor
+            key={draftId}
             storyId={chapter.storyId}
-            draftId={chapter.currentDraftId}
+            draftId={draftId}
             onWords={setWords}
             onHeader={() => setPicking(true)}
           />
@@ -89,7 +151,10 @@ function ChapterView({ chapter, storyWords }: { chapter: Chapter; storyWords: nu
         aria-live="off"
         className="shrink-0 border-t border-border pt-2 text-center text-xs text-muted-foreground"
       >
-        {t("quill.wordCounts", { chapter: words, story: total })}
+        {t(isCurrent ? "quill.wordCounts" : "quill.draftWordCounts", {
+          chapter: words,
+          story: total,
+        })}
       </p>
       <ImagePickerDialog
         open={picking}

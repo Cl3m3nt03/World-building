@@ -60,11 +60,18 @@ function outline(of: Story): StoryOutline {
         currentDraftId: "d1",
         headerAssetId: null,
         wordCount: 0,
-        drafts: [{ id: "d1", name: "Brouillon 1", wordCount: 0, updatedAt: "" }],
+        drafts: [
+          { id: "d1", name: "Brouillon 1", wordCount: 0, updatedAt: "" },
+          ...(secondDraft ? [{ id: "d2", name: "Brouillon 2", wordCount: 5, updatedAt: "" }] : []),
+        ],
       },
     ],
   };
 }
+
+/** Whether chapter 1 has a second draft ("Il neigeait sur la vallée"). */
+let secondDraft = false;
+let madeCurrent: string[] = [];
 
 let stories: Story[];
 let created: NewStory[];
@@ -80,6 +87,8 @@ beforeEach(() => {
   deleted = [];
   saved = [];
   renamed = [];
+  secondDraft = false;
+  madeCurrent = [];
   mockIPC((command, payload) => {
     const args = payload as Record<string, unknown>;
     switch (command) {
@@ -114,16 +123,27 @@ beforeEach(() => {
         return {
           id: args.id,
           chapterId: "s1-c1",
-          name: "Brouillon 1",
+          name: args.id === "d2" ? "Brouillon 2" : "Brouillon 1",
           content: JSON.stringify({
             type: "doc",
             content: [
-              { type: "paragraph", content: [{ type: "text", text: "Il était une fois" }] },
+              {
+                type: "paragraph",
+                content: [
+                  {
+                    type: "text",
+                    text: args.id === "d2" ? "Il neigeait sur la vallée" : "Il était une fois",
+                  },
+                ],
+              },
             ],
           }),
-          wordCount: 4,
+          wordCount: args.id === "d2" ? 5 : 4,
           updatedAt: "",
         };
+      case "set_current_draft":
+        madeCurrent.push(args.id as string);
+        return null;
       case "save_draft":
         saved.push(args as { id: string; content: string });
         return { id: args.id, name: "Brouillon 1", wordCount: 6, updatedAt: "" };
@@ -259,4 +279,35 @@ test("the writing space saves the text, counts the words and manages chapters", 
   await waitFor(() =>
     expect(router.state.location.pathname).toBe("/world/demo/quill/story/s1/chapter/s1-c2"),
   );
+});
+
+test("another draft opens with a note, becomes current, and two drafts compare", async () => {
+  secondDraft = true;
+  const router = await renderAt("/world/demo/quill/story/s1/chapter/s1-c1");
+  const drafts = await screen.findByRole("list", { name: "Brouillons de Chapitre 1" });
+  expect(
+    within(drafts).getByRole("link", { name: "Brouillon 1, version courante, 0 mot" }),
+  ).toBeTruthy();
+
+  fireEvent.click(within(drafts).getByRole("link", { name: "Brouillon 2, 5 mots" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe(
+      "/world/demo/quill/story/s1/chapter/s1-c1/draft/d2",
+    ),
+  );
+  const note = await screen.findByRole("note");
+  expect(note.textContent).toContain("« Brouillon 2 », qui n'est pas la version courante");
+  expect(await screen.findByText("5 mots dans ce brouillon · 1200 dans l'histoire")).toBeTruthy();
+  fireEvent.click(within(note).getByRole("button", { name: "En faire la version courante" }));
+  await waitFor(() => expect(madeCurrent).toEqual(["d2"]));
+
+  fireEvent.click(screen.getByRole("link", { name: "Comparer" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe(
+      "/world/demo/quill/story/s1/chapter/s1-c1/compare/d1/d2",
+    ),
+  );
+  const table = await screen.findByRole("table");
+  await waitFor(() => expect(table.querySelector("del")?.textContent).toContain("était une fois"));
+  expect(table.querySelector("ins")?.textContent).toContain("neigeait sur la vallée");
 });

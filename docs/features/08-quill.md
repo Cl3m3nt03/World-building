@@ -41,6 +41,8 @@ L'écran se divise en trois colonnes :
 
 Chaque chapitre a un ou plusieurs brouillons, dont un est marqué comme **version courante**. On peut créer un brouillon vide ou dupliquer le brouillon courant. L'onglet « Brouillons » du panneau de droite permet de les comparer côte à côte.
 
+**Réalisé en M9 (9.4)** : sous le chapitre ouvert, ses brouillons avec leurs mots, la version courante marquée d'une étoile. On en ouvre un autre : un bandeau rappelle qu'il n'est pas la version courante (ses mots et ses cartes citées ne comptent pas encore) et propose « En faire la version courante ». « Nouveau brouillon » crée un brouillon vide ou une copie du courant, qui s'ouvre. Le menu d'un brouillon le rend courant, le renomme (ou double-clic), le duplique ou le supprime après confirmation (un chapitre en garde un). « Comparer » met deux brouillons côte à côte, choisis dans deux listes : les paragraphes égaux se font face, les mots retirés sont barrés à gauche, les mots ajoutés surlignés à droite (annoncés aux lecteurs d'écran). L'onglet Brouillons du panneau monde reprendra cette vue (9.7).
+
 ### Interactions avec le monde
 
 - **Détection automatique** : un nom ou alias de carte écrit dans le texte est souligné. Au survol, un aperçu de la carte apparaît ; un clic l'ouvre dans le panneau de droite.

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { ImagePickerDialog } from "@/features/media";
-import { commands, type DraftInfo, type StoryOutline } from "@/lib/bindings";
+import { commands, type Draft, type DraftInfo, type StoryOutline } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { quillKeys } from "../hooks/useQuill";
@@ -57,7 +57,10 @@ export function ChapterEditor({ storyId, draftId, onWords, onHeader }: Props) {
   });
   const save = useMutation({
     mutationFn: (content: string) => unwrap(commands.saveDraft(draftId, content)),
-    onSuccess: (saved) => {
+    onSuccess: (saved, content) => {
+      queryClient.setQueryData<Draft>(quillKeys.draft(draftId), (draft) =>
+        draft ? { ...draft, content, wordCount: saved.wordCount } : draft,
+      );
       queryClient.setQueryData<StoryOutline>(quillKeys.outline(storyId), (outline) =>
         outline ? withSaved(outline, saved) : outline,
       );
