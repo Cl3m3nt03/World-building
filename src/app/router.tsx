@@ -19,11 +19,11 @@ import { HomeScreen } from "@/features/home";
 import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
 import {
-  ChapterPage,
   EditStoryPage,
   NewStoryPage,
   StoriesScreen,
   StoryIndexPage,
+  WritingSpace,
 } from "@/features/quill";
 import { sidebarStateQuery } from "@/features/sidebar";
 import { TreePage } from "@/features/trees";
@@ -210,7 +210,7 @@ const editStoryRoute = createRoute({
 const chapterRoute = createRoute({
   getParentRoute: () => storyRoute,
   path: "chapter/$chapterId",
-  component: ChapterPage,
+  component: WritingSpace,
 });
 
 const mediaRoute = createRoute({

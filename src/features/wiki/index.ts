@@ -9,3 +9,4 @@ export {
   useWikiSettings,
   wikiKeys,
 } from "./hooks/useWiki";
+export { FONT_NAMES, WIKI_FONTS, type WikiFontKey } from "./theme";
