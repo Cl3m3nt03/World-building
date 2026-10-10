@@ -20,6 +20,20 @@ const DEFAULT_DISABLED_FEATURES: &[&str] = &["msWebOOUI", "msPdfOOUI", "msSmartS
 const DISABLE_FEATURES: &str = "--disable-features=";
 pub const BROWSER_ARGS_ENV: &str = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
 
+/// Debug builds only: set to `1`, the window opens out of the screens, without
+/// taking the focus nor showing in the taskbar. The real-app checks and the
+/// local end-to-end tests drive it through DevTools while the person keeps
+/// using the computer (a game on the main screen…).
+pub const BACKGROUND_WINDOW_ENV: &str = "BUILDERZ_BACKGROUND_WINDOW";
+
+/// Where a background window goes: far outside any screen.
+const OFF_SCREEN: f64 = -20_000.0;
+
+/// Whether the window should open in the background (debug builds only).
+fn background_window() -> bool {
+    cfg!(debug_assertions) && std::env::var(BACKGROUND_WINDOW_ENV).is_ok_and(|value| value == "1")
+}
+
 /// WebView2 arguments: Tauri's defaults plus those from `extra` (the
 /// environment variable), with every `--disable-features` list merged into one.
 pub fn browser_args(extra: Option<&str>) -> String {
@@ -49,7 +63,7 @@ pub fn browser_args(extra: Option<&str>) -> String {
 
 /// Builds the main window from its configuration in `tauri.conf.json`.
 pub fn create_main_window(app: &App) -> AppResult<()> {
-    let config = app
+    let mut config = app
         .config()
         .app
         .windows
@@ -57,14 +71,29 @@ pub fn create_main_window(app: &App) -> AppResult<()> {
         .cloned()
         .ok_or_else(|| AppError::Internal("no window in tauri.conf.json".into()))?;
     let extra = std::env::var(BROWSER_ARGS_ENV).ok();
+    let background = background_window();
+    if background {
+        // `center` would bring it back on the main screen.
+        config.center = false;
+        config.x = Some(OFF_SCREEN);
+        config.y = Some(OFF_SCREEN);
+        config.focus = false;
+        config.skip_taskbar = true;
+    }
 
-    WebviewWindowBuilder::from_config(app.handle(), &config)
+    let window = WebviewWindowBuilder::from_config(app.handle(), &config)
         .and_then(|builder| {
             builder
                 .additional_browser_args(&browser_args(extra.as_deref()))
                 .build()
         })
         .map_err(|error| AppError::Internal(format!("cannot create the main window: {error}")))?;
+    if background {
+        // Windows may place a new window on a screen anyway: moved once built.
+        window
+            .set_position(tauri::PhysicalPosition::new(OFF_SCREEN, OFF_SCREEN))
+            .map_err(|error| AppError::Internal(format!("cannot move the window: {error}")))?;
+    }
     Ok(())
 }
 
