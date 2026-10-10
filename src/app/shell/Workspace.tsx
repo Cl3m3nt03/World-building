@@ -20,7 +20,6 @@ import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import { useCreateTree } from "@/features/trees";
-import type { TranslationKey } from "@/i18n";
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
 
@@ -189,25 +188,5 @@ export function WorldWorkspace() {
         </main>
       </ResizablePanel>
     </ResizablePanelGroup>
-  );
-}
-
-type ComingSoonProps = {
-  title: TranslationKey;
-  /** What the module will do, so the empty tab explains itself. */
-  description: TranslationKey;
-  milestone: string;
-};
-
-export function ComingSoon({ title, description, milestone }: ComingSoonProps) {
-  const { t } = useTranslation();
-  return (
-    <main className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
-      <h1 className="text-2xl font-bold">{t(title)}</h1>
-      <p className="max-w-md text-sm text-muted-foreground">{t(description)}</p>
-      <p className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
-        {t("placeholder.comingIn", { milestone })}
-      </p>
-    </main>
   );
 }

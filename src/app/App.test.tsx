@@ -135,12 +135,6 @@ describe("routing", () => {
     }
   });
 
-  test("the Quill tab explains what is coming", async () => {
-    await renderAt("/world/demo/quill");
-    expect(screen.getByText(/Quill servira à écrire vos histoires/)).toBeTruthy();
-    expect(screen.getByText("Bientôt disponible : arrive avec M9")).toBeTruthy();
-  });
-
   test("an unknown route shows the not-found screen", async () => {
     await renderAt("/nowhere");
     expect(screen.getByRole("heading", { name: "Page introuvable" })).toBeTruthy();

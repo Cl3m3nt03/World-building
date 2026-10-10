@@ -437,6 +437,10 @@ export type AssetUsage =
 { kind: "mapBackground"; mapId: string; mapTitle: string; inTrash: boolean } | 
 /**  The banner of the wiki's home page (M8). */
 { kind: "wikiBanner" } | 
+/**  The cover of a story (Quill, M9). */
+{ kind: "storyCover"; storyId: string; storyTitle: string } | 
+/**  The image over a chapter's text (Quill, M9). */
+{ kind: "chapterHeader"; chapterId: string; chapterTitle: string; storyTitle: string } | 
 /**  An image on a canvas (M7). */
 { kind: "canvasImage"; canvasId: string; canvasTitle: string; inTrash: boolean };
 
@@ -460,14 +464,11 @@ export type BacklinkVia = {
 /**  The finish of a book's cover. */
 export type BookFinish = "cloth" | "leather" | "paper";
 
-/**
- *  How the book looks: its colour and the finish of its cover. Read with
- *  tolerance: a missing or unknown field takes its default.
- */
+/**  How the book looks: its colour and the finish of its cover. */
 export type BookStyle = {
 	/**  CSS `#rrggbb`. */
-	color?: string,
-	finish?: BookFinish,
+	color: string,
+	finish: BookFinish,
 };
 
 /**
@@ -556,8 +557,8 @@ export type Chapter = {
 
 /**  The cover: an image of the media library, and where the title sits. */
 export type Cover = {
-	assetId?: string | null,
-	titlePosition?: TitlePosition,
+	assetId: string | null,
+	titlePosition: TitlePosition,
 };
 
 export type Document = {

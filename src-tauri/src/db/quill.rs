@@ -377,3 +377,37 @@ pub async fn delete_draft(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<()
         .await?;
     Ok(())
 }
+
+/// A story or a chapter using an image (the media library's "used by").
+pub struct QuillUserRow {
+    pub id: String,
+    pub title: String,
+    pub story_title: String,
+}
+
+/// The stories whose cover is the asset.
+pub async fn covers_using(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<QuillUserRow>> {
+    Ok(sqlx::query_as!(
+        QuillUserRow,
+        r#"SELECT id AS "id!", title, title AS "story_title!"
+           FROM stories WHERE json_extract(cover, '$.assetId') = ?
+           ORDER BY title COLLATE NOCASE"#,
+        asset_id
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
+/// The chapters whose header is the asset.
+pub async fn headers_using(pool: &SqlitePool, asset_id: &str) -> AppResult<Vec<QuillUserRow>> {
+    Ok(sqlx::query_as!(
+        QuillUserRow,
+        r#"SELECT c.id AS "id!", c.title, s.title AS story_title
+           FROM chapters c JOIN stories s ON s.id = c.story_id
+           WHERE c.header_asset_id = ?
+           ORDER BY s.title COLLATE NOCASE, c.sort_order"#,
+        asset_id
+    )
+    .fetch_all(pool)
+    .await?)
+}

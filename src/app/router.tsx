@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
-import { ComingSoon, StartWith, WorldWorkspace } from "@/app/shell/Workspace";
+import { StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
 import { CanvasPage } from "@/features/canvases";
 import { CardPage } from "@/features/cards";
@@ -18,6 +18,13 @@ import { GraphPage } from "@/features/graphs";
 import { HomeScreen } from "@/features/home";
 import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
+import {
+  ChapterPage,
+  EditStoryPage,
+  NewStoryPage,
+  StoriesScreen,
+  StoryIndexPage,
+} from "@/features/quill";
 import { sidebarStateQuery } from "@/features/sidebar";
 import { TreePage } from "@/features/trees";
 import { WikiCardPage, WikiHome, WikiLayout, WikiMapPage } from "@/features/wiki";
@@ -38,7 +45,11 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *   /world/$worldId/wiki       Wiki tab: its home page (M8)
  *     /card/$cardId            a card's page in the wiki
  *     /map/$mapId              a map's page in the wiki
- *   /world/$worldId/quill      Quill tab
+ *   /world/$worldId/quill      Quill tab: the stories (M9)
+ *     /new                     a new story's book
+ *     /story/$storyId          a story → its first chapter
+ *       /edit                  its book
+ *       /chapter/$chapterId    a chapter, in the writing space
  *   /world/$worldId/media      Media library (reached from Home)
  */
 
@@ -164,9 +175,42 @@ const wikiMapRoute = createRoute({
 const quillRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "quill",
-  component: () => (
-    <ComingSoon title="shell.tabs.quill" description="placeholder.quill" milestone="M9" />
-  ),
+});
+
+/** Quill (M9): the stories. */
+const quillIndexRoute = createRoute({
+  getParentRoute: () => quillRoute,
+  path: "/",
+  component: StoriesScreen,
+});
+
+const newStoryRoute = createRoute({
+  getParentRoute: () => quillRoute,
+  path: "new",
+  component: NewStoryPage,
+});
+
+const storyRoute = createRoute({
+  getParentRoute: () => quillRoute,
+  path: "story/$storyId",
+});
+
+const storyIndexRoute = createRoute({
+  getParentRoute: () => storyRoute,
+  path: "/",
+  component: StoryIndexPage,
+});
+
+const editStoryRoute = createRoute({
+  getParentRoute: () => storyRoute,
+  path: "edit",
+  component: EditStoryPage,
+});
+
+const chapterRoute = createRoute({
+  getParentRoute: () => storyRoute,
+  path: "chapter/$chapterId",
+  component: ChapterPage,
 });
 
 const mediaRoute = createRoute({
@@ -189,7 +233,11 @@ export const routeTree = rootRoute.addChildren([
       canvasRoute,
     ]),
     wikiRoute.addChildren([wikiHomeRoute, wikiCardRoute, wikiMapRoute]),
-    quillRoute,
+    quillRoute.addChildren([
+      quillIndexRoute,
+      newStoryRoute,
+      storyRoute.addChildren([storyIndexRoute, editStoryRoute, chapterRoute]),
+    ]),
     mediaRoute,
   ]),
 ]);
