@@ -53,6 +53,16 @@ async function waitForSelection(text: string) {
   await browser.pause(150);
 }
 
+/**
+ * Moves the caret with `keys` (or a click before), then gives the editor a
+ * beat to read where it is: it reads the page's selection on
+ * selectionchange, and a key that edits at once would use the old place.
+ */
+async function caret(keys?: string | string[]) {
+  if (keys) await browser.keys(keys);
+  await browser.pause(250);
+}
+
 /** Waits for the chapter's text, as the editor shows it, to include `text`. */
 async function waitForText(text: string) {
   await browser.waitUntil(async () => (await chapterText().getText()).includes(text), {
@@ -87,7 +97,8 @@ describe("M9: Quill", () => {
 
   it("creates a card from a selected passage, cited by the chapter", async () => {
     await chapterText().click();
-    await browser.keys(["Control", "End"]);
+    await caret();
+    await caret(["Control", "End"]);
     await browser.keys("Enter");
     await browser.keys("Minas Tirith");
     await browser.keys(["Shift", "Home"]);
@@ -121,8 +132,9 @@ describe("M9: Quill", () => {
     // The end of the first line rewritten with keys only: a selection
     // typed over would race with the editor reading it (#381).
     await chapterText().click();
-    await browser.keys(["Control", "Home"]);
-    await browser.keys("End");
+    await caret();
+    await caret(["Control", "Home"]);
+    await caret("End");
     await browser.keys(Array(" dans la ville.".length).fill("Backspace"));
     await browser.keys(" vers la mer.");
     await browser.waitUntil(

@@ -113,6 +113,8 @@ describe("M10: Quill, advanced", () => {
     await $("button=Créer l'histoire").click();
     await chapterText().waitForDisplayed({ timeoutMsg: "the first chapter did not open" });
     await chapterText().click();
+    // The editor reads where the caret is a beat after the click.
+    await browser.pause(250);
     await browser.keys("Au loin, une cloche sonna minuit.");
 
     await mode("Audio").click();
