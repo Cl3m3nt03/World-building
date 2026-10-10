@@ -65,8 +65,9 @@ describe("M9: Quill", () => {
     });
 
     // Opened again from the list of stories, after a reload.
+    // The reload keeps the open story: back to the list from its link.
     await browser.refresh();
-    await quillTab().click();
+    await $("a=Histoires").click();
     await $(`//ul//a[contains(., "${STORY}")]`).click();
     await waitForText("Le roi entra dans la ville.");
   });
