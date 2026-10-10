@@ -73,108 +73,111 @@ export function EditorToolbar({ editor, onImage, onHeader }: Props) {
   );
 
   return (
-    <div
-      role="toolbar"
-      aria-label={t("quill.toolbar.label")}
-      className="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-surface px-2 py-1"
-    >
-      <Select
-        value={fontKey}
-        onValueChange={(key) => {
-          const chain = editor.chain().focus();
-          if (key === DEFAULT) chain.unsetFontFamily().run();
-          else chain.setFontFamily(WIKI_FONTS[key as WikiFontKey]).run();
-        }}
+    // A container: the labels of Image and Header show when there is room.
+    <div className="@container">
+      <div
+        role="toolbar"
+        aria-label={t("quill.toolbar.label")}
+        className="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-surface px-2 py-1"
       >
-        <SelectTrigger size="sm" aria-label={t("quill.toolbar.font")} className="w-32">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={DEFAULT}>{t("quill.toolbar.defaultFont")}</SelectItem>
-          {FONT_KEYS.map((key) => (
-            <SelectItem key={key} value={key} style={{ fontFamily: WIKI_FONTS[key] }}>
-              {FONT_NAMES[key]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={state.size}
-        onValueChange={(size) => {
-          const chain = editor.chain().focus();
-          if (size === DEFAULT) chain.unsetFontSize().run();
-          else chain.setFontSize(size).run();
-        }}
-      >
-        <SelectTrigger size="sm" aria-label={t("quill.toolbar.size")} className="w-20">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={DEFAULT}>{t("quill.toolbar.defaultSize")}</SelectItem>
-          {FONT_SIZES.map((size) => (
-            <SelectItem key={size} value={`${size}px`}>
-              {size}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-      {toggle(
-        t("quill.toolbar.bold"),
-        state.bold,
-        () => editor.chain().focus().toggleBold().run(),
-        Bold,
-      )}
-      {toggle(
-        t("quill.toolbar.italic"),
-        state.italic,
-        () => editor.chain().focus().toggleItalic().run(),
-        Italic,
-      )}
-      {toggle(
-        t("quill.toolbar.strike"),
-        state.strike,
-        () => editor.chain().focus().toggleStrike().run(),
-        Strikethrough,
-      )}
-      {toggle(
-        t("quill.toolbar.quote"),
-        state.quote,
-        () => editor.chain().focus().toggleBlockquote().run(),
-        Quote,
-      )}
-      <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-      <Button type="button" variant="ghost" size="sm" onClick={onImage}>
-        <ImagePlus />
-        {t("quill.toolbar.image")}
-      </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={onHeader}>
-        <PanelTop />
-        {t("quill.toolbar.header")}
-      </Button>
-      <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label={t("quill.toolbar.undo")}
-        disabled={!state.canUndo}
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => editor.chain().focus().undo().run()}
-      >
-        <Undo2 />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label={t("quill.toolbar.redo")}
-        disabled={!state.canRedo}
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => editor.chain().focus().redo().run()}
-      >
-        <Redo2 />
-      </Button>
+        <Select
+          value={fontKey}
+          onValueChange={(key) => {
+            const chain = editor.chain().focus();
+            if (key === DEFAULT) chain.unsetFontFamily().run();
+            else chain.setFontFamily(WIKI_FONTS[key as WikiFontKey]).run();
+          }}
+        >
+          <SelectTrigger size="sm" aria-label={t("quill.toolbar.font")} className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={DEFAULT}>{t("quill.toolbar.defaultFont")}</SelectItem>
+            {FONT_KEYS.map((key) => (
+              <SelectItem key={key} value={key} style={{ fontFamily: WIKI_FONTS[key] }}>
+                {FONT_NAMES[key]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={state.size}
+          onValueChange={(size) => {
+            const chain = editor.chain().focus();
+            if (size === DEFAULT) chain.unsetFontSize().run();
+            else chain.setFontSize(size).run();
+          }}
+        >
+          <SelectTrigger size="sm" aria-label={t("quill.toolbar.size")} className="w-20">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={DEFAULT}>{t("quill.toolbar.defaultSize")}</SelectItem>
+            {FONT_SIZES.map((size) => (
+              <SelectItem key={size} value={`${size}px`}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+        {toggle(
+          t("quill.toolbar.bold"),
+          state.bold,
+          () => editor.chain().focus().toggleBold().run(),
+          Bold,
+        )}
+        {toggle(
+          t("quill.toolbar.italic"),
+          state.italic,
+          () => editor.chain().focus().toggleItalic().run(),
+          Italic,
+        )}
+        {toggle(
+          t("quill.toolbar.strike"),
+          state.strike,
+          () => editor.chain().focus().toggleStrike().run(),
+          Strikethrough,
+        )}
+        {toggle(
+          t("quill.toolbar.quote"),
+          state.quote,
+          () => editor.chain().focus().toggleBlockquote().run(),
+          Quote,
+        )}
+        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+        <Button type="button" variant="ghost" size="sm" onClick={onImage}>
+          <ImagePlus />
+          <span className="sr-only @xl:not-sr-only">{t("quill.toolbar.image")}</span>
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onHeader}>
+          <PanelTop />
+          <span className="sr-only @xl:not-sr-only">{t("quill.toolbar.header")}</span>
+        </Button>
+        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("quill.toolbar.undo")}
+          disabled={!state.canUndo}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => editor.chain().focus().undo().run()}
+        >
+          <Undo2 />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("quill.toolbar.redo")}
+          disabled={!state.canRedo}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => editor.chain().focus().redo().run()}
+        >
+          <Redo2 />
+        </Button>
+      </div>
     </div>
   );
 }

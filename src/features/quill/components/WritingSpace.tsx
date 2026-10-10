@@ -80,8 +80,9 @@ export function WritingSpace() {
       className={cn(
         "glass grid h-full gap-4 rounded-lg p-4",
         showPanel && panelLayout.layout
-          ? "grid-cols-[15rem_minmax(0,1fr)_minmax(20rem,30rem)]"
-          : "grid-cols-[15rem_minmax(0,1fr)]",
+          ? // The text keeps the larger part; the panel shares the room.
+            "grid-cols-[13rem_minmax(0,3fr)_minmax(18rem,2fr)] xl:grid-cols-[15rem_minmax(0,3fr)_minmax(20rem,2fr)]"
+          : "grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]",
       )}
     >
       <ChapterList
