@@ -15,7 +15,7 @@ L'ordre suit les dépendances : le Graph a besoin des liens entre cartes, le Can
 | **M7.5 Arbres et Graph** | Relations des arbres dans le Graph et « Cité dans », propriétés-relations, nouvel arbre depuis les relations connues, Graph expliqué (ADR 0007) | `M7.5-arbres-et-graph.md` |
 | **M8 Wiki** → `v1.0.0` | Vue lecture et édition, thèmes, export HTML | `M8-wiki.md` |
 | **M9 Quill – écriture** → `v1.1.0` | Histoires, chapitres, brouillons, notes, panneau monde (ADR 0009) | `M9-quill.md` |
-| **M10 Quill – avancé** | Couverture 3D, mode audio, prévisualisation, exports PDF/DOCX/ePub | `features/08-quill.md` |
+| **M10 Quill – avancé** → `v1.2.0` | Couverture 3D, mode audio, prévisualisation, exports PDF/DOCX/ePub (ADR 0010) | `M10-quill-avance.md` |
 | **M11 Frise chronologique** | Frise du monde (nouvelle feature de vvd, à spécifier) : #114 | à écrire (`features/09-frise.md`) |
 
 Les milestones M1 et suivants sont découpés en issues au démarrage de chacun, dans un fichier `Mx-<nom>.md` de ce dossier, sur le modèle de `M0-fondations.md`.

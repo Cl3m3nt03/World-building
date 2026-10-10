@@ -1,6 +1,6 @@
 # 08 — Quill (écriture)
 
-**Milestones** : M9 (écriture) et M10 (avancé) · **Figma** : node `14:880` · **Roadmap** : `docs/roadmap/M9-quill.md` · **Décision** : ADR 0009 (données, liens des chapitres)
+**Milestones** : M9 (écriture) et M10 (avancé) · **Figma** : node `14:880` · **Roadmap** : `docs/roadmap/M9-quill.md`, `docs/roadmap/M10-quill-avance.md` · **Décisions** : ADR 0009 (données, liens des chapitres), ADR 0010 (sons ancrés, lecture, exports)
 
 ## Objectif
 
@@ -101,7 +101,7 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
 - `drafts` : id, chapter_id, name, content (JSON TipTap), content_text, word_count, updated_at
 - `chapter_notes` : id, draft_id, anchor (JSON : positions), body, created_at
 - `writing_panel` : story_id, layout (JSON dockview)
-- `audio_cues` (M10) : id, draft_id, anchor, kind (effet / ambiance), asset_id, volume, range (JSON)
+- `audio_cues` (M10) : id, draft_id, kind (effet / ambiance), asset_id, volume, loop ; l'ancre est une marque `audioCue` dans le texte (ADR 0010)
 
 ## Questions ouvertes
 
