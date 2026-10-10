@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.id AS \"id!\", d.chapter_id, d.name, d.word_count, d.updated_at\n           FROM drafts d JOIN chapters c ON c.id = d.chapter_id\n           WHERE c.story_id = ? ORDER BY d.chapter_id, d.sort_order, d.created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drafts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "chapter_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drafts",
+            "name": "chapter_id"
+          }
+        }
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drafts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "word_count",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "drafts",
+            "name": "word_count"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drafts",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "81e1009d53a242f1342524307f3acc75dc5fef94bbcd203366e75b13cb563171"
+}

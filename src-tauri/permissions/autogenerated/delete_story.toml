@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-delete-story"
+description = "Enables the delete_story command without any pre-configured scope."
+commands.allow = ["delete_story"]
+
+[[permission]]
+identifier = "deny-delete-story"
+description = "Denies the delete_story command without any pre-configured scope."
+commands.deny = ["delete_story"]

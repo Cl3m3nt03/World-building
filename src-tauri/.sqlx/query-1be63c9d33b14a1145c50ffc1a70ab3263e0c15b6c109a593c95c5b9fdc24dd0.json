@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO drafts (id, chapter_id, name, content, content_text, word_count,\n                             sort_order, created_at, updated_at)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "1be63c9d33b14a1145c50ffc1a70ab3263e0c15b6c109a593c95c5b9fdc24dd0"
+}

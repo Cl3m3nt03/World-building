@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE drafts SET content = ?, content_text = ?, word_count = ?, updated_at = ?\n         WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "9e9045c1ffb5d7f377e14b96b113c6db340b926b9958698bc7e758e743142c78"
+}

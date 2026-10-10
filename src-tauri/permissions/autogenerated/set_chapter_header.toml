@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-chapter-header"
+description = "Enables the set_chapter_header command without any pre-configured scope."
+commands.allow = ["set_chapter_header"]
+
+[[permission]]
+identifier = "deny-set-chapter-header"
+description = "Denies the set_chapter_header command without any pre-configured scope."
+commands.deny = ["set_chapter_header"]

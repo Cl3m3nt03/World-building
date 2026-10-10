@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-rename-chapter"
+description = "Enables the rename_chapter command without any pre-configured scope."
+commands.allow = ["rename_chapter"]
+
+[[permission]]
+identifier = "deny-rename-chapter"
+description = "Denies the rename_chapter command without any pre-configured scope."
+commands.deny = ["rename_chapter"]

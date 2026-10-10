@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO chapters (id, story_id, title, sort_order, current_draft_id,\n                               header_asset_id, created_at, updated_at)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "fea8dee2d34345ff53f3633c80e97b73c9017fdffd6f2fb78971959b84c9f3ac"
+}
