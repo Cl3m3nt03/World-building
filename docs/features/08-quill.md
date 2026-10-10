@@ -65,6 +65,8 @@ Chaque chapitre a un ou plusieurs brouillons, dont un est marqué comme **versio
 - **Onglet Style** : pour l'apparence du mode écriture (clair, sombre ou thème du monde).
 - Techniquement, le panneau repose sur `dockview`.
 
+**Réalisé en M9 (9.7)** : le panneau monde, à droite du texte, est un espace d'onglets (dockview) qu'on réorganise, sépare côte à côte ou ferme. **Home** porte des blocs libres : une carte (son résumé, « Ouvrir »), les notes de l'histoire, un mood board d'images de la médiathèque, le graph du monde ; on les ajoute, on les déplace en tirant leur barre et on les agrandit par leur coin, ou au clavier depuis la barre (flèches pour déplacer, Maj + flèches pour redimensionner). **Brouillons** compare deux brouillons du chapitre ouvert. **Style** règle l'apparence du mode écriture : thème du monde, clair ou sombre. Les icônes du haut ouvrent ces onglets, une carte (choisie dans une recherche), une map (en lecture, ses pins ouvrent leurs cartes) ou le graph (ses cartes s'ouvrent dans le panneau). Une mention ou un nom cliqué dans le texte ouvre la carte dans un onglet, modifiable ; l'onglet prend son nom. Les onglets, les blocs et le style sont gardés par histoire (`writing_panel`). Un bouton au-dessus du texte masque ou affiche le panneau.
+
 ---
 
 ## M10 — Avancé

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Star, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { PanelRightClose, PanelRightOpen, Star, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,16 @@ import { useCardTypes } from "@/features/card-types";
 import { DEFAULT_PREFERENCES, MentionContext, useCardList } from "@/features/cards";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { useCurrentWorld } from "@/features/world";
-import { type Chapter, commands } from "@/lib/bindings";
+import { type Chapter, commands, type StoryNote } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { CompareView } from "../drafts/CompareView";
 import { draftRoute } from "../drafts/routes";
 import { ChapterEditor } from "../editor/ChapterEditor";
 import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
-import { CardPanel } from "../world/CardPanel";
+import type { WritingStyle } from "../panel/layout";
+import { PanelContext, usePanelLayout } from "../panel/PanelContext";
+import { WorldPanel, type WorldPanelHandle } from "../panel/WorldPanel";
 import { ChapterList } from "./ChapterList";
 
 /**
@@ -30,13 +32,27 @@ export function WritingSpace() {
   const storyId = params.storyId ?? "";
   const chapterId = params.chapterId ?? "";
   const outline = useStoryOutline(storyId);
-  const [openCard, setOpenCard] = useState<string | null>(null);
+  const panel = useRef<WorldPanelHandle>(null);
+  const panelLayout = usePanelLayout(storyId);
+  const [showPanel, setShowPanel] = useState(true);
+  const openCard = (cardId: string) => {
+    setShowPanel(true);
+    // The panel may have just been shown: one frame for it to be there.
+    requestAnimationFrame(() => panel.current?.openCard(cardId));
+  };
   const [focusNote, setFocusNote] = useState<{ id: string; key: number } | null>(null);
   const navigate = useNavigate();
   const cards = useCardList(false);
   const trashed = useCardList(true);
   const types = useCardTypes();
   const { data: world } = useCurrentWorld();
+
+  const openNote = (note: StoryNote) => {
+    const target = outline.data?.chapters.find((item) => item.id === note.chapterId);
+    if (!target || !params.worldId) return;
+    void navigate(draftRoute(params.worldId, target, note.draftId));
+    setFocusNote({ id: note.id, key: Date.now() });
+  };
 
   if (outline.error) {
     return (
@@ -58,9 +74,9 @@ export function WritingSpace() {
   return (
     <div
       className={cn(
-        "glass grid h-full gap-6 rounded-lg p-4",
-        openCard
-          ? "grid-cols-[15rem_minmax(0,1fr)_minmax(18rem,26rem)]"
+        "glass grid h-full gap-4 rounded-lg p-4",
+        showPanel && panelLayout.layout
+          ? "grid-cols-[15rem_minmax(0,1fr)_minmax(20rem,30rem)]"
           : "grid-cols-[15rem_minmax(0,1fr)]",
       )}
     >
@@ -68,12 +84,7 @@ export function WritingSpace() {
         outline={outline.data}
         currentId={chapterId}
         openDraftId={compared?.right ?? draftId}
-        onOpenNote={(note) => {
-          const target = outline.data?.chapters.find((item) => item.id === note.chapterId);
-          if (!target || !params.worldId) return;
-          void navigate(draftRoute(params.worldId, target, note.draftId));
-          setFocusNote({ id: note.id, key: Date.now() });
-        }}
+        onOpenNote={openNote}
       />
       {chapter && compared ? (
         <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
@@ -84,7 +95,7 @@ export function WritingSpace() {
             trashed: trashed.data ?? [],
             types: types.data ?? [],
             preferences: world?.preferences ?? DEFAULT_PREFERENCES,
-            open: setOpenCard,
+            open: openCard,
           }}
         >
           <ChapterView
@@ -92,18 +103,27 @@ export function WritingSpace() {
             chapter={chapter}
             draftId={draftId}
             storyWords={outline.data.story.wordCount}
-            onOpenCard={setOpenCard}
+            onOpenCard={openCard}
             focusNote={focusNote}
+            writingStyle={panelLayout.layout?.style ?? "world"}
+            panelShown={showPanel}
+            onTogglePanel={() => setShowPanel((shown) => !shown)}
           />
         </MentionContext.Provider>
       ) : null}
-      {openCard && (
-        <CardPanel
-          key={openCard}
-          cardId={openCard}
-          onOpen={setOpenCard}
-          onClose={() => setOpenCard(null)}
-        />
+      {showPanel && panelLayout.layout && (
+        <PanelContext.Provider
+          value={{
+            storyId,
+            chapter: chapter ?? null,
+            layout: panelLayout.layout,
+            update: panelLayout.update,
+            openCard,
+            openNote,
+          }}
+        >
+          <WorldPanel key={storyId} ref={panel} />
+        </PanelContext.Provider>
       )}
     </div>
   );
@@ -115,12 +135,18 @@ function ChapterView({
   storyWords,
   onOpenCard,
   focusNote,
+  writingStyle,
+  panelShown,
+  onTogglePanel,
 }: {
   chapter: Chapter;
   draftId: string;
   storyWords: number;
   onOpenCard: (cardId: string) => void;
   focusNote: { id: string; key: number } | null;
+  writingStyle: WritingStyle;
+  panelShown: boolean;
+  onTogglePanel: () => void;
 }) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -138,7 +164,22 @@ function ChapterView({
   const total = isCurrent ? storyWords - chapter.wordCount + words : storyWords;
 
   return (
-    <article aria-label={chapter.title} className="flex min-h-0 flex-col">
+    <article
+      aria-label={chapter.title}
+      // The writing mode's look (the panel's Style tab): the world's, or light, or dark.
+      data-quill-scheme={writingStyle === "world" ? undefined : writingStyle}
+      className="relative flex min-h-0 flex-col rounded-lg bg-background text-foreground"
+    >
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t(panelShown ? "quill.panel.hide" : "quill.panel.show")}
+        aria-pressed={panelShown}
+        className="absolute top-0 right-0 z-20"
+        onClick={onTogglePanel}
+      >
+        {panelShown ? <PanelRightClose /> : <PanelRightOpen />}
+      </Button>
       <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-2">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
           {chapter.headerAssetId && (

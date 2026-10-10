@@ -511,3 +511,31 @@ pub async fn delete_note(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<boo
         .await?;
     Ok(done.rows_affected() > 0)
 }
+
+// The world panel.
+
+/// A story's world panel layout (JSON), if it was ever saved.
+pub async fn panel(ex: impl SqliteExecutor<'_>, story_id: &str) -> AppResult<Option<String>> {
+    Ok(sqlx::query_scalar!(
+        "SELECT layout FROM writing_panel WHERE story_id = ?",
+        story_id
+    )
+    .fetch_optional(ex)
+    .await?)
+}
+
+pub async fn save_panel(
+    ex: impl SqliteExecutor<'_>,
+    story_id: &str,
+    layout: &str,
+) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO writing_panel (story_id, layout) VALUES (?, ?)
+         ON CONFLICT (story_id) DO UPDATE SET layout = excluded.layout",
+        story_id,
+        layout
+    )
+    .execute(ex)
+    .await?;
+    Ok(())
+}

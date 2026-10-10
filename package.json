@@ -53,6 +53,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "d3-force": "^3.0.0",
+    "dockview-react": "^8.4.1",
     "i18next": "^26.4.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.48.0",

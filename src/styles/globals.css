@@ -51,7 +51,14 @@
   --bz-border-strong: color-mix(in srgb, var(--wiki-text) 24%, transparent);
   --bz-hover: color-mix(in srgb, var(--wiki-text) 7%, transparent);
   --bz-pill: color-mix(in srgb, var(--wiki-text) 9%, transparent);
+}
 
+/*
+ * Below a root that changes the --bz-* tokens (the wiki, Quill's writing
+ * mode), the semantic tokens are declared again, so they read the new ones.
+ */
+[data-wiki],
+[data-quill-scheme] {
   --background: var(--bz-bg);
   --foreground: var(--bz-text);
   --card: var(--bz-surface);
@@ -554,4 +561,36 @@ div.leaflet-container {
   background: color-mix(in srgb, var(--bz-accent) 14%, transparent);
   border-bottom: 2px dotted var(--bz-accent);
   border-radius: 2px;
+}
+
+/* Quill's world panel (dockview, M9): its tabs and groups on the app's tokens. */
+.dockview-theme-bz {
+  --dv-paneview-active-outline-color: var(--ring);
+  --dv-tabs-and-actions-container-font-size: 12px;
+  --dv-tabs-and-actions-container-height: 30px;
+  --dv-tab-close-icon-size: 14px;
+  --dv-drag-over-background-color: color-mix(in srgb, var(--bz-accent) 20%, transparent);
+  --dv-drag-over-border-color: var(--bz-accent);
+  --dv-tabs-container-scrollbar-color: var(--bz-border-strong);
+  --dv-icon-hover-background-color: var(--bz-hover);
+  --dv-floating-box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+  --dv-group-view-background-color: transparent;
+  --dv-tabs-and-actions-container-background-color: transparent;
+  --dv-activegroup-visiblepanel-tab-background-color: var(--bz-surface-strong);
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--bz-surface);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-tab-divider-color: var(--bz-border);
+  --dv-activegroup-visiblepanel-tab-color: var(--bz-text);
+  --dv-activegroup-hiddenpanel-tab-color: var(--bz-text-muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--bz-text-muted);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--bz-text-muted);
+  --dv-separator-border: var(--bz-border);
+  --dv-paneview-header-border-color: var(--bz-border);
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: var(--bz-accent);
+  --dv-border-radius: var(--bz-radius-sm);
+  --dv-context-menu-background-color: var(--popover);
+  --dv-context-menu-color: var(--popover-foreground);
+  font-family: inherit;
 }

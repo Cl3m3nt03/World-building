@@ -194,6 +194,10 @@ export const commands = {
 	deleteNote: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_note", { id })),
 	/**  The notes of a story, by chapter. */
 	storyNotes: (storyId: string) => typedError<StoryNote[], AppError>(__TAURI_INVOKE("story_notes", { storyId })),
+	/**  A story's world panel layout (JSON). */
+	writingPanel: (storyId: string) => typedError<string, AppError>(__TAURI_INVOKE("writing_panel", { storyId })),
+	/**  Keeps a story's world panel layout. */
+	saveWritingPanel: (storyId: string, layout: string) => typedError<null, AppError>(__TAURI_INVOKE("save_writing_panel", { storyId, layout })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),

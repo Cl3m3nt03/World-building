@@ -13,14 +13,19 @@ const SNIPPET = 80;
 export function NotesList({
   outline,
   onOpen,
+  emptyText,
 }: {
   outline: StoryOutline;
   onOpen: (note: StoryNote) => void;
+  /** Said when there is no note (else nothing is shown). */
+  emptyText?: string;
 }) {
   const { t } = useTranslation();
   const notes = useStoryNotes(outline.story.id);
   const all = notes.data ?? [];
-  if (all.length === 0) return null;
+  if (all.length === 0) {
+    return emptyText ? <p className="text-xs text-muted-foreground">{emptyText}</p> : null;
+  }
   const chapters = outline.chapters.filter((chapter) =>
     all.some((note) => note.chapterId === chapter.id),
   );

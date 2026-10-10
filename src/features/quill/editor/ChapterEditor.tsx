@@ -3,7 +3,7 @@ import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
-import { useWorldInText, WorldInTextOverlay } from "@/features/cards";
+import { documentKeys, useWorldInText, WorldInTextOverlay } from "@/features/cards";
 import { ImagePickerDialog } from "@/features/media";
 import { commands, type Draft, type DraftInfo, type StoryOutline } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
@@ -91,6 +91,8 @@ export function ChapterEditor({
         outline ? withSaved(outline, saved) : outline,
       );
       void queryClient.invalidateQueries({ queryKey: quillKeys.stories() });
+      // The chapter's mentions may have changed: « Cité dans » of the cards.
+      void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
     },
   });
 

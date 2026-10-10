@@ -59,6 +59,8 @@
     "allow-update-note",
     "allow-delete-note",
     "allow-story-notes",
+    "allow-writing-panel",
+    "allow-save-writing-panel",
     "allow-create-graph",
     "allow-get-graph",
     "allow-save-graph",

@@ -141,6 +141,10 @@ beforeEach(() => {
           wordCount: args.id === "d2" ? 5 : 4,
           updatedAt: "",
         };
+      case "writing_panel":
+        return "{}";
+      case "story_notes":
+        return [];
       case "set_current_draft":
         madeCurrent.push(args.id as string);
         return null;

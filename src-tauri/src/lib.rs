@@ -114,6 +114,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::quill::update_note,
         commands::quill::delete_note,
         commands::quill::story_notes,
+        commands::quill::writing_panel,
+        commands::quill::save_writing_panel,
         commands::graphs::create_graph,
         commands::graphs::get_graph,
         commands::graphs::save_graph,

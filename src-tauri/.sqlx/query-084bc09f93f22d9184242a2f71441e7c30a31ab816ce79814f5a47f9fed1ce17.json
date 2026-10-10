@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO writing_panel (story_id, layout) VALUES (?, ?)\n         ON CONFLICT (story_id) DO UPDATE SET layout = excluded.layout",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "084bc09f93f22d9184242a2f71441e7c30a31ab816ce79814f5a47f9fed1ce17"
+}

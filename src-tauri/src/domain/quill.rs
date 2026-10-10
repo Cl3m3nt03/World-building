@@ -26,6 +26,9 @@ pub const MAX_NOTE_CHARS: usize = 20_000;
 /// The mark that anchors a note to its passage, in a draft's content.
 pub const NOTE_MARK: &str = "note";
 
+/// Largest world panel layout, in bytes of JSON.
+pub const MAX_PANEL_BYTES: usize = 512 * 1024;
+
 /// Largest draft, in bytes of JSON.
 pub const MAX_DRAFT_BYTES: usize = 8 * 1024 * 1024;
 
@@ -817,6 +820,35 @@ pub async fn story_notes(pool: &SqlitePool, story_id: &str) -> AppResult<Vec<Sto
             updated_at: row.updated_at,
         })
         .collect())
+}
+
+/// A story's world panel layout (a JSON object read by the front; `{}` when
+/// never saved).
+pub async fn panel(pool: &SqlitePool, story_id: &str) -> AppResult<String> {
+    if queries::story(pool, story_id).await?.is_none() {
+        return Err(invalid(format!("story not found: {story_id}")));
+    }
+    Ok(queries::panel(pool, story_id)
+        .await?
+        .unwrap_or_else(|| "{}".to_owned()))
+}
+
+/// Keeps a story's world panel layout: a JSON object, bounded.
+pub async fn save_panel(pool: &SqlitePool, story_id: &str, layout: &str) -> AppResult<()> {
+    if layout.len() > MAX_PANEL_BYTES {
+        return Err(invalid(format!(
+            "a panel layout holds at most {MAX_PANEL_BYTES} bytes"
+        )));
+    }
+    let value: Value =
+        serde_json::from_str(layout).map_err(|error| invalid(format!("panel layout: {error}")))?;
+    if !value.is_object() {
+        return Err(invalid("a panel layout is an object"));
+    }
+    if queries::story(pool, story_id).await?.is_none() {
+        return Err(invalid(format!("story not found: {story_id}")));
+    }
+    queries::save_panel(pool, story_id, layout).await
 }
 
 #[cfg(test)]

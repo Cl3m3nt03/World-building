@@ -23,7 +23,14 @@ const IGNORE_VIEW = () => undefined;
  * A click selects a card and shows its neighbours, a double click opens it.
  * Until cards are linked, it says how to link them.
  */
-export function HomeGraphPreview({ worldId }: { worldId: string }) {
+export function HomeGraphPreview({
+  worldId,
+  onOpen,
+}: {
+  worldId: string;
+  /** Opens a card somewhere else than World (Quill's world panel). */
+  onOpen?: (cardId: string) => void;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const data = useGraphData();
@@ -59,7 +66,8 @@ export function HomeGraphPreview({ worldId }: { worldId: string }) {
       </p>
     );
   }
-  const open = (id: string) => void navigate(documentRoute(worldId, "card", id));
+  const open = (id: string) =>
+    onOpen ? onOpen(id) : void navigate(documentRoute(worldId, "card", id));
 
   return (
     <div className="relative h-80">

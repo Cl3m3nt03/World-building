@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT layout FROM writing_panel WHERE story_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "layout",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "writing_panel",
+            "name": "layout"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a620cfddf24edb7e86958a5092ae6ce1fc048adc527df2abe424751136a55da5"
+}

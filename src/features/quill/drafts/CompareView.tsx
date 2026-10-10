@@ -35,10 +35,13 @@ export function CompareView({
   chapter,
   leftId,
   rightId,
+  onPick,
 }: {
   chapter: Chapter;
   leftId: string;
   rightId: string;
+  /** Out of the routes (the world panel's Drafts tab): the drafts picked, no way back. */
+  onPick?: (leftId: string, rightId: string) => void;
 }) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -56,16 +59,18 @@ export function CompareView({
     [...(row.left ?? []), ...(row.right ?? [])].some((piece) => piece.kind !== "same"),
   );
   const go = (nextLeft: string, nextRight: string) =>
-    void navigate({
-      to: "/world/$worldId/quill/story/$storyId/chapter/$chapterId/compare/$leftId/$rightId",
-      params: {
-        worldId,
-        storyId: chapter.storyId,
-        chapterId: chapter.id,
-        leftId: nextLeft,
-        rightId: nextRight,
-      },
-    });
+    onPick
+      ? onPick(nextLeft, nextRight)
+      : void navigate({
+          to: "/world/$worldId/quill/story/$storyId/chapter/$chapterId/compare/$leftId/$rightId",
+          params: {
+            worldId,
+            storyId: chapter.storyId,
+            chapterId: chapter.id,
+            leftId: nextLeft,
+            rightId: nextRight,
+          },
+        });
   const error = left.error ?? right.error;
 
   return (
@@ -74,12 +79,14 @@ export function CompareView({
       className="flex min-h-0 flex-col gap-3"
     >
       <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm">
-          <Link {...draftRoute(worldId, chapter, rightId)}>
-            <ArrowLeft />
-            {t("quill.compare.back")}
-          </Link>
-        </Button>
+        {!onPick && (
+          <Button asChild variant="ghost" size="sm">
+            <Link {...draftRoute(worldId, chapter, rightId)}>
+              <ArrowLeft />
+              {t("quill.compare.back")}
+            </Link>
+          </Button>
+        )}
         <h2 className="font-heading text-lg font-bold">
           {t("quill.compare.title", { name: chapter.title })}
         </h2>
