@@ -726,3 +726,20 @@ div.leaflet-container {
   background: color-mix(in srgb, var(--bz-accent) 18%, transparent);
   border-radius: 4px;
 }
+
+/*
+ * The passages with a sound (M10): faint while writing, marked in the Audio
+ * mode — an effect underlined, an ambience tinted all along.
+ */
+.quill-sound {
+  border-radius: 2px;
+}
+
+[data-quill-mode="audio"] .quill-sound[data-cue-kind="effect"] {
+  text-decoration: underline wavy color-mix(in srgb, var(--bz-accent) 80%, transparent);
+  text-underline-offset: 4px;
+}
+
+[data-quill-mode="audio"] .quill-sound[data-cue-kind="ambience"] {
+  background: color-mix(in srgb, var(--bz-accent) 14%, transparent);
+}

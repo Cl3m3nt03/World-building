@@ -5,9 +5,19 @@ import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { documentKeys, useWorldInText, WorldInTextOverlay } from "@/features/cards";
 import { ImagePickerDialog } from "@/features/media";
-import { commands, type Draft, type DraftInfo, type StoryOutline } from "@/lib/bindings";
+import {
+  type CueKind,
+  commands,
+  type Draft,
+  type DraftInfo,
+  type StoryOutline,
+} from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
+import { CueMargin } from "../audio/CueMargin";
+import { cuePositions } from "../audio/cueMark";
+import { SoundPickerDialog } from "../audio/SoundPickerDialog";
+import { useCreateCue, useDraftCues } from "../audio/useCues";
 import { quillKeys } from "../hooks/useQuill";
 import { NoteMargin } from "../notes/NoteMargin";
 import { notePositions } from "../notes/noteMark";
@@ -34,6 +44,10 @@ type Props = {
   onOpenCard: (cardId: string) => void;
   /** A note to show (from the list of notes); `key` changes at each request. */
   focusNote: { id: string; key: number } | null;
+  /** The Audio mode (M10): sounds are placed on passages, and shown in the margin. */
+  audio?: boolean | undefined;
+  /** A sound to show (from the list of sounds); `key` changes at each request. */
+  focusCue?: { id: string; key: number } | null | undefined;
 };
 
 /** The card named where the pointer is: a mention, or a name detected in the text. */
@@ -73,6 +87,8 @@ export function ChapterEditor({
   onHeader,
   onOpenCard,
   focusNote,
+  audio = false,
+  focusCue = null,
 }: Props) {
   const queryClient = useQueryClient();
   const draft = useQuery({
@@ -103,6 +119,8 @@ export function ChapterEditor({
       storyId={storyId}
       draftId={draftId}
       focusNote={focusNote}
+      audio={audio}
+      focusCue={focusCue}
       initial={draft.data.content}
       onSave={(content) => save.mutateAsync(content).then(() => undefined)}
       saveError={save.error}
@@ -117,6 +135,8 @@ function LoadedEditor({
   storyId,
   draftId,
   focusNote,
+  audio,
+  focusCue,
   initial,
   onSave,
   saveError,
@@ -127,6 +147,8 @@ function LoadedEditor({
   storyId: string;
   draftId: string;
   focusNote: { id: string; key: number } | null;
+  audio: boolean;
+  focusCue: { id: string; key: number } | null;
   initial: string;
   onSave: (content: string) => Promise<void>;
   saveError: unknown;
@@ -138,6 +160,11 @@ function LoadedEditor({
   const worldInText = useWorldInText("");
   const box = useRef<HTMLDivElement>(null);
   const [openNote, setOpenNote] = useState<string | null>(null);
+  const [openCue, setOpenCue] = useState<string | null>(null);
+  const cues = useDraftCues(draftId);
+  const createCue = useCreateCue(draftId);
+  // A sound asked for on a passage, while its file is chosen.
+  const [placing, setPlacing] = useState<{ kind: CueKind; from: number; to: number } | null>(null);
   const notes = useStoryNotes(storyId);
   const createNote = useCreateNote(storyId);
   const draftNotes = (notes.data ?? []).filter((note) => note.draftId === draftId);
@@ -234,6 +261,36 @@ function LoadedEditor({
     setOpenNote(focusNote.id);
   }, [focusNote, editor]);
 
+  // A sound asked for from the list: its passage shown, the sound open.
+  useEffect(() => {
+    if (!focusCue || !editor || editor.isDestroyed) return;
+    const place = cuePositions(editor).find((item) => item.cueId === focusCue.id);
+    if (!place) return;
+    editor.chain().setTextSelection({ from: place.from, to: place.to }).scrollIntoView().run();
+    setOpenCue(focusCue.id);
+  }, [focusCue, editor]);
+
+  /** A new sound on the passage, once its file is chosen: made, its mark put, and opened. */
+  const addSound = (assetId: string) => {
+    const place = placing;
+    if (!editor || !place) return;
+    createCue.mutate(
+      { kind: place.kind, assetId },
+      {
+        onSuccess: (cue) => {
+          editor
+            .chain()
+            .focus()
+            .setTextSelection({ from: place.from, to: place.to })
+            .setMark("audioCue", { cueId: cue.id, kind: cue.kind })
+            .setTextSelection(place.to)
+            .run();
+          setOpenCue(cue.id);
+        },
+      },
+    );
+  };
+
   /** A new note on the passage: made, its mark put, and opened to be written. */
   const addNote = (from: number, to: number) => {
     if (!editor) return;
@@ -264,21 +321,46 @@ function LoadedEditor({
       <div className="sticky top-0 z-10">
         <EditorToolbar editor={editor} onImage={() => setPicking(true)} onHeader={onHeader} />
       </div>
-      <div ref={box} className="relative">
+      {/* Room on the right for the margin's icons (notes, sounds), at any width. */}
+      <div ref={box} className="relative mr-10" data-quill-mode={audio ? "audio" : "write"}>
         <EditorContent editor={editor} />
-        <NoteMargin
-          editor={editor}
-          storyId={storyId}
-          notes={draftNotes}
-          box={box}
-          openId={openNote}
-          onOpen={setOpenNote}
-        />
+        {audio ? (
+          <CueMargin
+            editor={editor}
+            draftId={draftId}
+            cues={cues.data ?? []}
+            box={box}
+            openId={openCue}
+            onOpen={setOpenCue}
+          />
+        ) : (
+          <NoteMargin
+            editor={editor}
+            storyId={storyId}
+            notes={draftNotes}
+            box={box}
+            openId={openNote}
+            onOpen={setOpenNote}
+          />
+        )}
       </div>
       {createNote.error && <AppErrorMessage error={createNote.error} />}
+      {(createCue.error ?? cues.error) && <AppErrorMessage error={createCue.error ?? cues.error} />}
       {preview && <CardPreview cardId={preview.cardId} rect={preview.rect} />}
       <WorldInTextOverlay editor={editor} overlay={worldInText.overlay} />
-      <SelectionMenu editor={editor} onAddNote={addNote} />
+      <SelectionMenu
+        editor={editor}
+        onAddNote={addNote}
+        onAddSound={audio ? (kind, from, to) => setPlacing({ kind, from, to }) : undefined}
+      />
+      <SoundPickerDialog
+        open={placing !== null}
+        onOpenChange={(open) => !open && setPlacing(null)}
+        title={t(
+          placing?.kind === "ambience" ? "quill.audio.add.ambience" : "quill.audio.add.effect",
+        )}
+        onPick={addSound}
+      />
       {saveError ? <AppErrorMessage error={saveError} /> : null}
       <SlashMenu store={slash} />
       <ImagePickerDialog

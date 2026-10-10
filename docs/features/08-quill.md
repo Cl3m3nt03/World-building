@@ -123,6 +123,14 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
 - Chaque réglage se voit aussitôt et reste avec l'histoire.
 - En défilement, le chapitre ouvert vient à l'écran.
 
+**Réalisé en M10 (10.4)** : le mode **Audio** de la barre.
+- Sur un passage sélectionné, le menu propose « Effet sonore » ou « Ambiance » (plus de carte ni de note dans ce mode).
+- On choisit le son dans la médiathèque (chaque son s'écoute avant d'être choisi, on peut aussi en importer un du PC), et le passage est marqué : un effet est souligné d'une vague, une ambiance teintée tout du long (discrets hors du mode Audio).
+- Une icône dans la marge, à la hauteur de chaque son, l'ouvre : l'écouter, régler son volume, le faire boucler (ambiance), le changer, le supprimer (la marque part avec lui).
+- À droite, « Sons du chapitre » les liste dans l'ordre du texte, avec leur passage ; un clic montre le passage et ouvre le son. Un son dont le passage a été effacé y reste, pour être supprimé.
+- Les marques suivent le texte et restent après relance ; un son dont le fichier a disparu est dit « Son introuvable ».
+- Les icônes de marge (notes et sons) ont leur place à droite du texte à toute largeur : le texte ne défile plus de côté.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order

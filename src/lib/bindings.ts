@@ -620,9 +620,9 @@ export type CueKind =
 
 /**  What changes on a sound; None keeps the current value. */
 export type CuePatch = {
-	assetId: string | null,
-	volume: number | null,
-	looped: boolean | null,
+	assetId?: string | null,
+	volume?: number | null,
+	looped?: boolean | null,
 };
 
 export type Document = {
