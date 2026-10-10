@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { PanelRightClose, PanelRightOpen, Star, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
 import type { WritingStyle } from "../panel/layout";
 import { PanelContext, usePanelLayout } from "../panel/PanelContext";
 import { WorldPanel, type WorldPanelHandle } from "../panel/WorldPanel";
+import { FocusTimer } from "../timer/FocusTimer";
+import type { Session } from "../timer/session";
 import { ChapterList } from "./ChapterList";
 
 /**
@@ -35,6 +37,8 @@ export function WritingSpace() {
   const panel = useRef<WorldPanelHandle>(null);
   const panelLayout = usePanelLayout(storyId);
   const [showPanel, setShowPanel] = useState(true);
+  // The focus timer's session goes on from one chapter to another.
+  const [session, setSession] = useState<Session | null>(null);
   const openCard = (cardId: string) => {
     setShowPanel(true);
     // The panel may have just been shown: one frame for it to be there.
@@ -108,6 +112,8 @@ export function WritingSpace() {
             writingStyle={panelLayout.layout?.style ?? "world"}
             panelShown={showPanel}
             onTogglePanel={() => setShowPanel((shown) => !shown)}
+            session={session}
+            setSession={setSession}
           />
         </MentionContext.Provider>
       ) : null}
@@ -138,6 +144,8 @@ function ChapterView({
   writingStyle,
   panelShown,
   onTogglePanel,
+  session,
+  setSession,
 }: {
   chapter: Chapter;
   draftId: string;
@@ -147,6 +155,8 @@ function ChapterView({
   writingStyle: WritingStyle;
   panelShown: boolean;
   onTogglePanel: () => void;
+  session: Session | null;
+  setSession: Dispatch<SetStateAction<Session | null>>;
 }) {
   const { t } = useTranslation();
   const { worldId } = useParams({ from: "/world/$worldId" });
@@ -239,16 +249,15 @@ function ChapterView({
           />
         </div>
       </div>
-      <p
-        role="status"
-        aria-live="off"
-        className="shrink-0 border-t border-border pt-2 text-center text-xs text-muted-foreground"
-      >
-        {t(isCurrent ? "quill.wordCounts" : "quill.draftWordCounts", {
-          chapter: words,
-          story: total,
-        })}
-      </p>
+      <div className="flex shrink-0 items-center justify-center gap-4 border-t border-border pt-2 text-xs text-muted-foreground">
+        <p role="status" aria-live="off">
+          {t(isCurrent ? "quill.wordCounts" : "quill.draftWordCounts", {
+            chapter: words,
+            story: total,
+          })}
+        </p>
+        <FocusTimer words={total} session={session} setSession={setSession} />
+      </div>
       <ImagePickerDialog
         open={picking}
         onOpenChange={setPicking}
