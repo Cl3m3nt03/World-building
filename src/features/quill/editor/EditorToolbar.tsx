@@ -86,7 +86,7 @@ export function EditorToolbar({ editor, onImage, onHeader }: Props) {
           else chain.setFontFamily(WIKI_FONTS[key as WikiFontKey]).run();
         }}
       >
-        <SelectTrigger size="sm" aria-label={t("quill.toolbar.font")} className="w-40">
+        <SelectTrigger size="sm" aria-label={t("quill.toolbar.font")} className="w-32">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -106,7 +106,7 @@ export function EditorToolbar({ editor, onImage, onHeader }: Props) {
           else chain.setFontSize(size).run();
         }}
       >
-        <SelectTrigger size="sm" aria-label={t("quill.toolbar.size")} className="w-24">
+        <SelectTrigger size="sm" aria-label={t("quill.toolbar.size")} className="w-20">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

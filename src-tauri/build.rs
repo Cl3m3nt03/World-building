@@ -57,6 +57,8 @@ const COMMANDS: &[&str] = &[
     "update_note",
     "delete_note",
     "story_notes",
+    "writing_panel",
+    "save_writing_panel",
     "create_graph",
     "get_graph",
     "save_graph",

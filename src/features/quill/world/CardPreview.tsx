@@ -1,77 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
-import type { JSONContent } from "@tiptap/react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { cardKeys, parseContent, typeLabel, useCardList } from "@/features/cards";
-import { AssetImage } from "@/features/media";
-import { commands } from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
-import { paragraphs } from "../drafts/diff";
-
-/** Characters of a card's text shown in its preview. */
-const EXCERPT = 220;
+import { CardSummary } from "./CardSummary";
 
 /**
- * A card seen while the pointer rests on its name in the text: image, name,
- * type, other names and the start of its text. Clicking the name opens it in
- * the world panel.
+ * A card seen while the pointer rests on its name in the text. Clicking the
+ * name opens it in the world panel.
  */
 export function CardPreview({ cardId, rect }: { cardId: string; rect: DOMRect }) {
   const { t } = useTranslation();
-  const cards = useCardList(false);
-  const types = useCardTypes();
-  const card = cards.data?.find((candidate) => candidate.id === cardId);
-  const text = useQuery({
-    queryKey: [...cardKeys.detail(cardId), "content"],
-    queryFn: async () => parseContent(await unwrap(commands.getCardContent(cardId))),
-    staleTime: Number.POSITIVE_INFINITY,
-  });
-  if (!card) return null;
-  const all = types.data ?? [];
-  const type = all.find((candidate) => candidate.id === card.typeId);
-  const Icon = typeIcon(type?.icon ?? "shapes");
-  const excerpt = (text.data ?? [])
-    .flatMap((block) => (block.type === "text" ? paragraphs(block.doc as JSONContent) : []))
-    .join(" ");
   const below = rect.bottom + 260 < window.innerHeight;
-
   return createPortal(
     <div
       role="tooltip"
-      className="glass pointer-events-none fixed z-50 flex w-72 gap-3 rounded-lg p-3 text-sm shadow-lg"
+      className="glass pointer-events-none fixed z-50 flex w-72 flex-col gap-1 rounded-lg p-3 shadow-lg"
       style={{
         left: Math.min(rect.left, window.innerWidth - 300),
         ...(below ? { top: rect.bottom + 6 } : { bottom: window.innerHeight - rect.top + 6 }),
       }}
     >
-      {card.imageAssetId && (
-        <AssetImage
-          assetId={card.imageAssetId}
-          alt=""
-          className="h-24 w-16 shrink-0 rounded-md object-cover"
-        />
-      )}
-      <div className="flex min-w-0 flex-col gap-1">
-        <p className="truncate font-bold">{card.title}</p>
-        {type && (
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Icon aria-hidden className="size-3.5" style={{ color: typeColor(type.color) }} />
-            {typeLabel(type, all)}
-          </p>
-        )}
-        {card.aliases.length > 0 && (
-          <p className="truncate text-xs text-muted-foreground">
-            {t("quill.preview.aliases", { aliases: card.aliases.join(", ") })}
-          </p>
-        )}
-        {excerpt && (
-          <p className="line-clamp-4 text-xs">
-            {excerpt.length > EXCERPT ? `${excerpt.slice(0, EXCERPT)}…` : excerpt}
-          </p>
-        )}
-        <p className="text-xs text-muted-foreground">{t("quill.preview.open")}</p>
-      </div>
+      <CardSummary cardId={cardId} />
+      <p className="text-xs text-muted-foreground">{t("quill.preview.open")}</p>
     </div>,
     document.body,
   );

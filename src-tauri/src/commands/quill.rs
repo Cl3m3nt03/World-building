@@ -205,3 +205,26 @@ pub async fn story_notes(
 ) -> AppResult<Vec<StoryNote>> {
     quill::story_notes(&pool(&state, "story_notes").await?, &story_id).await
 }
+
+/// A story's world panel layout (JSON).
+#[tauri::command]
+#[specta::specta]
+pub async fn writing_panel(state: State<'_, AppState>, story_id: String) -> AppResult<String> {
+    quill::panel(&pool(&state, "writing_panel").await?, &story_id).await
+}
+
+/// Keeps a story's world panel layout.
+#[tauri::command]
+#[specta::specta]
+pub async fn save_writing_panel(
+    state: State<'_, AppState>,
+    story_id: String,
+    layout: String,
+) -> AppResult<()> {
+    quill::save_panel(
+        &pool(&state, "save_writing_panel").await?,
+        &story_id,
+        &layout,
+    )
+    .await
+}

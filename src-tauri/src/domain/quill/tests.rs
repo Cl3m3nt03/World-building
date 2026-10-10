@@ -389,3 +389,31 @@ async fn notes_are_made_listed_changed_copied_with_their_draft_and_deleted() {
             .is_empty()
     );
 }
+
+#[tokio::test]
+async fn the_world_panel_layout_is_kept_per_story() {
+    let (_dir, world) = world().await;
+    let id = create(&world.pool, &new_story("Récit"))
+        .await
+        .unwrap()
+        .story
+        .id;
+    assert_eq!(panel(&world.pool, &id).await.unwrap(), "{}");
+    save_panel(&world.pool, &id, r#"{"style":"dark"}"#)
+        .await
+        .unwrap();
+    save_panel(&world.pool, &id, r#"{"style":"light"}"#)
+        .await
+        .unwrap();
+    assert_eq!(
+        panel(&world.pool, &id).await.unwrap(),
+        r#"{"style":"light"}"#
+    );
+    assert!(save_panel(&world.pool, &id, "[1]").await.is_err());
+    assert!(save_panel(&world.pool, &id, "nope").await.is_err());
+    assert!(save_panel(&world.pool, "missing", "{}").await.is_err());
+    let big = format!(r#"{{"x":"{}"}}"#, "a".repeat(MAX_PANEL_BYTES));
+    assert!(save_panel(&world.pool, &id, &big).await.is_err());
+    delete(&world.pool, &id).await.unwrap();
+    assert!(panel(&world.pool, &id).await.is_err());
+}
