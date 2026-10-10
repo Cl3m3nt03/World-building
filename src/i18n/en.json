@@ -1273,5 +1273,7 @@
   "blocks.map.none": "This world has no map yet. Create one from the sidebar (“New map”).",
   "blocks.map.open": "Open the map",
   "blocks.map.change": "Change",
-  "blocks.map.missing": "This map no longer exists."
+  "blocks.map.missing": "This map no longer exists.",
+  "quill.book3d.label": "The book “{{title}}” in 3D",
+  "quill.book3d.hint": "Drag the book to turn it, or use the arrow keys. Double-click or Home: back to rest."
 }

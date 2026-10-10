@@ -2,9 +2,7 @@ import type { CSSProperties } from "react";
 import { AssetImage } from "@/features/media";
 import type { BookStyle, Cover } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
-
-/** The font of the titles on covers (shipped with the app, see the wiki's fonts). */
-const COVER_FONT = '"Playfair Display Variable", Georgia, serif';
+import { COVER_FONT, lightText } from "../cover/coverArt";
 
 /** Colours offered for a book (the user may pick any other). */
 export const BOOK_COLORS = [
@@ -28,26 +26,20 @@ const FINISH: Record<BookStyle["finish"], string> = {
   paper: "linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(0 0 0 / 0.06))",
 };
 
-/** Whether text on `hex` should be light (a dark book) or dark. */
-function lightText(hex: string): boolean {
-  const value = Number.parseInt(hex.slice(1), 16);
-  const [r, g, b] = [(value >> 16) & 255, (value >> 8) & 255, value & 255];
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 150;
-}
-
 type Props = {
   title: string;
   bookStyle: BookStyle;
   cover: Cover;
-  className?: string;
+  className?: string | undefined;
   /** Larger title (the creation screen's preview). */
   large?: boolean;
 };
 
 /**
- * A story's book seen from the front (M9: a 2D preview; the 3D book comes in
- * M10): its colour and finish, its cover image, and its title at the chosen
- * place. Decorative: the story's name is given next to it.
+ * A story's book seen from the front, in 2D (the list of stories, and the
+ * stand-in of the 3D book without WebGL): its colour and finish, its cover
+ * image, and its title at the chosen place. Decorative: the story's name is
+ * given next to it.
  */
 export function BookCover({ title, bookStyle, cover, className, large = false }: Props) {
   const light = lightText(bookStyle.color);
