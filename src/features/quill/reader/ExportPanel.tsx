@@ -22,6 +22,7 @@ import { coverPng } from "../cover/coverPng";
 const FORMATS: { format: ExportFormat; extension: string }[] = [
   { format: "epub", extension: "epub" },
   { format: "pdf", extension: "pdf" },
+  { format: "docx", extension: "docx" },
 ];
 
 /** A file name from a title (characters Windows refuses taken out). */

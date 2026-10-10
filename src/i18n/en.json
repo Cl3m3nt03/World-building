@@ -1366,5 +1366,7 @@
   "quill.export.saveTitle": "Save the book",
   "quill.export.done": "Book written: {{path}}",
   "quill.export.formats.pdf": "PDF",
-  "quill.export.formatHints.pdf": "To print or share: numbered A5 pages. A font missing on the PC is replaced by a close one."
+  "quill.export.formatHints.pdf": "To print or share: numbered A5 pages. A font missing on the PC is replaced by a close one.",
+  "quill.export.formats.docx": "Word (DOCX)",
+  "quill.export.formatHints.docx": "To rework the text or send it to a publisher: one chapter per page, titles to navigate."
 }

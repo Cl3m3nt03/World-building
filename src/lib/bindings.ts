@@ -705,7 +705,7 @@ export type ExportChapter = {
 };
 
 /**  The formats a story is exported to. */
-export type ExportFormat = "epub" | "pdf";
+export type ExportFormat = "epub" | "pdf" | "docx";
 
 export type Folder = {
 	id: string,
