@@ -115,6 +115,14 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
 - Chaque réglage se voit aussitôt.
 - Sans WebGL, l'aperçu 2D reste, et la liste des histoires garde l'aperçu 2D.
 
+**Réalisé en M10 (10.3)** : une barre sous le texte passe d'**Écrire** à **Publier**. Audio et Lecture viendront avec 10.4 et 10.5.
+- Le mode est dans l'adresse (`?mode=publish`), et un autre chapitre s'ouvre dans le même mode.
+- Publier montre le livre comme un lecteur : la couverture, puis chaque chapitre (son brouillon courant) avec son ouverture (image au-dessus du titre, titre sur l'image, ou sans image) et son texte. On y voit les titres, citations, listes, séparateurs et images ; les mentions sont écrites, les notes ne se voient pas.
+- La barre propose trois gabarits : **Navigateur**, **Mobile** (texte aligné à gauche) et **Liseuse**.
+- Le panneau de droite devient **Style** : thème de page (clair, sépia, sombre), mode de lecture (défilement, ou pages tournées avec les boutons ou les flèches, « Page 2 sur 3 »), fond de page (celui du thème ou neuf autres, le texte restant lisible), police (les six polices libres de l'app), taille du texte et mise en page des chapitres.
+- Chaque réglage se voit aussitôt et reste avec l'histoire.
+- En défilement, le chapitre ouvert vient à l'écran.
+
 ## Modèle de données (indicatif)
 
 - `stories` : id, title, book_style (JSON), cover (JSON : asset, position du texte), reader_settings (JSON), sort_order

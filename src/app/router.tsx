@@ -20,7 +20,9 @@ import { MapPage } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
 import {
   EditStoryPage,
+  type Mode,
   NewStoryPage,
+  readMode,
   StoriesScreen,
   StoryIndexPage,
   WritingSpace,
@@ -209,10 +211,20 @@ const editStoryRoute = createRoute({
   component: EditStoryPage,
 });
 
+/**
+ * The mode of the writing space (M10): writing when absent, else placing
+ * sounds, reading with them or publishing (`?mode=publish`).
+ */
+function modeSearch(search: Record<string, unknown>): { mode?: Exclude<Mode, "write"> } {
+  const mode = readMode(search.mode);
+  return mode === "write" ? {} : { mode };
+}
+
 const chapterRoute = createRoute({
   getParentRoute: () => storyRoute,
   path: "chapter/$chapterId",
   component: WritingSpace,
+  validateSearch: modeSearch,
 });
 
 /** A draft of a chapter that is not its current one (M9). */
@@ -220,6 +232,7 @@ const draftRoute = createRoute({
   getParentRoute: () => storyRoute,
   path: "chapter/$chapterId/draft/$draftId",
   component: WritingSpace,
+  validateSearch: modeSearch,
 });
 
 /** Two drafts of a chapter, side by side (M9). */

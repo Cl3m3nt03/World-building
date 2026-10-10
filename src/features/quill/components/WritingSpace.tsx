@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { PanelRightClose, PanelRightOpen, Star, X } from "lucide-react";
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,9 +18,13 @@ import { useChapterChange, useStoryOutline } from "../hooks/useQuill";
 import type { WritingStyle } from "../panel/layout";
 import { PanelContext, usePanelLayout } from "../panel/PanelContext";
 import { WorldPanel, type WorldPanelHandle } from "../panel/WorldPanel";
+import { ReaderStyle } from "../reader/ReaderStyle";
+import { ReaderView, type Template } from "../reader/ReaderView";
+import { useReaderSettings } from "../reader/settings";
 import { FocusTimer } from "../timer/FocusTimer";
 import type { Session } from "../timer/session";
 import { ChapterList } from "./ChapterList";
+import { type Mode, ModeBar, readMode } from "./ModeBar";
 
 /**
  * The writing space (docs/features/08-quill.md): the story's chapters on the
@@ -30,10 +34,15 @@ import { ChapterList } from "./ChapterList";
  * right (9.7).
  */
 export function WritingSpace() {
+  const { t } = useTranslation();
   const params = useParams({ strict: false });
   const storyId = params.storyId ?? "";
   const chapterId = params.chapterId ?? "";
   const outline = useStoryOutline(storyId);
+  const search = useSearch({ strict: false }) as { mode?: unknown };
+  const mode = readMode(search.mode);
+  const [template, setTemplate] = useState<Template>("web");
+  const reader = useReaderSettings(storyId);
   const panel = useRef<WorldPanelHandle>(null);
   const panelLayout = usePanelLayout(storyId);
   const [showPanel, setShowPanel] = useState(true);
@@ -50,6 +59,16 @@ export function WritingSpace() {
   const trashed = useCardList(true);
   const types = useCardTypes();
   const { data: world } = useCurrentWorld();
+
+  const setMode = (next: Mode) => {
+    void navigate({
+      to: ".",
+      search: (previous: Record<string, unknown>) => ({
+        ...previous,
+        mode: next === "write" ? undefined : next,
+      }),
+    } as never);
+  };
 
   const openNote = (note: StoryNote) => {
     const target = outline.data?.chapters.find((item) => item.id === note.chapterId);
@@ -75,11 +94,47 @@ export function WritingSpace() {
   const compared =
     params.leftId && params.rightId ? { left: params.leftId, right: params.rightId } : null;
 
+  const publishing = mode === "publish";
+  const center = publishing ? (
+    <ReaderView
+      outline={outline.data}
+      settings={reader.settings}
+      template={template}
+      chapterId={chapterId}
+    />
+  ) : chapter && compared ? (
+    <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
+  ) : chapter ? (
+    <MentionContext.Provider
+      value={{
+        cards: cards.data ?? [],
+        trashed: trashed.data ?? [],
+        types: types.data ?? [],
+        preferences: world?.preferences ?? DEFAULT_PREFERENCES,
+        open: openCard,
+      }}
+    >
+      <ChapterView
+        key={chapter.id}
+        chapter={chapter}
+        draftId={draftId}
+        storyWords={outline.data.story.wordCount}
+        onOpenCard={openCard}
+        focusNote={focusNote}
+        writingStyle={panelLayout.layout?.style ?? "world"}
+        panelShown={showPanel}
+        onTogglePanel={() => setShowPanel((shown) => !shown)}
+        session={session}
+        setSession={setSession}
+      />
+    </MentionContext.Provider>
+  ) : null;
+
   return (
     <div
       className={cn(
         "glass grid h-full gap-4 rounded-lg p-4",
-        showPanel && panelLayout.layout
+        publishing || (showPanel && panelLayout.layout)
           ? // The text keeps the larger part; the panel shares the room.
             "grid-cols-[13rem_minmax(0,3fr)_minmax(18rem,2fr)] xl:grid-cols-[15rem_minmax(0,3fr)_minmax(20rem,2fr)]"
           : "grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)]",
@@ -91,46 +146,42 @@ export function WritingSpace() {
         openDraftId={compared?.right ?? draftId}
         onOpenNote={openNote}
       />
-      {chapter && compared ? (
-        <CompareView chapter={chapter} leftId={compared.left} rightId={compared.right} />
-      ) : chapter ? (
-        <MentionContext.Provider
-          value={{
-            cards: cards.data ?? [],
-            trashed: trashed.data ?? [],
-            types: types.data ?? [],
-            preferences: world?.preferences ?? DEFAULT_PREFERENCES,
-            open: openCard,
-          }}
-        >
-          <ChapterView
-            key={chapter.id}
-            chapter={chapter}
-            draftId={draftId}
-            storyWords={outline.data.story.wordCount}
-            onOpenCard={openCard}
-            focusNote={focusNote}
-            writingStyle={panelLayout.layout?.style ?? "world"}
-            panelShown={showPanel}
-            onTogglePanel={() => setShowPanel((shown) => !shown)}
-            session={session}
-            setSession={setSession}
+      <div className="flex min-h-0 min-w-0 flex-col gap-2">
+        <div className="flex min-h-0 flex-1 flex-col">{center}</div>
+        <div className="flex shrink-0 justify-center">
+          <ModeBar
+            mode={mode}
+            modes={["write", "publish"]}
+            onMode={setMode}
+            template={template}
+            onTemplate={setTemplate}
           />
-        </MentionContext.Provider>
-      ) : null}
-      {showPanel && panelLayout.layout && (
-        <PanelContext.Provider
-          value={{
-            storyId,
-            chapter: chapter ?? null,
-            layout: panelLayout.layout,
-            update: panelLayout.update,
-            openCard,
-            openNote,
-          }}
+        </div>
+      </div>
+      {publishing ? (
+        <aside
+          aria-label={t("quill.reader.panel")}
+          className="scrollbar-thin flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
         >
-          <WorldPanel key={storyId} ref={panel} />
-        </PanelContext.Provider>
+          <h2 className="pt-4 pl-4 font-heading text-lg font-bold">{t("quill.reader.style")}</h2>
+          <ReaderStyle settings={reader.settings} onChange={reader.change} error={reader.error} />
+        </aside>
+      ) : (
+        showPanel &&
+        panelLayout.layout && (
+          <PanelContext.Provider
+            value={{
+              storyId,
+              chapter: chapter ?? null,
+              layout: panelLayout.layout,
+              update: panelLayout.update,
+              openCard,
+              openNote,
+            }}
+          >
+            <WorldPanel key={storyId} ref={panel} />
+          </PanelContext.Provider>
+        )
       )}
     </div>
   );
