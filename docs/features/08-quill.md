@@ -37,6 +37,8 @@ L'écran se divise en trois colonnes :
 
 **Réalisé en M9 (9.3)** : l'espace d'écriture. À gauche, l'histoire (mots) et ses chapitres : « Nouveau chapitre » l'ouvre, le menu d'un chapitre le renomme (ou un double-clic) ou le supprime après confirmation (une histoire garde un chapitre), et on les réordonne au glisser ou au clavier (Espace puis flèches, annoncé). Au centre, l'image d'en-tête du chapitre (médiathèque, retirée d'un clic), son titre écrit sur place, puis le texte du brouillon courant, enregistré une demi-seconde après la dernière frappe et avant la fermeture. La barre d'outils règle la police (les six polices libres de l'app) et la taille de la sélection, le gras, l'italique, le barré, la citation, insère une image de la médiathèque, choisit l'en-tête, annule et rétablit. « / » en début de ligne propose Titre 1 à 3, Séparateur, Citation et Image. En bas, les mots du chapitre (pendant la frappe) et de l'histoire. Le panneau monde viendra à droite (9.7).
 
+**Réalisé en M9 (9.8)** : « Minuteur », à côté des mots en bas du texte, propose une session de 15, 25, 45 ou 60 minutes, ou une autre durée (1 à 240 minutes). Le temps restant s'affiche discrètement, avec pause, reprise et arrêt. La session continue d'un chapitre à l'autre de l'histoire ; à sa fin, « Session terminée : N mots écrits » donne les mots ajoutés à l'histoire pendant la session (la version courante de chaque chapitre). Rien n'est enregistré : fermer l'histoire arrête la session.
+
 ### Brouillons
 
 Chaque chapitre a un ou plusieurs brouillons, dont un est marqué comme **version courante**. On peut créer un brouillon vide ou dupliquer le brouillon courant. L'onglet « Brouillons » du panneau de droite permet de les comparer côte à côte.
