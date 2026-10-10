@@ -53,6 +53,8 @@ Chaque chapitre a un ou plusieurs brouillons, dont un est marqué comme **versio
   - **Effet de texte** : un style visuel appliqué au passage (liste d'effets à définir avec Clément).
 - Les mentions et les liens créés dans Quill alimentent la table des liens (source = chapitre).
 
+**Réalisé en M9 (9.5)** : le texte d'un chapitre connaît le monde comme celui d'une carte : `@` propose les cartes, les noms et alias écrits deviennent des mentions (lien automatique) ou sont soulignés (détection), selon les préférences du monde. Au survol d'un nom, un aperçu montre l'image, le type, les autres noms et le début du texte de la carte ; un clic l'ouvre à droite, modifiable comme dans World (en attendant les onglets du panneau, 9.7). Sur un passage sélectionné, un menu propose « Créer une carte » (on choisit son type ; le passage devient son nom et une mention) et « Lier à une carte » (le passage devient une mention de la carte choisie). Les mentions du brouillon courant font apparaître le chapitre dans « Cité dans » de la carte (« Chapitre 2 — Mon histoire », qui l'ouvre dans Quill) ; le wiki ne les montre pas.
+
 ### Panneau monde (à droite)
 
 - **Onglet Home** : un espace de **blocs** librement disposés (cartes, notes, mood boards, graph du monde). On ajoute des blocs, on les déplace en les tirant par le haut et on les redimensionne par les bords et les coins.

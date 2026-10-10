@@ -1,6 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
 import "../fonts.css";
-import { DocumentLinkContext } from "@/lib/documentLinks";
+import { ChapterLinksContext, DocumentLinkContext } from "@/lib/documentLinks";
 import { useWikiSettings } from "../hooks/useWiki";
 import { useWikiLinks } from "../links";
 import { themeScheme, themeStyle } from "../theme";
@@ -24,11 +24,13 @@ export function WikiLayout() {
       className="relative flex h-full flex-col overflow-hidden rounded-lg bg-wiki-background font-wiki-body text-wiki-text"
     >
       <DocumentLinkContext.Provider value={resolve}>
-        <WikiBar />
-        <div className="min-h-0 flex-1">
-          <Outlet />
-        </div>
-        {settings.data && <SiteStyle settings={settings.data} />}
+        <ChapterLinksContext.Provider value={false}>
+          <WikiBar />
+          <div className="min-h-0 flex-1">
+            <Outlet />
+          </div>
+          {settings.data && <SiteStyle settings={settings.data} />}
+        </ChapterLinksContext.Provider>
       </DocumentLinkContext.Provider>
     </div>
   );

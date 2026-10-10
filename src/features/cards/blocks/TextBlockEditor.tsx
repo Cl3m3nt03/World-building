@@ -1,22 +1,9 @@
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { EntityChip } from "./mentions/EntityChip";
-import { entityNames } from "./mentions/entities";
-import {
-  type ChipListener,
-  cardEntities,
-  entityPluginKey,
-  linkDetectedAtCaret,
-  REFRESH_ENTITIES,
-} from "./mentions/entityExtension";
-import { useMentionWorld } from "./mentions/MentionContext";
-import { MentionSuggestions } from "./mentions/MentionSuggestions";
-import { cardMention } from "./mentions/mentionExtension";
-import { searchMentions } from "./mentions/search";
-import { createSuggestionStore } from "./mentions/suggestionStore";
+import { useWorldInText, WorldInTextOverlay } from "./mentions/useWorldInText";
 
 type TextBlockEditorProps = {
   /** The card being edited (left out of its own mentions). */
@@ -54,16 +41,7 @@ export function TextBlockEditor({
   // Latest callbacks, read by the editor's handlers created once.
   const callbacks = useRef({ onChange, onSlash });
   callbacks.current = { onChange, onSlash };
-  // The latest cards, read by the "@" search built once with the editor.
-  const world = useMentionWorld();
-  const worldRef = useRef(world);
-  worldRef.current = world;
-  const [suggestions] = useState(createSuggestionStore);
-  // Card names that can be detected or linked here, read by the editor's
-  // extension at each keystroke.
-  const names = useMemo(() => entityNames(world.cards, cardId), [world.cards, cardId]);
-  const entitySource = useRef({ names, preferences: world.preferences });
-  const [chip, setChip] = useState<Parameters<ChipListener>[0]>(null);
+  const worldInText = useWorldInText(cardId);
 
   const editor = useEditor({
     extensions: [
@@ -81,8 +59,7 @@ export function TextBlockEditor({
           return current.isEmpty ? t("blocks.textPlaceholder") : "";
         },
       }),
-      cardMention((query) => searchMentions(worldRef.current.cards, query, cardId), suggestions),
-      cardEntities(() => entitySource.current, setChip),
+      ...worldInText.extensions,
     ],
     content: doc,
     autofocus: autoFocus ? "end" : false,
@@ -127,31 +104,13 @@ export function TextBlockEditor({
       },
     },
     onUpdate: ({ editor: current }) => callbacks.current.onChange(current.getJSON()),
-    onBlur: () => setChip(null),
+    onBlur: worldInText.hideChip,
   });
-
-  // New cards, renamed cards or changed preferences: the extension reads
-  // them from now on, and looks for the names again.
-  const { preferences } = world;
-  useEffect(() => {
-    entitySource.current = { names, preferences };
-    if (!editor || editor.isDestroyed) return;
-    editor.view.dispatch(editor.state.tr.setMeta(entityPluginKey, REFRESH_ENTITIES));
-  }, [editor, names, preferences]);
 
   return (
     <>
       <EditorContent editor={editor} />
-      <MentionSuggestions store={suggestions} />
-      {editor && chip && (
-        <EntityChip
-          chip={chip}
-          onLink={() => {
-            linkDetectedAtCaret(editor.view, () => entitySource.current);
-            setChip(null);
-          }}
-        />
-      )}
+      <WorldInTextOverlay editor={editor} overlay={worldInText.overlay} />
     </>
   );
 }

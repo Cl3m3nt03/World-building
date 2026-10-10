@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { LayoutGrid, Map as MapIcon, Network, Share2 } from "lucide-react";
+import { Link, useParams } from "@tanstack/react-router";
+import { Feather, LayoutGrid, Map as MapIcon, Network, Share2 } from "lucide-react";
+import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { type BacklinkVia, commands, type DocumentKind } from "@/lib/bindings";
-import { useDocumentLink } from "@/lib/documentLinks";
+import { type Backlink, type BacklinkSource, type BacklinkVia, commands } from "@/lib/bindings";
+import { ChapterLinksContext, chapterRoute, useDocumentLink } from "@/lib/documentLinks";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
 
@@ -17,12 +18,13 @@ export function useBacklinks(cardId: string) {
   });
 }
 
-/** The icon of a document that is not a card (a card shows its type's). */
-const KIND_ICONS: Partial<Record<DocumentKind, typeof Network>> = {
+/** The icon of a source that is not a card (a card shows its type's). */
+const KIND_ICONS: Partial<Record<BacklinkSource, typeof Network>> = {
   map: MapIcon,
   graph: Share2,
   tree: Network,
   canvas: LayoutGrid,
+  chapter: Feather,
 };
 
 /**
@@ -32,6 +34,8 @@ const KIND_ICONS: Partial<Record<DocumentKind, typeof Network>> = {
 export function Backlinks({ cardId }: { cardId: string }) {
   const { t } = useTranslation();
   const linkOf = useDocumentLink();
+  const showChapters = useContext(ChapterLinksContext);
+  const { worldId } = useParams({ from: "/world/$worldId" });
   const backlinks = useBacklinks(cardId);
   const types = useCardTypes();
 
@@ -40,11 +44,21 @@ export function Backlinks({ cardId }: { cardId: string }) {
       ? via.propertyLabel
       : t(`backlinks.via.${via.kind}`);
 
-  // Only the documents that can be opened here (in the wiki: visible pages).
+  // Only what can be opened here (in the wiki: visible pages, no chapters).
+  const linkFor = (backlink: Backlink) => {
+    if (backlink.sourceKind !== "chapter") return linkOf(backlink.sourceKind, backlink.sourceId);
+    return showChapters && backlink.storyId
+      ? chapterRoute(worldId, backlink.storyId, backlink.sourceId)
+      : null;
+  };
   const shown = backlinks.data?.flatMap((backlink) => {
-    const link = linkOf(backlink.sourceKind, backlink.sourceId);
+    const link = linkFor(backlink);
     return link ? [{ backlink, link }] : [];
   });
+  const title = (backlink: Backlink) =>
+    backlink.sourceKind === "chapter"
+      ? t("backlinks.chapter", { chapter: backlink.sourceTitle, story: backlink.storyTitle ?? "" })
+      : backlink.sourceTitle;
 
   return (
     <section
@@ -72,7 +86,7 @@ export function Backlinks({ cardId }: { cardId: string }) {
                     className="size-4 shrink-0"
                     style={KindIcon ? undefined : { color: typeColor(type?.color ?? "slate") }}
                   />
-                  <span className="truncate">{backlink.sourceTitle}</span>
+                  <span className="truncate">{title(backlink)}</span>
                   <span className="truncate text-xs text-muted-foreground">
                     {backlink.via.map(describe).join(" · ")}
                   </span>

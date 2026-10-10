@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT l.source_id, c.title AS source_title, s.id AS \"story_id!\", s.title AS story_title,\n                  l.kind AS link_kind\n           FROM links l\n           JOIN chapters c ON c.id = l.source_id\n           JOIN stories s ON s.id = c.story_id\n           WHERE l.target_id = ?\n           ORDER BY s.sort_order, s.created_at, c.sort_order, l.kind",
+  "describe": {
+    "columns": [
+      {
+        "name": "source_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "name": "source_title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapters",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "story_id!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "story_title",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stories",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "link_kind",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "links",
+            "name": "kind"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e0ff318337e8149c3be1241fbf72c0c43b8ad9979ea55f46d0cfecdd022e1bf9"
+}
