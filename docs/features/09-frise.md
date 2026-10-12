@@ -54,6 +54,13 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - Un élément qui représente une carte la fait citer par la frise (lien `timeline`). Supprimer la frise retire ses pistes, ses éléments et ses liens.
 - La table `documents` a été reconstruite pour accepter ce nouveau type, sans perte et en gardant ses liens et ses déclencheurs de recherche (vérifié sur une copie d'un vrai monde).
 
+**Réalisé en M11 (11.2)** : le calendrier se règle dans *Réglages du monde › Calendrier*.
+- **Modèles** : douze mois de 30 jours, ou le grégorien (mois nommés, sans années bissextiles).
+- **Ères** : nom, abréviation et année de début. Une ère peut **compter à rebours** jusqu'à la suivante (« 2 AC » est l'an −2 quand « DC » débute en l'an 0). Deux ères ne débutent pas la même année. Sans ère, les années s'écrivent telles quelles.
+- **Mois** : de 1 à 24, de 1 à 400 jours chacun. Un mois sans nom s'écrit « 3e mois ».
+- Un **exemple** écrit en direct une date comme les frises l'écriront (« 12 du 3e mois 298 DC », « 12 Lune de feu 298 DC »). Le calendrier n'est enregistré que valide, par le bouton ; changer le calendrier ne déplace aucun élément, car les dates sont des jours.
+- Le champ de date des frises (jour, mois, année comptée dans son ère, ère) est prêt pour l'édition (11.4).
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

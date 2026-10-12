@@ -10,6 +10,7 @@ export const WORLD_SETTINGS_SECTIONS = [
   "types",
   "media",
   "theme",
+  "calendar",
   "preferences",
 ] as const;
 export type WorldSettingsSection = (typeof WORLD_SETTINGS_SECTIONS)[number];

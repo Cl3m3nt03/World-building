@@ -24,6 +24,10 @@ pub struct Era {
     pub abbreviation: String,
     /// The first year of the era (counted from the calendar's year 0).
     pub start_year: i32,
+    /// Its years count down to the next era (« 2 AC » before the Conquest),
+    /// as before Christ; else they count up from its start.
+    #[serde(default)]
+    pub backwards: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
@@ -168,11 +172,13 @@ mod tests {
                     name: "A".into(),
                     abbreviation: "A".into(),
                     start_year: 0,
+                    backwards: false,
                 },
                 Era {
                     name: "B".into(),
                     abbreviation: "B".into(),
                     start_year: 0,
+                    backwards: false,
                 },
             ],
             ..WorldCalendar::default()
