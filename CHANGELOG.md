@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.0](https://github.com/Cl3m3nt03/World-building/compare/v1.1.0...v1.2.0) (2026-10-12)
+
+
+### Fonctionnalités
+
+* **quill:** export a story as a PDF ([#380](https://github.com/Cl3m3nt03/World-building/issues/380)) ([af9664e](https://github.com/Cl3m3nt03/World-building/commit/af9664e86e3d0bb3402469712d989bc64e806ac3)), closes [#368](https://github.com/Cl3m3nt03/World-building/issues/368)
+* **quill:** export a story as a Word file ([#383](https://github.com/Cl3m3nt03/World-building/issues/383)) ([6af28ed](https://github.com/Cl3m3nt03/World-building/commit/6af28ede00124524881698b2488ede3e4361b101)), closes [#369](https://github.com/Cl3m3nt03/World-building/issues/369)
+* **quill:** export a story as an ePub ([#379](https://github.com/Cl3m3nt03/World-building/issues/379)) ([988baf7](https://github.com/Cl3m3nt03/World-building/commit/988baf770c36c47f854762ffc5828dd93742e337)), closes [#367](https://github.com/Cl3m3nt03/World-building/issues/367)
+* **quill:** place sounds on passages ([#377](https://github.com/Cl3m3nt03/World-building/issues/377)) ([6c1ea12](https://github.com/Cl3m3nt03/World-building/commit/6c1ea12934759d15b49e1ffc746207b53cd4d58d)), closes [#365](https://github.com/Cl3m3nt03/World-building/issues/365)
+* **quill:** preview the book as a reader sees it ([#375](https://github.com/Cl3m3nt03/World-building/issues/375)) ([c52dd85](https://github.com/Cl3m3nt03/World-building/commit/c52dd85d095a1579ea460e78fbf3fd74224262c0)), closes [#364](https://github.com/Cl3m3nt03/World-building/issues/364)
+* **quill:** read a chapter with its sounds ([#378](https://github.com/Cl3m3nt03/World-building/issues/378)) ([0e5c849](https://github.com/Cl3m3nt03/World-building/commit/0e5c8493ecfc56949a4b003cf117a320fbc50f0c)), closes [#366](https://github.com/Cl3m3nt03/World-building/issues/366)
+* **quill:** show the story's book in 3D ([#374](https://github.com/Cl3m3nt03/World-building/issues/374)) ([c8d7f82](https://github.com/Cl3m3nt03/World-building/commit/c8d7f828336c5431382b5ab0cd3153ce6cc713db)), closes [#363](https://github.com/Cl3m3nt03/World-building/issues/363)
+* **quill:** store sounds and reading settings ([#373](https://github.com/Cl3m3nt03/World-building/issues/373)) ([a015ade](https://github.com/Cl3m3nt03/World-building/commit/a015adefc297749e645c7a1983faa630ad4a34d2)), closes [#362](https://github.com/Cl3m3nt03/World-building/issues/362)
+
+
+### Corrections
+
+* **quill:** keep the mode bar within its column ([#386](https://github.com/Cl3m3nt03/World-building/issues/386)) ([d71f446](https://github.com/Cl3m3nt03/World-building/commit/d71f4460418008923d8f9521bbc3f082682941e3))
+
 ## [1.1.0](https://github.com/Cl3m3nt03/World-building/compare/v1.0.0...v1.1.0) (2026-10-10)
 
 
