@@ -174,7 +174,9 @@ describe("M10: Quill, advanced", () => {
     expect(page).toBe("rgb(242, 231, 208)");
   });
 
-  it("exports the story as ePub, PDF and Word in the files chosen", async () => {
+  it("exports the story as ePub, PDF and Word in the files chosen", async function () {
+    // Three exports, the PDF's first one slow on the CI runner.
+    this.timeout(300_000);
     await $('//*[@role="tab"][normalize-space()="Export"]').click();
     const folder = path.join(home(), "exports-m10");
     for (const [label, extension] of [
@@ -186,8 +188,10 @@ describe("M10: Quill, advanced", () => {
       const file = path.join(folder, `${STORY}.${extension}`);
       await answerNext(file);
       await $("button=Exporter").click();
+      // The first PDF finds the PC's fonts and compiles Typst: slow on the
+      // CI runner's debug build.
       await browser.waitUntil(() => existsSync(file), {
-        timeout: 30_000,
+        timeout: 120_000,
         timeoutMsg: `the ${label} file was not written`,
       });
       const head = readFileSync(file).subarray(0, 5).toString("latin1");
