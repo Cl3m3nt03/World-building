@@ -16,7 +16,7 @@ L'ordre suit les dépendances : le Graph a besoin des liens entre cartes, le Can
 | **M8 Wiki** → `v1.0.0` | Vue lecture et édition, thèmes, export HTML | `M8-wiki.md` |
 | **M9 Quill – écriture** → `v1.1.0` | Histoires, chapitres, brouillons, notes, panneau monde (ADR 0009) | `M9-quill.md` |
 | **M10 Quill – avancé** → `v1.2.0` | Couverture 3D, mode audio, prévisualisation, exports PDF/DOCX/ePub (ADR 0010) | `M10-quill-avance.md` |
-| **M11 Frise chronologique** | Frise du monde (nouvelle feature de vvd, à spécifier) : #114 | à écrire (`features/09-frise.md`) |
+| **M11 Frise chronologique** → `v1.3.0` | Calendrier du monde, frises (pistes, événements, périodes), liens aux cartes, wiki (ADR 0011) : #114 | `M11-frise.md` |
 
 Les milestones M1 et suivants sont découpés en issues au démarrage de chacun, dans un fichier `Mx-<nom>.md` de ce dossier, sur le modèle de `M0-fondations.md`.
 
