@@ -24,11 +24,13 @@ use crate::db;
 use crate::error::{AppError, AppResult};
 
 pub mod assets;
+pub mod calendar;
 pub mod preferences;
 pub mod storage;
 pub mod theme;
 pub mod tiles;
 
+pub use calendar::WorldCalendar;
 pub use preferences::WorldPreferences;
 pub use theme::WorldTheme;
 
@@ -87,6 +89,13 @@ pub struct WorldFile {
         skip_serializing_if = "WorldPreferences::is_default"
     )]
     pub preferences: WorldPreferences,
+    /// Absent: the default calendar (ADR 0011). Read tolerantly (see `calendar`).
+    #[serde(
+        default,
+        deserialize_with = "calendar::deserialize_lenient",
+        skip_serializing_if = "WorldCalendar::is_default"
+    )]
+    pub calendar: WorldCalendar,
     /// Most bytes the world may take on the disk (3.12): imports are refused
     /// beyond. Absent: no limit. Read tolerantly (an unreadable value is no limit).
     #[serde(
@@ -116,6 +125,8 @@ pub struct WorldInfo {
     pub main_image: Option<String>,
     pub theme: WorldTheme,
     pub preferences: WorldPreferences,
+    /// How the world counts time (eras, months), for its timelines.
+    pub calendar: WorldCalendar,
     /// Storage limit in bytes, if any (f64: u64 has no safe JS type).
     pub storage_limit: Option<f64>,
     /// Absolute path of the world folder.
@@ -144,6 +155,7 @@ impl OpenWorld {
             main_image: self.file.main_image.clone(),
             theme: self.file.theme.clone(),
             preferences: self.file.preferences,
+            calendar: self.file.calendar.clone(),
             storage_limit: self.file.storage_limit.map(|limit| limit as f64),
             path: self.root.display().to_string(),
             schema_version: u32::try_from(self.file.schema_version).unwrap_or(u32::MAX),
@@ -215,6 +227,12 @@ impl OpenWorld {
     /// Folder of the world.
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    pub fn set_calendar(&mut self, calendar: WorldCalendar) -> AppResult<()> {
+        let mut file = self.file.clone();
+        file.calendar = calendar.checked()?;
+        self.save(file)
     }
 
     pub fn set_preferences(&mut self, preferences: WorldPreferences) -> AppResult<()> {
@@ -481,6 +499,7 @@ async fn create_in(
         main_image: None,
         theme: WorldTheme::Default,
         preferences: WorldPreferences::default(),
+        calendar: WorldCalendar::default(),
         storage_limit: None,
         schema_version: db::latest_version(migrator),
         created_at: created,

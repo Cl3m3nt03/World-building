@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT d.title FROM timelines t JOIN documents d ON d.id = t.document_id\n         WHERE t.document_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "title",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "documents",
+            "name": "title"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8c7449a754497c75335c23b7c0021e6c9c262c815b7ecb37fa2361ba14bc355b"
+}

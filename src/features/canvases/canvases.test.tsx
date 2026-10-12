@@ -26,6 +26,7 @@ const WORLD = {
   mainImage: null,
   theme: { kind: "default" },
   preferences: { entityDetection: true, autoMentionLinks: true, animateNewLinks: true },
+  calendar: { eras: [], months: Array.from({ length: 12 }, () => ({ name: "", days: 30 })) },
   storageLimit: null,
   schemaVersion: 12,
   createdAt: "2026-10-03T10:00:00Z",

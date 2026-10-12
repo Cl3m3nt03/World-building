@@ -209,6 +209,18 @@ export const commands = {
 	deleteAudioCue: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_audio_cue", { id })),
 	/**  Exports a story to a file (ePub); returns the path written. */
 	exportStory: (request: StoryExport) => typedError<string, AppError>(__TAURI_INVOKE("export_story", { request })),
+	/**  Creates a timeline with its first track (names translated by the front). */
+	createTimeline: (title: string, trackName: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("create_timeline", { title, trackName })),
+	getTimeline: (id: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("get_timeline", { id })),
+	addTimelineTrack: (timelineId: string, name: string, color: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("add_timeline_track", { timelineId, name, color })),
+	updateTimelineTrack: (id: string, name: string, color: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("update_timeline_track", { id, name, color })),
+	moveTimelineTrack: (id: string, index: number) => typedError<Timeline, AppError>(__TAURI_INVOKE("move_timeline_track", { id, index })),
+	deleteTimelineTrack: (id: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("delete_timeline_track", { id })),
+	/**  Adds an item (a new id) or changes it. */
+	saveTimelineItem: (item: TimelineItem) => typedError<Timeline, AppError>(__TAURI_INVOKE("save_timeline_item", { item })),
+	deleteTimelineItem: (id: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("delete_timeline_item", { id })),
+	/**  Sets the calendar of the open world (its eras and months, ADR 0011). */
+	setWorldCalendar: (calendar: WorldCalendar) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("set_world_calendar", { calendar })),
 	/**  Creates a graph named `title` (translated by the front), showing every card. */
 	createGraph: (title: string) => typedError<Graph, AppError>(__TAURI_INVOKE("create_graph", { title })),
 	getGraph: (id: string) => typedError<Graph, AppError>(__TAURI_INVOKE("get_graph", { id })),
@@ -328,6 +340,8 @@ export const commands = {
 	mainImage: string | null,
 	theme: WorldTheme,
 	preferences: WorldPreferences,
+	/**  How the world counts time (eras, months), for its timelines. */
+	calendar: WorldCalendar,
 	/**  Storage limit in bytes, if any (f64: u64 has no safe JS type). */
 	storageLimit: number | null,
 	/**  Absolute path of the world folder. */
@@ -497,7 +511,7 @@ export type Backlink = {
 };
 
 /**  What cites a card: a document of the world, or a Quill chapter (ADR 0009). */
-export type BacklinkSource = "card" | "map" | "graph" | "canvas" | "tree" | "chapter";
+export type BacklinkSource = "card" | "map" | "graph" | "canvas" | "tree" | "timeline" | "chapter";
 
 export type BacklinkVia = {
 	kind: LinkKind,
@@ -627,6 +641,9 @@ export type CuePatch = {
 	looped?: boolean | null,
 };
 
+/**  What the date of an item names. */
+export type DatePrecision = "year" | "month" | "day";
+
 export type Document = {
 	id: string,
 	kind: DocumentKind,
@@ -646,7 +663,9 @@ export type DocumentFilter = {
 	trashed?: boolean,
 };
 
-export type DocumentKind = "card" | "map" | "graph" | "canvas" | "tree";
+export type DocumentKind = "card" | "map" | "graph" | "canvas" | "tree" | 
+/**  A timeline of the world (M11, ADR 0011). */
+"timeline";
 
 /**
  *  Everything the sidebar shows: folders and live documents, with their place
@@ -697,6 +716,15 @@ export type EdgeReason =
 
 /**  Where an edge starts: a node, or another edge (a junction). */
 export type EdgeSource = { kind: "node"; id: string } | { kind: "edge"; id: string };
+
+/**  A named stretch of years, from `start_year` to the next era's start. */
+export type Era = {
+	name: string,
+	/**  Shown after a year: « 298 DC ». */
+	abbreviation: string,
+	/**  The first year of the era (counted from the calendar's year 0). */
+	startYear: number,
+};
 
 /**  A chapter to export, and the draft to take its text from. */
 export type ExportChapter = {
@@ -844,7 +872,9 @@ export type LinkKind =
 /**  The card is pinned on a map. */
 "mapPin" | 
 /**  The card is shown in a relation tree (ADR 0007). */
-"tree";
+"tree" | 
+/**  The card stands for an item of a timeline (ADR 0011). */
+"timeline";
 
 /**  A map as seen by the front. */
 export type Map = {
@@ -907,6 +937,12 @@ export type MapZone = {
 	fillColor: string,
 	opacity: number | null,
 	pattern: ZonePattern,
+};
+
+export type Month = {
+	/**  Empty: « Mois 3 » (translated by the front). */
+	name: string,
+	days: number,
 };
 
 /**  A palette the user saved under a name. */
@@ -1244,6 +1280,37 @@ export type TextStyle = {
 
 export type Theme = "light" | "dark" | "system";
 
+export type Timeline = {
+	id: string,
+	title: string,
+	/**  In order, from the top. */
+	tracks: TimelineTrack[],
+	/**  In time order. */
+	items: TimelineItem[],
+};
+
+/**  An event (`end` none) or a period, on a track. */
+export type TimelineItem = {
+	id: string,
+	trackId: string,
+	/**  The card the item stands for. */
+	cardId: string | null,
+	title: string,
+	color: string,
+	description: string,
+	/**  Days from the year 0 of the world's calendar. */
+	start: number,
+	/**  For a period: its last day (not before `start`). */
+	end: number | null,
+	precision: DatePrecision,
+};
+
+export type TimelineTrack = {
+	id: string,
+	name: string,
+	color: string,
+};
+
 /**  Where the title sits on the cover. */
 export type TitlePosition = "top" | "middle" | "bottom";
 
@@ -1360,6 +1427,13 @@ export type WikiTheme = {
 	savedPalettes?: NamedPalette[],
 };
 
+export type WorldCalendar = {
+	/**  In order of their start; none: years are shown as they are. */
+	eras: Era[],
+	/**  At least one. */
+	months: Month[],
+};
+
 /**  A world as seen by the front. */
 export type WorldInfo = {
 	id: string,
@@ -1370,6 +1444,8 @@ export type WorldInfo = {
 	mainImage: string | null,
 	theme: WorldTheme,
 	preferences: WorldPreferences,
+	/**  How the world counts time (eras, months), for its timelines. */
+	calendar: WorldCalendar,
 	/**  Storage limit in bytes, if any (f64: u64 has no safe JS type). */
 	storageLimit: number | null,
 	/**  Absolute path of the world folder. */

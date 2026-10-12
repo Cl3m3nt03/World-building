@@ -30,6 +30,8 @@ pub enum DocumentKind {
     Graph,
     Canvas,
     Tree,
+    /// A timeline of the world (M11, ADR 0011).
+    Timeline,
 }
 
 impl DocumentKind {
@@ -40,6 +42,7 @@ impl DocumentKind {
             Self::Graph => "graph",
             Self::Canvas => "canvas",
             Self::Tree => "tree",
+            Self::Timeline => "timeline",
         }
     }
 
@@ -50,6 +53,7 @@ impl DocumentKind {
             "graph" => Self::Graph,
             "canvas" => Self::Canvas,
             "tree" => Self::Tree,
+            "timeline" => Self::Timeline,
             other => {
                 return Err(AppError::Internal(format!(
                     "unknown document kind: {other}"

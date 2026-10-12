@@ -46,6 +46,14 @@ Une **date** est une année, avec un mois et un jour facultatifs. Une date sans 
 
 Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et éléments, chaque élément ouvrant la page de sa carte.
 
+**Réalisé en M11 (11.1)** : le socle de données, sans interface pour l'instant (migration 0020, ADR 0011).
+- Le monde a un **calendrier** dans `world.json` (ères et mois). Il est lu avec tolérance : un calendrier illisible devient celui par défaut, douze mois de 30 jours sans ère.
+- Une **frise** est un document de type `timeline`. Elle naît avec une piste.
+- **Pistes** : on les ajoute, renomme, colore (palette des types de cartes), réordonne et supprime. Une frise en garde toujours une.
+- **Éléments** : un événement, ou une période qui ne peut pas finir avant de commencer. Leurs dates sont des jours depuis l'an 0, avec leur précision. Un élément reste sur sa frise.
+- Un élément qui représente une carte la fait citer par la frise (lien `timeline`). Supprimer la frise retire ses pistes, ses éléments et ses liens.
+- La table `documents` a été reconstruite pour accepter ce nouveau type, sans perte et en gardant ses liens et ses déclencheurs de recherche (vérifié sur une copie d'un vrai monde).
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

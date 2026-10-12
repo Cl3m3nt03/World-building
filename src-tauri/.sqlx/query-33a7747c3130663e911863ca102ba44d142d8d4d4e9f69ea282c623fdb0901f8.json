@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE timeline_tracks SET name = ?, color = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "33a7747c3130663e911863ca102ba44d142d8d4d4e9f69ea282c623fdb0901f8"
+}

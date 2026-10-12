@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE timeline_tracks SET sort_order = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "25ba3757c6ba2f1cf06ab6b12ba0a898d53446c859e5614d1bee12e880ece137"
+}

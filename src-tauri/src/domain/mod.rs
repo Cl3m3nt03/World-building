@@ -14,6 +14,7 @@ pub mod properties;
 pub mod quill;
 pub mod relations;
 pub mod search;
+pub mod timelines;
 pub mod tree;
 pub mod trees;
 pub mod ui_state;
