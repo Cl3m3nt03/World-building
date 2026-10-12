@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
+  CalendarDays,
   Images,
   type LucideIcon,
   Palette,
@@ -19,6 +20,7 @@ import { StorageSection } from "@/features/media/components/StorageSection";
 import { ThemeSection } from "@/features/world-theme";
 import type { TranslationKey } from "@/i18n";
 import type { WorldInfo } from "@/lib/bindings";
+import { CalendarSection } from "./CalendarSection";
 import { GeneralSection } from "./GeneralSection";
 import { PreferencesSection } from "./PreferencesSection";
 
@@ -27,6 +29,7 @@ const SECTIONS: { value: WorldSettingsSection; icon: LucideIcon; label: Translat
   { value: "types", icon: Shapes, label: "worldSettings.sections.types" },
   { value: "media", icon: Images, label: "worldSettings.sections.media" },
   { value: "theme", icon: Palette, label: "worldSettings.sections.theme" },
+  { value: "calendar", icon: CalendarDays, label: "worldSettings.sections.calendar" },
   { value: "preferences", icon: SlidersHorizontal, label: "worldSettings.sections.preferences" },
 ];
 
@@ -166,6 +169,9 @@ export function WorldSettingsDialog({ world }: { world: WorldInfo }) {
           </Panel>
           <Panel value="theme">
             <ThemeSection world={world} />
+          </Panel>
+          <Panel value="calendar">
+            <CalendarSection world={world} />
           </Panel>
           <Panel value="preferences">
             <PreferencesSection world={world} />

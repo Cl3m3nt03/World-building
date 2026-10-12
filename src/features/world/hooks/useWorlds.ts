@@ -5,6 +5,7 @@ import { appKeys } from "@/features/settings";
 import {
   commands,
   type Genre,
+  type WorldCalendar,
   type WorldInfo,
   type WorldPatch,
   type WorldPreferences,
@@ -183,6 +184,22 @@ export function useSetWorldTheme() {
  * Sets the writing preferences of the open world. They apply at once; if
  * saving fails, the saved ones come back.
  */
+/** Changes the world's calendar (its eras and months), at once on screen. */
+export function useSetWorldCalendar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (calendar: WorldCalendar) => unwrap(commands.setWorldCalendar(calendar)),
+    onMutate: async (calendar) => {
+      await queryClient.cancelQueries({ queryKey: worldKeys.current() });
+      queryClient.setQueryData<WorldInfo | null>(worldKeys.current(), (world) =>
+        world ? { ...world, calendar } : world,
+      );
+    },
+    onSuccess: (world) => queryClient.setQueryData(worldKeys.current(), world),
+    onError: () => queryClient.invalidateQueries({ queryKey: worldKeys.current() }),
+  });
+}
+
 export function useSetWorldPreferences() {
   const queryClient = useQueryClient();
   return useMutation({

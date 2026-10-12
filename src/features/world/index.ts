@@ -10,6 +10,7 @@ export {
   useDeleteWorld,
   useOpenWorld,
   usePreviewWorldTheme,
+  useSetWorldCalendar,
   useSetWorldMainImage,
   useSetWorldPreferences,
   useSetWorldTheme,

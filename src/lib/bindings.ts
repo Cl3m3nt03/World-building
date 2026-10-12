@@ -724,6 +724,11 @@ export type Era = {
 	abbreviation: string,
 	/**  The first year of the era (counted from the calendar's year 0). */
 	startYear: number,
+	/**
+	 *  Its years count down to the next era (« 2 AC » before the Conquest),
+	 *  as before Christ; else they count up from its start.
+	 */
+	backwards?: boolean,
 };
 
 /**  A chapter to export, and the draft to take its text from. */

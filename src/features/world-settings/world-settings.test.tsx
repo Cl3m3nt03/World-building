@@ -7,7 +7,14 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { useUiStore } from "@/app/stores/ui";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { AppSettings, Asset, WorldInfo, WorldPatch, WorldPreferences } from "@/lib/bindings";
+import type {
+  AppSettings,
+  Asset,
+  WorldCalendar,
+  WorldInfo,
+  WorldPatch,
+  WorldPreferences,
+} from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const IMAGE: Asset = {
@@ -96,6 +103,10 @@ beforeEach(() => {
             ...world,
             preferences: (payload as { preferences: WorldPreferences }).preferences,
           };
+        return world;
+      case "set_world_calendar":
+        if (world)
+          world = { ...world, calendar: (payload as { calendar: WorldCalendar }).calendar };
         return world;
       case "delete_world":
         if (deleteFails) throw { code: "io", message: "recycle bin: access denied" };
@@ -300,4 +311,36 @@ test("the writing preferences are all on by default and saved when switched", as
     }),
   );
   await waitFor(() => expect(autoLinks.getAttribute("aria-checked")).toBe("false"));
+});
+
+test("the calendar is edited, shown on an example date and saved once valid", async () => {
+  const { dialog } = await renderSettings();
+  act(() => useUiStore.getState().openWorldSettings("calendar"));
+
+  expect(await within(dialog).findByText("Exemple : 12 du 3e mois 298")).toBeTruthy();
+  const save = within(dialog).getByRole("button", { name: "Enregistrer le calendrier" });
+  expect(save.hasAttribute("disabled")).toBe(true);
+
+  fireEvent.click(within(dialog).getByRole("button", { name: "Ajouter une ère" }));
+  fireEvent.change(within(dialog).getByLabelText("Abréviation"), { target: { value: "DC" } });
+  fireEvent.change(within(dialog).getByLabelText("Nom du mois 3"), {
+    target: { value: "Lune de feu" },
+  });
+  expect(within(dialog).getByText("Exemple : 12 Lune de feu 298 DC")).toBeTruthy();
+
+  fireEvent.change(within(dialog).getByLabelText("Jours du mois 1"), { target: { value: "0" } });
+  expect(within(dialog).getByText("Un mois compte de 1 à 400 jours.")).toBeTruthy();
+  expect(save.hasAttribute("disabled")).toBe(true);
+  fireEvent.change(within(dialog).getByLabelText("Jours du mois 1"), { target: { value: "31" } });
+
+  fireEvent.click(save);
+  await waitFor(() => {
+    const call = calls.find((each) => each.command === "set_world_calendar");
+    const calendar = (call?.payload as { calendar: WorldCalendar } | undefined)?.calendar;
+    expect(calendar?.eras).toEqual([
+      { name: "", abbreviation: "DC", startYear: 0, backwards: false },
+    ]);
+    expect(calendar?.months[0]?.days).toBe(31);
+    expect(calendar?.months[2]?.name).toBe("Lune de feu");
+  });
 });
