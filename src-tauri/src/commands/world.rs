@@ -11,7 +11,9 @@ use crate::settings::{self, AppSettings, RecentWorld};
 use crate::state::AppState;
 use crate::thumbnails;
 use crate::world::storage::{self, StorageUsage};
-use crate::world::{self, Genre, OpenWorld, WorldInfo, WorldPatch, WorldPreferences, WorldTheme};
+use crate::world::{
+    self, Genre, OpenWorld, WorldCalendar, WorldInfo, WorldPatch, WorldPreferences, WorldTheme,
+};
 
 /// Creates a world named `name`, of the given genre, in a new folder inside
 /// `parent_dir` (the folder is named after the world), and opens it.
@@ -140,6 +142,21 @@ pub async fn set_world_theme(
         .as_mut()
         .ok_or_else(|| AppError::NoWorldOpen("set_world_theme".into()))?;
     world.set_theme(theme)?;
+    Ok(world.info())
+}
+
+/// Sets the calendar of the open world (its eras and months, ADR 0011).
+#[tauri::command]
+#[specta::specta]
+pub async fn set_world_calendar(
+    state: State<'_, AppState>,
+    calendar: WorldCalendar,
+) -> AppResult<WorldInfo> {
+    let mut guard = state.world.lock().await;
+    let world = guard
+        .as_mut()
+        .ok_or_else(|| AppError::NoWorldOpen("set_world_calendar".into()))?;
+    world.set_calendar(calendar)?;
     Ok(world.info())
 }
 

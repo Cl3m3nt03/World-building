@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-timeline-track"
+description = "Enables the update_timeline_track command without any pre-configured scope."
+commands.allow = ["update_timeline_track"]
+
+[[permission]]
+identifier = "deny-update-timeline-track"
+description = "Denies the update_timeline_track command without any pre-configured scope."
+commands.deny = ["update_timeline_track"]

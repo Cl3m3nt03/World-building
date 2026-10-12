@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM timeline_tracks WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "e6c8c957be6bd88ed3dbd4aae7c69d525b4d8b34298ff724b3da97b07b9c825e"
+}

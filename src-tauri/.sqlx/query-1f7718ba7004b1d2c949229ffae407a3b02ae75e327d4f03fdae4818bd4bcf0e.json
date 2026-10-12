@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO timeline_tracks (id, timeline_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "1f7718ba7004b1d2c949229ffae407a3b02ae75e327d4f03fdae4818bd4bcf0e"
+}

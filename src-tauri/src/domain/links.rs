@@ -23,6 +23,8 @@ pub enum LinkKind {
     MapPin,
     /// The card is shown in a relation tree (ADR 0007).
     Tree,
+    /// The card stands for an item of a timeline (ADR 0011).
+    Timeline,
 }
 
 impl LinkKind {
@@ -32,6 +34,7 @@ impl LinkKind {
             Self::Property => "property",
             Self::MapPin => "map_pin",
             Self::Tree => "tree",
+            Self::Timeline => "timeline",
         }
     }
 
@@ -41,6 +44,7 @@ impl LinkKind {
             "property" => Self::Property,
             "map_pin" => Self::MapPin,
             "tree" => Self::Tree,
+            "timeline" => Self::Timeline,
             other => return Err(AppError::Internal(format!("unknown link kind: {other}"))),
         })
     }
@@ -118,6 +122,7 @@ pub enum BacklinkSource {
     Graph,
     Canvas,
     Tree,
+    Timeline,
     Chapter,
 }
 
@@ -129,6 +134,7 @@ impl From<DocumentKind> for BacklinkSource {
             DocumentKind::Graph => Self::Graph,
             DocumentKind::Canvas => Self::Canvas,
             DocumentKind::Tree => Self::Tree,
+            DocumentKind::Timeline => Self::Timeline,
         }
     }
 }

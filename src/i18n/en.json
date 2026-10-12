@@ -419,6 +419,7 @@
   "backlinks.via.property": "property",
   "backlinks.via.mapPin": "map pin",
   "backlinks.via.tree": "relation tree",
+  "backlinks.via.timeline": "timeline",
   "blocks.title": "Content",
   "blocks.empty": "Start writing… (or add a block with \"+\")",
   "blocks.add": "Add a block",

@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, timeline_id, name, color, sort_order FROM timeline_tracks\n         WHERE timeline_id = ? ORDER BY sort_order, id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_tracks",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "timeline_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_tracks",
+            "name": "timeline_id"
+          }
+        }
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_tracks",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "color",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_tracks",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "name": "sort_order",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "timeline_tracks",
+            "name": "sort_order"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c6e92aaedf3d2470dcbf67ba60c9cc6d8a23b720b6e88e0d44c9874247fb8242"
+}

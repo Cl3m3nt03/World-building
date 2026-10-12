@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-timeline-item"
+description = "Enables the save_timeline_item command without any pre-configured scope."
+commands.allow = ["save_timeline_item"]
+
+[[permission]]
+identifier = "deny-save-timeline-item"
+description = "Denies the save_timeline_item command without any pre-configured scope."
+commands.deny = ["save_timeline_item"]
