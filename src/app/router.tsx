@@ -28,6 +28,7 @@ import {
   WritingSpace,
 } from "@/features/quill";
 import { sidebarStateQuery } from "@/features/sidebar";
+import { TimelinePage } from "@/features/timelines";
 import { TreePage } from "@/features/trees";
 import { WikiCardPage, WikiHome, WikiLayout, WikiMapPage } from "@/features/wiki";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
@@ -44,6 +45,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *     /graph/$graphId          a graph, in the workspace (M5)
  *     /tree/$treeId            a relation tree, in the workspace (M6)
  *     /canvas/$canvasId        a canvas, in the workspace (M7)
+ *     /timeline/$timelineId    a timeline, in the workspace (M11)
  *   /world/$worldId/wiki       Wiki tab: its home page (M8)
  *     /card/$cardId            a card's page in the wiki
  *     /map/$mapId              a map's page in the wiki
@@ -147,6 +149,12 @@ const canvasRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "canvas/$canvasId",
   component: CanvasPage,
+});
+
+const timelineRoute = createRoute({
+  getParentRoute: () => worldTabRoute,
+  path: "timeline/$timelineId",
+  component: TimelinePage,
 });
 
 const wikiRoute = createRoute({
@@ -260,6 +268,7 @@ export const routeTree = rootRoute.addChildren([
       graphRoute,
       treeRoute,
       canvasRoute,
+      timelineRoute,
     ]),
     wikiRoute.addChildren([wikiHomeRoute, wikiCardRoute, wikiMapRoute]),
     quillRoute.addChildren([

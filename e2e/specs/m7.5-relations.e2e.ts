@@ -57,7 +57,7 @@ describe("M7.5: trees and the graph", () => {
   });
 
   it("starts a new tree from the known relations, parents above their son", async () => {
-    await $("aria/Nouveau document (map, graph, arbre, canvas…)").click();
+    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouvel arbre"]').click();
     const offer = await $('section[aria-label="Partir de ce que le monde sait ?"]');
     await offer.waitForDisplayed({
@@ -97,7 +97,7 @@ describe("M7.5: trees and the graph", () => {
   });
 
   it("says in the graph why Aragorn and Arathorn are linked", async () => {
-    await $("aria/Nouveau document (map, graph, arbre, canvas…)").click();
+    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouveau graph"]').click();
     const list = await $('[role="listbox"]');
     await list.waitForDisplayed();

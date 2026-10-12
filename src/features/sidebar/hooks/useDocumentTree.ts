@@ -147,7 +147,7 @@ export function useTrashDocument() {
   });
 }
 
-/** Duplicates a card, a map, a graph, a tree or a canvas as `title`, right after it; gives the copy's id. */
+/** Duplicates a card, a map, a graph, a tree, a canvas or a timeline as `title`, right after it; gives the copy's id. */
 export function useDuplicateDocument() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -160,7 +160,9 @@ export function useDuplicateDocument() {
             ? (await unwrap(commands.duplicateTree(id, title))).id
             : kind === "canvas"
               ? (await unwrap(commands.duplicateCanvas(id, title))).id
-              : (await unwrap(commands.duplicateCard(id, title))).id,
+              : kind === "timeline"
+                ? (await unwrap(commands.duplicateTimeline(id, title))).id
+                : (await unwrap(commands.duplicateCard(id, title))).id,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
   });
 }

@@ -12,6 +12,7 @@ use crate::db;
 use crate::db::timelines::{self as queries, ItemRow, TrackRow};
 use crate::domain::documents::{self, DocumentKind, now, validate_title};
 use crate::domain::links::{self, LinkKind};
+use crate::domain::tree;
 use crate::error::{AppError, AppResult};
 
 /// Longest track name and item title, in characters.
@@ -347,6 +348,53 @@ pub async fn delete_item(pool: &SqlitePool, id: &str) -> AppResult<Timeline> {
     relink(&mut tx, &track.timeline_id).await?;
     tx.commit().await?;
     get(pool, &track.timeline_id).await
+}
+
+/// Copies a timeline (its tracks and items, new ids) as `title`, right
+/// after it; the copy cites the same cards.
+pub async fn duplicate(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Timeline> {
+    let title = validate_title(title)?;
+    let mut tx = db::begin_write(pool).await?;
+    if queries::title(&mut *tx, id).await?.is_none() {
+        return Err(invalid(format!("timeline not found: {id}")));
+    }
+    let document = documents::create_in(&mut tx, DocumentKind::Timeline, &title).await?;
+    queries::insert(&mut *tx, &document.id).await?;
+    let mut tracks = std::collections::HashMap::new();
+    for track in queries::tracks(&mut *tx, id).await? {
+        let copy = Uuid::new_v4().to_string();
+        tracks.insert(track.id.clone(), copy.clone());
+        queries::insert_track(
+            &mut *tx,
+            &TrackRow {
+                id: copy,
+                timeline_id: document.id.clone(),
+                ..track
+            },
+        )
+        .await?;
+    }
+    let now = now();
+    for item in queries::items(&mut *tx, id).await? {
+        let Some(track_id) = tracks.get(&item.track_id).cloned() else {
+            continue;
+        };
+        queries::upsert_item(
+            &mut *tx,
+            &ItemRow {
+                id: Uuid::new_v4().to_string(),
+                track_id,
+                created_at: now.clone(),
+                updated_at: now.clone(),
+                ..item
+            },
+        )
+        .await?;
+    }
+    relink(&mut tx, &document.id).await?;
+    tree::place_after(&mut tx, id, &document.id).await?;
+    tx.commit().await?;
+    get(pool, &document.id).await
 }
 
 #[cfg(test)]

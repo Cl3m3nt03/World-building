@@ -464,6 +464,7 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
     "Nouveau graph",
     "Nouvel arbre",
     "Nouveau canvas",
+    "Nouvelle frise",
   ]);
   await act(async () => {
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
@@ -473,12 +474,13 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
     fireEvent.contextMenu(screen.getByRole("tree"), { clientY: 600 });
   });
   expect(names()).toContain("Personnage");
-  expect(names().slice(-5)).toEqual([
+  expect(names().slice(-6)).toEqual([
     "Nouveau dossier",
     "Nouvelle map",
     "Nouveau graph",
     "Nouvel arbre",
     "Nouveau canvas",
+    "Nouvelle frise",
   ]);
 });
 
