@@ -58,6 +58,15 @@ dbg_macro = "deny"
 todo = "warn"
 
 # See https://tauri.app/concept/size/#cargo-configuration
+# Debug builds (dev, tests, clippy, the e2e app): line numbers for our own
+# code only. Full debug info made target/ grow past 130 GB (PDB files of
+# every dependency); nobody steps through the code with a debugger here.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [profile.release]
 codegen-units = 1
 lto = true
