@@ -137,7 +137,12 @@ describe("M11: the timeline", () => {
 
   it("keeps an item moved a year later after reopening the world", async () => {
     // Alt + right arrow: one unit later, never finer than the date (a year).
-    await bubble("Robert Baratheon").click();
+    // The bubble takes the focus by script: the item card, open beside it in
+    // the CI's small window, could catch a click.
+    await browser.execute(
+      (element) => (element as unknown as HTMLElement).focus(),
+      await bubble("Robert Baratheon"),
+    );
     await browser.keys(["Alt", "ArrowRight"]);
     await itemOf(
       "Robert Baratheon",
