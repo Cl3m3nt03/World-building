@@ -15,7 +15,7 @@ Sur vvd, le wiki est un site public hébergé. Ici, il prend deux formes :
 
 ## Contenu du wiki
 
-- Seuls les documents marqués **« Visible dans le wiki »** y apparaissent : des cartes et des maps.
+- Seuls les documents marqués **« Visible dans le wiki »** y apparaissent : des cartes, des maps et, depuis M11, des frises (voir `09-frise.md`).
 - Chaque page du wiki correspond à un document. Une page de carte affiche son image, ses propriétés, son contenu et ses rétroliens ; une page de map affiche la map en lecture seule, avec ses pins cliquables.
 - Un lien vers un document qui n'est pas visible dans le wiki s'affiche en texte simple, jamais en lien mort.
 

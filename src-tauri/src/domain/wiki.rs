@@ -80,7 +80,7 @@ pub struct WikiSettings {
     pub theme: WikiTheme,
 }
 
-/// A page of the wiki: a card or a map marked visible.
+/// A page of the wiki: a card, a map or a timeline (M11) marked visible.
 #[derive(Debug, Clone, PartialEq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct WikiPage {
@@ -213,10 +213,12 @@ fn to_json<T: Serialize>(value: &T) -> AppResult<String> {
     serde_json::to_string(value).map_err(|error| AppError::Internal(format!("wiki json: {error}")))
 }
 
-/// Marks the card or map `id` visible in the wiki, or not.
+/// Marks the card, map or timeline `id` visible in the wiki, or not.
 pub async fn set_visible(pool: &SqlitePool, id: &str, visible: bool) -> AppResult<()> {
     if !queries::set_visible(pool, id, visible).await? {
-        return Err(invalid(format!("no card or map to show in the wiki: {id}")));
+        return Err(invalid(format!(
+            "no card, map or timeline to show in the wiki: {id}"
+        )));
     }
     Ok(())
 }

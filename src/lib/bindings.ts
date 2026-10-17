@@ -1394,7 +1394,7 @@ export type VariantContent = {
 	annotations: TreeAnnotation[],
 };
 
-/**  A page of the wiki: a card or a map marked visible. */
+/**  A page of the wiki: a card, a map or a timeline (M11) marked visible. */
 export type WikiPage = {
 	id: string,
 	kind: DocumentKind,
