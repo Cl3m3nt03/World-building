@@ -1,5 +1,5 @@
 import { Link, useCanGoBack, useParams, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ChevronDown, ExternalLink, Map as MapIcon } from "lucide-react";
+import { ArrowLeft, ChartGantt, ChevronDown, ExternalLink, Map as MapIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
@@ -41,7 +41,9 @@ export function WikiBar() {
     ? documentRoute(worldId, "card", params.cardId)
     : params.mapId
       ? documentRoute(worldId, "map", params.mapId)
-      : null;
+      : params.timelineId
+        ? documentRoute(worldId, "timeline", params.timelineId)
+        : null;
 
   return (
     <nav
@@ -113,6 +115,12 @@ function PagesMenu() {
       label: t("wiki.bar.maps"),
       icon: <MapIcon aria-hidden />,
       pages: list.filter((page) => page.kind === "map"),
+    },
+    {
+      key: "timelines",
+      label: t("wiki.bar.timelines"),
+      icon: <ChartGantt aria-hidden />,
+      pages: list.filter((page) => page.kind === "timeline"),
     },
   ].filter((group) => group.pages.length > 0);
 

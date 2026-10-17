@@ -1,9 +1,11 @@
-import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
+  BookOpen,
   CalendarSearch,
   CircleHelp,
   Diamond,
   GitCommitHorizontal,
+  Globe,
   IdCard,
   ListFilter,
   Maximize,
@@ -31,8 +33,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
+import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, DatePrecision, Timeline, WorldCalendar } from "@/lib/bindings";
-import { documentRoute } from "@/lib/documentRoute";
+import { documentRoute, wikiTimelineRoute } from "@/lib/documentRoute";
 import { shiftDay, snapDay } from "../edit";
 import { useTimelineEditor } from "../hooks/useTimelineEditor";
 import { useRenameTimeline, useTimeline } from "../hooks/useTimelines";
@@ -186,6 +189,9 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
     [timeline.items, tags],
   );
   const [mode, setMode] = useState<"axis" | "tracks">("axis");
+  const wikiPages = useWikiPages();
+  const setWikiVisible = useSetWikiVisible();
+  const inWiki = wikiPages.data?.some((page) => page.id === timeline.id) ?? false;
 
   return (
     <article
@@ -194,7 +200,25 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
     >
       <header className="flex flex-wrap items-center gap-2 px-1">
         <TitleField timeline={timeline} />
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-pressed={inWiki}
+            className="aria-pressed:bg-secondary"
+            onClick={() => setWikiVisible.mutate({ id: timeline.id, visible: !inWiki })}
+          >
+            <Globe />
+            {t("sidebar.document.wiki")}
+          </Button>
+          {inWiki && (
+            <Button asChild variant="ghost" size="sm">
+              <Link {...wikiTimelineRoute(worldId, timeline.id)}>
+                <BookOpen />
+                {t("wiki.openInWiki")}
+              </Link>
+            </Button>
+          )}
           <GoToDate calendar={calendar} view={view} />
         </div>
       </header>

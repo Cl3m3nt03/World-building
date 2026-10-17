@@ -30,7 +30,7 @@ import {
 import { sidebarStateQuery } from "@/features/sidebar";
 import { TimelinePage } from "@/features/timelines";
 import { TreePage } from "@/features/trees";
-import { WikiCardPage, WikiHome, WikiLayout, WikiMapPage } from "@/features/wiki";
+import { WikiCardPage, WikiHome, WikiLayout, WikiMapPage, WikiTimelinePage } from "@/features/wiki";
 import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -49,6 +49,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *   /world/$worldId/wiki       Wiki tab: its home page (M8)
  *     /card/$cardId            a card's page in the wiki
  *     /map/$mapId              a map's page in the wiki
+ *     /timeline/$timelineId    a timeline's page in the wiki (M11)
  *   /world/$worldId/quill      Quill tab: the stories (M9)
  *     /new                     a new story's book
  *     /story/$storyId          a story → its first chapter
@@ -187,6 +188,13 @@ const wikiMapRoute = createRoute({
   component: WikiMapPage,
 });
 
+/** A timeline's page in the wiki (M11). */
+const wikiTimelineRoute = createRoute({
+  getParentRoute: () => wikiRoute,
+  path: "timeline/$timelineId",
+  component: WikiTimelinePage,
+});
+
 const quillRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "quill",
@@ -273,7 +281,7 @@ export const routeTree = rootRoute.addChildren([
       canvasRoute,
       timelineRoute,
     ]),
-    wikiRoute.addChildren([wikiHomeRoute, wikiCardRoute, wikiMapRoute]),
+    wikiRoute.addChildren([wikiHomeRoute, wikiCardRoute, wikiMapRoute, wikiTimelineRoute]),
     quillRoute.addChildren([
       quillIndexRoute,
       newStoryRoute,

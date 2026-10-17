@@ -3,9 +3,29 @@ import type { CSSProperties, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { typeColor } from "@/features/card-types";
 import { type Block, rows, statsRules } from "@/features/cards";
-import type { CardProperty, CardType, MapPin, WikiPage, Map as WorldMap } from "@/lib/bindings";
+import { formatDate } from "@/features/timelines/calendar";
+import {
+  eraBands,
+  extent,
+  frame,
+  itemEnd,
+  labelled,
+  lanes,
+  ticks,
+  xOf,
+} from "@/features/timelines/scale";
+import { calendarWords } from "@/features/timelines/useCalendar";
+import type {
+  CardProperty,
+  CardType,
+  MapPin,
+  Timeline,
+  TimelineItem,
+  WikiPage,
+  Map as WorldMap,
+} from "@/lib/bindings";
 import { featuredPages } from "../pages";
-import type { CardData, MapData, SiteData } from "./collect";
+import type { CardData, MapData, SiteData, TimelineData } from "./collect";
 import { type MentionTarget, textHtml } from "./text";
 
 /**
@@ -65,6 +85,9 @@ export function usedAssets(data: SiteData): string[] {
     }
   }
   for (const map of data.maps.values()) add(map.backgroundAssetId);
+  for (const timeline of data.timelines.values()) {
+    for (const item of timeline.items) if (!item.hidden) add(item.imageAssetId);
+  }
   return [...ids];
 }
 
@@ -123,6 +146,11 @@ function SiteNav({ ctx }: { ctx: SiteContext }) {
       key: "maps",
       label: t("wiki.bar.maps"),
       pages: data.pages.filter((page) => page.kind === "map"),
+    },
+    {
+      key: "timelines",
+      label: t("wiki.bar.timelines"),
+      pages: data.pages.filter((page) => page.kind === "timeline"),
     },
   ].filter((group) => group.pages.length > 0);
   return (
@@ -282,7 +310,18 @@ function BlockView({ ctx, block }: { ctx: SiteContext; block: Block }) {
       </div>
     );
   }
-  if (block.type === "timeline") return null;
+  if (block.type === "timeline") {
+    const timeline = block.timelineId ? ctx.data.timelines.get(block.timelineId) : undefined;
+    if (!timeline) return null;
+    return (
+      <figure className="timeline-block">
+        <TimelineDrawing ctx={ctx} timeline={timeline} />
+        <figcaption>
+          <DocumentName ctx={ctx} id={timeline.id} name={timeline.title} />
+        </figcaption>
+      </figure>
+    );
+  }
   if (block.type === "map") {
     const map = block.mapId ? ctx.data.maps.get(block.mapId) : undefined;
     if (!map) return null;
@@ -541,6 +580,159 @@ export function MapPageView({ ctx, map }: { ctx: SiteContext; map: MapData }) {
             </ul>
           </section>
         )}
+      </main>
+    </SiteDocument>
+  );
+}
+
+/** The drawing's width in « pixels », turned into percentages: it fits any width. */
+const DRAWING = 1000;
+const LEVEL = 2.4;
+
+/** An item's name: its own, or its card's. */
+function nameOf(ctx: SiteContext, item: TimelineItem): string {
+  return item.title.trim() || ctx.data.cards.find((card) => card.id === item.cardId)?.title || "";
+}
+
+/**
+ * A timeline drawn without script (M11 step 11.6), after the app's axis
+ * view: the axis and its graduation, the eras as bands, each item a dot
+ * with its name in a bubble (a link to its card's page when it has one).
+ * Positions are percentages, so it fits the page's width.
+ */
+function TimelineDrawing({ ctx, timeline }: { ctx: SiteContext; timeline: Timeline }) {
+  const calendar = ctx.data.calendar;
+  const words = calendarWords(ctx.t);
+  const items = timeline.items.filter((item) => !item.hidden);
+  const span = extent(calendar, items);
+  if (!span) return null;
+  const view = frame(span.from, span.to, DRAWING, 80, 160);
+  const percent = (day: number) => `${(xOf(view, day) / DRAWING) * 100}%`;
+  const levelOf = lanes(items, (item) => {
+    const at = xOf(view, item.start);
+    const half = (nameOf(ctx, item).length * 7 + 30) / 2;
+    return { left: at - half - 6, right: at + half + 6 };
+  });
+  const levels = Math.max(1, ...[...levelOf.values()].map((level) => level + 1));
+  const graduation = ticks(calendar, view, DRAWING, words);
+  const written = labelled(graduation, (day) => xOf(view, day));
+  const bands = eraBands(calendar).filter(
+    (band) => (band.to ?? Number.POSITIVE_INFINITY) >= view.start,
+  );
+  return (
+    <div
+      className="timeline"
+      style={{ "--levels": levels, "--level": `${LEVEL}rem` } as CSSProperties}
+    >
+      {bands.map((band) => (
+        <div
+          key={band.era.startYear}
+          className="era"
+          style={{
+            left: percent(Math.max(band.from, view.start)),
+            right: band.to === null ? 0 : `${100 - (xOf(view, band.to + 1) / DRAWING) * 100}%`,
+          }}
+        >
+          <span>{band.era.name || band.era.abbreviation}</span>
+        </div>
+      ))}
+      <div className="axis" />
+      {graduation.map((tick) => (
+        <span
+          key={tick.day}
+          className={tick.major ? "tick major" : "tick"}
+          style={{ left: percent(tick.day) }}
+        >
+          {written.has(tick.day) ? tick.label : null}
+        </span>
+      ))}
+      {items.map((item) => {
+        const level = levelOf.get(item.id) ?? 0;
+        const name = nameOf(ctx, item);
+        const bubble = { left: percent(item.start), "--at": level } as CSSProperties;
+        return (
+          <div
+            key={item.id}
+            className="item"
+            style={{ "--item": typeColor(item.color) } as CSSProperties}
+          >
+            {item.end !== null && (
+              <span
+                className="segment"
+                style={{
+                  left: percent(item.start),
+                  width: `${Math.max(0.4, ((xOf(view, itemEnd(calendar, item) + 1) - xOf(view, item.start)) / DRAWING) * 100)}%`,
+                }}
+              />
+            )}
+            <span className="stem" style={bubble} />
+            <span className="dot" style={{ left: percent(item.start) }} />
+            {item.cardId && ctx.pageIds.has(item.cardId) ? (
+              <a className="bubble" style={bubble} href={href(ctx, item.cardId)}>
+                {name}
+              </a>
+            ) : (
+              <span className="bubble" style={bubble}>
+                {name}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function TimelinePageView({ ctx, timeline }: { ctx: SiteContext; timeline: TimelineData }) {
+  const { t } = ctx;
+  const calendar = ctx.data.calendar;
+  const words = calendarWords(t);
+  const items = timeline.timeline.items.filter((item) => !item.hidden);
+  const dates = (item: TimelineItem) => {
+    const start = formatDate(calendar, item.start, item.precision, words);
+    return item.end === null
+      ? start
+      : `${start} – ${formatDate(calendar, item.end, item.precision, words)}`;
+  };
+  return (
+    <SiteDocument ctx={ctx} title={`${timeline.timeline.title} — ${ctx.data.title}`}>
+      <main className="page timeline-page">
+        <h1>{timeline.timeline.title}</h1>
+        <TimelineDrawing ctx={ctx} timeline={timeline.timeline} />
+        <section className="chronicle">
+          <h2>{t("wiki.timeline.chronicle")}</h2>
+          {items.length === 0 ? (
+            <p>{t("wiki.timeline.empty")}</p>
+          ) : (
+            <ol>
+              {items.map((item) => {
+                const card = ctx.data.cards.find((each) => each.id === item.cardId);
+                const image = item.imageAssetId ?? card?.imageAssetId ?? null;
+                return (
+                  <li key={item.id}>
+                    {image ? <img src={asset(ctx, image)} alt="" /> : null}
+                    <div>
+                      <span className="when">{dates(item)}</span>
+                      <DocumentName
+                        ctx={ctx}
+                        id={item.cardId ?? item.id}
+                        name={nameOf(ctx, item)}
+                      />
+                      {item.description ? <Paragraphs text={item.description} /> : null}
+                      {(item.tags ?? []).length > 0 ? (
+                        <ul className="tags">
+                          {(item.tags ?? []).map((tag) => (
+                            <li key={tag}>{tag}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </section>
       </main>
     </SiteDocument>
   );

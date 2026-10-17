@@ -1515,5 +1515,9 @@
   "timelines.editor.newTag": "Nouvelle étiquette",
   "timelines.editor.addTag": "Ajouter",
   "timelines.editor.removeTag": "Retirer l'étiquette {{tag}}",
-  "timelines.editor.more": "Piste et couleur"
+  "timelines.editor.more": "Piste et couleur",
+  "wiki.bar.timelines": "Frises",
+  "wiki.timeline.hidden": "Cette frise n'est pas visible dans le wiki.",
+  "wiki.timeline.chronicle": "Chronologie",
+  "wiki.timeline.empty": "Cette frise n'a encore rien à raconter."
 }

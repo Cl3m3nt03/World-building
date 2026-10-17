@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE documents SET wiki_visible = ? WHERE id = ? AND kind IN ('card', 'map', 'timeline')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "33982793e7f99a5f069b08f52e9ae506b5d12ff773f00ca6cf05e7f4a736e4e4"
+}

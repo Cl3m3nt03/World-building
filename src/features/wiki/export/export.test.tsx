@@ -7,6 +7,7 @@ import type {
   Card,
   CardProperty,
   SiteFile,
+  Timeline,
   WikiPage,
   WikiSettings,
   Map as WorldMap,
@@ -49,7 +50,59 @@ const PAGES: WikiPage[] = [
   },
   { id: "apex", kind: "card", title: "Apex", typeId: "character", imageAssetId: null, aliases: [] },
   { id: "arda", kind: "map", title: "Arda", typeId: null, imageAssetId: null, aliases: [] },
+  {
+    id: "ages",
+    kind: "timeline",
+    title: "Les Âges",
+    typeId: null,
+    imageAssetId: null,
+    aliases: [],
+  },
 ];
+
+/** A timeline page (M11): Apex's coming, a war, and a hidden secret. */
+const AGES: Timeline = {
+  id: "ages",
+  title: "Les Âges",
+  tracks: [{ id: "t", name: "Histoire", color: "amber" }],
+  items: [
+    {
+      id: "coming",
+      trackId: "t",
+      cardId: "apex",
+      title: "",
+      color: "blue",
+      description: "Il descend des montagnes.",
+      start: 12 * 360,
+      end: null,
+      precision: "year",
+      tags: ["Gardiens"],
+    },
+    {
+      id: "war",
+      trackId: "t",
+      cardId: null,
+      title: "Guerre des Cristaux",
+      color: "red",
+      description: "",
+      start: 20 * 360,
+      end: 23 * 360,
+      precision: "year",
+    },
+    {
+      id: "secret",
+      trackId: "t",
+      cardId: null,
+      title: "Le secret d'Alvar",
+      color: "slate",
+      description: "",
+      start: 21 * 360,
+      end: null,
+      precision: "year",
+      hidden: true,
+    },
+  ],
+};
 
 const SETTINGS: WikiSettings = {
   title: "Les Protecteurs",
@@ -203,6 +256,15 @@ beforeEach(() => {
           : [];
       case "get_map":
         return ARDA;
+      case "get_timeline":
+        return AGES;
+      case "current_world":
+        return {
+          calendar: {
+            eras: [{ name: "Âge des Gardiens", abbreviation: "AG", startYear: 0 }],
+            months: Array.from({ length: 12 }, () => ({ name: "", days: 30 })),
+          },
+        };
       case "start_wiki_export":
         started = args as { parent: string; title: string };
         return "C:/Sites/Les Protecteurs - wiki";
@@ -245,6 +307,7 @@ test("writes the home page, a page per page, the search, styles and fonts, then 
   expect(written.map((f) => f.path).sort()).toEqual([
     "fonts.css",
     "index.html",
+    "pages/ages.html",
     "pages/alvar.html",
     "pages/apex.html",
     "pages/arda.html",
@@ -319,4 +382,22 @@ test("the search index has names, aliases and text; the styles have the theme", 
 test("images are named as the Rust side copies them", () => {
   expect(assetFile(`0123456789abcdef${"f".repeat(48)}.webp`)).toBe("0123456789abcdef.webp");
   expect(assetFile("e".repeat(64))).toBe("eeeeeeeeeeeeeeee");
+});
+
+test("the timeline page: drawn without script, its chronicle, hidden items left out", async () => {
+  await run();
+  const ages = file("pages/ages.html");
+  expect(ages).toContain("<h1>Les Âges</h1>");
+  expect(ages).toContain('class="timeline"');
+  // An item standing for a card with a page links to it, under the card's name.
+  expect(ages).toContain('<a class="bubble"');
+  expect(ages).toContain('href="../pages/apex.html">Apex</a>');
+  // Dates in the world's calendar.
+  expect(ages).toContain("12 AG");
+  expect(ages).toContain("20 AG – 23 AG");
+  expect(ages).toContain("Âge des Gardiens");
+  expect(ages).toContain("Gardiens</li>");
+  expect(ages).not.toContain("Le secret d&#x27;Alvar");
+  expect(ages).not.toContain("<script>");
+  expect(file("index.html")).toContain('href="pages/ages.html"');
 });

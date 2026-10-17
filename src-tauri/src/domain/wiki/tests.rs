@@ -126,6 +126,19 @@ async fn only_visible_live_cards_and_maps_are_pages() {
     assert_eq!(shown[0].aliases, ["Grands-Pas"]);
     assert_eq!(shown[0].type_id.as_deref(), Some(character.as_str()));
 
+    // A timeline has its page (M11).
+    let history = crate::domain::timelines::create(pool, "Histoire", "Rois")
+        .await
+        .unwrap();
+    set_visible(pool, &history.id, true).await.unwrap();
+    let with_timeline = pages(pool).await.unwrap();
+    assert!(
+        with_timeline
+            .iter()
+            .any(|p| p.id == history.id && p.kind == DocumentKind::Timeline)
+    );
+    set_visible(pool, &history.id, false).await.unwrap();
+
     // Hidden again, or in the trash: no page.
     set_visible(pool, &gandalf, false).await.unwrap();
     documents::trash(pool, &aragorn).await.unwrap();

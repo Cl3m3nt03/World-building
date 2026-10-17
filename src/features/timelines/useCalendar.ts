@@ -1,17 +1,23 @@
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useCurrentWorld } from "@/features/world";
 import type { DatePrecision, WorldCalendar } from "@/lib/bindings";
 import { type CalendarWords, DEFAULT_CALENDAR, formatDate } from "./calendar";
 
-/** The words of the dates in the app's language. */
-export function useCalendarWords(): CalendarWords {
-  const { t } = useTranslation();
+/** The words of the dates in a language (`t`): also used by the wiki's export. */
+export function calendarWords(t: TFunction): CalendarWords {
   return {
     month: (number) => t("calendar.monthNumber", { count: number }),
     day: (day, month, year, named) =>
       t(named ? "calendar.dayNamed" : "calendar.dayNumbered", { day, month, year }),
     monthYear: (month, year) => t("calendar.monthYear", { month, year }),
   };
+}
+
+/** The words of the dates in the app's language. */
+export function useCalendarWords(): CalendarWords {
+  const { t } = useTranslation();
+  return calendarWords(t);
 }
 
 /** The open world's calendar, and how to write a date in it. */

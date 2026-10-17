@@ -130,6 +130,26 @@ figcaption { color: var(--wiki-muted); font-size: 0.85rem; margin-top: 0.3rem; }
 .pin-label { font-size: 0.75rem; padding: 0 0.3rem; border-radius: 0.2rem; background: color-mix(in srgb, var(--wiki-surface) 85%, transparent); color: var(--wiki-text); white-space: nowrap; }
 a.pin:hover .pin-label { color: var(--wiki-accent); }
 .map-page .map { margin: 1rem 0; }
+.timeline { position: relative; margin: 1rem 0; height: calc(var(--levels) * var(--level) + 5.5rem); border-radius: 0.6rem; background: var(--wiki-surface); background-image: radial-gradient(circle, color-mix(in srgb, var(--wiki-text) 18%, transparent) 1px, transparent 1.4px); background-size: 18px 18px; overflow: hidden; }
+.timeline .era { position: absolute; top: 0; bottom: 0; border-left: 1px solid color-mix(in srgb, var(--wiki-accent) 35%, transparent); background: color-mix(in srgb, var(--wiki-accent) 5%, transparent); }
+.timeline .era span { display: block; padding: 0.3rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--wiki-accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.timeline .axis { position: absolute; left: 0; right: 0; bottom: 2.75rem; height: 1px; background: color-mix(in srgb, var(--wiki-text) 40%, transparent); }
+.timeline .tick { position: absolute; bottom: 0.9rem; transform: translateX(-50%); font-size: 0.7rem; color: var(--wiki-muted); white-space: nowrap; }
+.timeline .tick::before { content: ""; position: absolute; left: 50%; bottom: 1.6rem; width: 1px; height: 0.4rem; background: color-mix(in srgb, var(--wiki-text) 40%, transparent); }
+.timeline .tick.major { color: var(--wiki-text); font-weight: 600; }
+.timeline .segment { position: absolute; bottom: calc(2.75rem - 3px); height: 6px; border-radius: 3px; background: var(--item); }
+.timeline .dot { position: absolute; bottom: calc(2.75rem - 6px); width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--item); border: 2px solid var(--wiki-surface); }
+.timeline .stem { position: absolute; bottom: 2.75rem; width: 1px; height: calc(1.4rem + var(--at) * var(--level)); background: color-mix(in srgb, var(--wiki-text) 25%, transparent); }
+.timeline .bubble { position: absolute; bottom: calc(2.75rem + 1.2rem + var(--at) * var(--level)); transform: translateX(-50%); padding: 0.2rem 0.7rem; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--wiki-text) 15%, transparent); background: var(--wiki-background); color: var(--wiki-text); font-size: 0.75rem; font-weight: 500; white-space: nowrap; text-decoration: none; }
+a.bubble:hover { color: var(--wiki-accent); }
+.timeline-block { margin: 0; }
+.chronicle ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.chronicle li { display: flex; gap: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; background: var(--wiki-surface); }
+.chronicle img { width: 3rem; height: 3rem; border-radius: 0.4rem; object-fit: cover; }
+.chronicle li > div > a, .chronicle li > div > span:nth-child(2) { display: block; font-weight: 600; }
+.chronicle .when { display: block; font-size: 0.85rem; color: var(--wiki-muted); }
+.chronicle .tags { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0; margin: 0.25rem 0 0; }
+.chronicle .tags li { padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75rem; background: var(--wiki-background); }
 .cited { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--wiki-text) 12%, transparent); }
 .cited ul { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .cited a { display: inline-block; padding: 0.2rem 0.75rem; border-radius: 999px; background: var(--wiki-surface); text-decoration: none; border: 1px solid color-mix(in srgb, var(--wiki-text) 12%, transparent); }
