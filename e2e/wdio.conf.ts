@@ -18,6 +18,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { connect } from "node:net";
 import os from "node:os";
 import path from "node:path";
 
@@ -28,6 +29,24 @@ const msedgedriver = path.join(root, "e2e", ".bin", "msedgedriver.exe");
 // GitHub annotations (readable without downloading the CI logs).
 const failures = path.join(os.tmpdir(), "builderz-e2e-failures.txt");
 const tauriDriverBin = process.env.TAURI_DRIVER ?? "tauri-driver";
+
+/** Resolves once something listens on `port` (localhost), or after `timeout` ms. */
+async function waitForPort(port: number, timeout: number): Promise<void> {
+  const until = Date.now() + timeout;
+  while (Date.now() < until) {
+    const open = await new Promise<boolean>((resolve) => {
+      const socket = connect(port, "127.0.0.1");
+      socket.once("connect", () => {
+        socket.destroy();
+        resolve(true);
+      });
+      socket.once("error", () => resolve(false));
+    });
+    if (open) return;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  console.warn(`tauri-driver did not listen on ${port} within ${timeout} ms`);
+}
 
 // Created once by the launcher; the workers inherit it through the environment.
 process.env.BUILDERZ_HOME ??= mkdtempSync(path.join(os.tmpdir(), "builderz-e2e-"));
@@ -103,11 +122,14 @@ export const config: WebdriverIO.Config = {
     console.log(`BUILDERZ_HOME=${home}`);
   },
 
-  beforeSession() {
+  async beforeSession() {
     tauriDriver = spawn(tauriDriverBin, ["--native-driver", nativeDriver()], {
       stdio: ["ignore", "inherit", "inherit"],
       env: process.env,
     });
+    // Cold, the driver takes a while to listen: without waiting, the first
+    // spec's session was refused now and then (ECONNREFUSED on 4444).
+    await waitForPort(4444, 30_000);
   },
 
   afterSession() {
