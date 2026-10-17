@@ -244,7 +244,14 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           mode={mode}
           dimmedIds={dimmedIds}
           onSelectedSide={setItemSide}
-          onCardDrop={(cardId, day, precision, trackId) => {
+          onCardDrop={(cardId, day, precision, trackId, itemId) => {
+            // Dropped on an item: the item now stands for the card.
+            const target = itemId ? timeline.items.find((each) => each.id === itemId) : undefined;
+            if (target) {
+              void editor.apply({ kind: "save", item: { ...target, cardId } });
+              setSelectedId(target.id);
+              return;
+            }
             // Without a track under it (axis view): the selected item's, or the first.
             const track =
               timeline.tracks.find((each) => each.id === trackId) ??

@@ -104,13 +104,15 @@ type Props = {
   onSelectedSide?: (side: "left" | "right") => void;
   /**
    * A card of the sidebar dropped on the timeline: the day under it (snapped
-   * to the visible unit) and, in the track view, the track under it.
+   * to the visible unit), in the track view the track under it, and the item
+   * it was dropped on, if any (the card is then linked to that item).
    */
   onCardDrop?: (
     cardId: string,
     day: number,
     precision: DatePrecision,
     trackId: string | null,
+    itemId: string | null,
   ) => void;
 };
 
@@ -122,6 +124,16 @@ type ItemDrag = {
   y: number;
   moved: boolean;
 };
+
+/** The item whose button or segment is under a point of the window, if any. */
+function itemUnder(clientX: number, clientY: number): string | null {
+  const element = (document.elementsFromPoint?.(clientX, clientY) ?? []).find(
+    (each) => each instanceof HTMLElement && each.closest("[data-item-id]"),
+  );
+  const holder =
+    element instanceof HTMLElement ? element.closest<HTMLElement>("[data-item-id]") : null;
+  return holder?.dataset.itemId ?? null;
+}
 
 /** What an item is called: its own title, or its card's. */
 export function itemTitle(item: TimelineItem, card: Card | undefined): string {
@@ -407,7 +419,8 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     onCreate(trackId, snapDay(calendar, dayAt(view, x), visibleUnit), visibleUnit);
   };
 
-  // A card dragged from the sidebar and dropped here (DocumentTreeView).
+  // A card dragged from the sidebar and dropped here (DocumentTreeView), on
+  // an item (its buttons carry data-item-id) or on the timeline.
   const dropTarget = useRef({ view, calendar, visibleUnit, onCardDrop });
   dropTarget.current = { view, calendar, visibleUnit, onCardDrop };
   useEffect(() => {
@@ -425,18 +438,25 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
       if (clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom) {
         return;
       }
-      const row = document
-        .elementsFromPoint?.(clientX, clientY)
-        .find((each) => each instanceof HTMLElement && each.dataset.trackId);
+      const under = document.elementsFromPoint?.(clientX, clientY) ?? [];
+      const row = under.find((each) => each instanceof HTMLElement && each.dataset.trackId);
       const trackId = row instanceof HTMLElement ? (row.dataset.trackId ?? null) : null;
-      drop(cardId, snapDay(cal, dayAt(shown, clientX - box.left), unit), unit, trackId);
+      drop(
+        cardId,
+        snapDay(cal, dayAt(shown, clientX - box.left), unit),
+        unit,
+        trackId,
+        itemUnder(clientX, clientY),
+      );
     };
     window.addEventListener(CARD_DROP_EVENT, onDrop);
     return () => window.removeEventListener(CARD_DROP_EVENT, onDrop);
   }, []);
 
   // While a card is dragged over the timeline: where it would land.
-  const [guide, setGuide] = useState<{ x: number; day: number } | null>(null);
+  const [guide, setGuide] = useState<{ x: number; day: number; itemId: string | null } | null>(
+    null,
+  );
   useEffect(() => {
     const onDrag = (event: Event) => {
       const detail = (event as CustomEvent<CardDragDetail>).detail;
@@ -462,22 +482,29 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
         return;
       }
       const day = snapDay(cal, dayAt(shown, detail.clientX - box.left), unit);
-      setGuide({ x: xOf(shown, day), day });
+      const itemId = itemUnder(detail.clientX, detail.clientY);
+      setGuide((last) =>
+        last && last.day === day && last.itemId === itemId
+          ? last
+          : { x: xOf(shown, day), day, itemId },
+      );
     };
     window.addEventListener(CARD_DRAG_EVENT, onDrag);
     return () => window.removeEventListener(CARD_DRAG_EVENT, onDrag);
   }, []);
-  const dropGuide = guide ? (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-y-0 z-[15] border-l-2 border-dashed border-primary"
-      style={{ left: guide.x }}
-    >
-      <span className="absolute top-2 left-1.5 rounded-full bg-primary px-2 py-0.5 text-xs font-medium whitespace-nowrap text-primary-foreground shadow">
-        {formatDate(calendar, guide.day, visibleUnit, words)}
-      </span>
-    </div>
-  ) : null;
+  // Over an item, the item lights up instead (the card would be linked to it).
+  const dropGuide =
+    guide && !guide.itemId ? (
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 z-[15] border-l-2 border-dashed border-primary"
+        style={{ left: guide.x }}
+      >
+        <span className="absolute top-2 left-1.5 rounded-full bg-primary px-2 py-0.5 text-xs font-medium whitespace-nowrap text-primary-foreground shadow">
+          {formatDate(calendar, guide.day, visibleUnit, words)}
+        </span>
+      </div>
+    ) : null;
 
   // A focused item out of sight (Tab) comes into the middle.
   const reveal = (item: TimelineItem) => {
@@ -571,6 +598,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
       dragging: item.id === draft?.id,
       editable: Boolean(onChange),
       dimmed: dimmedIds?.has(item.id) ?? false,
+      targeted: guide?.itemId === item.id,
       onSelect: () => {
         // The click ending a drag selects nothing.
         if (skipClick.current) {
@@ -851,6 +879,8 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
 
 type ItemProps = {
   item: TimelineItem;
+  /** A card dragged from the sidebar is over it: dropped, it would be linked to it. */
+  targeted: boolean;
   title: string;
   card: Card | undefined;
   label: string;
@@ -882,6 +912,7 @@ function AxisItem({
   dragging,
   editable,
   dimmed,
+  targeted,
   onSelect,
   onFocus,
   onPointerDown,
@@ -898,6 +929,7 @@ function AxisItem({
       {end !== null && (
         <div
           aria-hidden
+          data-item-id={item.id}
           onPointerDown={onPointerDown}
           className={cn(
             "absolute h-1.5 -translate-y-1/2 rounded-full bg-[var(--item)]",
@@ -938,6 +970,7 @@ function AxisItem({
       />
       <button
         type="button"
+        data-item-id={item.id}
         aria-label={label}
         aria-pressed={selected}
         title={label}
@@ -953,6 +986,7 @@ function AxisItem({
           selected && "border-transparent bg-foreground text-background hover:bg-foreground",
           editable && "cursor-grab",
           dragging && "z-20 cursor-grabbing shadow-lg",
+          targeted && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         )}
         style={{ left: x, top: bubbleY, height: BUBBLE_H, ...style }}
       >
@@ -984,6 +1018,7 @@ function ItemButton({
   dragging,
   editable,
   dimmed,
+  targeted,
   onSelect,
   onFocus,
   onPointerDown,
@@ -1006,8 +1041,16 @@ function ItemButton({
     editable && "cursor-grab",
     dragging && "z-10 cursor-grabbing opacity-90 shadow-lg",
     dimmed && "opacity-30",
+    targeted && "ring-2 ring-primary ring-offset-2 ring-offset-background",
   );
-  const handlers = { onClick: onSelect, onFocus, onPointerDown, onKeyDown, onDoubleClick };
+  const handlers = {
+    "data-item-id": item.id,
+    onClick: onSelect,
+    onFocus,
+    onPointerDown,
+    onKeyDown,
+    onDoubleClick,
+  };
   if (item.end === null) {
     return (
       <button
