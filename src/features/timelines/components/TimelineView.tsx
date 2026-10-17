@@ -16,6 +16,12 @@ import { useTranslation } from "react-i18next";
 import { typeColor } from "@/features/card-types";
 import { AssetImage } from "@/features/media";
 import type { Card, DatePrecision, Timeline, TimelineItem, WorldCalendar } from "@/lib/bindings";
+import {
+  CARD_DRAG_EVENT,
+  CARD_DROP_EVENT,
+  type CardDragDetail,
+  type CardDropDetail,
+} from "@/lib/cardDrop";
 import { cn } from "@/lib/utils";
 import { type CalendarWords, formatDate } from "../calendar";
 import { moveItem, snapDay, stepOf, stretchItem, unitsIn } from "../edit";
@@ -96,6 +102,16 @@ type Props = {
    * card on the other side, so it never hides the item.
    */
   onSelectedSide?: (side: "left" | "right") => void;
+  /**
+   * A card of the sidebar dropped on the timeline: the day under it (snapped
+   * to the visible unit) and, in the track view, the track under it.
+   */
+  onCardDrop?: (
+    cardId: string,
+    day: number,
+    precision: DatePrecision,
+    trackId: string | null,
+  ) => void;
 };
 
 /** A drag of an item: what is held and from where. */
@@ -159,6 +175,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     mode = "axis",
     dimmedIds,
     onSelectedSide,
+    onCardDrop,
   },
   ref,
 ) {
@@ -390,6 +407,78 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     onCreate(trackId, snapDay(calendar, dayAt(view, x), visibleUnit), visibleUnit);
   };
 
+  // A card dragged from the sidebar and dropped here (DocumentTreeView).
+  const dropTarget = useRef({ view, calendar, visibleUnit, onCardDrop });
+  dropTarget.current = { view, calendar, visibleUnit, onCardDrop };
+  useEffect(() => {
+    const onDrop = (event: Event) => {
+      const { cardId, clientX, clientY } = (event as CustomEvent<CardDropDetail>).detail;
+      const {
+        view: shown,
+        calendar: cal,
+        visibleUnit: unit,
+        onCardDrop: drop,
+      } = dropTarget.current;
+      const element = area.current;
+      if (!element || !shown || !drop) return;
+      const box = element.getBoundingClientRect();
+      if (clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom) {
+        return;
+      }
+      const row = document
+        .elementsFromPoint?.(clientX, clientY)
+        .find((each) => each instanceof HTMLElement && each.dataset.trackId);
+      const trackId = row instanceof HTMLElement ? (row.dataset.trackId ?? null) : null;
+      drop(cardId, snapDay(cal, dayAt(shown, clientX - box.left), unit), unit, trackId);
+    };
+    window.addEventListener(CARD_DROP_EVENT, onDrop);
+    return () => window.removeEventListener(CARD_DROP_EVENT, onDrop);
+  }, []);
+
+  // While a card is dragged over the timeline: where it would land.
+  const [guide, setGuide] = useState<{ x: number; day: number } | null>(null);
+  useEffect(() => {
+    const onDrag = (event: Event) => {
+      const detail = (event as CustomEvent<CardDragDetail>).detail;
+      const {
+        view: shown,
+        calendar: cal,
+        visibleUnit: unit,
+        onCardDrop: drop,
+      } = dropTarget.current;
+      const element = area.current;
+      if (!detail || !element || !shown || !drop) {
+        setGuide(null);
+        return;
+      }
+      const box = element.getBoundingClientRect();
+      const inside =
+        detail.clientX >= box.left &&
+        detail.clientX <= box.right &&
+        detail.clientY >= box.top &&
+        detail.clientY <= box.bottom;
+      if (!inside) {
+        setGuide(null);
+        return;
+      }
+      const day = snapDay(cal, dayAt(shown, detail.clientX - box.left), unit);
+      setGuide({ x: xOf(shown, day), day });
+    };
+    window.addEventListener(CARD_DRAG_EVENT, onDrag);
+    return () => window.removeEventListener(CARD_DRAG_EVENT, onDrag);
+  }, []);
+  const dropGuide = guide ? (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 z-[15] border-l-2 border-dashed border-primary"
+      style={{ left: guide.x }}
+    >
+      <span className="absolute top-2 left-1.5 rounded-full bg-primary px-2 py-0.5 text-xs font-medium whitespace-nowrap text-primary-foreground shadow">
+        {formatDate(calendar, guide.day, visibleUnit, words)}
+      </span>
+    </div>
+  ) : null;
+
   // A focused item out of sight (Tab) comes into the middle.
   const reveal = (item: TimelineItem) => {
     if (area.current) area.current.scrollLeft = 0;
@@ -608,6 +697,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
               </ul>
             </>
           )}
+          {dropGuide}
           {timeline.items.length === 0 && (
             <p className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-sm text-muted-foreground">
               {t("timelines.empty")}
@@ -747,6 +837,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
               ))}
             </>
           )}
+          {dropGuide}
           {timeline.items.length === 0 && (
             <p className="pointer-events-none absolute inset-x-0 top-1/2 text-center text-sm text-muted-foreground">
               {t("timelines.empty")}

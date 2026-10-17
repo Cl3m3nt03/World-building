@@ -57,7 +57,7 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
 import { useSetWikiVisible } from "@/features/wiki";
 import type { CardType, DocumentTree } from "@/lib/bindings";
-import { dropCard } from "@/lib/cardDrop";
+import { dragCard, dropCard } from "@/lib/cardDrop";
 import { documentRoute } from "@/lib/documentRoute";
 import {
   useCreateFolder,
@@ -601,6 +601,15 @@ export function DocumentTreeView({
   };
 
   const onDragMove = (event: DragMoveEvent) => {
+    // A card outside the tree: what is under the pointer may show where it lands.
+    const moved = dragKey ? nodeOf.get(dragKey) : undefined;
+    if (moved?.kind === "document" && moved.document.kind === "card") {
+      dragCard(
+        overTree()
+          ? null
+          : { cardId: moved.document.id, clientX: pointerX.current, clientY: pointerY.current },
+      );
+    }
     const overKey = event.over ? String(event.over.id) : null;
     const element = overKey ? rowElement(overKey) : null;
     if (!overKey || !element || dragKey === null) {
@@ -643,6 +652,7 @@ export function DocumentTreeView({
   };
 
   const endDrag = () => {
+    dragCard(null);
     setDragKey(null);
     setDrop(null);
     clearHover();

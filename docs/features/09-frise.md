@@ -96,6 +96,8 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - Sa **page** montre la frise en lecture (vue Axe : on la parcourt, on la zoome, un double-clic sur un élément ouvre la page de sa carte), puis la **chronologie** : chaque élément avec ses dates, son image, sa description et ses étiquettes ; son nom mène à la page de sa carte si elle en a une. Les éléments masqués par l'œil n'y sont pas.
 - L'**export HTML** du wiki écrit une page par frise : la frise dessinée sans script (axe, ères, bulles placées en pourcentages, donc à toutes les largeurs) et la chronologie ; le bloc « Frise » des cartes y est dessiné aussi. Tout se lit sans réseau ; les images des éléments sont copiées avec le site.
 
+**Après M11 (v1.3.x)** : une carte de la sidebar se **glisse directement sur la frise**. Pendant le glisser, un trait en pointillé et la date montrent où elle tombera (calée sur l'unité visible). Lâchée, elle devient un événement à cette date : sur la piste sous le pointeur en vue Pistes, sinon sur celle de l'élément sélectionné (ou la première). L'élément prend le nom, l'image de la carte et la couleur de la piste, et s'ouvre dans sa carte flottante ; Ctrl + Z l'annule.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».
