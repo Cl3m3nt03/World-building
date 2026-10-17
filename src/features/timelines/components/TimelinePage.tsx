@@ -244,6 +244,27 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           mode={mode}
           dimmedIds={dimmedIds}
           onSelectedSide={setItemSide}
+          onCardDrop={(cardId, day, precision, trackId) => {
+            // Without a track under it (axis view): the selected item's, or the first.
+            const track =
+              timeline.tracks.find((each) => each.id === trackId) ??
+              timeline.tracks.find((each) => each.id === selected?.trackId) ??
+              timeline.tracks[0];
+            if (!track) return;
+            const item = {
+              id: crypto.randomUUID(),
+              trackId: track.id,
+              cardId,
+              title: "",
+              color: track.color,
+              description: "",
+              start: day,
+              end: null,
+              precision,
+            };
+            void editor.apply({ kind: "save", item });
+            setSelectedId(item.id);
+          }}
         />
 
         {selected ? (

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Card, DocumentTree, Timeline, TimelineItem, WorldInfo } from "@/lib/bindings";
+import { dragCard, dropCard } from "@/lib/cardDrop";
 import { createQueryClient } from "@/lib/query";
 
 const YEAR = 360;
@@ -481,4 +482,32 @@ test("tags are added in the item card, then filter the timeline", async () => {
   expect(
     screen.getByRole("button", { name: /^Rébellion de Robert, / }).parentElement?.className,
   ).not.toContain("opacity-30");
+});
+
+test("a card dropped from the sidebar becomes an event where it lands", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+
+  // jsdom lays nothing out: the drawing's box is at (0, 0).
+  act(() => dropCard({ cardId: "robert", clientX: 0, clientY: 0 }));
+
+  await waitFor(() => expect(stored?.items).toHaveLength(4));
+  const placed = stored?.items.find((item) => item.cardId === "robert" && item.id !== "crowned");
+  expect(placed).toMatchObject({ trackId: "wars", title: "", end: null, color: "red" });
+  // It opens in its card, to be completed.
+  expect(await screen.findByRole("complementary", { name: "Élément sélectionné" })).toBeTruthy();
+});
+
+test("while a card is dragged over it, the timeline shows where it would land", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  act(() => dragCard({ cardId: "robert", clientX: 0, clientY: 0 }));
+  const guide = await waitFor(() => {
+    const found = view.querySelector(".border-dashed");
+    expect(found?.textContent).toMatch(/AC$/);
+    return found;
+  });
+  expect(guide).toBeTruthy();
+  act(() => dragCard(null));
+  await waitFor(() => expect(view.querySelector(".border-dashed")).toBeNull());
 });

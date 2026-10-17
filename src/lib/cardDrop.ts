@@ -9,3 +9,14 @@ export type CardDropDetail = { cardId: string; clientX: number; clientY: number 
 export function dropCard(detail: CardDropDetail): void {
   window.dispatchEvent(new CustomEvent<CardDropDetail>(CARD_DROP_EVENT, { detail }));
 }
+
+/**
+ * While a card of the sidebar is dragged outside the tree: where the pointer
+ * is (`null` once the drag ends), so a timeline can show where it would land.
+ */
+export const CARD_DRAG_EVENT = "bz-card-drag";
+export type CardDragDetail = CardDropDetail | null;
+
+export function dragCard(detail: CardDragDetail): void {
+  window.dispatchEvent(new CustomEvent<CardDragDetail>(CARD_DRAG_EVENT, { detail }));
+}
