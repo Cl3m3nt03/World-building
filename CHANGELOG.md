@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.0](https://github.com/Cl3m3nt03/World-building/compare/v1.2.0...v1.3.0) (2026-10-17)
+
+
+### Fonctionnalités
+
+* **timeline:** edit a timeline's items and tracks ([#401](https://github.com/Cl3m3nt03/World-building/issues/401)) ([d072904](https://github.com/Cl3m3nt03/World-building/commit/d072904a2158d40334705fe500bc731b766f44b0)), closes [#391](https://github.com/Cl3m3nt03/World-building/issues/391)
+* **timeline:** link timelines to the world's cards ([#402](https://github.com/Cl3m3nt03/World-building/issues/402)) ([d378f74](https://github.com/Cl3m3nt03/World-building/commit/d378f740805766e80a8b160afd0b448374ada7f1)), closes [#392](https://github.com/Cl3m3nt03/World-building/issues/392)
+* **timeline:** open and browse a timeline ([#399](https://github.com/Cl3m3nt03/World-building/issues/399)) ([7f2d305](https://github.com/Cl3m3nt03/World-building/commit/7f2d30565a796c5d10366af93cd55d2bab243d53)), closes [#390](https://github.com/Cl3m3nt03/World-building/issues/390)
+* **timeline:** set the world's calendar ([#398](https://github.com/Cl3m3nt03/World-building/issues/398)) ([9e6e54e](https://github.com/Cl3m3nt03/World-building/commit/9e6e54ef5350b305c7653f48ecca959399cc5c67)), closes [#389](https://github.com/Cl3m3nt03/World-building/issues/389)
+* **timeline:** show timelines in the wiki and its export ([#405](https://github.com/Cl3m3nt03/World-building/issues/405)) ([eb51a7f](https://github.com/Cl3m3nt03/World-building/commit/eb51a7f3d206466cbff20021242bdd4e148e5db9)), closes [#393](https://github.com/Cl3m3nt03/World-building/issues/393)
+* **timeline:** show timelines the way vvd does ([#404](https://github.com/Cl3m3nt03/World-building/issues/404)) ([6df3c23](https://github.com/Cl3m3nt03/World-building/commit/6df3c2378e08bd61577d6995367b159aad3fd62e)), closes [#403](https://github.com/Cl3m3nt03/World-building/issues/403)
+* **timeline:** store the world's calendar and its timelines ([#397](https://github.com/Cl3m3nt03/World-building/issues/397)) ([ef90cb2](https://github.com/Cl3m3nt03/World-building/commit/ef90cb2019f37e40b85ae4094a72763694910c2f)), closes [#388](https://github.com/Cl3m3nt03/World-building/issues/388)
+
+
+### Corrections
+
+* **timeline:** leave room for the first item's name when framing ([#407](https://github.com/Cl3m3nt03/World-building/issues/407)) ([0a3b3cd](https://github.com/Cl3m3nt03/World-building/commit/0a3b3cd8ab041c5afb3f8c58a8996605333c9b81))
+
 ## [1.2.0](https://github.com/Cl3m3nt03/World-building/compare/v1.1.0...v1.2.0) (2026-10-12)
 
 
