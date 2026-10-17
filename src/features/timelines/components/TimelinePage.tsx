@@ -189,6 +189,8 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
     [timeline.items, tags],
   );
   const [mode, setMode] = useState<"axis" | "tracks">("axis");
+  // The item card floats on the side away from the selected item.
+  const [itemSide, setItemSide] = useState<"left" | "right">("right");
   const wikiPages = useWikiPages();
   const setWikiVisible = useSetWikiVisible();
   const inWiki = wikiPages.data?.some((page) => page.id === timeline.id) ?? false;
@@ -241,6 +243,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           focusId={revealId ?? focusId}
           mode={mode}
           dimmedIds={dimmedIds}
+          onSelectedSide={setItemSide}
         />
 
         {selected ? (
@@ -253,6 +256,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             onSave={(item) => void editor.apply({ kind: "save", item })}
             onDelete={remove}
             onClose={() => setSelectedId(null)}
+            side={itemSide === "right" ? "left" : "right"}
           />
         ) : null}
 
