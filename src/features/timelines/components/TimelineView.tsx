@@ -18,9 +18,11 @@ import { AssetImage } from "@/features/media";
 import type { Card, DatePrecision, Timeline, TimelineItem, WorldCalendar } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { type CalendarWords, formatDate } from "../calendar";
+import { moveItem, snapDay, stepOf, stretchItem, unitsIn } from "../edit";
 import {
   centerOn,
   clampScale,
+  dayAt,
   eraBands,
   extent,
   frame,
@@ -28,6 +30,8 @@ import {
   labelled,
   lanes,
   ticks,
+  tickUnit,
+  unitPrecision,
   type Viewport,
   xOf,
   zoomAt,
@@ -52,6 +56,8 @@ export type TimelineViewHandle = {
   goTo: (day: number, precision: DatePrecision) => void;
   /** The day in the middle of the view. */
   center: () => number;
+  /** What the graduation counts in: where new items snap. */
+  unit: () => DatePrecision;
 };
 
 type Props = {
@@ -62,6 +68,20 @@ type Props = {
   label: string;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** An item dragged, stretched or moved by keys (11.4); without it, items stay put. */
+  onChange?: (item: TimelineItem) => void;
+  /** A double click on a track: a new event there. */
+  onCreate?: (trackId: string, day: number, precision: DatePrecision) => void;
+  onDelete?: (id: string) => void;
+};
+
+/** A drag of an item: what is held and from where. */
+type ItemDrag = {
+  item: TimelineItem;
+  edge: "move" | "start" | "end";
+  x: number;
+  y: number;
+  moved: boolean;
 };
 
 /** What an item is called: its own title, or its card's. */
@@ -99,7 +119,7 @@ function initialView(calendar: WorldCalendar, timeline: Timeline, width: number)
  * pointer, a drag pans; arrows, + and − do the same from the keyboard.
  */
 export const TimelineView = forwardRef<TimelineViewHandle, Props>(function TimelineView(
-  { timeline, calendar, cardsById, label, selectedId, onSelect },
+  { timeline, calendar, cardsById, label, selectedId, onSelect, onChange, onCreate, onDelete },
   ref,
 ) {
   const { t } = useTranslation();
@@ -141,8 +161,9 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
           return centerOn({ ...current, scale }, day, width);
         }),
       center: () => (view ? view.start + width / 2 / view.scale : 0),
+      unit: () => unitPrecision(tickUnit(calendar, view?.scale ?? 1)),
     }),
-    [fitAll, width, view],
+    [fitAll, width, view, calendar],
   );
 
   // Wheel: pans; with Ctrl, zooms around the pointer. Not passive, to keep the page still.
@@ -201,6 +222,123 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     event.preventDefault();
   };
 
+  // Items are dragged (moved, or a period stretched by an edge), across tracks too.
+  const visibleUnit = unitPrecision(tickUnit(calendar, view?.scale ?? 1));
+  const [draft, setDraft] = useState<TimelineItem | null>(null);
+  const itemDrag = useRef<ItemDrag | null>(null);
+  const skipClick = useRef(false);
+  const latest = useRef({ calendar, view, visibleUnit, onChange });
+  latest.current = { calendar, view, visibleUnit, onChange };
+
+  const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, item: TimelineItem) => {
+    if (event.button !== 0 || !onChange) return;
+    const handle = (event.target as Element).closest<HTMLElement>("[data-edge]")?.dataset.edge;
+    itemDrag.current = {
+      item,
+      edge: handle === "start" || handle === "end" ? handle : "move",
+      x: event.clientX,
+      y: event.clientY,
+      moved: false,
+    };
+    let landing: TimelineItem | null = null;
+    const onMove = (move: globalThis.PointerEvent) => {
+      const current = itemDrag.current;
+      const { calendar: cal, view: shown, visibleUnit: unit } = latest.current;
+      if (!current || !shown) return;
+      const dx = move.clientX - current.x;
+      // A move may go up or down to another track; a stretch only sideways.
+      const dy = current.edge === "move" ? move.clientY - current.y : 0;
+      if (!current.moved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      current.moved = true;
+      const step = stepOf(unit, current.item.precision);
+      const count = unitsIn(cal, dx, shown.scale, step);
+      let next =
+        current.edge === "move"
+          ? moveItem(cal, current.item, step, count)
+          : stretchItem(cal, current.item, current.edge, step, count);
+      if (current.edge === "move") {
+        const row = document
+          .elementsFromPoint?.(move.clientX, move.clientY)
+          .find((element) => element instanceof HTMLElement && element.dataset.trackId);
+        const trackId = row instanceof HTMLElement ? row.dataset.trackId : undefined;
+        if (trackId) next = { ...next, trackId };
+      }
+      landing = next;
+      setDraft(next);
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      const current = itemDrag.current;
+      itemDrag.current = null;
+      setDraft(null);
+      if (!current?.moved) return;
+      // The click ending a drag selects nothing.
+      skipClick.current = true;
+      if (
+        landing &&
+        (landing.start !== current.item.start ||
+          landing.end !== current.item.end ||
+          landing.trackId !== current.item.trackId)
+      ) {
+        latest.current.onChange?.(landing);
+      }
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
+  /**
+   * Alt + left/right move the item by a unit (with Shift, stretch its end);
+   * Alt + up/down move it to the track above or below; Delete removes it.
+   */
+  const onItemKeyDown = (event: KeyboardEvent<HTMLButtonElement>, item: TimelineItem) => {
+    if (!onChange) return;
+    const step = stepOf(visibleUnit, item.precision);
+    const index = timeline.tracks.findIndex((track) => track.id === item.trackId);
+    let next: TimelineItem | null = null;
+    if (event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+      const count = event.key === "ArrowLeft" ? -1 : 1;
+      next = event.shiftKey
+        ? stretchItem(calendar, item, "end", step, count)
+        : moveItem(calendar, item, step, count);
+    } else if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+      const track = timeline.tracks[index + (event.key === "ArrowUp" ? -1 : 1)];
+      if (track) next = { ...item, trackId: track.id };
+    } else if ((event.key === "Delete" || event.key === "Backspace") && onDelete) {
+      event.preventDefault();
+      event.stopPropagation();
+      onDelete(item.id);
+      return;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (next && next !== item) onChange(next);
+  };
+
+  /**
+   * A double click on a track adds an event there. Heard on the drawing: its
+   * pointer capture (the pan) sends the clicks to it, so the track is the
+   * one under the pointer.
+   */
+  const onDoubleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (!onCreate || !view || !area.current || (event.target as Element).closest("button")) return;
+    const under = document.elementsFromPoint?.(event.clientX, event.clientY) ?? [
+      event.target as Element,
+    ];
+    const row = [event.target as Element, ...under]
+      .map((element) => element.closest<HTMLElement>("[data-track-id]"))
+      .find((element) => element !== null);
+    const trackId = row?.dataset.trackId;
+    if (!trackId) return;
+    const x = event.clientX - area.current.getBoundingClientRect().left;
+    onCreate(trackId, snapDay(calendar, dayAt(view, x), visibleUnit), visibleUnit);
+  };
+
   // A focused item out of sight (Tab) comes into the middle.
   const reveal = (item: TimelineItem) => {
     if (area.current) area.current.scrollLeft = 0;
@@ -222,9 +360,15 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
   );
 
   // Lanes only change with the scale (positions relative to day 0).
+  // The item being dragged shows where it would land.
+  const shown = useMemo(
+    () =>
+      draft ? timeline.items.map((item) => (item.id === draft.id ? draft : item)) : timeline.items,
+    [timeline.items, draft],
+  );
   const layout = useMemo(() => {
     const byTrack = new Map<string, TimelineItem[]>();
-    for (const item of timeline.items) {
+    for (const item of shown) {
       const list = byTrack.get(item.trackId) ?? [];
       list.push(item);
       byTrack.set(item.trackId, list);
@@ -248,7 +392,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
       height.set(track.id, Math.max(1, most) * LANE_H + 2 * TRACK_PAD);
     }
     return { byTrack, laneOf, height };
-  }, [timeline, calendar, cardsById, scale]);
+  }, [timeline.tracks, shown, calendar, cardsById, scale]);
 
   const clampX = (x: number) => Math.min(Math.max(x, -BLEED), width + BLEED);
 
@@ -288,6 +432,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onDoubleClick={onDoubleClick}
           onPointerCancel={() => {
             drag.current = null;
           }}
@@ -371,6 +516,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
                 <ul
                   key={track.id}
                   aria-label={track.name}
+                  data-track-id={track.id}
                   className="relative border-b border-border"
                   style={{ height: layout.height.get(track.id) }}
                 >
@@ -391,8 +537,18 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
                           right={clampX(x1)}
                           top={top}
                           selected={item.id === selectedId}
-                          onSelect={() => onSelect(item.id)}
+                          dragging={item.id === draft?.id}
+                          editable={Boolean(onChange)}
+                          onSelect={() => {
+                            if (skipClick.current) {
+                              skipClick.current = false;
+                              return;
+                            }
+                            onSelect(item.id);
+                          }}
                           onFocus={() => reveal(item)}
+                          onPointerDown={(event) => onItemPointerDown(event, item)}
+                          onKeyDown={(event) => onItemKeyDown(event, item)}
                         />
                       </li>
                     );
@@ -421,8 +577,12 @@ type ItemButtonProps = {
   right: number;
   top: number;
   selected: boolean;
+  dragging: boolean;
+  editable: boolean;
   onSelect: () => void;
   onFocus: () => void;
+  onPointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
+  onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 };
 
 /** An event (a marker and its name) or a period (a bar holding its name). */
@@ -435,8 +595,12 @@ function ItemButton({
   right,
   top,
   selected,
+  dragging,
+  editable,
   onSelect,
   onFocus,
+  onPointerDown,
+  onKeyDown,
 }: ItemButtonProps) {
   const color = typeColor(item.color);
   const style = { "--item": color, top, height: LANE_H - 6 } as CSSProperties;
@@ -451,7 +615,10 @@ function ItemButton({
     "absolute flex items-center gap-1.5 rounded-md text-xs whitespace-nowrap outline-none",
     "focus-visible:ring-2 focus-visible:ring-ring",
     selected && "ring-2 ring-ring",
+    editable && "cursor-grab",
+    dragging && "z-10 cursor-grabbing opacity-90 shadow-lg",
   );
+  const handlers = { onClick: onSelect, onFocus, onPointerDown, onKeyDown };
   if (item.end === null) {
     return (
       <button
@@ -459,8 +626,7 @@ function ItemButton({
         aria-label={label}
         aria-pressed={selected}
         title={label}
-        onClick={onSelect}
-        onFocus={onFocus}
+        {...handlers}
         className={cn(common, "-translate-x-2 pr-2 pl-0.5 hover:bg-accent/60")}
         style={{ ...style, left }}
       >
@@ -482,8 +648,7 @@ function ItemButton({
       aria-label={label}
       aria-pressed={selected}
       title={label}
-      onClick={onSelect}
-      onFocus={onFocus}
+      {...handlers}
       className={cn(
         common,
         "border border-[color-mix(in_oklab,var(--item)_55%,transparent)] border-l-[3px] border-l-[var(--item)]",
@@ -495,6 +660,21 @@ function ItemButton({
         {avatar}
         <span className="font-medium">{title}</span>
       </span>
+      {editable && (
+        <>
+          {/* The edges stretch the period. */}
+          <span
+            aria-hidden
+            data-edge="start"
+            className="absolute inset-y-0 -left-1 w-2.5 cursor-ew-resize"
+          />
+          <span
+            aria-hidden
+            data-edge="end"
+            className="absolute inset-y-0 -right-1 w-2.5 cursor-ew-resize"
+          />
+        </>
+      )}
     </button>
   );
 }

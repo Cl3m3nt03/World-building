@@ -67,7 +67,15 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - Un **événement** est un losange suivi de son nom. Une **période** est une barre de sa couleur, dont le nom reste visible quand son début sort de la vue. Un élément qui représente une carte prend son nom (s'il n'en a pas) et son image.
 - **Navigation** : la molette fait défiler, Ctrl + molette zoome autour du pointeur, le glisser déplace la vue. Les boutons « Zoomer » et « Dézoomer », « Tout voir » (qui cadre tous les éléments) et « Aller à une date » (une date du calendrier du monde, la vue s'y centre et zoome assez pour en voir l'unité) complètent la barre.
 - **Clavier** : flèches pour se déplacer (avec Maj, plus loin), `+` et `−` pour zoomer, `0` pour tout voir, Tab d'un élément à l'autre (un élément hors de vue vient au centre), Entrée pour l'ouvrir, Échap pour le refermer. Chaque élément a un nom complet (« Rébellion de Robert, de 282 AC à 283 AC »).
-- **Ouvrir un élément** affiche son détail sous la frise : nom, dates, piste, description et lien vers sa carte. L'édition arrive en 11.4.
+- **Ouvrir un élément** le sélectionne et ouvre son panneau (voir 11.4).
+
+**Réalisé en M11 (11.4)** : la frise s'édite.
+- **Ajouter** : le menu « Ajouter › Un événement / Une période » place l'élément au centre de la vue, sur la piste de l'élément sélectionné (ou la première), calé sur l'unité visible ; une période couvre trois unités. Un double-clic sur une piste y ajoute un événement. Le nouvel élément prend la couleur de sa piste et s'ouvre dans le panneau, pour être nommé.
+- **Tirer** un élément le déplace, d'une piste à l'autre aussi ; tirer un bord d'une période l'étire, sans que sa fin passe avant son début. Le pas est l'unité visible, jamais plus fin que la précision de l'élément (un élément daté à l'année avance d'un an). Un élément déplacé de N années ou N mois garde son mois et son jour.
+- **Au clavier**, sur un élément : Alt + flèche gauche ou droite le déplace d'une unité (avec Maj, étire sa fin), Alt + flèche haut ou bas le passe sur la piste voisine, Suppr le supprime.
+- **Panneau d'élément** (à droite) : nom (vide, il prend celui de la carte), carte représentée (choisie dans la recherche de cartes, ouverte d'un clic, ou détachée en gardant son nom), date ou début et fin (« Période » ajoute une fin), piste, couleur, description, « Supprimer l'élément ». Chaque changement est enregistré aussitôt (nom et description quand on quitte le champ). Une fin avant le début est refusée avec un message.
+- **Pistes** : un dialogue les renomme, les colore, les monte ou descend, en ajoute (couleur suivante de la palette, 50 au plus) et en supprime. Supprimer une piste qui porte des éléments demande une confirmation ; la dernière piste reste.
+- **Annuler et rétablir** (boutons, Ctrl + Z, Ctrl + Y ou Ctrl + Maj + Z) : ajouts, déplacements, modifications et suppressions d'éléments, noms, couleurs et ordre des pistes. Ajouter ou supprimer une piste ne s'annule pas, et supprimer une piste efface l'historique, puisque ses éléments ont disparu.
 
 ## Critères d'acceptation
 

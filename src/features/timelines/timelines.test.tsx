@@ -6,7 +6,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { Card, DocumentTree, Timeline, WorldInfo } from "@/lib/bindings";
+import type { Card, DocumentTree, Timeline, TimelineItem, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 
 const YEAR = 360;
@@ -89,7 +89,7 @@ let calls: { command: string; payload: unknown }[];
 let tree: DocumentTree;
 let stored: Timeline | null;
 
-function document(timeline: Timeline) {
+function asDocument(timeline: Timeline) {
   return {
     id: timeline.id,
     kind: "timeline" as const,
@@ -126,7 +126,7 @@ beforeEach(() => {
   );
   calls = [];
   stored = HISTORY;
-  tree = { folders: [], documents: [document(HISTORY)] };
+  tree = { folders: [], documents: [asDocument(HISTORY)] };
   mockIPC((command, payload) => {
     calls.push({ command, payload });
     switch (command) {
@@ -142,6 +142,30 @@ beforeEach(() => {
         return [];
       case "get_timeline":
         return stored;
+      case "save_timeline_item": {
+        const { item } = payload as { item: TimelineItem };
+        if (!stored) return null;
+        const items = stored.items.some((each) => each.id === item.id)
+          ? stored.items.map((each) => (each.id === item.id ? item : each))
+          : [...stored.items, item];
+        stored = { ...stored, items: items.sort((a, b) => a.start - b.start) };
+        return stored;
+      }
+      case "delete_timeline_item": {
+        const { id } = payload as { id: string };
+        if (!stored) return null;
+        stored = { ...stored, items: stored.items.filter((item) => item.id !== id) };
+        return stored;
+      }
+      case "update_timeline_track": {
+        const { id, name, color } = payload as { id: string; name: string; color: string };
+        if (!stored) return null;
+        stored = {
+          ...stored,
+          tracks: stored.tracks.map((track) => (track.id === id ? { id, name, color } : track)),
+        };
+        return stored;
+      }
       case "create_timeline": {
         const { title, trackName } = payload as { title: string; trackName: string };
         stored = {
@@ -150,7 +174,7 @@ beforeEach(() => {
           tracks: [{ id: "t", name: trackName, color: "slate" }],
           items: [],
         };
-        tree = { folders: [], documents: [document(stored)] };
+        tree = { folders: [], documents: [asDocument(stored)] };
         return stored;
       }
       default:
@@ -225,15 +249,129 @@ test("tracks hold their items, named in the world's calendar, with the eras behi
   expect(within(view).getByText("Avant la Conquête")).toBeTruthy();
 });
 
-test("an item opens its details, and its card from there", async () => {
+test("an item opens in the editor, which leads to its card", async () => {
   const router = await renderAt("/world/demo/world/timeline/tl1");
 
   fireEvent.click(await screen.findByRole("button", { name: /^Robert Baratheon, / }));
-  const details = await screen.findByRole("region", { name: /^Robert Baratheon, / });
-  expect(within(details).getByText("3e mois 283 AC · Rois")).toBeTruthy();
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  expect((within(editor).getByLabelText("Nom") as HTMLInputElement).placeholder).toBe(
+    "Robert Baratheon",
+  );
 
-  fireEvent.click(within(details).getByRole("link", { name: "Ouvrir Robert Baratheon" }));
+  fireEvent.click(within(editor).getByRole("link", { name: "Robert Baratheon" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/robert"));
+});
+
+test("the editor saves a name when its field is left, then Ctrl+Z puts it back", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  const name = within(editor).getByLabelText("Nom");
+
+  fireEvent.change(name, { target: { value: "Rébellion de Robert Baratheon" } });
+  fireEvent.blur(name);
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")?.title).toBe(
+      "Rébellion de Robert Baratheon",
+    ),
+  );
+
+  fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")?.title).toBe(
+      "Rébellion de Robert",
+    ),
+  );
+  await waitFor(() => expect((name as HTMLInputElement).value).toBe("Rébellion de Robert"));
+  fireEvent.keyDown(document.body, { key: "y", ctrlKey: true });
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")?.title).toBe(
+      "Rébellion de Robert Baratheon",
+    ),
+  );
+});
+
+test("Alt + arrows move an item by a year and to another track; undo puts it back", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  const rebellion = within(view).getByRole("button", { name: /^Rébellion de Robert, / });
+
+  fireEvent.keyDown(rebellion, { key: "ArrowRight", altKey: true });
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")).toMatchObject({
+      start: 283 * YEAR,
+      end: 284 * YEAR,
+    }),
+  );
+  fireEvent.keyDown(
+    within(view).getByRole("button", { name: "Rébellion de Robert, de 283 AC à 284 AC" }),
+    { key: "ArrowDown", altKey: true },
+  );
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")?.trackId).toBe("kings"),
+  );
+  expect(
+    within(within(view).getByRole("list", { name: "Rois" })).getByRole("button", {
+      name: /^Rébellion de Robert/,
+    }),
+  ).toBeTruthy();
+
+  fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+  fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")).toMatchObject({
+      trackId: "wars",
+      start: 282 * YEAR,
+    }),
+  );
+});
+
+test("a double click on a track adds an event there; Delete removes it", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+
+  fireEvent.doubleClick(within(view).getByRole("list", { name: "Rois" }), { clientX: 500 });
+  await waitFor(() => expect(stored?.items).toHaveLength(4));
+  const added = stored?.items.find((item) => item.title === "Nouvel événement");
+  expect(added).toMatchObject({ trackId: "kings", end: null, color: "amber" });
+  // The new event opens in the editor, to be named.
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  expect((within(editor).getByLabelText("Nom") as HTMLInputElement).value).toBe("Nouvel événement");
+
+  fireEvent.keyDown(within(view).getByRole("button", { name: /^Nouvel événement, / }), {
+    key: "Delete",
+  });
+  await waitFor(() => expect(stored?.items).toHaveLength(3));
+});
+
+test("a period's end cannot come before its start", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  const end = within(editor).getByRole("group", { name: "Fin" });
+
+  fireEvent.change(within(end).getByLabelText("Année"), { target: { value: "200" } });
+  expect(within(editor).getByRole("alert").textContent).toBe(
+    "La fin ne peut pas précéder le début.",
+  );
+  expect(stored?.items.find((item) => item.id === "rebellion")?.end).toBe(283 * YEAR);
+});
+
+test("tracks are renamed and recoloured from their dialog", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: "Pistes" }));
+  const dialog = await screen.findByRole("dialog", { name: "Pistes de la frise" });
+
+  const name = within(dialog).getByLabelText("Nom de la piste 1");
+  fireEvent.change(name, { target: { value: "Guerres et batailles" } });
+  fireEvent.blur(name);
+  await waitFor(() => expect(stored?.tracks[0]?.name).toBe("Guerres et batailles"));
+
+  const colors = within(dialog).getByRole("radiogroup", {
+    name: "Couleur de la piste Guerres et batailles",
+  });
+  fireEvent.click(within(colors).getByRole("radio", { name: /Bleu/ }));
+  await waitFor(() => expect(stored?.tracks[0]?.color).toBe("blue"));
 });
 
 test("the keys zoom and frame the timeline again", async () => {
