@@ -129,8 +129,9 @@ export function itemLabel(
 /** The view a timeline opens on: all its items, else its eras' meeting or a century from 0. */
 function initialView(calendar: WorldCalendar, timeline: Timeline, width: number): Viewport {
   const span = extent(calendar, timeline.items);
-  // On the right, room for the names of the last items.
-  if (span) return frame(span.from, span.to, width, 48, Math.min(220, width / 4));
+  // Room for the names of the first and last items (bubbles are centred on them).
+  if (span)
+    return frame(span.from, span.to, width, Math.min(140, width / 6), Math.min(220, width / 4));
   const year = calendar.months.reduce((sum, month) => sum + month.days, 0) || 1;
   return frame(-10 * year, 100 * year, width);
 }
