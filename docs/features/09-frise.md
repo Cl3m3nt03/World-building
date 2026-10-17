@@ -6,7 +6,7 @@
 
 Raconter l'histoire du monde dans le temps : ses ères, ses guerres, les vies de ses personnages, les règnes de ses maisons. La frise montre **quand** les choses arrivent et **combien de temps** elles durent. Elle reste reliée aux cartes, comme la map, le graph et les arbres.
 
-vvd n'en documente pas le fonctionnement et le board FigJam ne la contient pas. La frise est donc conçue d'après les outils de référence du worldbuilding (World Anvil, LegendKeeper, Aeon Timeline) : calendrier propre au monde, ères, pistes parallèles, événements ponctuels et périodes, zoom.
+Le board FigJam ne la contient pas. La frise a d'abord été conçue d'après les outils de référence du worldbuilding (World Anvil, LegendKeeper, Aeon Timeline) : calendrier propre au monde, ères, pistes parallèles, événements ponctuels et périodes, zoom. Une capture de la « Chronologie » de vvd, envoyée par Clément, a ensuite fixé son apparence : un axe sur fond pointillé, des bulles au-dessus, une carte d'élément flottante, une barre d'outils en bas (11.5b).
 
 ## Calendrier du monde
 

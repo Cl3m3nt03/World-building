@@ -2,7 +2,7 @@
 
 **Objectif** : raconter l'histoire du monde dans le temps. Chaque monde a son calendrier (ères, mois). Une frise est un document de World : des pistes, des événements et des périodes, reliés aux cartes, qu'on parcourt en zoomant des siècles aux jours.
 
-**Spec** : `docs/features/09-frise.md`. Le board FigJam ne la décrit pas et vvd n'en documente pas le fonctionnement : elle est conçue d'après les outils de référence du worldbuilding. **Décision** : ADR 0011.
+**Spec** : `docs/features/09-frise.md`. Le board FigJam ne la décrit pas. Elle a d'abord été conçue d'après les outils de référence du worldbuilding, puis alignée sur la « Chronologie » de vvd d'après une capture envoyée par Clément (11.5b). **Décision** : ADR 0011.
 
 **Choix de conception** :
 - **Un document de World** : la frise a la sidebar, la corbeille, la recherche, les épingles et le wiki, comme la map et le graph.
