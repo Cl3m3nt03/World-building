@@ -398,3 +398,39 @@ test("the keys zoom and frame the timeline again", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Tout voir" }));
   expect(width()).toBeCloseTo(framed);
 });
+
+test("?card= opens the timeline on that card's item, selected", async () => {
+  await renderAt("/world/demo/world/timeline/tl1?card=robert");
+  const robert = await screen.findByRole("button", { name: /^Robert Baratheon, / });
+  await waitFor(() => expect(robert.getAttribute("aria-pressed")).toBe("true"));
+  expect(await screen.findByRole("complementary", { name: "Élément sélectionné" })).toBeTruthy();
+});
+
+test("a double click on an item standing for a card opens the card", async () => {
+  const router = await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.doubleClick(await screen.findByRole("button", { name: /^Robert Baratheon, / }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/robert"));
+});
+
+test("Add cards places the chosen cards on a track, undone as one", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const add = await screen.findByRole("button", { name: "Ajouter" });
+  await act(async () => {
+    add.focus();
+    fireEvent.keyDown(add, { key: "Enter" });
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Des cartes…" }));
+  const dialog = await screen.findByRole("dialog", { name: "Ajouter des cartes" });
+  expect(within(dialog).getByText("déjà sur la frise")).toBeTruthy();
+
+  fireEvent.click(within(dialog).getByRole("checkbox", { name: /Robert Baratheon/ }));
+  fireEvent.change(within(dialog).getByLabelText("Année"), { target: { value: "300" } });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Placer 1 carte" }));
+
+  await waitFor(() => expect(stored?.items).toHaveLength(4));
+  const placed = stored?.items.find((item) => item.cardId === "robert" && item.id !== "crowned");
+  expect(placed).toMatchObject({ trackId: "wars", title: "", start: 300 * YEAR, end: null });
+
+  fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+  await waitFor(() => expect(stored?.items).toHaveLength(3));
+});

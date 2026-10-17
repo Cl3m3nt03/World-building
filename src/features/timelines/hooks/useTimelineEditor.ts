@@ -10,7 +10,9 @@ export type TimelineOp =
   | { kind: "save"; item: TimelineItem }
   | { kind: "delete"; id: string }
   | { kind: "track"; id: string; name: string; color: string }
-  | { kind: "moveTrack"; id: string; index: number };
+  | { kind: "moveTrack"; id: string; index: number }
+  /** Several changes undone as one (« Ajouter des cartes »). */
+  | { kind: "batch"; ops: TimelineOp[] };
 
 /** Most changes kept for « Annuler ». */
 const HISTORY = 100;
@@ -33,11 +35,23 @@ function inverseOf(timeline: Timeline, op: TimelineOp): TimelineOp | null {
       const index = timeline.tracks.findIndex((track) => track.id === op.id);
       return index >= 0 ? { kind: "moveTrack", id: op.id, index } : null;
     }
+    case "batch": {
+      // Undone last first; the changes of a batch touch different things.
+      const inverses = op.ops.map((each) => inverseOf(timeline, each));
+      return inverses.every((each) => each !== null)
+        ? { kind: "batch", ops: (inverses as TimelineOp[]).reverse() }
+        : null;
+    }
   }
 }
 
-function run(op: TimelineOp): Promise<Timeline> {
+async function run(op: TimelineOp): Promise<Timeline | null> {
   switch (op.kind) {
+    case "batch": {
+      let last: Timeline | null = null;
+      for (const each of op.ops) last = await run(each);
+      return last;
+    }
     case "save":
       return unwrap(commands.saveTimelineItem(op.item));
     case "delete":
@@ -58,6 +72,7 @@ function touchesCards(timeline: Timeline, op: TimelineOp): boolean {
   if (op.kind === "delete") {
     return Boolean(timeline.items.find((item) => item.id === op.id)?.cardId);
   }
+  if (op.kind === "batch") return op.ops.some((each) => touchesCards(timeline, each));
   return false;
 }
 

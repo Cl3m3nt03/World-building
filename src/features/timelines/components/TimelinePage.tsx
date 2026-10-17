@@ -1,7 +1,8 @@
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
   CalendarSearch,
   Diamond,
+  IdCard,
   Maximize,
   Plus,
   RectangleHorizontal,
@@ -26,10 +27,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import type { Card, DatePrecision, Timeline, WorldCalendar } from "@/lib/bindings";
+import { documentRoute } from "@/lib/documentRoute";
 import { shiftDay, snapDay } from "../edit";
 import { useTimelineEditor } from "../hooks/useTimelineEditor";
 import { useRenameTimeline, useTimeline } from "../hooks/useTimelines";
 import { useCalendar } from "../useCalendar";
+import { AddCardsDialog } from "./AddCardsDialog";
 import { DateField, type DateValue } from "./DateField";
 import { ItemEditor } from "./ItemEditor";
 import { TimelineView, type TimelineViewHandle, ZOOM_STEP } from "./TimelineView";
@@ -66,8 +69,24 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
   const view = useRef<TimelineViewHandle>(null);
   const editor = useTimelineEditor(timeline.id);
   const cardsById = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { worldId } = useParams({ from: "/world/$worldId/world/timeline/$timelineId" });
+  // « Cité dans » asks for a card: its first item is shown, centred and selected.
+  const { card: focusCard } = useSearch({ from: "/world/$worldId/world/timeline/$timelineId" });
+  const focusId = focusCard
+    ? (timeline.items.find((item) => item.cardId === focusCard)?.id ?? null)
+    : null;
+  const [selectedId, setSelectedId] = useState<string | null>(focusId);
+  // Items placed out of sight (« Ajouter des cartes ») are brought into view.
+  const [revealId, setRevealId] = useState<string | null>(null);
+  useEffect(() => {
+    if (focusId) {
+      setSelectedId(focusId);
+      setRevealId(null);
+    }
+  }, [focusId]);
   const [tracksOpen, setTracksOpen] = useState(false);
+  const [addingCards, setAddingCards] = useState<{ trackId: string; date: DateValue } | null>(null);
   const selected = timeline.items.find((item) => item.id === selectedId) ?? null;
 
   // Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) for the timeline; fields keep their own.
@@ -126,6 +145,16 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
     const unit = handle.unit();
     create(trackId, snapDay(calendar, handle.center(), unit), unit, kind);
   };
+  const addCards = () => {
+    const handle = view.current;
+    const trackId = selected?.trackId ?? timeline.tracks[0]?.id;
+    if (!handle || !trackId) return;
+    const unit = handle.unit();
+    setAddingCards({
+      trackId,
+      date: { days: snapDay(calendar, handle.center(), unit), precision: unit },
+    });
+  };
   const remove = (id: string) => {
     void editor.apply({ kind: "delete", id });
     if (id === selectedId) setSelectedId(null);
@@ -154,6 +183,10 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
               <DropdownMenuItem onSelect={() => createHere("period")}>
                 <RectangleHorizontal />
                 {t("timelines.addPeriod")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={addCards}>
+                <IdCard />
+                {t("timelines.addCards.open")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -221,6 +254,10 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           onChange={(item) => void editor.apply({ kind: "save", item })}
           onCreate={(trackId, day, precision) => create(trackId, day, precision, "event")}
           onDelete={remove}
+          onOpen={(item) => {
+            if (item.cardId) void navigate(documentRoute(worldId, "card", item.cardId));
+          }}
+          focusId={revealId ?? focusId}
         />
         {selected ? (
           <ItemEditor
@@ -236,6 +273,26 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
         ) : null}
       </div>
       <p className="text-xs text-muted-foreground">{t("timelines.navigationHint")}</p>
+      {addingCards ? (
+        <AddCardsDialog
+          onClose={() => setAddingCards(null)}
+          timeline={timeline}
+          calendar={calendar}
+          cards={cards}
+          trackId={addingCards.trackId}
+          date={addingCards.date}
+          onPlace={(items) => {
+            void editor.apply({
+              kind: "batch",
+              ops: items.map((item) => ({ kind: "save", item })),
+            });
+            if (items[0]) {
+              setSelectedId(items[0].id);
+              setRevealId(items[0].id);
+            }
+          }}
+        />
+      ) : null}
       <TracksDialog
         open={tracksOpen}
         onOpenChange={setTracksOpen}

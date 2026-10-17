@@ -73,6 +73,12 @@ type Props = {
   /** A double click on a track: a new event there. */
   onCreate?: (trackId: string, day: number, precision: DatePrecision) => void;
   onDelete?: (id: string) => void;
+  /** A double click on an item (one standing for a card opens it). */
+  onOpen?: (item: TimelineItem) => void;
+  /** The item the view centres on, at first and whenever it changes. */
+  focusId?: string | null;
+  /** Inside a card: the wheel scrolls the card, Ctrl + wheel zooms. */
+  embedded?: boolean;
 };
 
 /** A drag of an item: what is held and from where. */
@@ -119,7 +125,20 @@ function initialView(calendar: WorldCalendar, timeline: Timeline, width: number)
  * pointer, a drag pans; arrows, + and − do the same from the keyboard.
  */
 export const TimelineView = forwardRef<TimelineViewHandle, Props>(function TimelineView(
-  { timeline, calendar, cardsById, label, selectedId, onSelect, onChange, onCreate, onDelete },
+  {
+    timeline,
+    calendar,
+    cardsById,
+    label,
+    selectedId,
+    onSelect,
+    onChange,
+    onCreate,
+    onDelete,
+    onOpen,
+    focusId = null,
+    embedded = false,
+  },
   ref,
 ) {
   const { t } = useTranslation();
@@ -140,9 +159,16 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  // The item to show, centred: at first, then each time another is asked for.
+  const focused = useRef<string | null>(null);
   useEffect(() => {
-    if (width > 0 && view === null) setView(initialView(calendar, timeline, width));
-  }, [width, view, calendar, timeline]);
+    if (width <= 0) return;
+    const item = focusId ? timeline.items.find((each) => each.id === focusId) : undefined;
+    if (view !== null && (!item || focused.current === focusId)) return;
+    focused.current = focusId;
+    const base = view ?? initialView(calendar, timeline, width);
+    setView(item ? centerOn(base, (item.start + itemEnd(calendar, item) + 1) / 2, width) : base);
+  }, [width, view, calendar, timeline, focusId]);
 
   const fitAll = useCallback(() => {
     if (width > 0) setView(initialView(calendar, timeline, width));
@@ -171,6 +197,8 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     const element = area.current;
     if (!element) return;
     const onWheel = (event: WheelEvent) => {
+      // In a card, the wheel alone scrolls the card.
+      if (embedded && !(event.ctrlKey || event.metaKey)) return;
       event.preventDefault();
       const x = event.clientX - element.getBoundingClientRect().left;
       setView((current) => {
@@ -184,7 +212,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     };
     element.addEventListener("wheel", onWheel, { passive: false });
     return () => element.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [embedded]);
 
   // A drag on the background pans; a click there (no drag) clears the selection.
   const drag = useRef<{ x: number; moved: boolean } | null>(null);
@@ -548,6 +576,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
                           }}
                           onFocus={() => reveal(item)}
                           onPointerDown={(event) => onItemPointerDown(event, item)}
+                          onDoubleClick={() => onOpen?.(item)}
                           onKeyDown={(event) => onItemKeyDown(event, item)}
                         />
                       </li>
@@ -583,6 +612,7 @@ type ItemButtonProps = {
   onFocus: () => void;
   onPointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  onDoubleClick: () => void;
 };
 
 /** An event (a marker and its name) or a period (a bar holding its name). */
@@ -601,6 +631,7 @@ function ItemButton({
   onFocus,
   onPointerDown,
   onKeyDown,
+  onDoubleClick,
 }: ItemButtonProps) {
   const color = typeColor(item.color);
   const style = { "--item": color, top, height: LANE_H - 6 } as CSSProperties;
@@ -618,7 +649,7 @@ function ItemButton({
     editable && "cursor-grab",
     dragging && "z-10 cursor-grabbing opacity-90 shadow-lg",
   );
-  const handlers = { onClick: onSelect, onFocus, onPointerDown, onKeyDown };
+  const handlers = { onClick: onSelect, onFocus, onPointerDown, onKeyDown, onDoubleClick };
   if (item.end === null) {
     return (
       <button

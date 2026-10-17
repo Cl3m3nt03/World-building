@@ -282,6 +282,7 @@ function BlockView({ ctx, block }: { ctx: SiteContext; block: Block }) {
       </div>
     );
   }
+  if (block.type === "timeline") return null;
   if (block.type === "map") {
     const map = block.mapId ? ctx.data.maps.get(block.mapId) : undefined;
     if (!map) return null;

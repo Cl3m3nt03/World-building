@@ -16,7 +16,7 @@ use serde_json::Value;
 use crate::error::{AppError, AppResult};
 
 /// Block types the app knows.
-pub const BLOCK_TYPES: [&str; 4] = ["text", "image", "stats5e", "map"];
+pub const BLOCK_TYPES: [&str; 5] = ["text", "image", "stats5e", "map", "timeline"];
 /// Largest content, in bytes of JSON.
 pub const MAX_CONTENT_BYTES: usize = 4 * 1024 * 1024;
 /// Most blocks in one card.
@@ -223,6 +223,8 @@ mod tests {
         assert!(parse("not json").is_err());
         assert!(parse(r#"[{ "type": "text" }]"#).is_err());
         assert!(parse(r#"[{ "id": "a", "type": "video" }]"#).is_err());
+        // A timeline shown in the card (M11).
+        assert!(parse(r#"[{ "id": "a", "type": "timeline", "timelineId": null }]"#).is_ok());
         assert!(
             parse(r#"[{ "id": "a", "type": "text" }, { "id": "a", "type": "text" }]"#).is_err()
         );
