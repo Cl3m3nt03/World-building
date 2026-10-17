@@ -77,6 +77,12 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - **Pistes** : un dialogue les renomme, les colore, les monte ou descend, en ajoute (couleur suivante de la palette, 50 au plus) et en supprime. Supprimer une piste qui porte des éléments demande une confirmation ; la dernière piste reste.
 - **Annuler et rétablir** (boutons, Ctrl + Z, Ctrl + Y ou Ctrl + Maj + Z) : ajouts, déplacements, modifications et suppressions d'éléments, noms, couleurs et ordre des pistes. Ajouter ou supprimer une piste ne s'annule pas, et supprimer une piste efface l'historique, puisque ses éléments ont disparu.
 
+**Réalisé en M11 (11.5)** : la frise et le monde.
+- **« Ajouter › Des cartes… »** ouvre un dialogue : on coche des cartes (recherche sur les noms et alias ; celles déjà sur la frise sont signalées), on choisit une piste et une date du calendrier du monde, et « Placer N cartes » en fait des événements. Chacun prend le nom et l'image de sa carte et la couleur de la piste. L'ajout s'annule d'un seul Ctrl + Z.
+- Un **double-clic** sur un élément qui représente une carte ouvre la carte. Le panneau d'élément l'ouvre aussi.
+- **« Cité dans »** d'une carte placée sur une frise montre la frise ; le lien l'ouvre centrée sur l'élément de la carte, sélectionné.
+- **Bloc « Frise »** dans une carte (menu « + » ou « / ») : on choisit une frise du monde, elle s'affiche en lecture, centrée sur l'élément de cette carte s'il existe. La molette fait défiler la carte, Ctrl + molette zoome. « Ouvrir la frise » l'ouvre centrée sur cette carte, « Changer » en choisit une autre. L'export HTML du wiki laisse ce bloc de côté jusqu'en 11.6.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

@@ -7,6 +7,7 @@ import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { type Backlink, type BacklinkSource, type BacklinkVia, commands } from "@/lib/bindings";
 import { ChapterLinksContext, chapterRoute, useDocumentLink } from "@/lib/documentLinks";
+import { timelineCardRoute } from "@/lib/documentRoute";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
 
@@ -47,6 +48,13 @@ export function Backlinks({ cardId }: { cardId: string }) {
 
   // Only what can be opened here (in the wiki: visible pages, no chapters).
   const linkFor = (backlink: Backlink) => {
+    if (backlink.sourceKind === "timeline") {
+      // In World, the timeline opens centred on this card's item.
+      const link = linkOf("timeline", backlink.sourceId);
+      return link?.to === "/world/$worldId/world/timeline/$timelineId"
+        ? timelineCardRoute(worldId, backlink.sourceId, cardId)
+        : link;
+    }
     if (backlink.sourceKind !== "chapter") return linkOf(backlink.sourceKind, backlink.sourceId);
     return showChapters && backlink.storyId
       ? chapterRoute(worldId, backlink.storyId, backlink.sourceId)

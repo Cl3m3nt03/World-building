@@ -49,7 +49,13 @@ export type Stats5eBlock = BlockPlace & {
 };
 /** A map of the world shown in the card (M4 step 4.10); `mapId` is null until one is chosen. */
 export type MapBlock = BlockPlace & { id: string; type: "map"; mapId: string | null };
-export type Block = TextBlock | ImageBlock | Stats5eBlock | MapBlock;
+/** A timeline of the world shown in the card (M11 step 11.5); `timelineId` is null until one is chosen. */
+export type TimelineBlock = BlockPlace & {
+  id: string;
+  type: "timeline";
+  timelineId: string | null;
+};
+export type Block = TextBlock | ImageBlock | Stats5eBlock | MapBlock | TimelineBlock;
 export type BlockType = Block["type"];
 
 export function newId(): string {
@@ -89,6 +95,8 @@ export function newBlock(type: BlockType): Block {
       return emptyStats5eBlock();
     case "map":
       return { id: newId(), type: "map", mapId: null };
+    case "timeline":
+      return { id: newId(), type: "timeline", timelineId: null };
   }
 }
 
@@ -187,6 +195,14 @@ function readBlockContent(value: unknown): Block | null {
       id: value.id,
       type: "map",
       mapId: typeof value.mapId === "string" && value.mapId !== "" ? value.mapId : null,
+    };
+  }
+  if (value.type === "timeline") {
+    return {
+      id: value.id,
+      type: "timeline",
+      timelineId:
+        typeof value.timelineId === "string" && value.timelineId !== "" ? value.timelineId : null,
     };
   }
   if (value.type === "image") return readImageBlock(value.id, value);

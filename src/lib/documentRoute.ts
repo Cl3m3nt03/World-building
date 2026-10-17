@@ -36,6 +36,15 @@ export function documentRoute(worldId: string, kind: DocumentKind, id: string) {
   return { to: "/world/$worldId/world/card/$cardId", params: { worldId, cardId: id } } as const;
 }
 
+/** A timeline centred on the item standing for a card (M11, from « Cité dans »). */
+export function timelineCardRoute(worldId: string, timelineId: string, cardId: string) {
+  return {
+    to: "/world/$worldId/world/timeline/$timelineId",
+    params: { worldId, timelineId },
+    search: { card: cardId },
+  } as const;
+}
+
 /** A card's page in the wiki (M8). */
 export function wikiCardRoute(worldId: string, cardId: string) {
   return { to: "/world/$worldId/wiki/card/$cardId", params: { worldId, cardId } } as const;

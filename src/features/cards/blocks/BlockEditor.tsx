@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  ChartGantt,
   Columns2,
   GripVertical,
   ImageIcon,
@@ -79,6 +80,7 @@ import { MapBlockView } from "./MapBlockView";
 import { type Block, type BlockType, newBlock } from "./model";
 import { Stats5eBlockView } from "./stats/Stats5eBlockView";
 import { TextBlockEditor } from "./TextBlockEditor";
+import { TimelineBlockView } from "./TimelineBlockView";
 import { templateBlocks } from "./template";
 import { useCardContent, useSaveCardContent } from "./useCardContent";
 
@@ -89,11 +91,17 @@ const SAVE_DELAY_MS = 600;
 const BLOCK_CHOICES: {
   type: BlockType;
   icon: typeof Type;
-  label: "blocks.types.text" | "blocks.types.image" | "blocks.types.stats5e" | "blocks.types.map";
+  label:
+    | "blocks.types.text"
+    | "blocks.types.image"
+    | "blocks.types.stats5e"
+    | "blocks.types.map"
+    | "blocks.types.timeline";
 }[] = [
   { type: "text", icon: Type, label: "blocks.types.text" },
   { type: "image", icon: ImageIcon, label: "blocks.types.image" },
   { type: "map", icon: MapIcon, label: "blocks.types.map" },
+  { type: "timeline", icon: ChartGantt, label: "blocks.types.timeline" },
   { type: "stats5e", icon: Swords, label: "blocks.types.stats5e" },
 ];
 
@@ -111,6 +119,7 @@ const BLOCK_LABELS = {
   image: "blocks.imageLabel",
   stats5e: "blocks.stats5eLabel",
   map: "blocks.mapLabel",
+  timeline: "blocks.timelineLabel",
 } as const satisfies Record<BlockType, string>;
 
 /** Menu of block types; `children` is the trigger, or the menu is controlled. */
@@ -378,6 +387,8 @@ function SortableBlock({
           <ImageBlockView block={block} label={label} pickOnMount={focus} onChange={onChange} />
         ) : block.type === "map" ? (
           <MapBlockView block={block} label={label} onChange={onChange} />
+        ) : block.type === "timeline" ? (
+          <TimelineBlockView block={block} label={label} onChange={onChange} />
         ) : (
           <Stats5eBlockView block={block} label={label} onChange={onChange} />
         )}

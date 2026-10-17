@@ -151,10 +151,13 @@ const canvasRoute = createRoute({
   component: CanvasPage,
 });
 
+/** A timeline (M11); `?card=` centres it on that card's item (from « Cité dans »). */
 const timelineRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "timeline/$timelineId",
   component: TimelinePage,
+  validateSearch: (search: Record<string, unknown>): { card?: string } =>
+    typeof search.card === "string" && search.card !== "" ? { card: search.card } : {},
 });
 
 const wikiRoute = createRoute({
