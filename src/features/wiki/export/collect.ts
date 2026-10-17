@@ -1,12 +1,15 @@
 import { type Block, parseContent } from "@/features/cards";
+import { DEFAULT_CALENDAR } from "@/features/timelines/calendar";
 import {
   type Backlink,
   type Card,
   type CardProperty,
   type CardType,
   commands,
+  type Timeline,
   type WikiPage,
   type WikiSettings,
+  type WorldCalendar,
   type Map as WorldMap,
 } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
@@ -23,6 +26,9 @@ export type CardData = {
 /** A map page of the site. */
 export type MapData = { page: WikiPage; map: WorldMap };
 
+/** A timeline page of the site (M11). */
+export type TimelineData = { page: WikiPage; timeline: Timeline };
+
 /** Everything the exported site is made of, read from the world. */
 export type SiteData = {
   settings: WikiSettings;
@@ -36,6 +42,11 @@ export type SiteData = {
   mapPages: MapData[];
   /** The maps shown in card blocks, by id (pages or not). */
   maps: Map<string, WorldMap>;
+  timelinePages: TimelineData[];
+  /** The timelines shown in card blocks, by id (pages or not). */
+  timelines: Map<string, Timeline>;
+  /** The world's calendar, to write the timelines' dates. */
+  calendar: WorldCalendar;
 };
 
 /**
@@ -46,12 +57,22 @@ export async function collectSite(
   worldName: string,
   onPage: (done: number, total: number) => void,
 ): Promise<SiteData> {
-  const [settings, pages, types, cards] = await Promise.all([
+  const [settings, pages, types, cards, world] = await Promise.all([
     unwrap(commands.wikiSettings()),
     unwrap(commands.wikiPages()),
     unwrap(commands.listCardTypes()),
     unwrap(commands.listCards(false)),
+    unwrap(commands.currentWorld()),
   ]);
+  const timelinePages: TimelineData[] = [];
+  const timelines = new Map<string, Timeline>();
+  const readTimeline = async (id: string) => {
+    const known = timelines.get(id);
+    if (known) return known;
+    const timeline = await unwrap(commands.getTimeline(id));
+    timelines.set(id, timeline);
+    return timeline;
+  };
   const cardPages: CardData[] = [];
   const mapPages: MapData[] = [];
   const maps = new Map<string, WorldMap>();
@@ -66,6 +87,8 @@ export async function collectSite(
   for (const page of pages) {
     if (page.kind === "map") {
       mapPages.push({ page, map: await readMap(page.id) });
+    } else if (page.kind === "timeline") {
+      timelinePages.push({ page, timeline: await readTimeline(page.id) });
     } else {
       const [card, content, properties, backlinks] = await Promise.all([
         unwrap(commands.getCard(page.id)),
@@ -77,6 +100,9 @@ export async function collectSite(
       for (const block of blocks) {
         // A map shown in the card: drawn in the page even without its own page.
         if (block.type === "map" && block.mapId) await readMap(block.mapId).catch(() => null);
+        if (block.type === "timeline" && block.timelineId) {
+          await readTimeline(block.timelineId).catch(() => null);
+        }
       }
       cardPages.push({ page, card, blocks, properties, backlinks });
     }
@@ -92,5 +118,8 @@ export async function collectSite(
     cardPages,
     mapPages,
     maps,
+    timelinePages,
+    timelines,
+    calendar: world?.calendar ?? DEFAULT_CALENDAR,
   };
 }

@@ -91,6 +91,11 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - **Étiquettes** : libres, 20 par élément au plus (40 caractères), sans doublon ; le filtre estompe les éléments qui n'en portent aucune des choisies.
 - Données (migration 0021) : `image_asset_id`, `tags` (liste JSON) et `hidden` sur les éléments. L'image d'un élément compte dans « Utilisée par » de la médiathèque.
 
+**Réalisé en M11 (11.6)** : la frise dans le wiki.
+- Une frise se rend **visible dans le wiki** par le bouton « Visible dans le wiki » de son en-tête ou le clic droit de la sidebar ; « Ouvrir dans le wiki » l'y ouvre. Elle apparaît dans le menu « Pages » du wiki, rubrique « Frises ».
+- Sa **page** montre la frise en lecture (vue Axe : on la parcourt, on la zoome, un double-clic sur un élément ouvre la page de sa carte), puis la **chronologie** : chaque élément avec ses dates, son image, sa description et ses étiquettes ; son nom mène à la page de sa carte si elle en a une. Les éléments masqués par l'œil n'y sont pas.
+- L'**export HTML** du wiki écrit une page par frise : la frise dessinée sans script (axe, ères, bulles placées en pourcentages, donc à toutes les largeurs) et la chronologie ; le bloc « Frise » des cartes y est dessiné aussi. Tout se lit sans réseau ; les images des éléments sont copiées avec le site.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

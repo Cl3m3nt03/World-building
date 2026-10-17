@@ -883,8 +883,10 @@ function DocumentMenu({
         <FolderInput />
         {t("sidebar.document.moveTo")}
       </ContextMenuItem>
-      {/* Only cards and maps have a page in the wiki. */}
-      {(node.document.kind === "card" || node.document.kind === "map") && (
+      {/* Only cards, maps and timelines have a page in the wiki. */}
+      {(node.document.kind === "card" ||
+        node.document.kind === "map" ||
+        node.document.kind === "timeline") && (
         <ContextMenuCheckboxItem
           checked={node.document.wikiVisible}
           onCheckedChange={(checked) => onWikiVisible(checked === true)}

@@ -11,6 +11,7 @@ import {
   pageFile,
   renderDocument,
   type SiteContext,
+  TimelinePageView,
   usedAssets,
 } from "./site";
 import { rootCss, SITE_CSS, SITE_JS } from "./static";
@@ -89,6 +90,10 @@ export async function exportWiki({
     ...data.mapPages.map((map) => ({
       path: pageFile(map.page.id),
       content: renderDocument(<MapPageView ctx={ctx("../")} map={map} />),
+    })),
+    ...data.timelinePages.map((timeline) => ({
+      path: pageFile(timeline.page.id),
+      content: renderDocument(<TimelinePageView ctx={ctx("../")} timeline={timeline} />),
     })),
     { path: "search.js", content: searchIndex(data) },
     { path: "site.js", content: SITE_JS },

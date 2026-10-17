@@ -1,16 +1,17 @@
 import { useCallback, useMemo } from "react";
 import type { DocumentKind, WikiPage } from "@/lib/bindings";
 import type { DocumentLinkResolver } from "@/lib/documentLinks";
-import { documentRoute, wikiCardRoute, wikiMapRoute } from "@/lib/documentRoute";
+import { documentRoute, wikiCardRoute, wikiMapRoute, wikiTimelineRoute } from "@/lib/documentRoute";
 import { useWikiPages } from "./hooks/useWiki";
 
 /**
- * Where a document opens from the wiki: its page there. Only cards and maps
- * have one; another kind (never a page) would open in World.
+ * Where a document opens from the wiki: its page there. Only cards, maps and
+ * timelines have one; another kind (never a page) would open in World.
  */
 function wikiRoute(worldId: string, kind: DocumentKind, id: string) {
   if (kind === "card") return wikiCardRoute(worldId, id);
   if (kind === "map") return wikiMapRoute(worldId, id);
+  if (kind === "timeline") return wikiTimelineRoute(worldId, id);
   return documentRoute(worldId, kind, id);
 }
 

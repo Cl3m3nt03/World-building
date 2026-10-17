@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT d.id AS \"id!\", d.kind AS \"kind!\", d.title AS \"title!\", c.type_id,\n                  c.image_asset_id, c.aliases\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.wiki_visible = 1 AND d.trashed_at IS NULL AND d.kind IN ('card', 'map')\n           ORDER BY d.title COLLATE NOCASE, d.created_at",
+  "query": "SELECT d.id AS \"id!\", d.kind AS \"kind!\", d.title AS \"title!\", c.type_id,\n                  c.image_asset_id, c.aliases\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.wiki_visible = 1 AND d.trashed_at IS NULL\n             AND d.kind IN ('card', 'map', 'timeline')\n           ORDER BY d.title COLLATE NOCASE, d.created_at",
   "describe": {
     "columns": [
       {
@@ -82,5 +82,5 @@
       true
     ]
   },
-  "hash": "a436d976e741e741b5543943634df06f46230bb77c7de3c24889271e4dbf0a1a"
+  "hash": "34ef8102cf896eca3e3e2b28142a9639ea64f488cad48e6fb9f623638ed6a0a4"
 }

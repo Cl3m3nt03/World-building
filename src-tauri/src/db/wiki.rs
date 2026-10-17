@@ -12,7 +12,7 @@ pub struct SettingsRow {
     pub theme: String,
 }
 
-/// A page of the wiki: a live card or map marked visible.
+/// A page of the wiki: a live card, map or timeline marked visible.
 pub struct PageRow {
     pub id: String,
     pub kind: String,
@@ -46,11 +46,11 @@ pub async fn save_settings(pool: &SqlitePool, row: &SettingsRow) -> AppResult<()
     Ok(())
 }
 
-/// Marks a card or a map visible in the wiki or not; whether it was found.
+/// Marks a card, a map or a timeline visible in the wiki or not; whether it was found.
 pub async fn set_visible(pool: &SqlitePool, id: &str, visible: bool) -> AppResult<bool> {
     let visible = i64::from(visible);
     let done = sqlx::query!(
-        "UPDATE documents SET wiki_visible = ? WHERE id = ? AND kind IN ('card', 'map')",
+        "UPDATE documents SET wiki_visible = ? WHERE id = ? AND kind IN ('card', 'map', 'timeline')",
         visible,
         id
     )
@@ -59,14 +59,15 @@ pub async fn set_visible(pool: &SqlitePool, id: &str, visible: bool) -> AppResul
     Ok(done.rows_affected() > 0)
 }
 
-/// The wiki's pages: live cards and maps marked visible, by title.
+/// The wiki's pages: live cards, maps and timelines marked visible, by title.
 pub async fn pages(pool: &SqlitePool) -> AppResult<Vec<PageRow>> {
     Ok(sqlx::query_as!(
         PageRow,
         r#"SELECT d.id AS "id!", d.kind AS "kind!", d.title AS "title!", c.type_id,
                   c.image_asset_id, c.aliases
            FROM documents d LEFT JOIN cards c ON c.document_id = d.id
-           WHERE d.wiki_visible = 1 AND d.trashed_at IS NULL AND d.kind IN ('card', 'map')
+           WHERE d.wiki_visible = 1 AND d.trashed_at IS NULL
+             AND d.kind IN ('card', 'map', 'timeline')
            ORDER BY d.title COLLATE NOCASE, d.created_at"#
     )
     .fetch_all(pool)
