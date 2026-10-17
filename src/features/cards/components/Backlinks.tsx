@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { Feather, LayoutGrid, Map as MapIcon, Network, Share2 } from "lucide-react";
+import { ChartGantt, Feather, LayoutGrid, Map as MapIcon, Network, Share2 } from "lucide-react";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -24,6 +24,7 @@ const KIND_ICONS: Partial<Record<BacklinkSource, typeof Network>> = {
   graph: Share2,
   tree: Network,
   canvas: LayoutGrid,
+  timeline: ChartGantt,
   chapter: Feather,
 };
 

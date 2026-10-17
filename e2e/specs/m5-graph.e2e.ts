@@ -39,7 +39,7 @@ const savedConfig = (title: string) =>
 
 /** Picks `entry` of the « Nouveau document » menu of the sidebar. */
 async function newDocument(entry: string) {
-  await $("aria/Nouveau document (map, graph, arbre, canvas…)").click();
+  await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
   await $(`//*[@role="menuitem"][normalize-space()="${entry}"]`).click();
 }
 

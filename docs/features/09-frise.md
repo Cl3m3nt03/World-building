@@ -61,6 +61,14 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - Un **exemple** écrit en direct une date comme les frises l'écriront (« 12 du 3e mois 298 DC », « 12 Lune de feu 298 DC »). Le calendrier n'est enregistré que valide, par le bouton ; changer le calendrier ne déplace aucun élément, car les dates sont des jours.
 - Le champ de date des frises (jour, mois, année comptée dans son ère, ère) est prêt pour l'édition (11.4).
 
+**Réalisé en M11 (11.3)** : la frise s'ouvre et se parcourt.
+- On la crée par *Nouveau document › Nouvelle frise* (sidebar, clic droit) ou par la tuile « Frise » d'un espace vide. Elle naît avec la piste « Événements ». Comme les autres documents, elle se renomme, s'épingle, se duplique (pistes et éléments copiés) et passe par la corbeille. Elle apparaît dans « Cité dans » des cartes qu'elle représente, et le filtre de la sidebar connaît le type « Frises ».
+- **Vue** : la graduation suit le zoom, des millions d'années jusqu'aux jours, et s'écrit dans le calendrier du monde (« 298 AC », « 3e mois », « 12 »). Les ères sont des bandes de fond nommées dans la règle. Chaque piste a son nom et sa couleur à gauche. Les éléments qui se chevaucheraient, barre ou nom, passent sur une ligne en dessous.
+- Un **événement** est un losange suivi de son nom. Une **période** est une barre de sa couleur, dont le nom reste visible quand son début sort de la vue. Un élément qui représente une carte prend son nom (s'il n'en a pas) et son image.
+- **Navigation** : la molette fait défiler, Ctrl + molette zoome autour du pointeur, le glisser déplace la vue. Les boutons « Zoomer » et « Dézoomer », « Tout voir » (qui cadre tous les éléments) et « Aller à une date » (une date du calendrier du monde, la vue s'y centre et zoome assez pour en voir l'unité) complètent la barre.
+- **Clavier** : flèches pour se déplacer (avec Maj, plus loin), `+` et `−` pour zoomer, `0` pour tout voir, Tab d'un élément à l'autre (un élément hors de vue vient au centre), Entrée pour l'ouvrir, Échap pour le refermer. Chaque élément a un nom complet (« Rébellion de Robert, de 282 AC à 283 AC »).
+- **Ouvrir un élément** affiche son détail sous la frise : nom, dates, piste, description et lien vers sa carte. L'édition arrive en 11.4.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

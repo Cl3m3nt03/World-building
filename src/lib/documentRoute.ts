@@ -27,6 +27,12 @@ export function documentRoute(worldId: string, kind: DocumentKind, id: string) {
       params: { worldId, treeId: id },
     } as const;
   }
+  if (kind === "timeline") {
+    return {
+      to: "/world/$worldId/world/timeline/$timelineId",
+      params: { worldId, timelineId: id },
+    } as const;
+  }
   return { to: "/world/$worldId/world/card/$cardId", params: { worldId, cardId: id } } as const;
 }
 

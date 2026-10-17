@@ -223,3 +223,48 @@ async fn a_deleted_timeline_takes_its_tracks_items_and_links() {
     assert!(get(&world.pool, &timeline.id).await.is_err());
     assert!(cited_by(&world.pool, &card).await.is_empty());
 }
+
+#[tokio::test]
+async fn a_copy_has_its_own_tracks_and_items_and_cites_the_same_cards() {
+    let (_dir, world) = world().await;
+    let card = a_card(&world.pool, "Aegon").await;
+    let timeline = create(&world.pool, "Histoire", "Rois").await.unwrap();
+    let track = timeline.tracks[0].id.clone();
+    add_track(&world.pool, &timeline.id, "Guerres", "red")
+        .await
+        .unwrap();
+    save_item(
+        &world.pool,
+        &item(&track, "Conquête", 0, Some(2), Some(&card)),
+    )
+    .await
+    .unwrap();
+
+    let copy = duplicate(&world.pool, &timeline.id, "Histoire (copie)")
+        .await
+        .unwrap();
+
+    assert_eq!(copy.title, "Histoire (copie)");
+    assert_eq!(
+        copy.tracks
+            .iter()
+            .map(|t| t.name.as_str())
+            .collect::<Vec<_>>(),
+        ["Rois", "Guerres"]
+    );
+    assert!(
+        copy.tracks
+            .iter()
+            .all(|t| !timeline.tracks.iter().any(|o| o.id == t.id))
+    );
+    assert_eq!(copy.items.len(), 1);
+    assert_eq!(copy.items[0].track_id, copy.tracks[0].id);
+    assert_eq!(copy.items[0].end, Some(2));
+    let mut citing = cited_by(&world.pool, &card).await;
+    citing.sort();
+    let mut expected = vec![timeline.id.clone(), copy.id.clone()];
+    expected.sort();
+    assert_eq!(citing, expected);
+    // The original is untouched.
+    assert_eq!(get(&world.pool, &timeline.id).await.unwrap().items.len(), 1);
+}

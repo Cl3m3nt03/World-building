@@ -14,6 +14,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { defaultRangeExtractor, type Range, useVirtualizer } from "@tanstack/react-virtual";
 import {
   ArrowUpRight,
+  ChartGantt,
   ChevronRight,
   Copy,
   FolderInput,
@@ -120,6 +121,7 @@ type Props = {
   onNewTree: () => void;
   /** "New canvas" from the right click (M7). */
   onNewCanvas: () => void;
+  onNewTimeline: () => void;
   ref?: Ref<DocumentTreeHandle>;
 };
 
@@ -151,6 +153,7 @@ export function DocumentTreeView({
   onNewGraph,
   onNewTree,
   onNewCanvas,
+  onNewTimeline,
   ref,
 }: Props) {
   const { t } = useTranslation();
@@ -545,6 +548,10 @@ export function DocumentTreeView({
         <LayoutGrid />
         {t("sidebar.newCanvas")}
       </ContextMenuItem>
+      <ContextMenuItem onSelect={onNewTimeline}>
+        <ChartGantt />
+        {t("sidebar.newTimeline")}
+      </ContextMenuItem>
     </>
   );
 
@@ -916,6 +923,7 @@ function nodeVisual(
   if (node.document.kind === "graph") return { Icon: Share2, label: node.document.title };
   if (node.document.kind === "tree") return { Icon: Network, label: node.document.title };
   if (node.document.kind === "canvas") return { Icon: LayoutGrid, label: node.document.title };
+  if (node.document.kind === "timeline") return { Icon: ChartGantt, label: node.document.title };
   const type = node.document.typeId ? typesById.get(node.document.typeId) : undefined;
   return {
     Icon: typeIcon(type?.icon ?? "shapes"),

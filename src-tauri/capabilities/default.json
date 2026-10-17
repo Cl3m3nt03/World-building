@@ -69,6 +69,7 @@
     "allow-delete-audio-cue",
     "allow-export-story",
     "allow-create-timeline",
+    "allow-duplicate-timeline",
     "allow-get-timeline",
     "allow-add-timeline-track",
     "allow-update-timeline-track",

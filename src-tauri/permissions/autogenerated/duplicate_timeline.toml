@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-duplicate-timeline"
+description = "Enables the duplicate_timeline command without any pre-configured scope."
+commands.allow = ["duplicate_timeline"]
+
+[[permission]]
+identifier = "deny-duplicate-timeline"
+description = "Denies the duplicate_timeline command without any pre-configured scope."
+commands.deny = ["duplicate_timeline"]

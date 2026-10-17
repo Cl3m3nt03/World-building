@@ -99,3 +99,14 @@ pub async fn save_timeline_item(
 pub async fn delete_timeline_item(state: State<'_, AppState>, id: String) -> AppResult<Timeline> {
     timelines::delete_item(&pool(&state, "delete_timeline_item").await?, &id).await
 }
+
+/// Duplicates a timeline as `title` (translated by the front), right after it.
+#[tauri::command]
+#[specta::specta]
+pub async fn duplicate_timeline(
+    state: State<'_, AppState>,
+    id: String,
+    title: String,
+) -> AppResult<Timeline> {
+    timelines::duplicate(&pool(&state, "duplicate_timeline").await?, &id, &title).await
+}

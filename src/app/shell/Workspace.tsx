@@ -1,5 +1,6 @@
 import { Outlet, useParams } from "@tanstack/react-router";
 import {
+  ChartGantt,
   LayoutGrid,
   Map as MapIcon,
   Network,
@@ -19,6 +20,7 @@ import { CreateCardMenu } from "@/features/cards";
 import { useCreateGraph } from "@/features/graphs";
 import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
+import { useCreateTimeline } from "@/features/timelines";
 import { useCreateTree } from "@/features/trees";
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
@@ -36,7 +38,9 @@ export function StartWith() {
   const createGraph = useCreateGraph();
   const createTree = useCreateTree();
   const createCanvas = useCreateCanvas();
-  const createError = createGraph.error ?? createTree.error ?? createCanvas.error;
+  const createTimeline = useCreateTimeline();
+  const createError =
+    createGraph.error ?? createTree.error ?? createCanvas.error ?? createTimeline.error;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3">
       {createError && <AppErrorMessage error={createError} />}
@@ -101,6 +105,18 @@ export function StartWith() {
             <LayoutGrid />
           </Button>
           <span className="text-xs text-muted-foreground">{t("workspace.create.canvas")}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <Button
+            variant="secondary"
+            aria-label={t("workspace.create.timeline")}
+            className={TILE_CLASS}
+            disabled={createTimeline.isPending}
+            onClick={() => worldId && createTimeline.mutate(worldId)}
+          >
+            <ChartGantt />
+          </Button>
+          <span className="text-xs text-muted-foreground">{t("workspace.create.timeline")}</span>
         </div>
       </div>
     </div>

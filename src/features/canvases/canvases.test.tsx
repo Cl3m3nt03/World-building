@@ -110,7 +110,7 @@ async function renderAt(path: string) {
 test('"New canvas" in the sidebar creates an empty canvas and opens it', async () => {
   const router = await renderAt("/world/demo/world");
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre, canvas…)",
+    name: "Nouveau document (map, graph, arbre, canvas, frise…)",
   });
   await act(async () => {
     trigger.focus();

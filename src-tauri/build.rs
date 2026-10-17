@@ -67,6 +67,7 @@ const COMMANDS: &[&str] = &[
     "delete_audio_cue",
     "export_story",
     "create_timeline",
+    "duplicate_timeline",
     "get_timeline",
     "add_timeline_track",
     "update_timeline_track",

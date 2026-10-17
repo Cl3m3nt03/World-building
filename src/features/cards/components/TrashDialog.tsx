@@ -1,4 +1,12 @@
-import { LayoutGrid, Map as MapIcon, Network, RotateCcw, Share2, Trash2 } from "lucide-react";
+import {
+  ChartGantt,
+  LayoutGrid,
+  Map as MapIcon,
+  Network,
+  RotateCcw,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -86,7 +94,9 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
                       ? Network
                       : item.kind === "canvas"
                         ? LayoutGrid
-                        : typeIcon(type?.icon ?? "shapes");
+                        : item.kind === "timeline"
+                          ? ChartGantt
+                          : typeIcon(type?.icon ?? "shapes");
               return (
                 <li
                   key={item.id}

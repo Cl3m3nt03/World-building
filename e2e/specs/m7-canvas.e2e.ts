@@ -130,7 +130,7 @@ describe("M7: the canvas", () => {
     await createCard("Personnage", "Théoden");
     await createCard("Personnage", "Éomer");
     await createCard("Lieu", "Edoras");
-    await $("aria/Nouveau document (map, graph, arbre, canvas…)").click();
+    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouveau canvas"]').click();
     await surface().waitForDisplayed({ timeout: 30000, timeoutMsg: "the canvas did not open" });
     await browser.waitUntil(async () => browser.execute(() => "__bzExcalidraw" in window), {

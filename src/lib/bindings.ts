@@ -211,6 +211,8 @@ export const commands = {
 	exportStory: (request: StoryExport) => typedError<string, AppError>(__TAURI_INVOKE("export_story", { request })),
 	/**  Creates a timeline with its first track (names translated by the front). */
 	createTimeline: (title: string, trackName: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("create_timeline", { title, trackName })),
+	/**  Duplicates a timeline as `title` (translated by the front), right after it. */
+	duplicateTimeline: (id: string, title: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("duplicate_timeline", { id, title })),
 	getTimeline: (id: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("get_timeline", { id })),
 	addTimelineTrack: (timelineId: string, name: string, color: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("add_timeline_track", { timelineId, name, color })),
 	updateTimelineTrack: (id: string, name: string, color: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("update_timeline_track", { id, name, color })),
