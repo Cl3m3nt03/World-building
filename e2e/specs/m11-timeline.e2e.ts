@@ -71,7 +71,7 @@ describe("M11: the timeline", () => {
     await dialog().$("button=Ajouter une ère").click();
     await dialog().$("aria/Nom de l'ère").setValue("Après la Conquête");
     await dialog().$("aria/Abréviation").setValue("AC");
-    await dialog().$("*=Exemple : 12 du 3e mois 298 AC").waitForDisplayed({
+    await dialog().$("span*=Exemple : 12 du 3e mois 298 AC").waitForDisplayed({
       timeoutMsg: "the example date did not use the era",
     });
     await dialog().$("button=Enregistrer le calendrier").click();
