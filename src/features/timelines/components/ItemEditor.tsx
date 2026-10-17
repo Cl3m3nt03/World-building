@@ -43,6 +43,8 @@ type Props = {
   onSave: (item: TimelineItem) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  /** Where the card floats: away from the item it shows. */
+  side?: "left" | "right";
 };
 
 /** A section that opens and closes, like vvd's « Étiquettes ». */
@@ -91,7 +93,16 @@ function Fold({
  * colour. Each change is saved at once (texts when the field is left) and
  * can be undone.
  */
-export function ItemEditor({ item, timeline, calendar, card, onSave, onDelete, onClose }: Props) {
+export function ItemEditor({
+  item,
+  timeline,
+  calendar,
+  card,
+  onSave,
+  onDelete,
+  onClose,
+  side = "right",
+}: Props) {
   const { t } = useTranslation();
   const words = useCalendarWords();
   const id = useId();
@@ -154,7 +165,10 @@ export function ItemEditor({ item, timeline, calendar, card, onSave, onDelete, o
   return (
     <aside
       aria-label={t("timelines.editor.label")}
-      className="glass absolute top-3 right-3 z-30 flex max-h-[calc(100%-5rem)] w-[22rem] flex-col gap-3 overflow-y-auto rounded-2xl p-3 shadow-xl"
+      className={cn(
+        "glass absolute top-3 z-30 flex max-h-[calc(100%-5rem)] w-[min(22rem,38%)] min-w-64 flex-col gap-3 overflow-y-auto rounded-2xl p-3 shadow-xl",
+        side === "left" ? "left-3" : "right-3",
+      )}
     >
       <div className="flex items-start gap-3">
         <button

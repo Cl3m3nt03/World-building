@@ -91,6 +91,11 @@ type Props = {
   mode?: "axis" | "tracks";
   /** Items left out by the tag filter: shown faded. */
   dimmedIds?: ReadonlySet<string> | undefined;
+  /**
+   * The half of the view the selected item is in: the page puts the item's
+   * card on the other side, so it never hides the item.
+   */
+  onSelectedSide?: (side: "left" | "right") => void;
 };
 
 /** A drag of an item: what is held and from where. */
@@ -152,6 +157,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     embedded = false,
     mode = "axis",
     dimmedIds,
+    onSelectedSide,
   },
   ref,
 ) {
@@ -390,6 +396,15 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     const x = xOf(view, item.start);
     if (x < 0 || x > width - 40) setView(centerOn(view, item.start, width));
   };
+
+  const selectedItem = selectedId
+    ? timeline.items.find((item) => item.id === selectedId)
+    : undefined;
+  const selectedSide =
+    view && selectedItem && xOf(view, selectedItem.start) > width / 2 ? "right" : "left";
+  useEffect(() => {
+    onSelectedSide?.(selectedSide);
+  }, [onSelectedSide, selectedSide]);
 
   const scale = view?.scale ?? 1;
   const bands = useMemo(() => eraBands(calendar), [calendar]);
