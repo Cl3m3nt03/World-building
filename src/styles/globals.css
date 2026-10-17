@@ -127,6 +127,14 @@
   backdrop-filter: blur(var(--bz-blur-panel));
 }
 
+/* The timeline's canvas (M11, after vvd): a dot grid over the world's
+   backdrop, from the theme's border colour. */
+@utility timeline-dots {
+  background-color: color-mix(in oklab, var(--bz-surface) 55%, transparent);
+  background-image: radial-gradient(circle, var(--bz-border-strong) 1px, transparent 1.4px);
+  background-size: 18px 18px;
+}
+
 /* Native scrolling (e.g. a virtualized list) with a thin bar like the Radix
    ScrollArea's, instead of the Windows bar and its arrows. WebView2 keeps the
    arrows with `scrollbar-width: thin`, so the bar is drawn here instead. */

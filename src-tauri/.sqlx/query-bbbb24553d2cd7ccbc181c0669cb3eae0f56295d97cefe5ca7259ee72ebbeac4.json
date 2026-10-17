@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, track_id, card_id, title, color, description, start_day, end_day, precision,\n                created_at, updated_at\n         FROM timeline_items WHERE id = ?",
+  "query": "SELECT id, track_id, card_id, title, color, description, start_day, end_day, precision,\n                  image_asset_id, tags, hidden AS \"hidden: bool\", created_at, updated_at\n           FROM timeline_items WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -103,8 +103,41 @@
         }
       },
       {
-        "name": "created_at",
+        "name": "image_asset_id",
         "ordinal": 9,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "image_asset_id"
+          }
+        }
+      },
+      {
+        "name": "tags",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "name": "hidden: bool",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "hidden"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 12,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -115,7 +148,7 @@
       },
       {
         "name": "updated_at",
-        "ordinal": 10,
+        "ordinal": 13,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -138,9 +171,12 @@
       false,
       true,
       false,
+      true,
+      false,
+      false,
       false,
       false
     ]
   },
-  "hash": "56fb5f29cbb8737e1448be935dfa86556ebf9f24024739b7a8dcad5973f12a96"
+  "hash": "bbbb24553d2cd7ccbc181c0669cb3eae0f56295d97cefe5ca7259ee72ebbeac4"
 }

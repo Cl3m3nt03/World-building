@@ -42,6 +42,11 @@ import { useCalendarWords } from "../useCalendar";
 const RULER_H = 48;
 const LANE_H = 34;
 const TRACK_PAD = 10;
+/** The axis view (vvd's): a bubble's height and the gap between its levels. */
+const BUBBLE_H = 28;
+const LEVEL_GAP = 36;
+/** Below the axis: the graduation's labels. */
+const AXIS_FOOT = 64;
 /** Items further than this off the view are drawn at its edge (out of sight). */
 const BLEED = 2000;
 /** One key press pans this share of the view. */
@@ -79,6 +84,13 @@ type Props = {
   focusId?: string | null;
   /** Inside a card: the wheel scrolls the card, Ctrl + wheel zooms. */
   embedded?: boolean;
+  /**
+   * « axis » (vvd's look, the default): one axis, events as dots with their
+   * names in bubbles above; « tracks »: one row per track.
+   */
+  mode?: "axis" | "tracks";
+  /** Items left out by the tag filter: shown faded. */
+  dimmedIds?: ReadonlySet<string> | undefined;
 };
 
 /** A drag of an item: what is held and from where. */
@@ -138,6 +150,8 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     onOpen,
     focusId = null,
     embedded = false,
+    mode = "axis",
+    dimmedIds,
   },
   ref,
 ) {
@@ -146,6 +160,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
   const hintId = useId();
   const area = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
   const [view, setView] = useState<Viewport | null>(null);
 
   // The width of the drawing; the first one frames the timeline.
@@ -155,6 +170,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     const observer = new ResizeObserver(([entry]) => {
       const next = Math.round(entry?.contentRect.width ?? 0);
       if (next > 0) setWidth(next);
+      setHeight(Math.round(entry?.contentRect.height ?? 0));
     });
     observer.observe(element);
     return () => observer.disconnect();
@@ -258,7 +274,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
   const latest = useRef({ calendar, view, visibleUnit, onChange });
   latest.current = { calendar, view, visibleUnit, onChange };
 
-  const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, item: TimelineItem) => {
+  const onItemPointerDown = (event: PointerEvent<HTMLElement>, item: TimelineItem) => {
     if (event.button !== 0 || !onChange) return;
     const handle = (event.target as Element).closest<HTMLElement>("[data-edge]")?.dataset.edge;
     itemDrag.current = {
@@ -424,6 +440,168 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
 
   const clampX = (x: number) => Math.min(Math.max(x, -BLEED), width + BLEED);
 
+  // The axis view: each bubble on the first level where it runs into no other.
+  const axis = useMemo(() => {
+    if (mode !== "axis") return null;
+    const levelOf = lanes(shown, (item) => {
+      const card = item.cardId ? cardsById.get(item.cardId) : undefined;
+      const text = itemTitle(item, card).length * 7 + (card?.imageAssetId ? 26 : 0) + 34;
+      const at = item.start * scale;
+      return { left: at - text / 2 - 6, right: at + text / 2 + 6 };
+    });
+    let levels = 1;
+    for (const level of levelOf.values()) levels = Math.max(levels, level + 1);
+    return { levelOf, levels };
+  }, [mode, shown, cardsById, scale]);
+
+  const itemProps = (item: TimelineItem) => {
+    const card = item.cardId ? cardsById.get(item.cardId) : undefined;
+    const title = itemTitle(item, card);
+    return {
+      item,
+      title,
+      card,
+      label: itemLabel(t, calendar, words, item, title),
+      selected: item.id === selectedId,
+      dragging: item.id === draft?.id,
+      editable: Boolean(onChange),
+      dimmed: dimmedIds?.has(item.id) ?? false,
+      onSelect: () => {
+        // The click ending a drag selects nothing.
+        if (skipClick.current) {
+          skipClick.current = false;
+          return;
+        }
+        onSelect(item.id);
+      },
+      onFocus: () => reveal(item),
+      onPointerDown: (event: PointerEvent<HTMLElement>) => onItemPointerDown(event, item),
+      onDoubleClick: () => onOpen?.(item),
+      onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => onItemKeyDown(event, item),
+    };
+  };
+
+  const drawingProps = {
+    ref: area,
+    role: "application",
+    "aria-roledescription": t("timelines.roleDescription"),
+    "aria-label": label,
+    "aria-describedby": hintId,
+    tabIndex: 0,
+    onKeyDown,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onDoubleClick,
+    onPointerCancel: () => {
+      drag.current = null;
+    },
+  } as const;
+
+  if (axis) {
+    // The axis sits low enough for every level of bubbles above it.
+    const axisY = Math.max(Math.round(height * 0.58), 48 + axis.levels * LEVEL_GAP + BUBBLE_H);
+    return (
+      <div className="timeline-dots relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded-lg border border-border/60">
+        <div
+          {...drawingProps}
+          className="relative h-full min-h-full cursor-grab touch-none overflow-x-clip outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset active:cursor-grabbing"
+          style={{ minHeight: axisY + AXIS_FOOT }}
+        >
+          <p id={hintId} className="sr-only">
+            {t("timelines.keysHint")}
+          </p>
+          {view && (
+            <>
+              {/* Eras: soft bands, named at their visible start when there is room. */}
+              <div aria-hidden className="pointer-events-none absolute inset-0">
+                {bands.map((band, index) => {
+                  const left = clampX(xOf(view, band.from));
+                  const right = band.to === null ? width + BLEED : clampX(xOf(view, band.to + 1));
+                  if (right < 0 || left > width) return null;
+                  const shown = Math.min(right, width) - Math.max(left, 0);
+                  const name = band.era.name || band.era.abbreviation;
+                  return (
+                    <div key={band.era.startYear}>
+                      <div
+                        className={cn(
+                          "absolute inset-y-0 border-l border-primary/25",
+                          index % 2 === 0 ? "bg-primary/[0.04]" : "bg-transparent",
+                        )}
+                        style={{ left, width: Math.max(0, right - left) }}
+                      />
+                      {shown > 48 && (
+                        <span
+                          className="absolute top-2 truncate px-2 text-xs font-semibold text-primary"
+                          style={{ left: Math.max(left, 0), maxWidth: shown }}
+                        >
+                          {name}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* The axis and its graduation. */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0"
+                style={{ top: axisY }}
+              >
+                <div className="absolute inset-x-0 h-px bg-foreground/35" />
+                {graduation.map((tick) => (
+                  <div key={tick.day} className="absolute" style={{ left: xOf(view, tick.day) }}>
+                    <div
+                      className={cn(
+                        "absolute -top-1 w-px",
+                        tick.major ? "h-3 bg-foreground/55" : "h-2 bg-foreground/35",
+                      )}
+                    />
+                    {written.has(tick.day) && (
+                      <span
+                        className={cn(
+                          "absolute top-4 -translate-x-1/2 text-xs whitespace-nowrap tabular-nums",
+                          tick.major ? "font-medium text-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {tick.label}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <ul aria-label={label} className="contents">
+                {shown.map((item) => {
+                  const x0 = xOf(view, item.start);
+                  const x1 = xOf(view, itemEnd(calendar, item) + 1);
+                  const level = axis.levelOf.get(item.id) ?? 0;
+                  return (
+                    <li key={item.id} className="contents">
+                      <AxisItem
+                        {...itemProps(item)}
+                        x={clampX(x0)}
+                        end={item.end === null ? null : clampX(x1)}
+                        axisY={axisY}
+                        bubbleY={axisY - 22 - level * LEVEL_GAP - BUBBLE_H}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+          {timeline.items.length === 0 && (
+            <p className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-sm text-muted-foreground">
+              {t("timelines.empty")}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-0 flex-1 overflow-y-auto rounded-md border border-border bg-background/40">
       <div className="flex min-h-full w-full">
@@ -449,21 +627,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
           ))}
         </div>
         <div
-          ref={area}
-          role="application"
-          aria-roledescription={t("timelines.roleDescription")}
-          aria-label={label}
-          aria-describedby={hintId}
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: the drawing takes the keys that move it
-          tabIndex={0}
-          onKeyDown={onKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onDoubleClick={onDoubleClick}
-          onPointerCancel={() => {
-            drag.current = null;
-          }}
+          {...drawingProps}
           className="relative min-w-0 flex-1 cursor-grab touch-none overflow-x-clip outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset active:cursor-grabbing"
         >
           <p id={hintId} className="sr-only">
@@ -549,35 +713,16 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
                   style={{ height: layout.height.get(track.id) }}
                 >
                   {(layout.byTrack.get(track.id) ?? []).map((item) => {
-                    const card = item.cardId ? cardsById.get(item.cardId) : undefined;
-                    const title = itemTitle(item, card);
                     const x0 = xOf(view, item.start);
                     const x1 = xOf(view, itemEnd(calendar, item) + 1);
                     const top = TRACK_PAD + (layout.laneOf.get(item.id) ?? 0) * LANE_H;
                     return (
                       <li key={item.id} className="contents">
                         <ItemButton
-                          item={item}
-                          title={title}
-                          card={card}
-                          label={itemLabel(t, calendar, words, item, title)}
+                          {...itemProps(item)}
                           left={clampX(x0)}
                           right={clampX(x1)}
                           top={top}
-                          selected={item.id === selectedId}
-                          dragging={item.id === draft?.id}
-                          editable={Boolean(onChange)}
-                          onSelect={() => {
-                            if (skipClick.current) {
-                              skipClick.current = false;
-                              return;
-                            }
-                            onSelect(item.id);
-                          }}
-                          onFocus={() => reveal(item)}
-                          onPointerDown={(event) => onItemPointerDown(event, item)}
-                          onDoubleClick={() => onOpen?.(item)}
-                          onKeyDown={(event) => onItemKeyDown(event, item)}
                         />
                       </li>
                     );
@@ -597,23 +742,127 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
   );
 });
 
-type ItemButtonProps = {
+type ItemProps = {
   item: TimelineItem;
   title: string;
   card: Card | undefined;
   label: string;
-  left: number;
-  right: number;
-  top: number;
   selected: boolean;
   dragging: boolean;
   editable: boolean;
+  /** Left out by the tag filter. */
+  dimmed: boolean;
   onSelect: () => void;
   onFocus: () => void;
-  onPointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
   onDoubleClick: () => void;
 };
+
+type ItemButtonProps = ItemProps & { left: number; right: number; top: number };
+
+/**
+ * An item on the axis: a dot (a period, a thick segment along the axis)
+ * and its name in a bubble above, joined by a stem. The bubble is the
+ * button; the segment's ends stretch the period.
+ */
+function AxisItem({
+  item,
+  title,
+  card,
+  label,
+  selected,
+  dragging,
+  editable,
+  dimmed,
+  onSelect,
+  onFocus,
+  onPointerDown,
+  onKeyDown,
+  onDoubleClick,
+  x,
+  end,
+  axisY,
+  bubbleY,
+}: ItemProps & { x: number; end: number | null; axisY: number; bubbleY: number }) {
+  const style = { "--item": typeColor(item.color) } as CSSProperties;
+  return (
+    <div className={cn("contents", dimmed && "[&>*]:opacity-30")} style={style}>
+      {end !== null && (
+        <div
+          aria-hidden
+          onPointerDown={onPointerDown}
+          className={cn(
+            "absolute h-1.5 -translate-y-1/2 rounded-full bg-[var(--item)]",
+            editable && "cursor-grab",
+          )}
+          style={{ left: x, top: axisY, width: Math.max(6, end - x), ...style }}
+        >
+          {editable && (
+            <>
+              <span
+                data-edge="start"
+                className="absolute -inset-y-2 -left-1.5 w-3 cursor-ew-resize"
+              />
+              <span
+                data-edge="end"
+                className="absolute -inset-y-2 -right-1.5 w-3 cursor-ew-resize"
+              />
+            </>
+          )}
+        </div>
+      )}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute z-0 w-px bg-foreground/25"
+        style={{
+          left: x,
+          top: bubbleY + BUBBLE_H,
+          height: Math.max(0, axisY - bubbleY - BUBBLE_H),
+        }}
+      />
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-[var(--item)] shadow-sm",
+          selected && "ring-2 ring-ring",
+        )}
+        style={{ left: x, top: axisY, ...style }}
+      />
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={selected}
+        title={label}
+        onClick={onSelect}
+        onFocus={onFocus}
+        onPointerDown={onPointerDown}
+        onKeyDown={onKeyDown}
+        onDoubleClick={onDoubleClick}
+        className={cn(
+          "absolute z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap shadow-sm outline-none backdrop-blur",
+          "border-border bg-background/90 text-foreground hover:bg-background",
+          "focus-visible:ring-2 focus-visible:ring-ring",
+          selected && "border-transparent bg-foreground text-background hover:bg-foreground",
+          editable && "cursor-grab",
+          dragging && "z-20 cursor-grabbing shadow-lg",
+        )}
+        style={{ left: x, top: bubbleY, height: BUBBLE_H, ...style }}
+      >
+        {card?.imageAssetId || item.imageAssetId ? (
+          <AssetImage
+            assetId={(item.imageAssetId ?? card?.imageAssetId) as string}
+            alt=""
+            className="-ml-2 size-5 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span aria-hidden className="size-2 shrink-0 rounded-full bg-[var(--item)]" />
+        )}
+        {title}
+      </button>
+    </div>
+  );
+}
 
 /** An event (a marker and its name) or a period (a bar holding its name). */
 function ItemButton({
@@ -627,6 +876,7 @@ function ItemButton({
   selected,
   dragging,
   editable,
+  dimmed,
   onSelect,
   onFocus,
   onPointerDown,
@@ -648,6 +898,7 @@ function ItemButton({
     selected && "ring-2 ring-ring",
     editable && "cursor-grab",
     dragging && "z-10 cursor-grabbing opacity-90 shadow-lg",
+    dimmed && "opacity-30",
   );
   const handlers = { onClick: onSelect, onFocus, onPointerDown, onKeyDown, onDoubleClick };
   if (item.end === null) {

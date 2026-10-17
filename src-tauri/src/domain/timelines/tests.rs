@@ -26,6 +26,9 @@ fn item(
         start,
         end,
         precision: DatePrecision::Year,
+        image_asset_id: None,
+        tags: Vec::new(),
+        hidden: false,
     }
 }
 
@@ -267,4 +270,35 @@ async fn a_copy_has_its_own_tracks_and_items_and_cites_the_same_cards() {
     assert_eq!(citing, expected);
     // The original is untouched.
     assert_eq!(get(&world.pool, &timeline.id).await.unwrap().items.len(), 1);
+}
+
+#[tokio::test]
+async fn tags_are_tidied_and_images_and_hiding_are_kept() {
+    let (_dir, world) = world().await;
+    let timeline = create(&world.pool, "Histoire", "Guerres").await.unwrap();
+    let mut war = item(&timeline.tracks[0].id, "Rébellion", 282, Some(283), None);
+    war.tags = vec![
+        " Guerre ".into(),
+        "guerre".into(),
+        String::new(),
+        "Baratheon".into(),
+    ];
+    war.image_asset_id = Some(format!("{}.png", "a".repeat(64)));
+    war.hidden = true;
+    let saved = save_item(&world.pool, &war).await.unwrap();
+    assert_eq!(saved.items[0].tags, ["Guerre", "Baratheon"]);
+    assert_eq!(saved.items[0].image_asset_id, war.image_asset_id);
+    assert!(saved.items[0].hidden);
+    let users = db::timelines::using_asset(&world.pool, &format!("{}.png", "a".repeat(64)))
+        .await
+        .unwrap();
+    assert_eq!(users.len(), 1);
+
+    war.tags = vec!["x".repeat(MAX_TAG + 1)];
+    assert!(save_item(&world.pool, &war).await.is_err());
+    war.tags = (0..=MAX_TAGS).map(|n| n.to_string()).collect();
+    assert!(save_item(&world.pool, &war).await.is_err());
+    war.tags = Vec::new();
+    war.image_asset_id = Some("../evil.png".into());
+    assert!(save_item(&world.pool, &war).await.is_err());
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT i.id AS \"id!\", i.track_id, i.card_id, i.title, i.color, i.description,\n                  i.start_day, i.end_day, i.precision, i.created_at, i.updated_at\n           FROM timeline_items i JOIN timeline_tracks t ON t.id = i.track_id\n           WHERE t.timeline_id = ? ORDER BY i.start_day, i.id",
+  "query": "SELECT i.id AS \"id!\", i.track_id, i.card_id, i.title, i.color, i.description,\n                  i.start_day, i.end_day, i.precision, i.image_asset_id, i.tags,\n                  i.hidden AS \"hidden: bool\", i.created_at, i.updated_at\n           FROM timeline_items i JOIN timeline_tracks t ON t.id = i.track_id\n           WHERE t.timeline_id = ? ORDER BY i.start_day, i.id",
   "describe": {
     "columns": [
       {
@@ -103,8 +103,41 @@
         }
       },
       {
-        "name": "created_at",
+        "name": "image_asset_id",
         "ordinal": 9,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "image_asset_id"
+          }
+        }
+      },
+      {
+        "name": "tags",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "name": "hidden: bool",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "hidden"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 12,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -115,7 +148,7 @@
       },
       {
         "name": "updated_at",
-        "ordinal": 10,
+        "ordinal": 13,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -138,9 +171,12 @@
       false,
       true,
       false,
+      true,
+      false,
+      false,
       false,
       false
     ]
   },
-  "hash": "ba105c7983d2de3fabd424b4696a2c219b597ca18d67c672a758d9b36f1daf16"
+  "hash": "e855fae779ecc86133fdfb6d161d5cd709d1a758ac9c71f4f5b5fb531ec97b22"
 }

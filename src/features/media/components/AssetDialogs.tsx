@@ -109,9 +109,11 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
         ? t("media.usage.mapBackground", { name: usage.mapTitle })
         : usage.kind === "canvasImage"
           ? t("media.usage.canvasImage", { name: usage.canvasTitle })
-          : usage.kind === "cardImage"
-            ? t("media.usage.cardImage", { name: usage.cardTitle })
-            : t("media.usage.cardBlock", { name: usage.cardTitle });
+          : usage.kind === "timelineImage"
+            ? t("media.usage.timelineImage", { name: usage.timelineTitle })
+            : usage.kind === "cardImage"
+              ? t("media.usage.cardImage", { name: usage.cardTitle })
+              : t("media.usage.cardBlock", { name: usage.cardTitle });
     return usage.inTrash ? t("media.usage.inTrash", { where }) : where;
   };
 
@@ -152,7 +154,9 @@ export function DeleteAssetDialog({ asset, onClose }: DialogProps) {
                             ? `${usage.kind}-${usage.mapId}`
                             : usage.kind === "canvasImage"
                               ? `${usage.kind}-${usage.canvasId}`
-                              : `${usage.kind}-${usage.cardId}`
+                              : usage.kind === "timelineImage"
+                                ? `${usage.kind}-${usage.timelineId}`
+                                : `${usage.kind}-${usage.cardId}`
                   }
                 >
                   {describeUsage(usage)}

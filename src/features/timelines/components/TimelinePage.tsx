@@ -1,13 +1,17 @@
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
   CalendarSearch,
+  CircleHelp,
   Diamond,
+  GitCommitHorizontal,
   IdCard,
+  ListFilter,
   Maximize,
   Plus,
   RectangleHorizontal,
   Redo2,
   Rows3,
+  Settings2,
   Undo2,
   ZoomIn,
   ZoomOut,
@@ -24,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import type { Card, DatePrecision, Timeline, WorldCalendar } from "@/lib/bindings";
@@ -160,89 +165,41 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
     if (id === selectedId) setSelectedId(null);
   };
 
+  // The tag filter: items without any chosen tag are faded.
+  const [tags, setTags] = useState<ReadonlySet<string>>(new Set());
+  const allTags = useMemo(
+    () =>
+      [...new Set(timeline.items.flatMap((item) => item.tags ?? []))].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [timeline.items],
+  );
+  const dimmedIds = useMemo(
+    () =>
+      tags.size === 0
+        ? undefined
+        : new Set(
+            timeline.items
+              .filter((item) => !(item.tags ?? []).some((tag) => tags.has(tag)))
+              .map((item) => item.id),
+          ),
+    [timeline.items, tags],
+  );
+  const [mode, setMode] = useState<"axis" | "tracks">("axis");
+
   return (
     <article
       aria-label={timeline.title}
-      className="glass flex h-full min-w-0 flex-col gap-3 overflow-hidden rounded-lg p-3"
+      className="glass relative flex h-full min-w-0 flex-col gap-2 overflow-hidden rounded-lg p-2"
     >
-      <header className="flex flex-wrap items-center gap-2">
+      <header className="flex flex-wrap items-center gap-2 px-1">
         <TitleField timeline={timeline} />
-        <div className="flex items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm">
-                <Plus />
-                {t("timelines.add")}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onSelect={() => createHere("event")}>
-                <Diamond />
-                {t("timelines.addEvent")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => createHere("period")}>
-                <RectangleHorizontal />
-                {t("timelines.addPeriod")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={addCards}>
-                <IdCard />
-                {t("timelines.addCards.open")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="secondary" size="sm" onClick={() => setTracksOpen(true)}>
-            <Rows3 />
-            {t("timelines.tracks.open")}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("timelines.undo")}
-            title={t("timelines.undo")}
-            disabled={!editor.canUndo}
-            onClick={() => void editor.undo()}
-          >
-            <Undo2 />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("timelines.redo")}
-            title={t("timelines.redo")}
-            disabled={!editor.canRedo}
-            onClick={() => void editor.redo()}
-          >
-            <Redo2 />
-          </Button>
-        </div>
-        <div className="ml-auto flex flex-wrap items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("timelines.zoomOut")}
-            title={t("timelines.zoomOut")}
-            onClick={() => view.current?.zoom(1 / ZOOM_STEP)}
-          >
-            <ZoomOut />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("timelines.zoomIn")}
-            title={t("timelines.zoomIn")}
-            onClick={() => view.current?.zoom(ZOOM_STEP)}
-          >
-            <ZoomIn />
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => view.current?.fitAll()}>
-            <Maximize />
-            {t("timelines.fitAll")}
-          </Button>
+        <div className="ml-auto">
           <GoToDate calendar={calendar} view={view} />
         </div>
       </header>
       {editor.error ? <AppErrorMessage error={editor.error} /> : null}
-      <div className="flex min-h-0 flex-1 gap-3">
+      <div className="relative flex min-h-0 flex-1">
         <TimelineView
           ref={view}
           timeline={timeline}
@@ -258,7 +215,10 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             if (item.cardId) void navigate(documentRoute(worldId, "card", item.cardId));
           }}
           focusId={revealId ?? focusId}
+          mode={mode}
+          dimmedIds={dimmedIds}
         />
+
         {selected ? (
           <ItemEditor
             key={selected.id}
@@ -271,8 +231,146 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             onClose={() => setSelectedId(null)}
           />
         ) : null}
+
+        {/* The tools, floating at the bottom (after vvd). */}
+        <div
+          role="toolbar"
+          aria-label={t("timelines.toolbar")}
+          className="glass absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="rounded-full">
+                <Plus />
+                {t("timelines.add")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start">
+              <DropdownMenuItem onSelect={() => createHere("event")}>
+                <Diamond />
+                {t("timelines.addEvent")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => createHere("period")}>
+                <RectangleHorizontal />
+                {t("timelines.addPeriod")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={addCards}>
+                <IdCard />
+                {t("timelines.addCards.open")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <TagFilter all={allTags} chosen={tags} onChange={setTags} />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="rounded-full"
+            aria-label={t("timelines.tracks.open")}
+            title={t("timelines.tracks.open")}
+            onClick={() => setTracksOpen(true)}
+          >
+            <Settings2 />
+          </Button>
+          <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="rounded-full"
+            aria-label={t("timelines.undo")}
+            title={t("timelines.undo")}
+            disabled={!editor.canUndo}
+            onClick={() => void editor.undo()}
+          >
+            <Undo2 />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="rounded-full"
+            aria-label={t("timelines.redo")}
+            title={t("timelines.redo")}
+            disabled={!editor.canRedo}
+            onClick={() => void editor.redo()}
+          >
+            <Redo2 />
+          </Button>
+          <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+          <ToggleGroup
+            type="single"
+            value={mode}
+            onValueChange={(next) => {
+              if (next === "axis" || next === "tracks") setMode(next);
+            }}
+            aria-label={t("timelines.mode.label")}
+            className="gap-0.5"
+          >
+            <ToggleGroupItem
+              value="axis"
+              aria-label={t("timelines.mode.axis")}
+              title={t("timelines.mode.axis")}
+              className="rounded-full"
+            >
+              <GitCommitHorizontal />
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="tracks"
+              aria-label={t("timelines.mode.tracks")}
+              title={t("timelines.mode.tracks")}
+              className="rounded-full"
+            >
+              <Rows3 />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
+        {/* Zoom, at the bottom right. */}
+        <div className="glass absolute right-3 bottom-3 z-20 flex flex-col gap-0.5 rounded-xl p-1 shadow-lg">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("timelines.zoomIn")}
+            title={t("timelines.zoomIn")}
+            onClick={() => view.current?.zoom(ZOOM_STEP)}
+          >
+            <ZoomIn />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("timelines.zoomOut")}
+            title={t("timelines.zoomOut")}
+            onClick={() => view.current?.zoom(1 / ZOOM_STEP)}
+          >
+            <ZoomOut />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("timelines.fitAll")}
+            title={t("timelines.fitAll")}
+            onClick={() => view.current?.fitAll()}
+          >
+            <Maximize />
+          </Button>
+        </div>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="glass absolute bottom-3 left-3 z-20 rounded-full shadow-lg"
+              aria-label={t("timelines.help")}
+              title={t("timelines.help")}
+            >
+              <CircleHelp />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="start" className="w-80 text-sm">
+            {t("timelines.navigationHint")}
+          </PopoverContent>
+        </Popover>
       </div>
-      <p className="text-xs text-muted-foreground">{t("timelines.navigationHint")}</p>
       {addingCards ? (
         <AddCardsDialog
           onClose={() => setAddingCards(null)}
@@ -300,6 +398,85 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
         editor={editor}
       />
     </article>
+  );
+}
+
+/** The tag filter: the timeline's tags; with some chosen, the other items fade. */
+function TagFilter({
+  all,
+  chosen,
+  onChange,
+}: {
+  all: string[];
+  chosen: ReadonlySet<string>;
+  onChange: (tags: ReadonlySet<string>) => void;
+}) {
+  const { t } = useTranslation();
+  const toggle = (tag: string) => {
+    const next = new Set(chosen);
+    if (next.has(tag)) next.delete(tag);
+    else next.add(tag);
+    onChange(next);
+  };
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant={chosen.size > 0 ? "secondary" : "ghost"}
+          size="icon-sm"
+          className="relative rounded-full"
+          aria-label={
+            chosen.size > 0
+              ? t("timelines.filter.active", { count: chosen.size })
+              : t("timelines.filter.label")
+          }
+          title={t("timelines.filter.label")}
+        >
+          <ListFilter />
+          {chosen.size > 0 ? (
+            <span
+              aria-hidden
+              className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground"
+            >
+              {chosen.size}
+            </span>
+          ) : null}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="top" className="w-64">
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-sm font-medium">{t("timelines.filter.title")}</legend>
+          {all.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("timelines.filter.none")}</p>
+          ) : (
+            all.map((tag) => (
+              <label
+                key={tag}
+                className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent"
+              >
+                <input
+                  type="checkbox"
+                  checked={chosen.has(tag)}
+                  onChange={() => toggle(tag)}
+                  className="accent-primary"
+                />
+                {tag}
+              </label>
+            ))
+          )}
+          {chosen.size > 0 ? (
+            <Button
+              variant="ghost"
+              size="xs"
+              className="mt-1 self-start"
+              onClick={() => onChange(new Set())}
+            >
+              {t("timelines.filter.clear")}
+            </Button>
+          ) : null}
+        </fieldset>
+      </PopoverContent>
+    </Popover>
   );
 }
 

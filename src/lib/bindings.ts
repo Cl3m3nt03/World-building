@@ -481,7 +481,9 @@ export type AssetUsage =
 /**  A sound in a chapter's text (Quill, M10). */
 { kind: "chapterSound"; chapterId: string; chapterTitle: string; storyTitle: string } | 
 /**  An image on a canvas (M7). */
-{ kind: "canvasImage"; canvasId: string; canvasTitle: string; inTrash: boolean };
+{ kind: "canvasImage"; canvasId: string; canvasTitle: string; inTrash: boolean } | 
+/**  The image of an item on a timeline (M11). */
+{ kind: "timelineImage"; timelineId: string; timelineTitle: string; inTrash: boolean };
 
 /**  A sound on a passage of a draft. */
 export type AudioCue = {
@@ -1310,6 +1312,12 @@ export type TimelineItem = {
 	/**  For a period: its last day (not before `start`). */
 	end: number | null,
 	precision: DatePrecision,
+	/**  An image of its own (a card's item shows the card's image without one). */
+	imageAssetId?: string | null,
+	/**  Free tags, to filter the timeline by. */
+	tags?: string[],
+	/**  Left out of the wiki. */
+	hidden?: boolean,
 };
 
 export type TimelineTrack = {
