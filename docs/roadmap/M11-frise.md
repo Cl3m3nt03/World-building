@@ -10,7 +10,7 @@
 - **Des jours entiers** : une date est un nombre de jours depuis l'an 0, avec sa précision (année, mois ou jour). Le calendrier ne sert qu'à l'affichage et à la saisie.
 - **Les cartes d'abord** : un élément représente volontiers une carte, et la carte voit la frise dans « Cité dans ».
 
-**Ordre d'exécution** : 11.1 → 11.2 → 11.3 → 11.4, puis 11.5 et 11.6, et 11.7, 11.8 en dernier.
+**Ordre d'exécution** : 11.1 → 11.2 → 11.3 → 11.4 → 11.5 → 11.5b, puis 11.6, et 11.7, 11.8 en dernier.
 
 ---
 
@@ -70,6 +70,17 @@
 - [ ] Bloc « Frise » dans une carte (comme le bloc Map)
 
 **Critères d'acceptation** : la carte Robert Baratheon, placée sur la frise, la montre dans « Cité dans », qui ouvre la frise centrée sur lui.
+
+## 11.5b — Frise façon vvd (#403)
+**Branche** : `feat/timeline-vvd` · **Dépend de** : 11.5
+
+Ajoutée après la capture de la « Chronologie » de vvd envoyée par Clément.
+
+- [ ] Vue « Axe » par défaut (axe, points, bulles), vue « Pistes » en second mode
+- [ ] Carte d'élément flottante : image, nom, visibilité, supprimer, date, description, étiquettes, cartes
+- [ ] Étiquettes (migration 0021) et filtre ; barre d'outils flottante en bas, zoom en bas à droite
+
+**Critères d'acceptation** : la frise GoT ressemble à la capture vvd ; tout ce qui marchait en 11.3–11.5 marche dans les deux vues.
 
 ## 11.6 — La frise dans le wiki (#393)
 **Branche** : `feat/timeline-wiki` · **Dépend de** : 11.3

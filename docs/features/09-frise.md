@@ -83,6 +83,14 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - **« Cité dans »** d'une carte placée sur une frise montre la frise ; le lien l'ouvre centrée sur l'élément de la carte, sélectionné.
 - **Bloc « Frise »** dans une carte (menu « + » ou « / ») : on choisit une frise du monde, elle s'affiche en lecture, centrée sur l'élément de cette carte s'il existe. La molette fait défiler la carte, Ctrl + molette zoome. « Ouvrir la frise » l'ouvre centrée sur cette carte, « Changer » en choisit une autre. L'export HTML du wiki laisse ce bloc de côté jusqu'en 11.6.
 
+**Réalisé en M11 (11.5b)** : la frise prend le visage de celle de vvd (capture envoyée par Clément).
+- **Vue « Axe »**, par défaut : un axe horizontal sur un fond pointillé, graduation dessous. Chaque élément est un point sur l'axe, son nom une bulle au-dessus (avec l'image de l'élément ou de sa carte), reliée par un trait. Une période est un segment épais sur l'axe, dont les bouts l'étirent. Les bulles montent d'un cran quand elles se chevaucheraient, et l'axe descend pour leur laisser la place. Les ères sont des bandes nommées quand il y a la place.
+- **Vue « Pistes »** : celle de 11.3, au choix dans la barre d'outils.
+- **Barre d'outils flottante** en bas : « Ajouter » (un événement, une période, des cartes), filtre par étiquette, « Gérer les pistes », annuler, rétablir, choix Axe / Pistes. **Zoom** en bas à droite (zoomer, dézoomer, tout voir) ; l'aide des raccourcis derrière le « ? » en bas à gauche.
+- **Carte d'élément flottante** : image (un clic la choisit dans la médiathèque), nom, œil (masquer l'élément dans le wiki), corbeille, date (un clic ouvre les champs de date et la bascule période), description, « Étiquettes » repliables, « Piste et couleur » repliable, et « Ajouter une carte » (ou la carte représentée, à ouvrir ou détacher).
+- **Étiquettes** : libres, 20 par élément au plus (40 caractères), sans doublon ; le filtre estompe les éléments qui n'en portent aucune des choisies.
+- Données (migration 0021) : `image_asset_id`, `tags` (liste JSON) et `hidden` sur les éléments. L'image d'un élément compte dans « Utilisée par » de la médiathèque.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

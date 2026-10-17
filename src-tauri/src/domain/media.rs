@@ -150,6 +150,13 @@ pub enum AssetUsage {
         canvas_title: String,
         in_trash: bool,
     },
+    /// The image of an item on a timeline (M11).
+    #[serde(rename_all = "camelCase")]
+    TimelineImage {
+        timeline_id: String,
+        timeline_title: String,
+        in_trash: bool,
+    },
 }
 
 /// Where an asset is used: map backgrounds, canvas images, covers, chapter
@@ -190,6 +197,13 @@ pub async fn card_usages(pool: &SqlitePool, id: &str) -> AppResult<Vec<AssetUsag
         usages.push(AssetUsage::CanvasImage {
             canvas_id: row.id,
             canvas_title: row.title,
+            in_trash: row.in_trash,
+        });
+    }
+    for row in crate::db::timelines::using_asset(pool, id).await? {
+        usages.push(AssetUsage::TimelineImage {
+            timeline_id: row.id,
+            timeline_title: row.title,
             in_trash: row.in_trash,
         });
     }

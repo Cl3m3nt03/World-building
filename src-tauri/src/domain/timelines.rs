@@ -21,6 +21,9 @@ pub const MAX_NAME: usize = 120;
 pub const MAX_DESCRIPTION: usize = 4000;
 /// Most tracks a timeline holds.
 pub const MAX_TRACKS: usize = 50;
+/// Most tags on an item, and the longest tag in characters.
+pub const MAX_TAGS: usize = 20;
+pub const MAX_TAG: usize = 40;
 /// The colour keys a track or an item may take (the card types' palette).
 pub const COLORS: [&str; 9] = [
     "red", "orange", "amber", "green", "teal", "blue", "violet", "pink", "slate",
@@ -77,6 +80,15 @@ pub struct TimelineItem {
     /// For a period: its last day (not before `start`).
     pub end: Option<i32>,
     pub precision: DatePrecision,
+    /// An image of its own (a card's item shows the card's image without one).
+    #[serde(default)]
+    pub image_asset_id: Option<String>,
+    /// Free tags, to filter the timeline by.
+    #[serde(default)]
+    pub tags: Vec<String>,
+    /// Left out of the wiki.
+    #[serde(default)]
+    pub hidden: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
@@ -125,7 +137,35 @@ fn item_of(row: ItemRow) -> TimelineItem {
         start: day(row.start_day),
         end: row.end_day.map(day),
         precision: DatePrecision::parse(&row.precision),
+        image_asset_id: row.image_asset_id,
+        // Unreadable tags read as none.
+        tags: serde_json::from_str(&row.tags).unwrap_or_default(),
+        hidden: row.hidden,
     }
+}
+
+/// The tags of an item, trimmed, without empty ones nor duplicates (case aside).
+fn check_tags(tags: &[String]) -> AppResult<Vec<String>> {
+    let mut kept: Vec<String> = Vec::new();
+    for tag in tags {
+        let tag = tag.trim();
+        if tag.is_empty() {
+            continue;
+        }
+        if tag.chars().count() > MAX_TAG {
+            return Err(invalid(format!("a tag has at most {MAX_TAG} characters")));
+        }
+        if !kept
+            .iter()
+            .any(|other| other.to_lowercase() == tag.to_lowercase())
+        {
+            kept.push(tag.to_owned());
+        }
+    }
+    if kept.len() > MAX_TAGS {
+        return Err(invalid(format!("an item has at most {MAX_TAGS} tags")));
+    }
+    Ok(kept)
 }
 
 /// The timeline `id` with its tracks and items.
@@ -296,6 +336,12 @@ pub async fn save_item(pool: &SqlitePool, item: &TimelineItem) -> AppResult<Time
     if Uuid::parse_str(&item.id).is_err() {
         return Err(invalid(format!("invalid item id: {}", item.id)));
     }
+    let tags = check_tags(&item.tags)?;
+    if let Some(asset) = &item.image_asset_id
+        && !crate::world::assets::is_valid_id(asset)
+    {
+        return Err(invalid(format!("invalid asset id: {asset}")));
+    }
     if let Some(card) = &item.card_id
         && !queries::is_card(pool, card).await?
     {
@@ -328,6 +374,10 @@ pub async fn save_item(pool: &SqlitePool, item: &TimelineItem) -> AppResult<Time
             start_day: i64::from(item.start),
             end_day: item.end.map(i64::from),
             precision: item.precision.as_str().to_owned(),
+            image_asset_id: item.image_asset_id.clone(),
+            tags: serde_json::to_string(&tags)
+                .map_err(|error| AppError::Internal(format!("tags: {error}")))?,
+            hidden: item.hidden,
             created_at: existing.map_or_else(|| now.clone(), |row| row.created_at),
             updated_at: now,
         },

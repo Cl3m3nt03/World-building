@@ -190,6 +190,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/** The track view (the axis view is the default). */
+function showTracks() {
+  fireEvent.click(screen.getByRole("radio", { name: "Pistes" }));
+}
+
 async function renderAt(path: string) {
   const queryClient = createQueryClient();
   const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }));
@@ -225,6 +230,7 @@ test('"New timeline" in the sidebar creates a timeline with one track, and opens
     payload: { title: "Nouvelle frise", trackName: "Événements" },
   });
   expect(await screen.findByText("Cette frise est encore vide.")).toBeTruthy();
+  showTracks();
   expect(await screen.findByRole("list", { name: "Événements" })).toBeTruthy();
 });
 
@@ -232,6 +238,7 @@ test("tracks hold their items, named in the world's calendar, with the eras behi
   await renderAt("/world/demo/world/timeline/tl1");
 
   const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  showTracks();
   const wars = within(view).getByRole("list", { name: "Guerres" });
   expect(
     within(wars).getByRole("button", { name: "Rébellion de Robert, de 282 AC à 283 AC" }),
@@ -294,6 +301,7 @@ test("the editor saves a name when its field is left, then Ctrl+Z puts it back",
 test("Alt + arrows move an item by a year and to another track; undo puts it back", async () => {
   await renderAt("/world/demo/world/timeline/tl1");
   const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  showTracks();
   const rebellion = within(view).getByRole("button", { name: /^Rébellion de Robert, / });
 
   fireEvent.keyDown(rebellion, { key: "ArrowRight", altKey: true });
@@ -329,6 +337,7 @@ test("Alt + arrows move an item by a year and to another track; undo puts it bac
 test("a double click on a track adds an event there; Delete removes it", async () => {
   await renderAt("/world/demo/world/timeline/tl1");
   const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  showTracks();
 
   fireEvent.doubleClick(within(view).getByRole("list", { name: "Rois" }), { clientX: 500 });
   await waitFor(() => expect(stored?.items).toHaveLength(4));
@@ -348,6 +357,7 @@ test("a period's end cannot come before its start", async () => {
   await renderAt("/world/demo/world/timeline/tl1");
   fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
   const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  fireEvent.click(within(editor).getByRole("button", { name: "282 AC – 283 AC" }));
   const end = within(editor).getByRole("group", { name: "Fin" });
 
   fireEvent.change(within(end).getByLabelText("Année"), { target: { value: "200" } });
@@ -359,7 +369,7 @@ test("a period's end cannot come before its start", async () => {
 
 test("tracks are renamed and recoloured from their dialog", async () => {
   await renderAt("/world/demo/world/timeline/tl1");
-  fireEvent.click(await screen.findByRole("button", { name: "Pistes" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Gérer les pistes" }));
   const dialog = await screen.findByRole("dialog", { name: "Pistes de la frise" });
 
   const name = within(dialog).getByLabelText("Nom de la piste 1");
@@ -433,4 +443,42 @@ test("Add cards places the chosen cards on a track, undone as one", async () => 
 
   fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
   await waitFor(() => expect(stored?.items).toHaveLength(3));
+});
+
+test("the axis shows every item as a dot and a bubble, across tracks", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  expect(within(view).queryByRole("list", { name: "Guerres" })).toBeNull();
+  for (const name of [/^Conquête d'Aegon, /, /^Rébellion de Robert, /, /^Robert Baratheon, /]) {
+    expect(within(view).getByRole("button", { name })).toBeTruthy();
+  }
+  expect(screen.getByRole("radio", { name: "Axe" }).getAttribute("aria-checked")).toBe("true");
+});
+
+test("tags are added in the item card, then filter the timeline", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  fireEvent.click(within(editor).getByRole("button", { name: "Étiquettes" }));
+  fireEvent.change(within(editor).getByLabelText("Nouvelle étiquette"), {
+    target: { value: "Guerre" },
+  });
+  fireEvent.click(within(editor).getByRole("button", { name: "Ajouter" }));
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")?.tags).toEqual(["Guerre"]),
+  );
+
+  // The eye hides the item in the wiki.
+  fireEvent.click(within(editor).getByRole("button", { name: "Masquer dans le wiki" }));
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")?.hidden).toBe(true),
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Filtrer par étiquette" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: "Guerre" }));
+  const conquest = screen.getByRole("button", { name: /^Conquête d'Aegon, / });
+  await waitFor(() => expect(conquest.parentElement?.className).toContain("opacity-30"));
+  expect(
+    screen.getByRole("button", { name: /^Rébellion de Robert, / }).parentElement?.className,
+  ).not.toContain("opacity-30");
 });
