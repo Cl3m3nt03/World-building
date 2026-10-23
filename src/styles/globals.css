@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* V2 « Atlas ancien » (ADR 0012): Alegreya for titles, Alegreya Sans for the
+   interface, its true small caps for rubrics. Inter and Space Mono stay for
+   the wiki's and Quill's own themes. */
+@import "@fontsource-variable/alegreya/wght.css";
+@import "@fontsource-variable/alegreya/wght-italic.css";
+@import "@fontsource/alegreya-sans/400.css";
+@import "@fontsource/alegreya-sans/400-italic.css";
+@import "@fontsource/alegreya-sans/500.css";
+@import "@fontsource/alegreya-sans/700.css";
+@import "@fontsource/alegreya-sans-sc/500.css";
 @import "@fontsource-variable/inter";
 @import "@fontsource/space-mono/700.css";
 @import "./tokens.css";
@@ -79,8 +89,9 @@
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Space Mono", ui-monospace, monospace;
+  --font-sans: "Alegreya Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Alegreya Variable", "Alegreya", ui-serif, Georgia, serif;
+  --font-caps: "Alegreya Sans SC", "Alegreya Sans", ui-sans-serif, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -181,19 +192,39 @@
     @apply bg-background text-foreground;
     margin: 0;
     overflow: hidden;
+    /* Alegreya's x-height is small: its letters are sized up to read like
+       a 0.5 x-height face, without changing any rem-based layout. */
+    font-size-adjust: 0.5;
   }
 
   h1,
   h2,
   h3 {
     @apply font-heading;
+    /* A serif breathes more than the sans of the interface. */
+    line-height: 1.2;
+    letter-spacing: -0.005em;
   }
+}
+
+/*
+ * A rubric (« Documents récents », « Propriétés », « Cité dans »): true small
+ * caps, spaced, in the muted ink, never fake capitals (ADR 0012).
+ */
+@utility rubric {
+  font-family: var(--font-caps);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  color: var(--muted-foreground);
 }
 
 /* Rich text of the card blocks (TipTap). */
 .prose-bz {
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  /* Alegreya Sans has a small x-height: a little larger, with more air. */
+  font-size: 1rem;
+  line-height: 1.65;
 }
 .prose-bz > * + * {
   margin-top: 0.5em;

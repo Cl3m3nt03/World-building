@@ -117,7 +117,7 @@ export function ChapterList({ outline, currentId, openDraftId, onOpenNote }: Pro
           })}
         </p>
       </div>
-      <h2 id="chapters-title" className="text-xs font-bold text-muted-foreground">
+      <h2 id="chapters-title" className="rubric">
         {t("quill.chapters")}
       </h2>
       {error && <AppErrorMessage error={error} />}

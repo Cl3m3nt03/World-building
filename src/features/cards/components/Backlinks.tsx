@@ -74,7 +74,7 @@ export function Backlinks({ cardId }: { cardId: string }) {
       aria-label={t("backlinks.title")}
       className="flex flex-col gap-2 border-t border-border pt-4"
     >
-      <h2 className="text-sm font-bold text-muted-foreground">{t("backlinks.title")}</h2>
+      <h2 className="rubric">{t("backlinks.title")}</h2>
       {backlinks.error && <AppErrorMessage error={backlinks.error} />}
       {shown?.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("backlinks.none")}</p>

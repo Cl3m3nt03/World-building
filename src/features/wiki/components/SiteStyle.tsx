@@ -142,7 +142,7 @@ function Themes({ theme, onChange }: TabProps) {
       </ul>
       {saved.length > 0 && (
         <section className="flex flex-col gap-1.5">
-          <h3 className="text-xs font-bold text-muted-foreground">{t("wiki.style.saved")}</h3>
+          <h3 className="rubric">{t("wiki.style.saved")}</h3>
           <ul className="flex flex-col gap-1">
             {saved.map((named, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: two palettes may share a name; the list only grows at its end.

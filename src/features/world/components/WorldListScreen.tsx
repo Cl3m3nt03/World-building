@@ -84,7 +84,7 @@ export function WorldListScreen() {
       {error && <AppErrorMessage error={error} />}
 
       <section aria-labelledby={recentHeadingId} className="flex min-h-0 flex-col gap-3">
-        <h2 id={recentHeadingId} className="text-sm font-bold text-muted-foreground">
+        <h2 id={recentHeadingId} className="rubric">
           {t("worlds.recent")}
         </h2>
         {recentWorlds.length === 0 ? (

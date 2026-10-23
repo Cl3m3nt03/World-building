@@ -177,7 +177,7 @@ function Aliases({ card }: { card: Card }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-bold text-muted-foreground">{t("cards.aliases")}</h2>
+      <h2 className="rubric">{t("cards.aliases")}</h2>
       <p className="-mt-1 text-xs text-muted-foreground">{t("cards.aliasesHint")}</p>
       {card.aliases.length > 0 && (
         <ul className="flex flex-wrap gap-1.5">
