@@ -183,7 +183,7 @@ export function ItemEditor({
     <aside
       aria-label={t("timelines.editor.label")}
       className={cn(
-        "glass-float absolute top-3 z-30 flex max-h-[calc(100%-5rem)] w-[min(22rem,38%)] min-w-64 flex-col gap-3 overflow-y-auto rounded-2xl p-3 shadow-xl",
+        "glass-float float-in absolute top-3 z-30 flex max-h-[calc(100%-5rem)] w-[min(22rem,38%)] min-w-64 flex-col gap-3 overflow-y-auto rounded-2xl p-3 shadow-xl",
         side === "left" ? "left-3" : "right-3",
       )}
     >

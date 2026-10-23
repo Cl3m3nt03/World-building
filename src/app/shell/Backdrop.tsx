@@ -52,7 +52,7 @@ export function Backdrop() {
         className="absolute inset-0"
         style={shown ? { opacity: "var(--bz-atlas-over-image)" } : undefined}
       >
-        <Atlas seed={world?.id ?? "builderz"} />
+        <Atlas key={world?.id} seed={world?.id ?? "builderz"} draw={Boolean(world)} />
       </div>
     </div>
   );

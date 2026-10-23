@@ -27,6 +27,18 @@ describe("Atlas", () => {
     expect(relief().style.transform).toBe("translate(14px, 14px)");
   });
 
+  it("draws its contour lines when a world opens", () => {
+    render(<Atlas seed="world" draw />);
+    const lines = screen.getByTestId("atlas").querySelectorAll("path[pathLength]");
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) expect(line.classList.contains("atlas-draw")).toBe(true);
+  });
+
+  it("is simply there on the world list", () => {
+    render(<Atlas seed="builderz" />);
+    expect(screen.getByTestId("atlas").querySelector(".atlas-draw")).toBeNull();
+  });
+
   it("stays still when transparency is off", async () => {
     useUiStore.setState({ transparency: "off" });
     render(<Atlas seed="world" />);
