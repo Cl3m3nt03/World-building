@@ -34,7 +34,7 @@ Ce sont les tokens `--bz-*` de `src/styles/tokens.css`, avec les mêmes noms qu'
 | Fond | `#13110d` encre chaude | `#f2e9d4` vélin |
 | Texte | `#eee4cf` parchemin | `#2b2219` encre brune |
 | Texte atténué | `#a89d86` | `#6e604c` |
-| Accent (or gravé) | `#d4ad5a` | `#8c6a24` |
+| Accent (or gravé) | `#d4ad5a` | `#7d5e1e` (assombri pour l'AA : 5,4:1 sur le verre) |
 | Secondaire (vert-de-gris) | `#6fa596` | `#3d6f63` |
 | Destruction (sang-de-bœuf) | `#d0645a` | `#a63c33` |
 
