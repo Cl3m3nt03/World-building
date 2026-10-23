@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import { documentKeys } from "@/features/cards/hooks/keys";
-import { commands, type Timeline, type TimelineItem } from "@/lib/bindings";
+import { commands, type Timeline, type TimelineItem, type TimelineLink } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { timelineKeys } from "./useTimelines";
 
@@ -11,6 +11,8 @@ export type TimelineOp =
   | { kind: "delete"; id: string }
   | { kind: "track"; id: string; name: string; color: string }
   | { kind: "moveTrack"; id: string; index: number }
+  | { kind: "link"; link: TimelineLink }
+  | { kind: "unlink"; id: string }
   /** Several changes undone as one (« Ajouter des cartes »). */
   | { kind: "batch"; ops: TimelineOp[] };
 
@@ -25,7 +27,30 @@ function inverseOf(timeline: Timeline, op: TimelineOp): TimelineOp | null {
     }
     case "delete": {
       const before = timeline.items.find((item) => item.id === op.id);
-      return before ? { kind: "save", item: before } : null;
+      if (!before) return null;
+      // Its arrows go with it, and come back with it.
+      const links = (timeline.links ?? []).filter(
+        (link) => link.from === op.id || link.to === op.id,
+      );
+      return links.length === 0
+        ? { kind: "save", item: before }
+        : {
+            kind: "batch",
+            ops: [
+              { kind: "save", item: before },
+              ...links.map((link) => ({ kind: "link" as const, link })),
+            ],
+          };
+    }
+    case "link": {
+      const known = (timeline.links ?? []).some(
+        (link) => link.from === op.link.from && link.to === op.link.to,
+      );
+      return known ? null : { kind: "unlink", id: op.link.id };
+    }
+    case "unlink": {
+      const before = (timeline.links ?? []).find((link) => link.id === op.id);
+      return before ? { kind: "link", link: before } : null;
     }
     case "track": {
       const before = timeline.tracks.find((track) => track.id === op.id);
@@ -60,6 +85,10 @@ async function run(op: TimelineOp): Promise<Timeline | null> {
       return unwrap(commands.updateTimelineTrack(op.id, op.name, op.color));
     case "moveTrack":
       return unwrap(commands.moveTimelineTrack(op.id, op.index));
+    case "link":
+      return unwrap(commands.saveTimelineLink(op.link));
+    case "unlink":
+      return unwrap(commands.deleteTimelineLink(op.id));
   }
 }
 

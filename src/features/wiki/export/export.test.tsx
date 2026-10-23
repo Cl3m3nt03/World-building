@@ -62,6 +62,7 @@ const PAGES: WikiPage[] = [
 
 /** A timeline page (M11): Apex's coming, a war, and a hidden secret. */
 const AGES: Timeline = {
+  links: [{ id: "l1", from: "coming", to: "war" }],
   id: "ages",
   title: "Les Âges",
   tracks: [{ id: "t", name: "Histoire", color: "amber" }],
@@ -399,5 +400,7 @@ test("the timeline page: drawn without script, its chronicle, hidden items left 
   expect(ages).toContain("Gardiens</li>");
   expect(ages).not.toContain("Le secret d&#x27;Alvar");
   expect(ages).not.toContain("<script>");
+  // Cause and effect, in the chronicle.
+  expect(ages).toContain("Mène à : Guerre des Cristaux");
   expect(file("index.html")).toContain('href="pages/ages.html"');
 });

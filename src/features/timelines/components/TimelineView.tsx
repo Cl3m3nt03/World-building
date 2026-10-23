@@ -129,6 +129,66 @@ type ItemDrag = {
   moved: boolean;
 };
 
+/**
+ * Cause and effect: an arrow from each item to the items it leads to, a
+ * curve above them; the selected item's arrows stand out.
+ */
+function Arrows({
+  links,
+  points,
+  selectedId,
+}: {
+  links: readonly { id: string; from: string; to: string }[];
+  points: ReadonlyMap<string, { x: number; y: number }>;
+  selectedId: string | null;
+}) {
+  const marker = useId();
+  if (links.length === 0) return null;
+  return (
+    <svg
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-[5] size-full overflow-visible"
+    >
+      <defs>
+        {["muted", "selected"].map((kind) => (
+          <marker
+            key={kind}
+            id={`${marker}-${kind}`}
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
+            <path
+              d="M 0 0 L 10 5 L 0 10 z"
+              className={kind === "selected" ? "fill-primary" : "fill-foreground/45"}
+            />
+          </marker>
+        ))}
+      </defs>
+      {links.map((link) => {
+        const from = points.get(link.from);
+        const to = points.get(link.to);
+        if (!from || !to) return null;
+        const lift = Math.min(90, 24 + Math.abs(to.x - from.x) / 4);
+        const selected = link.from === selectedId || link.to === selectedId;
+        return (
+          <path
+            key={link.id}
+            d={`M ${from.x} ${from.y} C ${from.x} ${from.y - lift}, ${to.x} ${to.y - lift}, ${to.x} ${to.y}`}
+            fill="none"
+            markerEnd={`url(#${marker}-${selected ? "selected" : "muted"})`}
+            className={selected ? "stroke-primary" : "stroke-foreground/35"}
+            strokeWidth={selected ? 2 : 1.5}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 /** The item whose button or segment is under a point of the window, if any. */
 function itemUnder(clientX: number, clientY: number): string | null {
   const element = (document.elementsFromPoint?.(clientX, clientY) ?? []).find(
@@ -715,6 +775,21 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
                 ))}
               </div>
 
+              <Arrows
+                links={timeline.links ?? []}
+                points={
+                  new Map(
+                    shown.map((item) => [
+                      item.id,
+                      {
+                        x: clampX(xOf(view, item.start)),
+                        y: axisY - 22 - (axis.levelOf.get(item.id) ?? 0) * LEVEL_GAP - BUBBLE_H,
+                      },
+                    ]),
+                  )
+                }
+                selectedId={selectedId}
+              />
               <ul aria-label={label} className="contents">
                 {shown.map((item) => {
                   const x0 = xOf(view, item.start);
@@ -848,6 +923,24 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
                 })}
               </div>
 
+              <Arrows
+                links={timeline.links ?? []}
+                points={(() => {
+                  const points = new Map<string, { x: number; y: number }>();
+                  let top = RULER_H;
+                  for (const track of timeline.tracks) {
+                    for (const item of layout.byTrack.get(track.id) ?? []) {
+                      points.set(item.id, {
+                        x: clampX(xOf(view, item.start)),
+                        y: top + TRACK_PAD + (layout.laneOf.get(item.id) ?? 0) * LANE_H + 2,
+                      });
+                    }
+                    top += layout.height.get(track.id) ?? 0;
+                  }
+                  return points;
+                })()}
+                selectedId={selectedId}
+              />
               {timeline.tracks.map((track) => (
                 <ul
                   key={track.id}

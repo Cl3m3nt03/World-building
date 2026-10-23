@@ -3,7 +3,7 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
-use crate::domain::timelines::{self, Timeline, TimelineItem};
+use crate::domain::timelines::{self, Timeline, TimelineItem, TimelineLink};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -109,4 +109,20 @@ pub async fn duplicate_timeline(
     title: String,
 ) -> AppResult<Timeline> {
     timelines::duplicate(&pool(&state, "duplicate_timeline").await?, &id, &title).await
+}
+
+/// Draws an arrow between two items of a timeline (« mène à »).
+#[tauri::command]
+#[specta::specta]
+pub async fn save_timeline_link(
+    state: State<'_, AppState>,
+    link: TimelineLink,
+) -> AppResult<Timeline> {
+    timelines::save_link(&pool(&state, "save_timeline_link").await?, &link).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_timeline_link(state: State<'_, AppState>, id: String) -> AppResult<Timeline> {
+    timelines::delete_link(&pool(&state, "delete_timeline_link").await?, &id).await
 }

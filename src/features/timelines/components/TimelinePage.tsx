@@ -35,13 +35,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCardList } from "@/features/cards";
 import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
-import type { Card, DatePrecision, Timeline, WorldCalendar } from "@/lib/bindings";
+import type { Card, DatePrecision, Timeline, TimelineItem, WorldCalendar } from "@/lib/bindings";
 import { documentRoute, wikiTimelineRoute } from "@/lib/documentRoute";
 import { livesAt } from "../ages";
+import { formatDate } from "../calendar";
 import { shiftDay, snapDay } from "../edit";
 import { useTimelineEditor } from "../hooks/useTimelineEditor";
 import { useRenameTimeline, useTimeline } from "../hooks/useTimelines";
-import { useCalendar } from "../useCalendar";
+import { useCalendar, useCalendarWords } from "../useCalendar";
 import { AddCardsDialog } from "./AddCardsDialog";
 import { DateField, type DateValue } from "./DateField";
 import { ItemEditor } from "./ItemEditor";
@@ -78,6 +79,7 @@ export function TimelinePage() {
 function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[] }) {
   const { t } = useTranslation();
   const { calendar } = useCalendar();
+  const words = useCalendarWords();
   const view = useRef<TimelineViewHandle>(null);
   const editor = useTimelineEditor(timeline.id);
   const cardsById = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
@@ -211,6 +213,40 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
     setSelectedId(item.id);
     view.current?.centerAt((item.start + (item.end ?? item.start)) / 2);
   };
+  // Cause and effect of an item: its arrows, and the items it could lead to.
+  const nameOf = (item: TimelineItem) =>
+    item.title.trim() || (item.cardId ? cardsById.get(item.cardId)?.title : "") || "";
+  const datesOf = (item: TimelineItem) => {
+    const start = formatDate(calendar, item.start, item.precision, words);
+    return item.end === null
+      ? start
+      : `${start} – ${formatDate(calendar, item.end, item.precision, words)}`;
+  };
+  const causes = (item: TimelineItem) => {
+    const links = timeline.links ?? [];
+    const byId = new Map(timeline.items.map((each) => [each.id, each]));
+    const side = (pick: "from" | "to", other: "from" | "to") =>
+      links
+        .filter((link) => link[pick] === item.id)
+        .flatMap((link) => {
+          const target = byId.get(link[other]);
+          return target ? [{ linkId: link.id, id: target.id, name: nameOf(target) }] : [];
+        });
+    const leadsTo = side("from", "to");
+    const taken = new Set(leadsTo.map((link) => link.id));
+    return {
+      leadsTo,
+      comesFrom: side("to", "from"),
+      candidates: [...timeline.items]
+        .filter((each) => each.id !== item.id && !taken.has(each.id))
+        .sort((a, b) => a.start - b.start)
+        // With its dates: two items may share a name (a reign and a life).
+        .map((each) => ({
+          id: each.id,
+          name: `${nameOf(each)} (${datesOf(each)})`,
+        })),
+    };
+  };
   // What the view shows, for the minimap.
   const [shown, setShown] = useState<Shown | null>(null);
   const wikiPages = useWikiPages();
@@ -318,6 +354,14 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
               };
             })}
             onSelectItem={setSelectedId}
+            {...causes(selected)}
+            onLink={(to) =>
+              void editor.apply({
+                kind: "link",
+                link: { id: crypto.randomUUID(), from: selected.id, to },
+              })
+            }
+            onUnlink={(linkId) => void editor.apply({ kind: "unlink", id: linkId })}
           />
         ) : null}
 

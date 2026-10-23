@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO timeline_links (id, timeline_id, from_item, to_item, created_at)\n         VALUES (?, ?, ?, ?, ?)\n         ON CONFLICT (from_item, to_item) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "0e751b7cfc76c2ceba4c01017cd48b2da2cc2c248fd13c0715759083b89450a8"
+}

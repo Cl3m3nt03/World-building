@@ -75,6 +75,16 @@ function WikiTimeline({
     () => ({ ...timeline, items: timeline.items.filter((item) => !item.hidden) }),
     [timeline],
   );
+  // What an item leads to, among the items shown.
+  const leadsTo = (item: TimelineItem) =>
+    (timeline.links ?? [])
+      .filter((link) => link.from === item.id)
+      .flatMap((link) => {
+        const target = shown.items.find((each) => each.id === link.to);
+        return target
+          ? [itemTitle(target, target.cardId ? cardsById.get(target.cardId) : undefined)]
+          : [];
+      });
   const pageOf = (item: TimelineItem) => (item.cardId && isPage(item.cardId) ? item.cardId : null);
 
   return (
@@ -148,6 +158,11 @@ function WikiTimeline({
                       )}
                       {item.description ? (
                         <p className="text-sm whitespace-pre-line">{item.description}</p>
+                      ) : null}
+                      {leadsTo(item).length > 0 ? (
+                        <p className="text-sm text-wiki-muted">
+                          {t("wiki.timeline.leadsTo", { names: leadsTo(item).join(", ") })}
+                        </p>
                       ) : null}
                       {(item.tags ?? []).length > 0 ? (
                         <ul

@@ -213,6 +213,9 @@ export const commands = {
 	createTimeline: (title: string, trackName: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("create_timeline", { title, trackName })),
 	/**  Duplicates a timeline as `title` (translated by the front), right after it. */
 	duplicateTimeline: (id: string, title: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("duplicate_timeline", { id, title })),
+	/**  Draws an arrow between two items of a timeline (« mène à »). */
+	saveTimelineLink: (link: TimelineLink) => typedError<Timeline, AppError>(__TAURI_INVOKE("save_timeline_link", { link })),
+	deleteTimelineLink: (id: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("delete_timeline_link", { id })),
 	getTimeline: (id: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("get_timeline", { id })),
 	addTimelineTrack: (timelineId: string, name: string, color: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("add_timeline_track", { timelineId, name, color })),
 	updateTimelineTrack: (id: string, name: string, color: string) => typedError<Timeline, AppError>(__TAURI_INVOKE("update_timeline_track", { id, name, color })),
@@ -1296,6 +1299,8 @@ export type Timeline = {
 	tracks: TimelineTrack[],
 	/**  In time order. */
 	items: TimelineItem[],
+	/**  Cause and effect, oldest first. */
+	links: TimelineLink[],
 };
 
 /**  An event (`end` none) or a period, on a track. */
@@ -1320,6 +1325,13 @@ export type TimelineItem = {
 	hidden?: boolean,
 	/**  A period standing for a card: its life, birth to death (ages are counted from it). */
 	life?: boolean,
+};
+
+/**  An arrow from an item to another (« mène à »), on the same timeline. */
+export type TimelineLink = {
+	id: string,
+	from: string,
+	to: string,
 };
 
 export type TimelineTrack = {

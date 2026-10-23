@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id!\", from_item, to_item FROM timeline_links\n           WHERE timeline_id = ? ORDER BY created_at, id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_links",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "from_item",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_links",
+            "name": "from_item"
+          }
+        }
+      },
+      {
+        "name": "to_item",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_links",
+            "name": "to_item"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2ba3f65c33948d41f61406a39716ecfb85938ac3ae4e81ae8dfbadf5863bea05"
+}

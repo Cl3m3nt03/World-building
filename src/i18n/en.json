@@ -1534,5 +1534,12 @@
   "timelines.story.pause": "Pause",
   "timelines.story.position": "{{index}} / {{count}}",
   "timelines.story.exit": "Stop playing",
-  "timelines.story.exitShort": "Stop"
+  "timelines.story.exitShort": "Stop",
+  "timelines.editor.causes": "Cause and effect",
+  "timelines.editor.leadsTo": "Leads to",
+  "timelines.editor.comesFrom": "Comes from",
+  "timelines.editor.addLead": "Link to an item",
+  "timelines.editor.chooseLead": "Choose what it leads to…",
+  "timelines.editor.unlinkItem": "Remove the arrow to {{name}}",
+  "wiki.timeline.leadsTo": "Leads to: {{names}}"
 }

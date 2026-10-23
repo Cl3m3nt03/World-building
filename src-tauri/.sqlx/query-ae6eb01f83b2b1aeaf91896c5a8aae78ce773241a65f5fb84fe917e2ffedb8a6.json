@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM timeline_links WHERE id = ? RETURNING timeline_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "timeline_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "timeline_links",
+            "name": "timeline_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ae6eb01f83b2b1aeaf91896c5a8aae78ce773241a65f5fb84fe917e2ffedb8a6"
+}

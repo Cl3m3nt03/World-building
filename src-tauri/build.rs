@@ -68,6 +68,8 @@ const COMMANDS: &[&str] = &[
     "export_story",
     "create_timeline",
     "duplicate_timeline",
+    "save_timeline_link",
+    "delete_timeline_link",
     "get_timeline",
     "add_timeline_track",
     "update_timeline_track",

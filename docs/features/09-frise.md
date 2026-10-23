@@ -105,6 +105,8 @@ Lâchée **sur un élément** (sa bulle, son segment ou sa barre, entouré penda
 
 **Lecture (M11+, #417)** : le bouton « Lecture : raconter la frise » de la barre d'outils raconte la frise élément par élément, dans l'ordre du temps (en partant de l'élément sélectionné, et en sautant ceux qu'estompe le filtre d'étiquettes). Chaque élément est centré et sa carte s'ouvre ; la lecture passe au suivant toutes les 5 secondes et s'arrête au dernier. La barre devient un lecteur : précédent, pause ou reprise (au bout, la reprise recommence au début), suivant, position (« 3 / 17 »), « Quitter ». Au clavier : flèches gauche et droite, Espace, Échap.
 
+**Cause et effet (M11+, #418)** : dans la carte d'un élément, « Cause et effet » relie l'élément à un autre de la frise (« Relier à un élément » : les éléments avec leurs dates, deux pouvant porter le même nom). La section liste ce à quoi il **mène** et ce dont il **vient** ; un clic sélectionne l'autre élément, la croix retire la flèche. Les flèches se dessinent en courbe au-dessus des bulles (vue Axe) ou des éléments (vue Pistes) ; celles de l'élément sélectionné ressortent. Supprimer un élément retire ses flèches ; Ctrl + Z rend l'élément et ses flèches. Dans le wiki et son export, la chronologie indique « Mène à : … ».
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

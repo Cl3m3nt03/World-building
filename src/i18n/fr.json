@@ -1534,5 +1534,12 @@
   "timelines.story.pause": "Mettre en pause",
   "timelines.story.position": "{{index}} / {{count}}",
   "timelines.story.exit": "Quitter la lecture",
-  "timelines.story.exitShort": "Quitter"
+  "timelines.story.exitShort": "Quitter",
+  "timelines.editor.causes": "Cause et effet",
+  "timelines.editor.leadsTo": "Mène à",
+  "timelines.editor.comesFrom": "Vient de",
+  "timelines.editor.addLead": "Relier à un élément",
+  "timelines.editor.chooseLead": "Choisir ce à quoi il mène…",
+  "timelines.editor.unlinkItem": "Retirer la flèche vers {{name}}",
+  "wiki.timeline.leadsTo": "Mène à : {{names}}"
 }

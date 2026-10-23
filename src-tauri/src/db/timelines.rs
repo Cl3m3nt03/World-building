@@ -1,4 +1,4 @@
-//! Queries of the timelines (migrations 0020 and 0021).
+//! Queries of the timelines (migrations 0020 to 0023).
 
 use sqlx::{SqliteExecutor, SqlitePool};
 
@@ -224,4 +224,56 @@ pub async fn is_card(pool: &SqlitePool, id: &str) -> AppResult<bool> {
     .fetch_one(pool)
     .await?
         > 0)
+}
+
+pub struct LinkRow {
+    pub id: String,
+    pub from_item: String,
+    pub to_item: String,
+}
+
+/// The arrows of a timeline, oldest first.
+pub async fn links(ex: impl SqliteExecutor<'_>, timeline_id: &str) -> AppResult<Vec<LinkRow>> {
+    Ok(sqlx::query_as!(
+        LinkRow,
+        r#"SELECT id AS "id!", from_item, to_item FROM timeline_links
+           WHERE timeline_id = ? ORDER BY created_at, id"#,
+        timeline_id
+    )
+    .fetch_all(ex)
+    .await?)
+}
+
+/// Adds the arrow `from` → `to`, or keeps the one already there (the same
+/// id when it is given again).
+pub async fn insert_link(
+    ex: impl SqliteExecutor<'_>,
+    id: &str,
+    timeline_id: &str,
+    from: &str,
+    to: &str,
+    created_at: &str,
+) -> AppResult<()> {
+    sqlx::query!(
+        "INSERT INTO timeline_links (id, timeline_id, from_item, to_item, created_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT (from_item, to_item) DO NOTHING",
+        id,
+        timeline_id,
+        from,
+        to,
+        created_at
+    )
+    .execute(ex)
+    .await?;
+    Ok(())
+}
+
+pub async fn delete_link(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<Option<String>> {
+    Ok(sqlx::query_scalar!(
+        "DELETE FROM timeline_links WHERE id = ? RETURNING timeline_id",
+        id
+    )
+    .fetch_optional(ex)
+    .await?)
 }
