@@ -45,7 +45,7 @@ export function TopBar({ activeTab, onTabClick }: TopBarProps) {
           aria-expanded={settingsOpen}
           onClick={() => openWorldSettings("general")}
           disabled={!world}
-          className="glass h-10 max-w-64 rounded-lg px-2.5 font-heading text-sm"
+          className="glass-veil h-10 max-w-64 rounded-lg px-2.5 font-heading text-sm"
         >
           {world?.mainImage ? (
             <AssetImage
@@ -63,7 +63,7 @@ export function TopBar({ activeTab, onTabClick }: TopBarProps) {
       {/* Center island: modes */}
       <TabsList
         aria-label={t("shell.tabs.label")}
-        className="glass h-10 gap-0.5 rounded-full p-1 group-data-horizontal/tabs:h-10"
+        className="glass-veil h-10 gap-0.5 rounded-full p-1 group-data-horizontal/tabs:h-10"
       >
         {TABS.map(({ value, icon: Icon, label }) => {
           const active = value === activeTab;
@@ -93,7 +93,7 @@ export function TopBar({ activeTab, onTabClick }: TopBarProps) {
       {/* Right island: actions */}
       <nav
         aria-label={t("shell.actions.label")}
-        className="glass flex h-10 items-center gap-0.5 justify-self-end rounded-full px-1"
+        className="glass-veil flex h-10 items-center gap-0.5 justify-self-end rounded-full px-1"
       >
         {world && <RadioButton worldId={world.id} />}
 
