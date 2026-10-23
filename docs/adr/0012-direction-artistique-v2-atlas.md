@@ -1,6 +1,6 @@
 # ADR 0012 — Direction artistique de la V2 : « Atlas ancien »
 
-- **Statut** : Proposé (ambiance, priorité et thème choisis par Clément ; détails proposés)
+- **Statut** : Accepté (ambiance, priorité et thème choisis par Clément, détails validés le 2026-10-23)
 - **Date** : 2026-10-23
 - **Décideur** : Clément
 - **Complète** : ADR 0003 (direction artistique de la V1), sans le remplacer sur ce qui reste vrai
