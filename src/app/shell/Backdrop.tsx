@@ -3,6 +3,7 @@ import { useSettings } from "@/features/settings";
 import { thumbnailUrl, useCurrentWorld } from "@/features/world";
 import { resolveTheme, useWorldAccent } from "@/features/world-theme";
 import { useAssetUrl } from "@/lib/assets";
+import { Atlas } from "./Atlas";
 
 /**
  * Image behind the whole interface (ADR 0003) and accent of the app. With a
@@ -21,9 +22,14 @@ function useBackdrop(): string | undefined {
   return last ? thumbnailUrl(last) : undefined;
 }
 
-/** Full-screen backdrop, blurred and darkened. Without an image, the token gradient. */
+/**
+ * Full-screen backdrop: the image, blurred and veiled, with the living atlas
+ * engraved over it (ADR 0012). Without an image, the atlas alone on the token
+ * gradient. The atlas is the open world's own, or the app's on the world list.
+ */
 export function Backdrop() {
   const imageUrl = useBackdrop();
+  const { data: world } = useCurrentWorld();
   // An image that cannot be shown (file removed outside the app) gives the gradient.
   const [failed, setFailed] = useState<string | null>(null);
   const shown = imageUrl && imageUrl !== failed ? imageUrl : undefined;
@@ -42,6 +48,12 @@ export function Backdrop() {
         <div className="absolute inset-0" style={{ background: "var(--bz-backdrop-gradient)" }} />
       )}
       <div className="absolute inset-0" style={{ background: "var(--bz-backdrop-overlay)" }} />
+      <div
+        className="absolute inset-0"
+        style={shown ? { opacity: "var(--bz-atlas-over-image)" } : undefined}
+      >
+        <Atlas seed={world?.id ?? "builderz"} />
+      </div>
     </div>
   );
 }
