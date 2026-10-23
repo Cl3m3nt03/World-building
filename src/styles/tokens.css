@@ -21,6 +21,12 @@
     radial-gradient(70% 60% at 12% 8%, rgb(214 180 110 / 0.42), transparent 70%),
     radial-gradient(60% 55% at 92% 96%, rgb(120 170 155 / 0.26), transparent 70%),
     linear-gradient(160deg, #f5eedc, #ebe0c6);
+  /* The living atlas: engraved ink, its graticule in verdigris, and how much
+     of it shows over a world's image. */
+  --bz-atlas-ink: rgb(95 68 24 / 0.2);
+  --bz-atlas-ink-strong: rgb(95 68 24 / 0.32);
+  --bz-atlas-sea: rgb(61 111 99 / 0.16);
+  --bz-atlas-over-image: 0.55;
   --bz-surface: rgb(250 245 232 / 0.78);
   --bz-surface-strong: rgb(251 247 237 / 0.95);
   --bz-pill: rgb(255 252 244 / 0.72);
@@ -88,6 +94,10 @@
     radial-gradient(70% 60% at 12% 8%, rgb(110 82 30 / 0.36), transparent 70%),
     radial-gradient(60% 55% at 92% 96%, rgb(40 84 72 / 0.36), transparent 70%),
     linear-gradient(160deg, #1a160f, #100e0a);
+  --bz-atlas-ink: rgb(212 173 90 / 0.13);
+  --bz-atlas-ink-strong: rgb(212 173 90 / 0.22);
+  --bz-atlas-sea: rgb(111 165 150 / 0.14);
+  --bz-atlas-over-image: 0.6;
   --bz-surface: rgb(26 22 16 / 0.72);
   --bz-surface-strong: rgb(22 19 14 / 0.94);
   --bz-pill: rgb(0 0 0 / 0.45);
