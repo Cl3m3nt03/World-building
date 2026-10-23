@@ -1,87 +1,118 @@
 /*
- * BuilderZ design tokens (ADR 0003 — direction artistique).
+ * BuilderZ design tokens — V2 « Atlas ancien » (ADR 0012; organisation of the
+ * shell from ADR 0003). « Vélin » (light) is the base, « encre » (dark)
+ * overrides it; both are polished alike and the app follows Windows.
  * Raw palette, prefixed --bz-* to avoid clashing with shadcn/ui semantic names
  * (ADR "--accent" is --bz-accent here; shadcn's --accent is the hover surface).
- * Light is the base, dark overrides it. The dark theme is the reference.
  * The wiki (M8) takes the light or dark set from its own background
  * (`data-wiki-scheme`), and Quill's writing mode its chosen one
  * (`data-quill-scheme`), whatever the app's theme.
+ * Contrast (WCAG, text on the glass blended on the backdrop): every text
+ * colour ≥ 4.5:1 on its surfaces in both themes (measured in the PR of #425).
  */
 
 :root,
 [data-wiki-scheme="light"],
 [data-quill-scheme="light"] {
-  --bz-bg: #f5efe3;
-  --bz-backdrop-overlay: rgb(245 239 227 / 0.6);
+  /* Vélin: the cartographer's paper, ink-brown text, engraved gold. */
+  --bz-bg: #f2e9d4;
+  --bz-backdrop-overlay: rgb(242 233 212 / 0.6);
   --bz-backdrop-gradient:
-    radial-gradient(70% 60% at 15% 10%, rgb(232 208 160 / 0.55), transparent 70%),
-    radial-gradient(60% 55% at 90% 95%, rgb(214 186 150 / 0.45), transparent 70%),
-    linear-gradient(160deg, #f7f1e6, #ede3d1);
-  --bz-surface: rgb(255 251 243 / 0.78);
-  --bz-surface-strong: rgb(255 252 246 / 0.95);
-  --bz-pill: rgb(255 255 255 / 0.7);
-  --bz-hover: rgb(60 40 10 / 0.06);
-  --bz-border: rgb(60 40 10 / 0.12);
-  --bz-border-strong: rgb(60 40 10 / 0.22);
-  --bz-text: #1f1a14;
-  --bz-text-muted: #6b6155;
+    radial-gradient(70% 60% at 12% 8%, rgb(214 180 110 / 0.42), transparent 70%),
+    radial-gradient(60% 55% at 92% 96%, rgb(120 170 155 / 0.26), transparent 70%),
+    linear-gradient(160deg, #f5eedc, #ebe0c6);
+  --bz-surface: rgb(250 245 232 / 0.78);
+  --bz-surface-strong: rgb(251 247 237 / 0.95);
+  --bz-pill: rgb(255 252 244 / 0.72);
+  --bz-hover: rgb(70 50 20 / 0.06);
+  --bz-border: rgb(70 50 20 / 0.13);
+  --bz-border-strong: rgb(70 50 20 / 0.24);
+  --bz-text: #2b2219;
+  --bz-text-muted: #6e604c;
   /* The open world's theme may set its own accent (features/world-theme). */
-  --bz-accent: var(--bz-world-accent-light, #a8741a);
+  --bz-accent: var(--bz-world-accent-light, #7d5e1e);
   --bz-accent-foreground: var(--bz-world-accent-foreground-light, #fffaf0);
-  --bz-danger: #c93a3f;
+  /* Verdigris, the seas of old maps: the secondary colour. */
+  --bz-verdigris: #3d6f63;
+  --bz-danger: #a63c33;
   /* The bezel of the devices of Quill's reading preview (M10). */
   --bz-device: #2a2724;
 
-  /* Card type colors (icons, markers). Readable on the surfaces of each theme. */
-  --bz-type-red: #b8323a;
-  --bz-type-orange: #b75a14;
-  --bz-type-amber: #946400;
-  --bz-type-green: #3a7d2c;
-  --bz-type-teal: #16786f;
-  --bz-type-blue: #2b62b8;
-  --bz-type-violet: #6d4bc0;
-  --bz-type-pink: #b33a7a;
-  --bz-type-slate: #5b6475;
+  /* Card type colors (icons, markers). ≥ 5:1 on the surfaces of each theme. */
+  --bz-type-red: #a82e33;
+  --bz-type-orange: #a14e12;
+  --bz-type-amber: #7f5800;
+  --bz-type-green: #346f27;
+  --bz-type-teal: #146a62;
+  --bz-type-blue: #2a58a6;
+  --bz-type-violet: #6142ac;
+  --bz-type-pink: #a1336d;
+  --bz-type-slate: #545b69;
 
+  /* Glass: the light the edges catch, and the shadows, tinted (never neutral grey). */
+  --bz-glass-edge: rgb(255 255 255 / 0.7);
+  --bz-glass-inner: rgb(255 255 255 / 0.35);
+  --bz-shadow-veil: 0 1px 2px rgb(70 45 10 / 0.08), 0 4px 14px rgb(70 45 10 / 0.06);
+  --bz-shadow-panel: 0 2px 6px rgb(70 45 10 / 0.08), 0 14px 36px rgb(70 45 10 / 0.1);
+  --bz-shadow-float: 0 6px 16px rgb(70 45 10 / 0.12), 0 28px 64px rgb(70 45 10 / 0.18);
+
+  /* Radii by rank: fields, buttons, panels, the big floating surfaces, islands. */
   --bz-radius-sm: 6px;
   --bz-radius-md: 10px;
-  --bz-radius-lg: 14px;
+  --bz-radius-lg: 16px;
+  --bz-radius-xl: 22px;
   --bz-radius-pill: 9999px;
-  --bz-blur-panel: 16px;
+  --bz-blur-panel: 18px;
   --bz-blur-backdrop: 24px;
+
+  /* Motion: it always answers a gesture (ADR 0012). */
+  --bz-duration-fast: 120ms;
+  --bz-duration-base: 200ms;
+  --bz-duration-slow: 360ms;
+  --bz-ease-out: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --bz-ease-in-out: cubic-bezier(0.6, 0, 0.3, 1);
+  --bz-ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
 }
 
 [data-theme="dark"],
 [data-wiki-scheme="dark"],
 [data-quill-scheme="dark"] {
+  /* Encre: warm ink-black, parchment text, the same gold, brighter. */
   --bz-device: #3b3f4b;
-  --bz-bg: #0b0e17;
-  --bz-backdrop-overlay: rgb(8 10 20 / 0.55);
+  --bz-bg: #13110d;
+  --bz-backdrop-overlay: rgb(14 12 8 / 0.55);
   --bz-backdrop-gradient:
-    radial-gradient(70% 60% at 15% 10%, rgb(38 52 96 / 0.75), transparent 70%),
-    radial-gradient(60% 55% at 90% 95%, rgb(58 40 88 / 0.6), transparent 70%),
-    linear-gradient(160deg, #10152a, #0b0e17);
-  --bz-surface: rgb(14 17 28 / 0.72);
-  --bz-surface-strong: rgb(10 12 20 / 0.92);
-  --bz-pill: rgb(0 0 0 / 0.55);
-  --bz-hover: rgb(255 255 255 / 0.07);
-  --bz-border: rgb(255 255 255 / 0.08);
-  --bz-border-strong: rgb(255 255 255 / 0.16);
-  --bz-text: #e8e9ee;
-  --bz-text-muted: #9095a6;
-  --bz-accent: var(--bz-world-accent-dark, #c8912e);
-  --bz-accent-foreground: var(--bz-world-accent-foreground-dark, #1a1206);
-  --bz-danger: #e5484d;
+    radial-gradient(70% 60% at 12% 8%, rgb(110 82 30 / 0.36), transparent 70%),
+    radial-gradient(60% 55% at 92% 96%, rgb(40 84 72 / 0.36), transparent 70%),
+    linear-gradient(160deg, #1a160f, #100e0a);
+  --bz-surface: rgb(26 22 16 / 0.72);
+  --bz-surface-strong: rgb(22 19 14 / 0.94);
+  --bz-pill: rgb(0 0 0 / 0.45);
+  --bz-hover: rgb(238 228 207 / 0.07);
+  --bz-border: rgb(238 228 207 / 0.09);
+  --bz-border-strong: rgb(238 228 207 / 0.18);
+  --bz-text: #eee4cf;
+  --bz-text-muted: #a89d86;
+  --bz-accent: var(--bz-world-accent-dark, #d4ad5a);
+  --bz-accent-foreground: var(--bz-world-accent-foreground-dark, #1b1408);
+  --bz-verdigris: #6fa596;
+  --bz-danger: #d0645a;
 
-  --bz-type-red: #f07178;
-  --bz-type-orange: #f29a5c;
-  --bz-type-amber: #e6b450;
-  --bz-type-green: #8bc97a;
-  --bz-type-teal: #5fcdc0;
-  --bz-type-blue: #7aa7f5;
-  --bz-type-violet: #b39af5;
-  --bz-type-pink: #ef8fc4;
-  --bz-type-slate: #a3abbd;
+  --bz-type-red: #ef7a72;
+  --bz-type-orange: #efa063;
+  --bz-type-amber: #e3b85a;
+  --bz-type-green: #93c77f;
+  --bz-type-teal: #69c7b4;
+  --bz-type-blue: #86a9ec;
+  --bz-type-violet: #b8a0ee;
+  --bz-type-pink: #ec95c2;
+  --bz-type-slate: #aeb2bb;
+
+  --bz-glass-edge: rgb(255 240 210 / 0.14);
+  --bz-glass-inner: rgb(255 240 210 / 0.05);
+  --bz-shadow-veil: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px rgb(8 5 0 / 0.28);
+  --bz-shadow-panel: 0 2px 6px rgb(0 0 0 / 0.3), 0 16px 40px rgb(8 5 0 / 0.4);
+  --bz-shadow-float: 0 8px 20px rgb(0 0 0 / 0.36), 0 32px 72px rgb(8 5 0 / 0.5);
 }
 
 /* Transparency off (app setting) or requested by the OS: opaque surfaces, no blur. */
@@ -96,5 +127,14 @@
     --bz-surface: var(--bz-surface-strong);
     --bz-blur-panel: 0px;
     --bz-blur-backdrop: 0px;
+  }
+}
+
+/* Reduced motion: changes happen at once. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --bz-duration-fast: 0ms;
+    --bz-duration-base: 0ms;
+    --bz-duration-slow: 0ms;
   }
 }
