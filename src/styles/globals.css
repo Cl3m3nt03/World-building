@@ -140,11 +140,53 @@
   --radius-2xl: calc(var(--bz-radius-xl) * 1.3);
 }
 
-/* Frosted glass panel (ADR 0003). Falls back to opaque when transparency is off. */
+/*
+ * Liquid glass in three levels (ADR 0012): veil (the top bar's islands),
+ * panel (sidebar, documents) and float (dialogs, menus, floating cards).
+ * Each catches the light on its top edge, has a soft inner rim, a tinted
+ * shadow and a faint grain so it never looks like plastic. Opaque, without
+ * blur, when transparency is off (the tokens do it).
+ */
+@utility glass-veil {
+  background-color: color-mix(in oklab, var(--bz-surface) 88%, transparent);
+  background-image: var(--bz-grain);
+  border: 1px solid var(--bz-border);
+  backdrop-filter: blur(var(--bz-blur-panel)) saturate(1.15);
+  box-shadow:
+    inset 0 1px 0 var(--bz-glass-edge),
+    inset 0 0 0 1px var(--bz-glass-inner),
+    var(--bz-shadow-veil);
+}
+@utility glass-panel {
+  background-color: var(--bz-surface);
+  background-image: var(--bz-grain);
+  border: 1px solid var(--bz-border);
+  backdrop-filter: blur(var(--bz-blur-panel)) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 var(--bz-glass-edge),
+    inset 0 0 0 1px var(--bz-glass-inner),
+    var(--bz-shadow-panel);
+}
+@utility glass-float {
+  background-color: color-mix(in oklab, var(--bz-surface-strong) 92%, transparent);
+  background-image: var(--bz-grain);
+  border: 1px solid var(--bz-border-strong);
+  backdrop-filter: blur(calc(var(--bz-blur-panel) * 1.4)) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--bz-glass-edge),
+    inset 0 0 0 1px var(--bz-glass-inner),
+    var(--bz-shadow-float);
+}
+/* The V1 name: a panel. */
 @utility glass {
   background-color: var(--bz-surface);
+  background-image: var(--bz-grain);
   border: 1px solid var(--bz-border);
-  backdrop-filter: blur(var(--bz-blur-panel));
+  backdrop-filter: blur(var(--bz-blur-panel)) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 var(--bz-glass-edge),
+    inset 0 0 0 1px var(--bz-glass-inner),
+    var(--bz-shadow-panel);
 }
 
 /* The timeline's canvas (M11, after vvd): a dot grid over the world's

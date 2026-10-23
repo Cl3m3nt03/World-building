@@ -389,7 +389,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           <div
             role="toolbar"
             aria-label={t("timelines.toolbar")}
-            className="glass absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
+            className="glass-float absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
           >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -496,7 +496,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
         )}
 
         {/* Zoom, at the bottom right. */}
-        <div className="glass absolute right-3 bottom-3 z-20 flex flex-col gap-0.5 rounded-xl p-1 shadow-lg">
+        <div className="glass-float absolute right-3 bottom-3 z-20 flex flex-col gap-0.5 rounded-xl p-1 shadow-lg">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -531,7 +531,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             <Button
               variant="ghost"
               size="icon-sm"
-              className="glass absolute bottom-3 left-3 z-20 rounded-full shadow-lg"
+              className="glass-float absolute bottom-3 left-3 z-20 rounded-full shadow-lg"
               aria-label={t("timelines.help")}
               title={t("timelines.help")}
             >
