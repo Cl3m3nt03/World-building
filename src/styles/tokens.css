@@ -6,14 +6,16 @@
  * (ADR "--accent" is --bz-accent here; shadcn's --accent is the hover surface).
  * The wiki (M8) takes the light or dark set from its own background
  * (`data-wiki-scheme`), and Quill's writing mode its chosen one
- * (`data-quill-scheme`), whatever the app's theme.
+ * (`data-quill-scheme`), whatever the app's theme; the design system page
+ * shows both side by side (`data-scheme`).
  * Contrast (WCAG, text on the glass blended on the backdrop): every text
  * colour ≥ 4.5:1 on its surfaces in both themes (measured in the PR of #425).
  */
 
 :root,
 [data-wiki-scheme="light"],
-[data-quill-scheme="light"] {
+[data-quill-scheme="light"],
+[data-scheme="light"] {
   /* Vélin: the cartographer's paper, ink-brown text, engraved gold. */
   --bz-bg: #f2e9d4;
   --bz-backdrop-overlay: rgb(242 233 212 / 0.6);
@@ -90,7 +92,8 @@
 
 [data-theme="dark"],
 [data-wiki-scheme="dark"],
-[data-quill-scheme="dark"] {
+[data-quill-scheme="dark"],
+[data-scheme="dark"] {
   /* Encre: warm ink-black, parchment text, the same gold, brighter. */
   --bz-device: #3b3f4b;
   --bz-bg: #13110d;
