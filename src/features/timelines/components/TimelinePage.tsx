@@ -36,6 +36,7 @@ import { useMarkOpened } from "@/features/cards/hooks/useCards";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, DatePrecision, Timeline, WorldCalendar } from "@/lib/bindings";
 import { documentRoute, wikiTimelineRoute } from "@/lib/documentRoute";
+import { livesAt } from "../ages";
 import { shiftDay, snapDay } from "../edit";
 import { useTimelineEditor } from "../hooks/useTimelineEditor";
 import { useRenameTimeline, useTimeline } from "../hooks/useTimelines";
@@ -285,6 +286,16 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             onDelete={remove}
             onClose={() => setSelectedId(null)}
             side={itemSide === "right" ? "left" : "right"}
+            lives={livesAt(calendar, timeline.items, selected.start, selected.id).map((life) => {
+              const lived = life.item.cardId ? cardsById.get(life.item.cardId) : undefined;
+              return {
+                id: life.item.id,
+                name: life.item.title.trim() || lived?.title || "",
+                imageAssetId: life.item.imageAssetId ?? lived?.imageAssetId ?? null,
+                age: life.age,
+              };
+            })}
+            onSelectItem={setSelectedId}
           />
         ) : null}
 

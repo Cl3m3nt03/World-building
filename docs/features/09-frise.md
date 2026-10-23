@@ -99,6 +99,8 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 **Après M11 (v1.3.x)** : une carte de la sidebar se **glisse directement sur la frise**. Pendant le glisser, un trait en pointillé et la date montrent où elle tombera (calée sur l'unité visible). Lâchée, elle devient un événement à cette date : sur la piste sous le pointeur en vue Pistes, sinon sur celle de l'élément sélectionné (ou la première). L'élément prend le nom, l'image de la carte et la couleur de la piste, et s'ouvre dans sa carte flottante ; Ctrl + Z l'annule.
 Lâchée **sur un élément** (sa bulle, son segment ou sa barre, entouré pendant le glisser), la carte est liée à cet élément au lieu d'en créer un : il la représente et garde son nom s'il en avait un (M11+, #414).
 
+**Âges (M11+, #415)** : une période qui représente une carte peut être marquée comme sa **vie** (« C'est la vie de … (naissance → mort) », dans les dates de l'élément ; migration 0022). La carte de tout autre élément liste alors, sous « Vivants à cette date », les cartes vivantes à sa date avec leur âge en années pleines dans le calendrier du monde (un anniversaire pas encore atteint compte un an de moins ; « moins d'un an » sinon), de la plus âgée à la plus jeune ; un clic sélectionne la vie. Une période sans carte, ou un règne non marqué, ne compte pas.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

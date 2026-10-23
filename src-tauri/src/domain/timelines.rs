@@ -89,6 +89,9 @@ pub struct TimelineItem {
     /// Left out of the wiki.
     #[serde(default)]
     pub hidden: bool,
+    /// A period standing for a card: its life, birth to death (ages are counted from it).
+    #[serde(default)]
+    pub life: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
@@ -141,6 +144,7 @@ fn item_of(row: ItemRow) -> TimelineItem {
         // Unreadable tags read as none.
         tags: serde_json::from_str(&row.tags).unwrap_or_default(),
         hidden: row.hidden,
+        life: row.life,
     }
 }
 
@@ -378,6 +382,8 @@ pub async fn save_item(pool: &SqlitePool, item: &TimelineItem) -> AppResult<Time
             tags: serde_json::to_string(&tags)
                 .map_err(|error| AppError::Internal(format!("tags: {error}")))?,
             hidden: item.hidden,
+            // Only a period standing for a card can be a life.
+            life: item.life && item.end.is_some() && item.card_id.is_some(),
             created_at: existing.map_or_else(|| now.clone(), |row| row.created_at),
             updated_at: now,
         },
