@@ -511,3 +511,27 @@ test("while a card is dragged over it, the timeline shows where it would land", 
   act(() => dragCard(null));
   await waitFor(() => expect(view.querySelector(".border-dashed")).toBeNull());
 });
+
+test("a card dropped on an item links it to that item, which keeps its name", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  const rebellion = within(view).getByRole("button", { name: /^Rébellion de Robert, / });
+  // jsdom lays nothing out: the point is over the rebellion's bubble.
+  document.elementsFromPoint = () => [rebellion];
+  try {
+    act(() => dragCard({ cardId: "robert", clientX: 0, clientY: 0 }));
+    await waitFor(() => expect(rebellion.className).toContain("ring-primary"));
+    act(() => dropCard({ cardId: "robert", clientX: 0, clientY: 0 }));
+    await waitFor(() =>
+      expect(stored?.items.find((item) => item.id === "rebellion")?.cardId).toBe("robert"),
+    );
+    expect(stored?.items).toHaveLength(3);
+    expect(stored?.items.find((item) => item.id === "rebellion")?.title).toBe(
+      "Rébellion de Robert",
+    );
+  } finally {
+    // @ts-expect-error jsdom has none
+    delete document.elementsFromPoint;
+    act(() => dragCard(null));
+  }
+});
