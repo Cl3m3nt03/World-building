@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/Cl3m3nt03/World-building/compare/v1.4.0...v1.5.0) (2026-10-23)
+
+
+### Fonctionnalités
+
+* **design:** a design system page, both themes side by side ([#440](https://github.com/Cl3m3nt03/World-building/issues/440)) ([f242f87](https://github.com/Cl3m3nt03/World-building/commit/f242f876580f29f283aabdaf47204ed502ccc616)), closes [#431](https://github.com/Cl3m3nt03/World-building/issues/431)
+* **design:** colour tokens of the « Atlas ancien » V2 ([#433](https://github.com/Cl3m3nt03/World-building/issues/433)) ([b782737](https://github.com/Cl3m3nt03/World-building/commit/b78273729b6258b80cf56a3ae3811a2a6135a140)), closes [#425](https://github.com/Cl3m3nt03/World-building/issues/425)
+* **design:** liquid glass in three levels ([#435](https://github.com/Cl3m3nt03/World-building/issues/435)) ([2d9b2de](https://github.com/Cl3m3nt03/World-building/commit/2d9b2de4fc3005f42e6d99155da2b55cf4d9a5f2)), closes [#427](https://github.com/Cl3m3nt03/World-building/issues/427)
+* **design:** motion tokens and the entry of a world ([#438](https://github.com/Cl3m3nt03/World-building/issues/438)) ([81b5f01](https://github.com/Cl3m3nt03/World-building/commit/81b5f0112f949167f128229bb175b228f5b964ab))
+* **design:** restyle the primitives on the V2 tokens ([#439](https://github.com/Cl3m3nt03/World-building/issues/439)) ([cf3b062](https://github.com/Cl3m3nt03/World-building/commit/cf3b06264f75fc3173d40df9feadf979b11cafe3)), closes [#430](https://github.com/Cl3m3nt03/World-building/issues/430)
+* **design:** set the app in Alegreya ([#434](https://github.com/Cl3m3nt03/World-building/issues/434)) ([3a08989](https://github.com/Cl3m3nt03/World-building/commit/3a089890a767f6dcb5bfbbd723d1d976439d3558)), closes [#426](https://github.com/Cl3m3nt03/World-building/issues/426)
+* **design:** the living atlas behind the interface ([#436](https://github.com/Cl3m3nt03/World-building/issues/436)) ([51b8a80](https://github.com/Cl3m3nt03/World-building/commit/51b8a80ecbfed99b66aca3766f83d505d569fa1c)), closes [#428](https://github.com/Cl3m3nt03/World-building/issues/428)
+
 ## [1.4.0](https://github.com/Cl3m3nt03/World-building/compare/v1.3.0...v1.4.0) (2026-10-23)
 
 
