@@ -63,9 +63,11 @@ function CompassRose({ x, y, size }: { x: number; y: number; size: number }) {
 /**
  * The living atlas (ADR 0012): the engraved map behind the interface, its own
  * for each world. The relief and the rose drift gently with the pointer, a
- * parallax that stops when motion is reduced or transparency is off.
+ * parallax that stops when motion is reduced or transparency is off. With
+ * `draw`, the contour lines draw themselves when the atlas appears: the start
+ * of the entry of a world.
  */
-export function Atlas({ seed }: { seed: string }) {
+export function Atlas({ seed, draw = false }: { seed: string; draw?: boolean }) {
   const relief = useMemo(() => atlasRelief(seed), [seed]);
   const transparency = useUiStore((state) => state.transparency);
   const reliefRef = useRef<SVGGElement>(null);
@@ -125,12 +127,12 @@ export function Atlas({ seed }: { seed: string }) {
       <g ref={reliefRef} className={DRIFT} fill="none">
         <g stroke="var(--bz-atlas-ink)" strokeWidth={0.9}>
           {relief.contours.map((d) => (
-            <path key={d} d={d} />
+            <path key={d} d={d} pathLength={1} className={draw ? "atlas-draw" : undefined} />
           ))}
         </g>
         <g stroke="var(--bz-atlas-ink-strong)" strokeWidth={1.3}>
           {relief.indexContours.map((d) => (
-            <path key={d} d={d} />
+            <path key={d} d={d} pathLength={1} className={draw ? "atlas-draw" : undefined} />
           ))}
         </g>
       </g>

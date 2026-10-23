@@ -177,6 +177,43 @@
     inset 0 0 0 1px var(--bz-glass-inner),
     var(--bz-shadow-float);
 }
+/*
+ * The entry of a world (ADR 0012), the one orchestrated sequence: the atlas
+ * draws itself, then the bar and the content set down. With reduced motion
+ * the durations are 0 and everything is there at once.
+ */
+@utility atlas-draw {
+  stroke-dasharray: 1;
+  animation: bz-atlas-draw calc(var(--bz-duration-slow) * 3) var(--bz-ease-in-out) both;
+}
+@utility atlas-settle {
+  animation: bz-atlas-settle var(--bz-duration-slow) var(--bz-ease-out) both;
+  animation-delay: calc(var(--bz-duration-slow) * var(--bz-settle-step, 1));
+}
+@keyframes bz-atlas-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes bz-atlas-settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+/* A floating panel that a gesture opens (the timeline's card, its player). */
+@utility float-in {
+  animation: bz-float-in var(--bz-duration-base) var(--bz-ease-out) both;
+}
+@keyframes bz-float-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
 /* The V1 name: a panel. */
 @utility glass {
   background-color: var(--bz-surface);

@@ -67,7 +67,7 @@ export function StoryPlayer({ count, index, onIndex, onExit }: Props) {
     <div
       role="toolbar"
       aria-label={t("timelines.story.label")}
-      className="glass-float absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
+      className="glass-float float-in absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
     >
       <Button
         variant="ghost"

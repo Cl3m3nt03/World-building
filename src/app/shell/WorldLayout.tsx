@@ -62,16 +62,19 @@ export function WorldLayout() {
       }}
       className="flex h-full flex-col gap-2 p-2"
     >
-      <TopBar
-        activeTab={tab}
-        // A page outside the tabs (the media library, under Home) highlights
-        // Home: a click on it must still lead back there. Within a tab (a card
-        // in World), the click changes nothing.
-        onTabClick={(value) => {
-          if (pathTab !== value) void navigate({ to: TAB_ROUTES[value], params: { worldId } });
-        }}
-      />
-      <TabsContent value={tab} className="min-h-0 flex-1">
+      {/* The entry of the world: the bar, then the content, set down after the atlas. */}
+      <div className="atlas-settle">
+        <TopBar
+          activeTab={tab}
+          // A page outside the tabs (the media library, under Home) highlights
+          // Home: a click on it must still lead back there. Within a tab (a card
+          // in World), the click changes nothing.
+          onTabClick={(value) => {
+            if (pathTab !== value) void navigate({ to: TAB_ROUTES[value], params: { worldId } });
+          }}
+        />
+      </div>
+      <TabsContent value={tab} className="atlas-settle min-h-0 flex-1 [--bz-settle-step:1.5]">
         <Outlet />
       </TabsContent>
       <CardTypesDialog open={cardTypesOpen} onOpenChange={setCardTypesOpen} />

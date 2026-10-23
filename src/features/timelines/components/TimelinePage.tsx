@@ -389,7 +389,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           <div
             role="toolbar"
             aria-label={t("timelines.toolbar")}
-            className="glass-float absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
+            className="glass-float float-in absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
           >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
