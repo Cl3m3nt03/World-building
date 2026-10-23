@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.0](https://github.com/Cl3m3nt03/World-building/compare/v1.3.0...v1.4.0) (2026-10-23)
+
+
+### Fonctionnalités
+
+* **timeline:** draw cause and effect between items ([#423](https://github.com/Cl3m3nt03/World-building/issues/423)) ([2d4b6f0](https://github.com/Cl3m3nt03/World-building/commit/2d4b6f0cceb42d147d9d29fdf429fb7d430376ae)), closes [#418](https://github.com/Cl3m3nt03/World-building/issues/418)
+* **timeline:** drop the sidebar's cards on a timeline ([#411](https://github.com/Cl3m3nt03/World-building/issues/411)) ([c442ee8](https://github.com/Cl3m3nt03/World-building/commit/c442ee84c27ac2cc0e9538642a0465529abcabb4))
+* **timeline:** link a card by dropping it on an item ([#419](https://github.com/Cl3m3nt03/World-building/issues/419)) ([c6a25a1](https://github.com/Cl3m3nt03/World-building/commit/c6a25a162919b313582d994d3000773e7644c3cc)), closes [#414](https://github.com/Cl3m3nt03/World-building/issues/414)
+* **timeline:** show the whole timeline in a minimap ([#421](https://github.com/Cl3m3nt03/World-building/issues/421)) ([a14c684](https://github.com/Cl3m3nt03/World-building/commit/a14c684198753b5d805175b010b7f641c5deed88)), closes [#416](https://github.com/Cl3m3nt03/World-building/issues/416)
+* **timeline:** tell a timeline item by item ([#422](https://github.com/Cl3m3nt03/World-building/issues/422)) ([dcd84dd](https://github.com/Cl3m3nt03/World-building/commit/dcd84dda506cc9e03f1bd90469fb49319d625aeb)), closes [#417](https://github.com/Cl3m3nt03/World-building/issues/417)
+* **timeline:** tell who is alive at an item's date, and how old ([#420](https://github.com/Cl3m3nt03/World-building/issues/420)) ([1df2d39](https://github.com/Cl3m3nt03/World-building/commit/1df2d39ac04d617508881bce1b13d622fa0558ad)), closes [#415](https://github.com/Cl3m3nt03/World-building/issues/415)
+
+
+### Corrections
+
+* **e2e:** wait for tauri-driver to listen before each session ([#412](https://github.com/Cl3m3nt03/World-building/issues/412)) ([1295231](https://github.com/Cl3m3nt03/World-building/commit/12952313b00dfc9a71fa4f29a663dba2065b056b))
+
 ## [1.3.0](https://github.com/Cl3m3nt03/World-building/compare/v1.2.0...v1.3.0) (2026-10-17)
 
 
