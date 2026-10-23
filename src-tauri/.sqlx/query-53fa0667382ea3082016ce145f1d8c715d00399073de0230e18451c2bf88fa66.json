@@ -1,10 +1,10 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT i.id AS \"id!\", i.track_id, i.card_id, i.title, i.color, i.description,\n                  i.start_day, i.end_day, i.precision, i.image_asset_id, i.tags,\n                  i.hidden AS \"hidden: bool\", i.created_at, i.updated_at\n           FROM timeline_items i JOIN timeline_tracks t ON t.id = i.track_id\n           WHERE t.timeline_id = ? ORDER BY i.start_day, i.id",
+  "query": "SELECT id, track_id, card_id, title, color, description, start_day, end_day, precision,\n                  image_asset_id, tags, hidden AS \"hidden: bool\", life AS \"life: bool\",\n                  created_at, updated_at\n           FROM timeline_items WHERE id = ?",
   "describe": {
     "columns": [
       {
-        "name": "id!",
+        "name": "id",
         "ordinal": 0,
         "type_info": "Text",
         "origin": {
@@ -136,8 +136,19 @@
         }
       },
       {
-        "name": "created_at",
+        "name": "life: bool",
         "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "timeline_items",
+            "name": "life"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 13,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -148,7 +159,7 @@
       },
       {
         "name": "updated_at",
-        "ordinal": 13,
+        "ordinal": 14,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -175,8 +186,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "e855fae779ecc86133fdfb6d161d5cd709d1a758ac9c71f4f5b5fb531ec97b22"
+  "hash": "53fa0667382ea3082016ce145f1d8c715d00399073de0230e18451c2bf88fa66"
 }

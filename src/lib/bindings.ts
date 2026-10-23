@@ -1318,6 +1318,8 @@ export type TimelineItem = {
 	tags?: string[],
 	/**  Left out of the wiki. */
 	hidden?: boolean,
+	/**  A period standing for a card: its life, birth to death (ages are counted from it). */
+	life?: boolean,
 };
 
 export type TimelineTrack = {

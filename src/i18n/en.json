@@ -1519,5 +1519,10 @@
   "wiki.bar.timelines": "Timelines",
   "wiki.timeline.hidden": "This timeline is not visible in the wiki.",
   "wiki.timeline.chronicle": "Chronicle",
-  "wiki.timeline.empty": "This timeline has nothing to tell yet."
+  "wiki.timeline.empty": "This timeline has nothing to tell yet.",
+  "timelines.editor.lives": "Alive at this date",
+  "timelines.editor.age_one": "{{count}} year old",
+  "timelines.editor.age_other": "{{count}} years old",
+  "timelines.editor.newborn": "under a year old",
+  "timelines.editor.life": "This is {{name}}'s life (birth → death)"
 }

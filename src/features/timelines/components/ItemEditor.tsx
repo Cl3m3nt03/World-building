@@ -45,6 +45,10 @@ type Props = {
   onClose: () => void;
   /** Where the card floats: away from the item it shows. */
   side?: "left" | "right";
+  /** The lives covering the item's date (its cards' ages then), oldest first. */
+  lives?: { id: string; name: string; imageAssetId: string | null; age: number }[];
+  /** Selects another item (a life). */
+  onSelectItem?: (id: string) => void;
 };
 
 /** A section that opens and closes, like vvd's « Étiquettes ». */
@@ -102,6 +106,8 @@ export function ItemEditor({
   onDelete,
   onClose,
   side = "right",
+  lives = [],
+  onSelectItem,
 }: Props) {
   const { t } = useTranslation();
   const words = useCalendarWords();
@@ -265,6 +271,18 @@ export function ItemEditor({
             />
             <Label htmlFor={`${id}-period`}>{t("timelines.editor.period")}</Label>
           </div>
+          {item.end !== null && card ? (
+            <div className="flex items-center gap-2">
+              <Switch
+                id={`${id}-life`}
+                checked={item.life ?? false}
+                onCheckedChange={(life) => save({ life })}
+              />
+              <Label htmlFor={`${id}-life`}>
+                {t("timelines.editor.life", { name: card.title })}
+              </Label>
+            </div>
+          ) : null}
           {end ? (
             <div className="flex flex-col gap-1">
               <DateField
@@ -298,6 +316,38 @@ export function ItemEditor({
           className="min-h-24 w-full rounded-xl border border-transparent bg-secondary/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         />
       </div>
+
+      {lives.length > 0 ? (
+        <Fold label={t("timelines.editor.lives")} defaultOpen>
+          <ul aria-label={t("timelines.editor.lives")} className="flex flex-col gap-1">
+            {lives.map((life) => (
+              <li key={life.id}>
+                <button
+                  type="button"
+                  onClick={() => onSelectItem?.(life.id)}
+                  className="flex w-full items-center gap-2 rounded-lg px-1.5 py-1 text-left text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {life.imageAssetId ? (
+                    <AssetImage
+                      assetId={life.imageAssetId}
+                      alt=""
+                      className="size-6 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span aria-hidden className="size-6 shrink-0 rounded-full bg-secondary" />
+                  )}
+                  <span className="min-w-0 flex-1 truncate">{life.name}</span>
+                  <span className="shrink-0 text-muted-foreground tabular-nums">
+                    {life.age < 1
+                      ? t("timelines.editor.newborn")
+                      : t("timelines.editor.age", { count: life.age })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Fold>
+      ) : null}
 
       <Fold label={t("timelines.editor.tags")} defaultOpen={tags.length > 0}>
         {tags.length > 0 ? (

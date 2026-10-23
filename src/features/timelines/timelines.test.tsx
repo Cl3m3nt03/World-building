@@ -535,3 +535,39 @@ test("a card dropped on an item links it to that item, which keeps its name", as
     act(() => dragCard(null));
   }
 });
+
+test("an event's card lists who is alive then, with their age", async () => {
+  // Robert's life on the timeline: 262 to 298.
+  stored = {
+    ...HISTORY,
+    items: [
+      ...HISTORY.items.filter((item) => item.id !== "crowned"),
+      {
+        id: "robert-life",
+        trackId: "kings",
+        cardId: "robert",
+        title: "",
+        color: "amber",
+        description: "",
+        start: 262 * YEAR,
+        end: 298 * YEAR,
+        precision: "year",
+        life: true,
+      },
+    ],
+  };
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  const lives = within(editor).getByRole("list", { name: "Vivants à cette date" });
+  const robert = within(lives).getByRole("button", { name: /Robert Baratheon/ });
+  expect(robert.textContent).toContain("20 ans");
+  fireEvent.click(robert);
+  await waitFor(() =>
+    expect(
+      screen
+        .getByRole("button", { name: /^Robert Baratheon, de 262 AC/ })
+        .getAttribute("aria-pressed"),
+    ).toBe("true"),
+  );
+});

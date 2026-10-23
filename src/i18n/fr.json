@@ -1519,5 +1519,10 @@
   "wiki.bar.timelines": "Frises",
   "wiki.timeline.hidden": "Cette frise n'est pas visible dans le wiki.",
   "wiki.timeline.chronicle": "Chronologie",
-  "wiki.timeline.empty": "Cette frise n'a encore rien à raconter."
+  "wiki.timeline.empty": "Cette frise n'a encore rien à raconter.",
+  "timelines.editor.lives": "Vivants à cette date",
+  "timelines.editor.age_one": "{{count}} an",
+  "timelines.editor.age_other": "{{count}} ans",
+  "timelines.editor.newborn": "moins d'un an",
+  "timelines.editor.life": "C'est la vie de {{name}} (naissance → mort)"
 }

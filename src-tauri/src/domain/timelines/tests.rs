@@ -29,6 +29,7 @@ fn item(
         image_asset_id: None,
         tags: Vec::new(),
         hidden: false,
+        life: false,
     }
 }
 
@@ -301,4 +302,24 @@ async fn tags_are_tidied_and_images_and_hiding_are_kept() {
     war.tags = Vec::new();
     war.image_asset_id = Some("../evil.png".into());
     assert!(save_item(&world.pool, &war).await.is_err());
+}
+
+#[tokio::test]
+async fn only_a_period_standing_for_a_card_is_a_life() {
+    let (_dir, world) = world().await;
+    let ned = a_card(&world.pool, "Eddard Stark").await;
+    let timeline = create(&world.pool, "Histoire", "Stark").await.unwrap();
+    let track = timeline.tracks[0].id.clone();
+    let mut life = item(&track, "", 263, Some(299), Some(&ned));
+    life.life = true;
+    let saved = save_item(&world.pool, &life).await.unwrap();
+    assert!(saved.items[0].life);
+    // An event, or a period without a card, is never a life.
+    let mut event = item(&track, "Naissance", 263, None, Some(&ned));
+    event.life = true;
+    let mut war = item(&track, "Guerre", 282, Some(283), None);
+    war.life = true;
+    save_item(&world.pool, &event).await.unwrap();
+    let saved = save_item(&world.pool, &war).await.unwrap();
+    assert_eq!(saved.items.iter().filter(|each| each.life).count(), 1);
 }

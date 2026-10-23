@@ -26,6 +26,7 @@ pub struct ItemRow {
     /// A JSON list of strings.
     pub tags: String,
     pub hidden: bool,
+    pub life: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -134,7 +135,7 @@ pub async fn items(ex: impl SqliteExecutor<'_>, timeline_id: &str) -> AppResult<
         ItemRow,
         r#"SELECT i.id AS "id!", i.track_id, i.card_id, i.title, i.color, i.description,
                   i.start_day, i.end_day, i.precision, i.image_asset_id, i.tags,
-                  i.hidden AS "hidden: bool", i.created_at, i.updated_at
+                  i.hidden AS "hidden: bool", i.life AS "life: bool", i.created_at, i.updated_at
            FROM timeline_items i JOIN timeline_tracks t ON t.id = i.track_id
            WHERE t.timeline_id = ? ORDER BY i.start_day, i.id"#,
         timeline_id
@@ -147,7 +148,8 @@ pub async fn item(ex: impl SqliteExecutor<'_>, id: &str) -> AppResult<Option<Ite
     Ok(sqlx::query_as!(
         ItemRow,
         r#"SELECT id, track_id, card_id, title, color, description, start_day, end_day, precision,
-                  image_asset_id, tags, hidden AS "hidden: bool", created_at, updated_at
+                  image_asset_id, tags, hidden AS "hidden: bool", life AS "life: bool",
+                  created_at, updated_at
            FROM timeline_items WHERE id = ?"#,
         id
     )
@@ -160,14 +162,15 @@ pub async fn upsert_item(ex: impl SqliteExecutor<'_>, row: &ItemRow) -> AppResul
     sqlx::query!(
         "INSERT INTO timeline_items (id, track_id, card_id, title, color, description,
                                      start_day, end_day, precision, image_asset_id, tags, hidden,
-                                     created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                     life, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT (id) DO UPDATE SET
             track_id = excluded.track_id, card_id = excluded.card_id, title = excluded.title,
             color = excluded.color, description = excluded.description,
             start_day = excluded.start_day, end_day = excluded.end_day,
             precision = excluded.precision, image_asset_id = excluded.image_asset_id,
-            tags = excluded.tags, hidden = excluded.hidden, updated_at = excluded.updated_at",
+            tags = excluded.tags, hidden = excluded.hidden, life = excluded.life,
+            updated_at = excluded.updated_at",
         row.id,
         row.track_id,
         row.card_id,
@@ -180,6 +183,7 @@ pub async fn upsert_item(ex: impl SqliteExecutor<'_>, row: &ItemRow) -> AppResul
         row.image_asset_id,
         row.tags,
         row.hidden,
+        row.life,
         row.created_at,
         row.updated_at
     )
