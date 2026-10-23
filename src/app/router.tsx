@@ -14,6 +14,7 @@ import { StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
 import { CanvasPage } from "@/features/canvases";
 import { CardPage } from "@/features/cards";
+import { DesignSystemPage } from "@/features/design-system";
 import { GraphPage } from "@/features/graphs";
 import { HomeScreen } from "@/features/home";
 import { MapPage } from "@/features/maps";
@@ -58,6 +59,7 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
  *         /draft/$draftId      one of its other drafts
  *         /compare/$l/$r       two of its drafts side by side
  *   /world/$worldId/media      Media library (reached from Home)
+ *   /design-system             the V2 design system (Settings › About)
  */
 
 type RouterContext = { queryClient: QueryClient };
@@ -77,6 +79,12 @@ const worldListRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: WorldListScreen,
+});
+
+const designSystemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/design-system",
+  component: DesignSystemPage,
 });
 
 const worldRoute = createRoute({
@@ -269,6 +277,7 @@ const mediaRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   worldListRoute,
+  designSystemRoute,
   worldRoute.addChildren([
     worldIndexRoute,
     homeRoute,

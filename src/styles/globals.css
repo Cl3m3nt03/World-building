@@ -65,10 +65,12 @@
 
 /*
  * Below a root that changes the --bz-* tokens (the wiki, Quill's writing
- * mode), the semantic tokens are declared again, so they read the new ones.
+ * mode, the design system page), the semantic tokens are declared again, so
+ * they read the new ones.
  */
 [data-wiki],
-[data-quill-scheme] {
+[data-quill-scheme],
+[data-scheme] {
   --background: var(--bz-bg);
   --foreground: var(--bz-text);
   --card: var(--bz-surface);
@@ -83,6 +85,7 @@
   --muted-foreground: var(--bz-text-muted);
   --accent: var(--bz-hover);
   --accent-foreground: var(--bz-text);
+  --destructive: var(--bz-danger);
   --border: var(--bz-border);
   --input: var(--bz-border-strong);
   --ring: var(--bz-accent);
