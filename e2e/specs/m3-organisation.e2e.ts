@@ -48,10 +48,17 @@ async function drag(from: string, to: string, where: number): Promise<string | n
   return indicator;
 }
 
-/** Opens a row's menu (right click) and picks `entry`. */
+/**
+ * Opens a row's menu (right click) and picks `entry`. The previous menu must be
+ * gone first: while it fades out, its entries would still match.
+ */
 async function menu(row: string, entry: string) {
+  await $("[role=menu]").waitForExist({ reverse: true });
   await (await sidebarItem(row)).click({ button: "right" });
-  await $(`//*[@role="menuitem"][starts-with(normalize-space(), "${entry}")]`).click();
+  await $('[role=menu][data-state="open"]').waitForDisplayed();
+  await $(
+    `//*[@role="menu"][@data-state="open"]//*[@role="menuitem"][starts-with(normalize-space(), "${entry}")]`,
+  ).click();
 }
 
 /** Clicks an entry of the open menu, scrolled into view first (long menus scroll). */
