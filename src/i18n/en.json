@@ -1525,5 +1525,14 @@
   "timelines.editor.age_other": "{{count}} years old",
   "timelines.editor.newborn": "under a year old",
   "timelines.editor.life": "This is {{name}}'s life (birth → death)",
-  "timelines.minimap.label": "Timeline overview"
+  "timelines.minimap.label": "Timeline overview",
+  "timelines.story.start": "Play: tell the timeline",
+  "timelines.story.label": "Timeline playback",
+  "timelines.story.previous": "Previous item",
+  "timelines.story.next": "Next item",
+  "timelines.story.play": "Resume playing",
+  "timelines.story.pause": "Pause",
+  "timelines.story.position": "{{index}} / {{count}}",
+  "timelines.story.exit": "Stop playing",
+  "timelines.story.exitShort": "Stop"
 }

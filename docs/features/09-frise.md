@@ -103,6 +103,8 @@ Lâchée **sur un élément** (sa bulle, son segment ou sa barre, entouré penda
 
 **Mini-carte (M11+, #416)** : une bande fine au-dessus de la barre d'outils montre toute la frise (ères, éléments à leur couleur) et, encadrée, la portion visible. Un clic ou un glisser y centre la vue sans changer le zoom. Au clavier, c'est un curseur (« Mini-carte de la frise ») : flèches pour se déplacer, Page haut / bas pour aller plus loin, Début / Fin pour le premier et le dernier élément ; la date du centre est annoncée.
 
+**Lecture (M11+, #417)** : le bouton « Lecture : raconter la frise » de la barre d'outils raconte la frise élément par élément, dans l'ordre du temps (en partant de l'élément sélectionné, et en sautant ceux qu'estompe le filtre d'étiquettes). Chaque élément est centré et sa carte s'ouvre ; la lecture passe au suivant toutes les 5 secondes et s'arrête au dernier. La barre devient un lecteur : précédent, pause ou reprise (au bout, la reprise recommence au début), suivant, position (« 3 / 17 »), « Quitter ». Au clavier : flèches gauche et droite, Espace, Échap.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

@@ -1525,5 +1525,14 @@
   "timelines.editor.age_other": "{{count}} ans",
   "timelines.editor.newborn": "moins d'un an",
   "timelines.editor.life": "C'est la vie de {{name}} (naissance → mort)",
-  "timelines.minimap.label": "Mini-carte de la frise"
+  "timelines.minimap.label": "Mini-carte de la frise",
+  "timelines.story.start": "Lecture : raconter la frise",
+  "timelines.story.label": "Lecture de la frise",
+  "timelines.story.previous": "Élément précédent",
+  "timelines.story.next": "Élément suivant",
+  "timelines.story.play": "Reprendre la lecture",
+  "timelines.story.pause": "Mettre en pause",
+  "timelines.story.position": "{{index}} / {{count}}",
+  "timelines.story.exit": "Quitter la lecture",
+  "timelines.story.exitShort": "Quitter"
 }
