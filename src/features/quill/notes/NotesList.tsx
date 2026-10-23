@@ -31,7 +31,7 @@ export function NotesList({
   );
   return (
     <section aria-labelledby="notes-title" className="flex flex-col gap-1.5">
-      <h2 id="notes-title" className="text-xs font-bold text-muted-foreground">
+      <h2 id="notes-title" className="rubric">
         {t("quill.notes.title", { count: all.length })}
       </h2>
       {chapters.map((chapter) => (

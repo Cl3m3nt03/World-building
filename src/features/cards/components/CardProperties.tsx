@@ -268,7 +268,7 @@ export function CardProperties({ cardId }: { cardId: string }) {
 
   return (
     <section aria-label={t("properties.title")} className="flex flex-col gap-2">
-      <h2 className="text-sm font-bold text-muted-foreground">{t("properties.title")}</h2>
+      <h2 className="rubric">{t("properties.title")}</h2>
       {properties.error && <AppErrorMessage error={properties.error} />}
       {shown.map((property) => (
         <PropertyRow

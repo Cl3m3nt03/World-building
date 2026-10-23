@@ -30,7 +30,7 @@ function Section({
       aria-labelledby={headingId}
       className={cn("glass flex flex-col gap-3 rounded-lg p-4", className)}
     >
-      <h2 id={headingId} className="text-sm font-bold text-muted-foreground">
+      <h2 id={headingId} className="rubric">
         {title}
       </h2>
       {children}
