@@ -571,3 +571,17 @@ test("an event's card lists who is alive then, with their age", async () => {
     ).toBe("true"),
   );
 });
+
+test("the minimap shows the whole timeline and moves the view", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const minimap = await screen.findByRole("slider", { name: "Mini-carte de la frise" });
+  const before = Number(minimap.getAttribute("aria-valuenow"));
+  expect(minimap.getAttribute("aria-valuetext")).toMatch(/AC$/);
+  fireEvent.keyDown(minimap, { key: "ArrowRight" });
+  await waitFor(() =>
+    expect(Number(minimap.getAttribute("aria-valuenow"))).toBeGreaterThan(before),
+  );
+  fireEvent.keyDown(minimap, { key: "Home" });
+  // The first item's day (two years before the Conquest) is now in the middle.
+  await waitFor(() => expect(Number(minimap.getAttribute("aria-valuenow"))).toBe(-2 * YEAR));
+});

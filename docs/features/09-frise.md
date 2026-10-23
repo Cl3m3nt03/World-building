@@ -101,6 +101,8 @@ Lâchée **sur un élément** (sa bulle, son segment ou sa barre, entouré penda
 
 **Âges (M11+, #415)** : une période qui représente une carte peut être marquée comme sa **vie** (« C'est la vie de … (naissance → mort) », dans les dates de l'élément ; migration 0022). La carte de tout autre élément liste alors, sous « Vivants à cette date », les cartes vivantes à sa date avec leur âge en années pleines dans le calendrier du monde (un anniversaire pas encore atteint compte un an de moins ; « moins d'un an » sinon), de la plus âgée à la plus jeune ; un clic sélectionne la vie. Une période sans carte, ou un règne non marqué, ne compte pas.
 
+**Mini-carte (M11+, #416)** : une bande fine au-dessus de la barre d'outils montre toute la frise (ères, éléments à leur couleur) et, encadrée, la portion visible. Un clic ou un glisser y centre la vue sans changer le zoom. Au clavier, c'est un curseur (« Mini-carte de la frise ») : flèches pour se déplacer, Page haut / bas pour aller plus loin, Début / Fin pour le premier et le dernier élément ; la date du centre est annoncée.
+
 ## Critères d'acceptation
 
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».

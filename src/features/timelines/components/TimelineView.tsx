@@ -69,6 +69,8 @@ export type TimelineViewHandle = {
   center: () => number;
   /** What the graduation counts in: where new items snap. */
   unit: () => DatePrecision;
+  /** Centres the view on a day, keeping the zoom (the minimap). */
+  centerAt: (day: number) => void;
 };
 
 type Props = {
@@ -97,6 +99,8 @@ type Props = {
   mode?: "axis" | "tracks";
   /** Items left out by the tag filter: shown faded. */
   dimmedIds?: ReadonlySet<string> | undefined;
+  /** The days the view shows, each time they change (for the minimap). */
+  onShownChange?: (shown: { from: number; to: number }) => void;
   /**
    * The half of the view the selected item is in: the page puts the item's
    * card on the other side, so it never hides the item.
@@ -188,6 +192,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
     dimmedIds,
     onSelectedSide,
     onCardDrop,
+    onShownChange,
   },
   ref,
 ) {
@@ -240,6 +245,7 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
         }),
       center: () => (view ? view.start + width / 2 / view.scale : 0),
       unit: () => unitPrecision(tickUnit(calendar, view?.scale ?? 1)),
+      centerAt: (day) => setView((current) => current && centerOn(current, day, width)),
     }),
     [fitAll, width, view, calendar],
   );
@@ -522,6 +528,10 @@ export const TimelineView = forwardRef<TimelineViewHandle, Props>(function Timel
   useEffect(() => {
     onSelectedSide?.(selectedSide);
   }, [onSelectedSide, selectedSide]);
+
+  useEffect(() => {
+    if (view && width > 0) onShownChange?.({ from: view.start, to: dayAt(view, width) });
+  }, [view, width, onShownChange]);
 
   const scale = view?.scale ?? 1;
   const bands = useMemo(() => eraBands(calendar), [calendar]);

@@ -1524,5 +1524,6 @@
   "timelines.editor.age_one": "{{count}} an",
   "timelines.editor.age_other": "{{count}} ans",
   "timelines.editor.newborn": "moins d'un an",
-  "timelines.editor.life": "C'est la vie de {{name}} (naissance → mort)"
+  "timelines.editor.life": "C'est la vie de {{name}} (naissance → mort)",
+  "timelines.minimap.label": "Mini-carte de la frise"
 }
