@@ -27,6 +27,11 @@
   --bz-atlas-ink-strong: rgb(95 68 24 / 0.32);
   --bz-atlas-sea: rgb(61 111 99 / 0.16);
   --bz-atlas-over-image: 0.55;
+  /* Fields (inputs, select triggers): a slightly sunk paper, and the sheen of
+     the gold buttons' top edge. */
+  --bz-field: rgb(255 252 244 / 0.62);
+  --bz-field-inset: inset 0 1px 2px rgb(70 45 10 / 0.07);
+  --bz-button-sheen: rgb(255 240 200 / 0.35);
   --bz-surface: rgb(250 245 232 / 0.78);
   --bz-surface-strong: rgb(251 247 237 / 0.95);
   --bz-pill: rgb(255 252 244 / 0.72);
@@ -98,6 +103,9 @@
   --bz-atlas-ink-strong: rgb(212 173 90 / 0.22);
   --bz-atlas-sea: rgb(111 165 150 / 0.14);
   --bz-atlas-over-image: 0.6;
+  --bz-field: rgb(8 6 3 / 0.32);
+  --bz-field-inset: inset 0 1px 2px rgb(0 0 0 / 0.3);
+  --bz-button-sheen: rgb(255 245 220 / 0.3);
   --bz-surface: rgb(26 22 16 / 0.72);
   --bz-surface-strong: rgb(22 19 14 / 0.94);
   --bz-pill: rgb(0 0 0 / 0.45);
