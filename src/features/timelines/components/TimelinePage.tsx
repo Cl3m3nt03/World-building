@@ -9,6 +9,7 @@ import {
   IdCard,
   ListFilter,
   Maximize,
+  Play,
   Plus,
   RectangleHorizontal,
   Redo2,
@@ -45,6 +46,7 @@ import { AddCardsDialog } from "./AddCardsDialog";
 import { DateField, type DateValue } from "./DateField";
 import { ItemEditor } from "./ItemEditor";
 import { Minimap, type Shown } from "./Minimap";
+import { StoryPlayer } from "./StoryPlayer";
 import { TimelineView, type TimelineViewHandle, ZOOM_STEP } from "./TimelineView";
 import { TracksDialog } from "./TracksDialog";
 
@@ -193,6 +195,22 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
   const [mode, setMode] = useState<"axis" | "tracks">("axis");
   // The item card floats on the side away from the selected item.
   const [itemSide, setItemSide] = useState<"left" | "right">("right");
+  // « Lecture »: the items told in time order (those the tag filter keeps), and where it is.
+  const told = useMemo(
+    () =>
+      [...timeline.items]
+        .filter((item) => !dimmedIds?.has(item.id))
+        .sort((a, b) => a.start - b.start),
+    [timeline.items, dimmedIds],
+  );
+  const [story, setStory] = useState<number | null>(null);
+  const tell = (index: number) => {
+    const item = told[index];
+    if (!item) return;
+    setStory(index);
+    setSelectedId(item.id);
+    view.current?.centerAt((item.start + (item.end ?? item.start)) / 2);
+  };
   // What the view shows, for the minimap.
   const [shown, setShown] = useState<Shown | null>(null);
   const wikiPages = useWikiPages();
@@ -315,96 +333,123 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           </div>
         ) : null}
 
-        {/* The tools, floating at the bottom (after vvd). */}
-        <div
-          role="toolbar"
-          aria-label={t("timelines.toolbar")}
-          className="glass absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" className="rounded-full">
-                <Plus />
-                {t("timelines.add")}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start">
-              <DropdownMenuItem onSelect={() => createHere("event")}>
-                <Diamond />
-                {t("timelines.addEvent")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => createHere("period")}>
-                <RectangleHorizontal />
-                {t("timelines.addPeriod")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={addCards}>
-                <IdCard />
-                {t("timelines.addCards.open")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <TagFilter all={allTags} chosen={tags} onChange={setTags} />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            aria-label={t("timelines.tracks.open")}
-            title={t("timelines.tracks.open")}
-            onClick={() => setTracksOpen(true)}
+        {/* The tools, floating at the bottom (after vvd); the player while a story plays. */}
+        {story !== null && told[story] ? (
+          <StoryPlayer
+            count={told.length}
+            index={story}
+            onIndex={tell}
+            onExit={() => setStory(null)}
+          />
+        ) : (
+          <div
+            role="toolbar"
+            aria-label={t("timelines.toolbar")}
+            className="glass absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full p-1 shadow-lg"
           >
-            <Settings2 />
-          </Button>
-          <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            aria-label={t("timelines.undo")}
-            title={t("timelines.undo")}
-            disabled={!editor.canUndo}
-            onClick={() => void editor.undo()}
-          >
-            <Undo2 />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            aria-label={t("timelines.redo")}
-            title={t("timelines.redo")}
-            disabled={!editor.canRedo}
-            onClick={() => void editor.redo()}
-          >
-            <Redo2 />
-          </Button>
-          <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
-          <ToggleGroup
-            type="single"
-            value={mode}
-            onValueChange={(next) => {
-              if (next === "axis" || next === "tracks") setMode(next);
-            }}
-            aria-label={t("timelines.mode.label")}
-            className="gap-0.5"
-          >
-            <ToggleGroupItem
-              value="axis"
-              aria-label={t("timelines.mode.axis")}
-              title={t("timelines.mode.axis")}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="rounded-full">
+                  <Plus />
+                  {t("timelines.add")}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start">
+                <DropdownMenuItem onSelect={() => createHere("event")}>
+                  <Diamond />
+                  {t("timelines.addEvent")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => createHere("period")}>
+                  <RectangleHorizontal />
+                  {t("timelines.addPeriod")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={addCards}>
+                  <IdCard />
+                  {t("timelines.addCards.open")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <TagFilter all={allTags} chosen={tags} onChange={setTags} />
+            <Button
+              variant="ghost"
+              size="icon-sm"
               className="rounded-full"
+              aria-label={t("timelines.story.start")}
+              title={t("timelines.story.start")}
+              disabled={told.length === 0}
+              onClick={() =>
+                tell(
+                  Math.max(
+                    0,
+                    told.findIndex((item) => item.id === selectedId),
+                  ),
+                )
+              }
             >
-              <GitCommitHorizontal />
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="tracks"
-              aria-label={t("timelines.mode.tracks")}
-              title={t("timelines.mode.tracks")}
+              <Play />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               className="rounded-full"
+              aria-label={t("timelines.tracks.open")}
+              title={t("timelines.tracks.open")}
+              onClick={() => setTracksOpen(true)}
             >
-              <Rows3 />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+              <Settings2 />
+            </Button>
+            <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
+              aria-label={t("timelines.undo")}
+              title={t("timelines.undo")}
+              disabled={!editor.canUndo}
+              onClick={() => void editor.undo()}
+            >
+              <Undo2 />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
+              aria-label={t("timelines.redo")}
+              title={t("timelines.redo")}
+              disabled={!editor.canRedo}
+              onClick={() => void editor.redo()}
+            >
+              <Redo2 />
+            </Button>
+            <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+            <ToggleGroup
+              type="single"
+              value={mode}
+              onValueChange={(next) => {
+                if (next === "axis" || next === "tracks") setMode(next);
+              }}
+              aria-label={t("timelines.mode.label")}
+              className="gap-0.5"
+            >
+              <ToggleGroupItem
+                value="axis"
+                aria-label={t("timelines.mode.axis")}
+                title={t("timelines.mode.axis")}
+                className="rounded-full"
+              >
+                <GitCommitHorizontal />
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="tracks"
+                aria-label={t("timelines.mode.tracks")}
+                title={t("timelines.mode.tracks")}
+                className="rounded-full"
+              >
+                <Rows3 />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        )}
 
         {/* Zoom, at the bottom right. */}
         <div className="glass absolute right-3 bottom-3 z-20 flex flex-col gap-0.5 rounded-xl p-1 shadow-lg">

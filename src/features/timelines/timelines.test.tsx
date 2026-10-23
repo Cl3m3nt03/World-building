@@ -585,3 +585,32 @@ test("the minimap shows the whole timeline and moves the view", async () => {
   // The first item's day (two years before the Conquest) is now in the middle.
   await waitFor(() => expect(Number(minimap.getAttribute("aria-valuenow"))).toBe(-2 * YEAR));
 });
+
+test("« Lecture » tells the items in time order, moving on by itself", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  const pressed = (name: RegExp) =>
+    within(view).getByRole("button", { name }).getAttribute("aria-pressed");
+
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  try {
+    fireEvent.click(screen.getByRole("button", { name: "Lecture : raconter la frise" }));
+    const player = await screen.findByRole("toolbar", { name: "Lecture de la frise" });
+    expect(within(player).getByText("1 / 3")).toBeTruthy();
+    expect(pressed(/^Conquête d'Aegon, /)).toBe("true");
+
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(within(player).getByText("2 / 3")).toBeTruthy();
+    expect(pressed(/^Rébellion de Robert, /)).toBe("true");
+
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    expect(within(player).getByText("1 / 3")).toBeTruthy();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(screen.queryByRole("toolbar", { name: "Lecture de la frise" })).toBeNull();
+    expect(screen.getByRole("toolbar", { name: "Outils de la frise" })).toBeTruthy();
+  } finally {
+    vi.useRealTimers();
+  }
+});
