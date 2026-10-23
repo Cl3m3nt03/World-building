@@ -54,6 +54,7 @@ const CARDS = [card("gondor", "Gondor"), card("minas", "Minas Tirith"), card("ro
 
 /** Gondor (a page) and Minas Tirith (not one) on the timeline, and a hidden item. */
 const AGES: Timeline = {
+  links: [],
   id: "ages",
   title: "Les Âges",
   tracks: [{ id: "t", name: "Histoire", color: "amber" }],

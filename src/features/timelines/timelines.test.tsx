@@ -6,7 +6,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { Card, DocumentTree, Timeline, TimelineItem, WorldInfo } from "@/lib/bindings";
+import type {
+  Card,
+  DocumentTree,
+  Timeline,
+  TimelineItem,
+  TimelineLink,
+  WorldInfo,
+} from "@/lib/bindings";
 import { dragCard, dropCard } from "@/lib/cardDrop";
 import { createQueryClient } from "@/lib/query";
 
@@ -43,6 +50,7 @@ const ROBERT = {
 } as unknown as Card;
 
 const HISTORY: Timeline = {
+  links: [],
   id: "tl1",
   title: "Histoire de Westeros",
   tracks: [
@@ -155,7 +163,23 @@ beforeEach(() => {
       case "delete_timeline_item": {
         const { id } = payload as { id: string };
         if (!stored) return null;
-        stored = { ...stored, items: stored.items.filter((item) => item.id !== id) };
+        stored = {
+          ...stored,
+          items: stored.items.filter((item) => item.id !== id),
+          links: stored.links.filter((link) => link.from !== id && link.to !== id),
+        };
+        return stored;
+      }
+      case "save_timeline_link": {
+        const { link } = payload as { link: TimelineLink };
+        if (!stored) return null;
+        stored = { ...stored, links: [...stored.links, link] };
+        return stored;
+      }
+      case "delete_timeline_link": {
+        const { id } = payload as { id: string };
+        if (!stored) return null;
+        stored = { ...stored, links: stored.links.filter((link) => link.id !== id) };
         return stored;
       }
       case "update_timeline_track": {
@@ -174,6 +198,7 @@ beforeEach(() => {
           title,
           tracks: [{ id: "t", name: trackName, color: "slate" }],
           items: [],
+          links: [],
         };
         tree = { folders: [], documents: [asDocument(stored)] };
         return stored;
@@ -613,4 +638,31 @@ test("« Lecture » tells the items in time order, moving on by itself", async (
   } finally {
     vi.useRealTimers();
   }
+});
+
+test("an arrow leads from an item to another; deleting one and undoing brings both back", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  fireEvent.click(within(view).getByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  fireEvent.click(within(editor).getByRole("button", { name: "Cause et effet" }));
+  fireEvent.click(within(editor).getByRole("combobox", { name: "Relier à un élément" }));
+  fireEvent.click(await screen.findByRole("option", { name: /^Robert Baratheon \(/ }));
+
+  await waitFor(() =>
+    expect(stored?.links).toEqual([expect.objectContaining({ from: "rebellion", to: "crowned" })]),
+  );
+  await waitFor(() => expect(view.querySelectorAll("svg path[marker-end]")).toHaveLength(1));
+  expect(
+    within(within(editor).getByRole("list", { name: "Mène à" })).getByText("Robert Baratheon"),
+  ).toBeTruthy();
+
+  // Deleting the crowning takes the arrow; undoing brings both back.
+  fireEvent.keyDown(within(view).getByRole("button", { name: /^Robert Baratheon, / }), {
+    key: "Delete",
+  });
+  await waitFor(() => expect(stored?.links).toHaveLength(0));
+  fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+  await waitFor(() => expect(stored?.items.some((item) => item.id === "crowned")).toBe(true));
+  await waitFor(() => expect(stored?.links).toHaveLength(1));
 });

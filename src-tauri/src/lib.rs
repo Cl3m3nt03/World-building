@@ -125,6 +125,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::quill::export_story,
         commands::timelines::create_timeline,
         commands::timelines::duplicate_timeline,
+        commands::timelines::save_timeline_link,
+        commands::timelines::delete_timeline_link,
         commands::timelines::get_timeline,
         commands::timelines::add_timeline_track,
         commands::timelines::update_timeline_track,

@@ -18,6 +18,7 @@ import { parseContent, type TimelineBlock } from "./model";
 import { TimelineBlockView } from "./TimelineBlockView";
 
 const HISTORY: Timeline = {
+  links: [],
   id: "tl1",
   title: "Histoire de Westeros",
   tracks: [{ id: "kings", name: "Rois", color: "amber" }],

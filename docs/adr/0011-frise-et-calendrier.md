@@ -31,3 +31,11 @@ La frise chronologique (#114, spec `docs/features/09-frise.md`) est demandée sa
 - La frise profite sans code nouveau de la sidebar, de la corbeille, de la recherche, des épingles et du wiki.
 - Le calendrier, partagé par toutes les frises d'un monde, sert de base aux dates qu'on pourra plus tard donner aux cartes (naissance, mort, fondation), sans changer le format.
 - Les années bissextiles et les calendriers lunaires ne sont pas pris en charge ; le format en jours permettrait de les ajouter.
+
+## Ajouts après M11
+
+Les mêmes principes valent pour ce qui a été ajouté ensuite, sans nouvel ADR :
+
+- **Migration 0021** (11.5b, aspect vvd) : un élément a une image à lui, des étiquettes (liste JSON) et un drapeau « masqué dans le wiki ».
+- **Migration 0022** (#415) : une période qui représente une carte peut être marquée comme sa **vie** (naissance → mort). Les âges en découlent, dans le calendrier du monde. Ce marquage est explicite : un règne ou une campagne liés à une carte ne sont pas une vie.
+- **Migration 0023** (#418) : `timeline_links`, une flèche de cause à effet d'un élément vers un autre de la même frise (« mène à »). Une flèche est unique par paire, ne relie pas un élément à lui-même et disparaît avec l'un de ses éléments ou avec la frise. Dupliquer la frise copie ses flèches.

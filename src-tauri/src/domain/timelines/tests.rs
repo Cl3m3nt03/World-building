@@ -323,3 +323,63 @@ async fn only_a_period_standing_for_a_card_is_a_life() {
     let saved = save_item(&world.pool, &war).await.unwrap();
     assert_eq!(saved.items.iter().filter(|each| each.life).count(), 1);
 }
+
+#[tokio::test]
+async fn arrows_join_two_items_of_one_timeline_and_go_with_them() {
+    let (_dir, world) = world().await;
+    let timeline = create(&world.pool, "Histoire", "Guerres").await.unwrap();
+    let track = timeline.tracks[0].id.clone();
+    let rebellion = item(&track, "Rébellion", 282, Some(283), None);
+    let reign = item(&track, "Règne", 283, Some(298), None);
+    save_item(&world.pool, &rebellion).await.unwrap();
+    save_item(&world.pool, &reign).await.unwrap();
+    let link = TimelineLink {
+        id: Uuid::new_v4().to_string(),
+        from: rebellion.id.clone(),
+        to: reign.id.clone(),
+    };
+    let saved = save_link(&world.pool, &link).await.unwrap();
+    assert_eq!(saved.links, std::slice::from_ref(&link));
+    // The same arrow again stays one; an item never leads to itself.
+    let again = TimelineLink {
+        id: Uuid::new_v4().to_string(),
+        ..link.clone()
+    };
+    assert_eq!(save_link(&world.pool, &again).await.unwrap().links.len(), 1);
+    let loop_link = TimelineLink {
+        to: rebellion.id.clone(),
+        ..again.clone()
+    };
+    assert!(save_link(&world.pool, &loop_link).await.is_err());
+    // Not across timelines.
+    let other = create(&world.pool, "Autre", "Piste").await.unwrap();
+    let elsewhere = item(&other.tracks[0].id, "Ailleurs", 1, None, None);
+    save_item(&world.pool, &elsewhere).await.unwrap();
+    let across = TimelineLink {
+        id: Uuid::new_v4().to_string(),
+        from: rebellion.id.clone(),
+        to: elsewhere.id.clone(),
+    };
+    assert!(save_link(&world.pool, &across).await.is_err());
+
+    // The copy keeps its own arrow.
+    let copy = duplicate(&world.pool, &timeline.id, "Copie").await.unwrap();
+    assert_eq!(copy.links.len(), 1);
+    assert_ne!(copy.links[0].from, rebellion.id);
+
+    // Deleted with an item; deleted alone.
+    assert!(
+        delete_item(&world.pool, &reign.id)
+            .await
+            .unwrap()
+            .links
+            .is_empty()
+    );
+    assert!(
+        delete_link(&world.pool, &copy.links[0].id)
+            .await
+            .unwrap()
+            .links
+            .is_empty()
+    );
+}

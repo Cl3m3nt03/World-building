@@ -147,6 +147,7 @@ a.bubble:hover { color: var(--wiki-accent); }
 .chronicle li { display: flex; gap: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; background: var(--wiki-surface); }
 .chronicle img { width: 3rem; height: 3rem; border-radius: 0.4rem; object-fit: cover; }
 .chronicle li > div > a, .chronicle li > div > span:nth-child(2) { display: block; font-weight: 600; }
+.chronicle .leads { margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--wiki-muted); }
 .chronicle .when { display: block; font-size: 0.85rem; color: var(--wiki-muted); }
 .chronicle .tags { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0; margin: 0.25rem 0 0; }
 .chronicle .tags li { padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75rem; background: var(--wiki-background); }

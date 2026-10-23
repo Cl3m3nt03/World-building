@@ -47,8 +47,14 @@ type Props = {
   side?: "left" | "right";
   /** The lives covering the item's date (its cards' ages then), oldest first. */
   lives?: { id: string; name: string; imageAssetId: string | null; age: number }[];
-  /** Selects another item (a life). */
+  /** Selects another item (a life, an item it leads to…). */
   onSelectItem?: (id: string) => void;
+  /** Cause and effect: what it leads to, what leads to it, what it could lead to. */
+  leadsTo?: { linkId: string; id: string; name: string }[];
+  comesFrom?: { linkId: string; id: string; name: string }[];
+  candidates?: { id: string; name: string }[];
+  onLink?: (to: string) => void;
+  onUnlink?: (linkId: string) => void;
 };
 
 /** A section that opens and closes, like vvd's « Étiquettes ». */
@@ -108,6 +114,11 @@ export function ItemEditor({
   side = "right",
   lives = [],
   onSelectItem,
+  leadsTo = [],
+  comesFrom = [],
+  candidates = [],
+  onLink,
+  onUnlink,
 }: Props) {
   const { t } = useTranslation();
   const words = useCalendarWords();
@@ -348,6 +359,60 @@ export function ItemEditor({
           </ul>
         </Fold>
       ) : null}
+
+      <Fold
+        label={t("timelines.editor.causes")}
+        defaultOpen={leadsTo.length > 0 || comesFrom.length > 0}
+      >
+        {[
+          { key: "to", label: t("timelines.editor.leadsTo"), links: leadsTo },
+          { key: "from", label: t("timelines.editor.comesFrom"), links: comesFrom },
+        ].map((group) =>
+          group.links.length === 0 ? null : (
+            <div key={group.key} className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">{group.label}</span>
+              <ul aria-label={group.label} className="flex flex-col gap-0.5">
+                {group.links.map((link) => (
+                  <li key={link.linkId} className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onSelectItem?.(link.id)}
+                      className="min-w-0 flex-1 truncate rounded-md px-1.5 py-1 text-left text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {link.name}
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={t("timelines.editor.unlinkItem", { name: link.name })}
+                      onClick={() => onUnlink?.(link.linkId)}
+                    >
+                      <X />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ),
+        )}
+        {candidates.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            <Label htmlFor={`${id}-lead`}>{t("timelines.editor.addLead")}</Label>
+            <Select value="" onValueChange={(to) => onLink?.(to)}>
+              <SelectTrigger id={`${id}-lead`}>
+                <SelectValue placeholder={t("timelines.editor.chooseLead")} />
+              </SelectTrigger>
+              <SelectContent>
+                {candidates.map((candidate) => (
+                  <SelectItem key={candidate.id} value={candidate.id}>
+                    {candidate.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+      </Fold>
 
       <Fold label={t("timelines.editor.tags")} defaultOpen={tags.length > 0}>
         {tags.length > 0 ? (

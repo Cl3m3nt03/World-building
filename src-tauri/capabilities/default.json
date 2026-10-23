@@ -70,6 +70,8 @@
     "allow-export-story",
     "allow-create-timeline",
     "allow-duplicate-timeline",
+    "allow-save-timeline-link",
+    "allow-delete-timeline-link",
     "allow-get-timeline",
     "allow-add-timeline-track",
     "allow-update-timeline-track",

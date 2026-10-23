@@ -94,6 +94,15 @@ pub struct TimelineItem {
     pub life: bool,
 }
 
+/// An arrow from an item to another (« mène à »), on the same timeline.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TimelineLink {
+    pub id: String,
+    pub from: String,
+    pub to: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Timeline {
@@ -103,6 +112,8 @@ pub struct Timeline {
     pub tracks: Vec<TimelineTrack>,
     /// In time order.
     pub items: Vec<TimelineItem>,
+    /// Cause and effect, oldest first.
+    pub links: Vec<TimelineLink>,
 }
 
 fn invalid(message: impl Into<String>) -> AppError {
@@ -192,11 +203,58 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Timeline> {
         .map(item_of)
         .collect();
     Ok(Timeline {
+        links: queries::links(pool, id)
+            .await?
+            .into_iter()
+            .map(|row| TimelineLink {
+                id: row.id,
+                from: row.from_item,
+                to: row.to_item,
+            })
+            .collect(),
         id: id.to_owned(),
         title,
         tracks,
         items,
     })
+}
+
+/// The timeline an item is on.
+async fn timeline_of_item(tx: &mut Transaction<'_, Sqlite>, item: &str) -> AppResult<String> {
+    let row = queries::item(&mut **tx, item)
+        .await?
+        .ok_or_else(|| invalid(format!("item not found: {item}")))?;
+    Ok(track_of(tx, &row.track_id).await?.timeline_id)
+}
+
+/// Draws the arrow `link.from` → `link.to` (two items of one timeline). The
+/// same arrow twice stays one.
+pub async fn save_link(pool: &SqlitePool, link: &TimelineLink) -> AppResult<Timeline> {
+    if Uuid::parse_str(&link.id).is_err() {
+        return Err(invalid(format!("invalid link id: {}", link.id)));
+    }
+    if link.from == link.to {
+        return Err(invalid("an item cannot lead to itself"));
+    }
+    let mut tx = db::begin_write(pool).await?;
+    let timeline = timeline_of_item(&mut tx, &link.from).await?;
+    if timeline_of_item(&mut tx, &link.to).await? != timeline {
+        return Err(invalid("an arrow joins two items of one timeline"));
+    }
+    queries::insert_link(&mut *tx, &link.id, &timeline, &link.from, &link.to, &now()).await?;
+    db::documents::touch(&mut tx, &timeline, &now()).await?;
+    tx.commit().await?;
+    get(pool, &timeline).await
+}
+
+pub async fn delete_link(pool: &SqlitePool, id: &str) -> AppResult<Timeline> {
+    let mut tx = db::begin_write(pool).await?;
+    let timeline = queries::delete_link(&mut *tx, id)
+        .await?
+        .ok_or_else(|| invalid(format!("link not found: {id}")))?;
+    db::documents::touch(&mut tx, &timeline, &now()).await?;
+    tx.commit().await?;
+    get(pool, &timeline).await
 }
 
 /// The cards the timeline's items stand for are the targets of its links.
@@ -431,14 +489,17 @@ pub async fn duplicate(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Ti
         .await?;
     }
     let now = now();
+    let mut items = std::collections::HashMap::new();
     for item in queries::items(&mut *tx, id).await? {
         let Some(track_id) = tracks.get(&item.track_id).cloned() else {
             continue;
         };
+        let copy = Uuid::new_v4().to_string();
+        items.insert(item.id.clone(), copy.clone());
         queries::upsert_item(
             &mut *tx,
             &ItemRow {
-                id: Uuid::new_v4().to_string(),
+                id: copy,
                 track_id,
                 created_at: now.clone(),
                 updated_at: now.clone(),
@@ -446,6 +507,12 @@ pub async fn duplicate(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Ti
             },
         )
         .await?;
+    }
+    for link in queries::links(&mut *tx, id).await? {
+        if let (Some(from), Some(to)) = (items.get(&link.from_item), items.get(&link.to_item)) {
+            let copy = Uuid::new_v4().to_string();
+            queries::insert_link(&mut *tx, &copy, &document.id, from, to, &now).await?;
+        }
     }
     relink(&mut tx, &document.id).await?;
     tree::place_after(&mut tx, id, &document.id).await?;

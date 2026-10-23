@@ -719,6 +719,19 @@ export function TimelinePageView({ ctx, timeline }: { ctx: SiteContext; timeline
                         name={nameOf(ctx, item)}
                       />
                       {item.description ? <Paragraphs text={item.description} /> : null}
+                      {(() => {
+                        const names = (timeline.timeline.links ?? [])
+                          .filter((link) => link.from === item.id)
+                          .flatMap((link) => {
+                            const target = items.find((each) => each.id === link.to);
+                            return target ? [nameOf(ctx, target)] : [];
+                          });
+                        return names.length > 0 ? (
+                          <p className="leads">
+                            {t("wiki.timeline.leadsTo", { names: names.join(", ") })}
+                          </p>
+                        ) : null;
+                      })()}
                       {(item.tags ?? []).length > 0 ? (
                         <ul className="tags">
                           {(item.tags ?? []).map((tag) => (
