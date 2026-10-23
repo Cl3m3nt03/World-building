@@ -44,6 +44,7 @@ import { useCalendar } from "../useCalendar";
 import { AddCardsDialog } from "./AddCardsDialog";
 import { DateField, type DateValue } from "./DateField";
 import { ItemEditor } from "./ItemEditor";
+import { Minimap, type Shown } from "./Minimap";
 import { TimelineView, type TimelineViewHandle, ZOOM_STEP } from "./TimelineView";
 import { TracksDialog } from "./TracksDialog";
 
@@ -192,6 +193,8 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
   const [mode, setMode] = useState<"axis" | "tracks">("axis");
   // The item card floats on the side away from the selected item.
   const [itemSide, setItemSide] = useState<"left" | "right">("right");
+  // What the view shows, for the minimap.
+  const [shown, setShown] = useState<Shown | null>(null);
   const wikiPages = useWikiPages();
   const setWikiVisible = useSetWikiVisible();
   const inWiki = wikiPages.data?.some((page) => page.id === timeline.id) ?? false;
@@ -245,6 +248,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           mode={mode}
           dimmedIds={dimmedIds}
           onSelectedSide={setItemSide}
+          onShownChange={setShown}
           onCardDrop={(cardId, day, precision, trackId, itemId) => {
             // Dropped on an item: the item now stands for the card.
             const target = itemId ? timeline.items.find((each) => each.id === itemId) : undefined;
@@ -297,6 +301,18 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             })}
             onSelectItem={setSelectedId}
           />
+        ) : null}
+
+        {/* The whole timeline, above the tools. */}
+        {shown ? (
+          <div className="absolute right-16 bottom-16 left-14 z-20">
+            <Minimap
+              timeline={timeline}
+              calendar={calendar}
+              shown={shown}
+              onCenter={(day) => view.current?.centerAt(day)}
+            />
+          </div>
         ) : null}
 
         {/* The tools, floating at the bottom (after vvd). */}
