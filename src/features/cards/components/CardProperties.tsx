@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import {
+  AddPropertyPopover,
   PropertyEditor,
   useCardProperties,
-  useCreateProperty,
   useSetPropertyValue,
 } from "@/features/properties";
 import type { CardProperty, PropertyValue } from "@/lib/bindings";
@@ -230,7 +230,7 @@ function PropertyRow({
   const link = definition.kind === "card" || definition.kind === "cards";
 
   return (
-    <div className="grid grid-cols-[10rem_1fr] items-center gap-3">
+    <div className="grid grid-cols-[8.5rem_1fr] items-center gap-2">
       {definition.owner.on === "card" ? (
         <PropertyEditor property={definition} types={types.data ?? []} defaultOpen={editorOpen}>
           <button
@@ -262,7 +262,7 @@ function PropertyRow({
 export function CardProperties({ cardId }: { cardId: string }) {
   const { t } = useTranslation();
   const properties = useCardProperties(cardId);
-  const create = useCreateProperty();
+  const types = useCardTypes();
   const [justCreated, setJustCreated] = useState<string | null>(null);
   const shown = properties.data ?? [];
 
@@ -281,22 +281,11 @@ export function CardProperties({ cardId }: { cardId: string }) {
       {properties.data && shown.length === 0 && (
         <p className="text-sm text-muted-foreground">{t("properties.cardNone")}</p>
       )}
-      {create.isError && <AppErrorMessage error={create.error} />}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="self-start"
-        disabled={create.isPending}
-        onClick={() =>
-          create.mutate(
-            { owner: { on: "card", cardId }, label: t("properties.newName"), kind: "text" },
-            { onSuccess: (property) => setJustCreated(property.id) },
-          )
-        }
-      >
-        <Plus />
-        {t("properties.addToCard")}
-      </Button>
+      <AddPropertyPopover
+        owner={{ on: "card", cardId }}
+        types={types.data ?? []}
+        onCreated={(property) => setJustCreated(property.id)}
+      />
     </section>
   );
 }

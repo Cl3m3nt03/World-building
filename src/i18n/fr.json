@@ -1651,5 +1651,10 @@
   "typePicker.changeTitle": "Changer de type",
   "cards.addAliasShort": "+ Ajouter",
   "cards.wikiVisible": "Visible dans le wiki · cliquer pour la masquer",
-  "cards.wikiHidden": "Absente du wiki · cliquer pour l'y montrer"
+  "cards.wikiHidden": "Absente du wiki · cliquer pour l'y montrer",
+  "properties.nameLabel": "Nom de la propriété",
+  "properties.families.value": "Valeur",
+  "properties.families.link": "Lien vers une carte",
+  "properties.anyCard": "N'importe quelle carte",
+  "properties.severalCards": "Plusieurs cartes à la fois"
 }
