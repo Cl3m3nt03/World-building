@@ -77,7 +77,11 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
     });
 
   return (
-    <aside aria-label={t("sidebar.label")} className="glass flex h-full flex-col rounded-lg">
+    // A container: the footer and the search adapt to the sidebar's own width.
+    <aside
+      aria-label={t("sidebar.label")}
+      className="glass-panel @container flex h-full min-w-0 flex-col overflow-hidden rounded-lg"
+    >
       <div className="flex min-h-0 flex-1 flex-col">
         {(tree.error ??
           sidebar.error ??
@@ -118,11 +122,17 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
           )}
         </SidebarSearch>
       </div>
-      <div className="flex gap-1 border-t border-border p-2">
+      <div className="flex min-w-0 items-center gap-1 border-t border-border p-2">
         <CreateCardMenu align="start">
-          <Button variant="secondary" size="sm" className="flex-1">
+          {/* Narrow sidebar: the icon alone, the name kept for screen readers. */}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-w-0 flex-1"
+            title={t("sidebar.newCard")}
+          >
             <Plus />
-            {t("sidebar.newCard")}
+            <span className="sr-only truncate @[15rem]:not-sr-only">{t("sidebar.newCard")}</span>
           </Button>
         </CreateCardMenu>
         {/* Maps, graphs, trees, canvases and timelines: one menu, so the bar does not grow. */}
@@ -131,6 +141,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
             <Button
               variant="ghost"
               size="icon-sm"
+              className="shrink-0"
               aria-label={t("sidebar.newDocument")}
               title={t("sidebar.newDocument")}
             >
@@ -163,6 +174,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
         <Button
           variant="ghost"
           size="icon-sm"
+          className="shrink-0"
           aria-label={t("sidebar.folder.new")}
           title={t("sidebar.folder.new")}
           disabled={!tree.data}
@@ -173,6 +185,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
         <Button
           variant="ghost"
           size="icon-sm"
+          className="shrink-0"
           aria-label={t("trash.title")}
           title={t("trash.title")}
           onClick={() => setTrashOpen(true)}
@@ -182,6 +195,7 @@ export function WorldSidebar({ onCollapse }: { onCollapse: () => void }) {
         <Button
           variant="ghost"
           size="icon-sm"
+          className="shrink-0"
           aria-label={t("sidebar.collapse")}
           title={t("sidebar.collapse")}
           onClick={onCollapse}

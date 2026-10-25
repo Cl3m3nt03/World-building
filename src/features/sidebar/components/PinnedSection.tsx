@@ -80,7 +80,7 @@ export function PinnedSection({ tree, currentId }: Props) {
       aria-labelledby="pinned-title"
       className="flex flex-col gap-1.5 border-b border-border p-2"
     >
-      <h2 id="pinned-title" className="px-1 text-xs font-medium text-muted-foreground">
+      <h2 id="pinned-title" className="rubric px-1">
         {t("sidebar.pins.title")}
       </h2>
       {error && <AppErrorMessage error={error} />}
@@ -162,7 +162,7 @@ function PinTile({
             // Of dnd-kit's attributes, only the instructions: the link keeps its role.
             aria-describedby={sortable.attributes["aria-describedby"]}
             aria-current={isCurrent ? "page" : undefined}
-            className="group flex flex-col overflow-hidden rounded-md border border-border bg-background/40 text-xs text-muted-foreground outline-none select-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+            className="group flex flex-col overflow-hidden rounded-md border border-border bg-(--bz-field) text-xs text-muted-foreground outline-none select-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:border-border-strong hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:border-primary aria-[current=page]:text-foreground"
           >
             <span className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
               {document.imageAssetId ? (
@@ -178,7 +178,9 @@ function PinTile({
             </span>
             <span className="flex items-center gap-1 px-1.5 py-1">
               <Icon aria-hidden className="size-3 shrink-0" style={{ color }} />
-              <span className="truncate">{document.title}</span>
+              <span className="truncate" title={document.title}>
+                {document.title}
+              </span>
             </span>
           </Link>
         </ContextMenuTrigger>
