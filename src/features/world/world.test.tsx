@@ -240,6 +240,35 @@ test("asks for a name on the spot, and sends the id of the previewed atlas", asy
   );
 });
 
+test("after a world is created, the next one starts blank with a new id", async () => {
+  const router = await renderStartScreen();
+  const create = async (name: string) => {
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Créer un monde" }));
+    });
+    const field = (await screen.findByLabelText("Nom")) as HTMLInputElement;
+    await waitFor(() =>
+      expect((screen.getByLabelText("Emplacement") as HTMLInputElement).value).not.toBe(""),
+    );
+    expect(field.value).toBe("");
+    fireEvent.change(field, { target: { value: name } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+    });
+    await waitFor(() => expect(router.state.location.pathname).toBe("/world/w-new/home"));
+  };
+  await create("Brume");
+  await act(async () => {
+    await router.navigate({ to: "/" });
+  });
+  await create("Givre");
+  const ids = calls
+    .filter((call) => call.command === "create_world")
+    .map((call) => (call.payload as { id: string }).id);
+  expect(ids).toHaveLength(2);
+  expect(ids[0]).not.toBe(ids[1]);
+});
+
 test("says under the location when its folder already holds something", async () => {
   mockIPC((command) => {
     if (command === "get_settings") return SETTINGS;
