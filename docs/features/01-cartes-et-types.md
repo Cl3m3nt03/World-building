@@ -92,6 +92,8 @@ Appliquer le template ajoute ces sections comme blocs texte pré-titrés, en pla
 
 **Réalisé en M2 (2.12)** : le template se modifie dans l'écran des types (section « Template guidé ») : ajouter une section, saisir son titre et sa question d'aide, la monter, la descendre ou la supprimer, sans bouton Enregistrer ; une section sans titre n'est pas gardée. Un sous-type sans template propre utilise celui de son type. Une carte vide propose « Utiliser le template « Personnage » » avec la liste des sections ; ensuite, « … › Appliquer le template » reste disponible. Chaque section devient un bloc texte à la fin de la carte : son titre en intertitre, et la question d'aide en texte indicatif sous le titre, qui disparaît dès qu'on écrit. Une section dont le titre existe déjà comme intertitre dans la carte n'est pas ajoutée à nouveau ; si tout est déjà là, un message le dit.
 
+**Réalisé en V2-M3 (3.5)** : une carte neuve reçoit d'emblée les sections du template de son type (ou, pour un sous-type sans template propre, de celui de son type) : elle s'ouvre déjà structurée, le titre sélectionné. C'est un réglage du type, « Appliquer le modèle à la création » (un interrupteur sous l'aide de la section « Template guidé » de l'écran des types), activé par défaut, y compris pour les types existants (migration 0024) ; il est gardé quand on duplique le type. Réglage désactivé, ou type sans template : la carte neuve est vide et propose « Utiliser le template » comme avant. Cela vaut pour toute carte créée (menu « Nouvelle carte », menu contextuel, carte créée depuis un passage de Quill). Rien n'est jamais écrasé : seules les cartes qui viennent d'être créées, donc vides, le reçoivent ; « … › Appliquer le template » reste au menu de la carte.
+
 ## Types et sous-types
 
 - Les types se gèrent depuis Home › Types, ou depuis le menu de création d'une carte (« Nouveau type »).
@@ -170,7 +172,7 @@ En bas de chaque carte, une section « Cité dans » liste les documents qui la 
 
 ## Modèle de données (indicatif)
 
-- `card_types` : id, parent_id (sous-type), name, icon, color, guided_template (JSON), sort_order
+- `card_types` : id, parent_id (sous-type), name, icon, color, guided_template (JSON), template_on_create, sort_order
 - `property_definitions` : id, scope (type ou carte), owner_id, label, kind, target_type_ids, sort_order
 - `cards` : document_id, type_id, image_asset_id, aliases (JSON), content (JSON TipTap), content_text (pour FTS)
 - `property_values` : card_id, property_id, value (JSON)
@@ -180,6 +182,7 @@ En bas de chaque carte, une section « Cité dans » liste les documents qui la 
 - On crée un type « Personnage » avec la propriété « Âge », puis trois cartes de ce type, qui affichent toutes le champ « Âge ».
 - Une propriété lien vers une autre carte apparaît dans les rétroliens de la carte cible.
 - Appliquer un template guidé à une carte qui a déjà du contenu ne détruit rien.
+- Une carte neuve d'un type à template reçoit ses sections (sauf si le type a « Appliquer le modèle à la création » désactivé) ; un type sans template donne une carte vide.
 - La fiche 5e calcule les modificateurs à partir des caractéristiques.
 
 **Réalisé en M7.5 (7.5.3)** : une propriété de lien (vers une ou plusieurs cartes) peut porter une relation du monde (ADR 0007, migration 0016) : dans sa fenêtre, « Relation » propose « Aucune (simple lien) » et les relations du monde (Parent, Enfant, Conjoint… et celles qu'on a créées). Réglée sur *parent de*, une propriété « Parents » dit que chaque carte choisie est parent de la carte qui la porte ; la fenêtre le rappelle en clair. Le Graph le sait (le lien porte la relation), et les arbres s'en servent pour partir des relations connues (7.5.4). Changer la propriété en texte ou en nombre lui retire sa relation ; supprimer une relation du monde laisse ses propriétés en simples liens. Le nom d'une nouvelle propriété arrive sélectionné : on tape directement le sien.
