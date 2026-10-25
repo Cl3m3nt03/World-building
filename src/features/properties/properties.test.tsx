@@ -221,11 +221,30 @@ test("a card shows its properties and saves numbers and texts", async () => {
   );
 });
 
+test("a named link to several cards is added from its family", async () => {
+  renderWith(<CardProperties cardId="aragorn" />);
+  await screen.findByRole("textbox", { name: "Âge" });
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
+  fireEvent.change(await screen.findByLabelText("Nom de la propriété"), {
+    target: { value: "Alliés" },
+  });
+  fireEvent.click(screen.getByLabelText("Plusieurs cartes à la fois"));
+  fireEvent.click(screen.getByRole("button", { name: "N'importe quelle carte" }));
+  await waitFor(() =>
+    expect(callsOf("create_property")[0]?.payload).toEqual({
+      owner: { on: "card", cardId: "aragorn" },
+      label: "Alliés",
+      kind: "cards",
+    }),
+  );
+});
+
 test("a property can be added to one card only", async () => {
   renderWith(<CardProperties cardId="aragorn" />);
   await screen.findByRole("textbox", { name: "Âge" });
 
-  fireEvent.click(screen.getByRole("button", { name: "Propriété propre à cette carte" }));
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Texte" }));
 
   await waitFor(() =>
     expect(callsOf("create_property")[0]?.payload).toEqual({

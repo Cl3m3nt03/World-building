@@ -151,6 +151,13 @@ Renommer une propriété de type la renomme partout. La supprimer demande une co
 
 **Réalisé en M2 (2.7)** : une propriété ajoutée à un type s'affiche sur les cartes créées ensuite ; le bandeau « Appliquer les changements à toutes les cartes de ce type ? » propose de l'afficher aussi sur les cartes existantes (« Oui ») ou de les laisser telles quelles (« Ignorer »). Une propriété s'édite dans une petite fenêtre (nom, nature, suppression) ; changer sa nature efface ses valeurs. Sur une carte, les valeurs s'enregistrent sans bouton : un texte vide ou un nombre effacé retire la valeur, une saisie qui n'est pas un nombre est signalée et n'est pas enregistrée (la virgule décimale est acceptée). « Propriété propre à cette carte » en ajoute une qui ne concerne que cette carte. Pour une propriété lien (2.8), la fenêtre propose aussi les types de cartes acceptés (aucun coché : toutes les cartes ; un type accepte ses sous-types). Sur la carte, la valeur se choisit dans une liste qui recherche dans les noms et les alias, au clavier (flèches, Entrée) ; chaque carte liée s'affiche comme une étiquette qui l'ouvre et se retire d'un clic. Une carte liée introuvable (supprimée définitivement) s'affiche comme telle.
 
+**V2-3.3 (d'après vvd)** : « + Ajouter une propriété » ouvre une petite fenêtre :
+- en tête, le **nom** de la propriété, qui a le focus ; Entrée seule crée une propriété texte ;
+- puis son genre, en deux familles. **Valeur** : texte, nombre. **Lien vers une carte** : n'importe quelle carte, ou une carte d'un type principal précis. La case « Plusieurs cartes à la fois » fait de ce lien une liste de cartes ;
+- un clic sur un genre crée la propriété, propre à cette carte, et ouvre son réglage comme avant. Sans nom, elle s'appelle « Nouvelle propriété ».
+
+Les lignes de propriétés sont plus serrées (libellé, puis valeur). Les genres « Sélection » et « Date » vus dans vvd viendront avec #482.
+
 ## Rétroliens
 
 En bas de chaque carte, une section « Cité dans » liste les documents qui la mentionnent ou la référencent. Chaque document y figure une fois, avec la façon dont il la cite (le nom de la propriété lien, « mention »…), et s'ouvre d'un clic. Un document à la corbeille n'y figure pas, et revient s'il est restauré.

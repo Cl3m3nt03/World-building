@@ -1651,5 +1651,10 @@
   "typePicker.changeTitle": "Change the type",
   "cards.addAliasShort": "+ Add",
   "cards.wikiVisible": "Shown in the wiki · click to hide it",
-  "cards.wikiHidden": "Not in the wiki · click to show it"
+  "cards.wikiHidden": "Not in the wiki · click to show it",
+  "properties.nameLabel": "Property name",
+  "properties.families.value": "Value",
+  "properties.families.link": "Link to a card",
+  "properties.anyCard": "Any card",
+  "properties.severalCards": "Several cards at once"
 }

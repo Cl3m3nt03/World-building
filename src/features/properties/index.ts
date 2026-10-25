@@ -1,3 +1,4 @@
+export { AddPropertyPopover } from "./components/AddPropertyPopover";
 export { kindIcon, PropertyEditor } from "./components/PropertyEditor";
 export { TypeProperties } from "./components/TypeProperties";
 export {
