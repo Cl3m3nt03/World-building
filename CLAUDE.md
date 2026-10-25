@@ -4,6 +4,7 @@ BuilderZ est une application desktop Windows (Tauri 2) de worldbuilding, locale 
 Les specs fonctionnelles sont dans `docs/features/`, les décisions dans `docs/adr/` et la roadmap dans `docs/roadmap/`.
 **Avant toute tâche, lis `docs/contexte.md` (pourquoi le projet existe, décisions déjà prises), l'ADR 0001 (stack) et l'ADR 0002 (workflow). Avant toute tâche d'interface, lis aussi l'ADR 0003 (direction artistique).**
 Avant de travailler sur un module, lis sa spec dans `docs/features/`. Pour le détail visuel, consulte les captures du board FigJam via le MCP Figma : le file key et les nodes sont indiqués dans `docs/contexte.md`. On reproduit les comportements et la direction artistique de vvd, mais jamais ses fichiers (assets, logo, polices, CSS, textes).
+Pour la V2, chaque écran commence par l'étude de son équivalent dans vvd avec REA : voir `docs/outils/rea.md` (on observe, on n'en reprend jamais le code).
 
 ## Règles de travail (non négociables)
 
