@@ -37,7 +37,7 @@ export const sidebarItem = (title: string) =>
 /** Creates a card of `type` from the sidebar and names it `title`. */
 export async function createCard(type: string, title: string) {
   await $("button=Nouvelle carte").click();
-  await $(`//*[@role="menuitem"][normalize-space()="${type}"]`).click();
+  await $(`//*[@role="option"][normalize-space()="${type}"]`).click();
   // The new card opens with its title selected: typing at once replaces it
   // (keys typed while the menu was still closing used to be lost, #122).
   const titleField = await $("aria/Nom de la carte");

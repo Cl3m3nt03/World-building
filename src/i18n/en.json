@@ -1642,5 +1642,11 @@
   "tone.cozy": "Cozy",
   "tone.comedy": "Comedy",
   "tones.label": "Tones",
-  "tones.hint": "Up to {{count}}, beside the genre. They tell the world's mood."
+  "tones.hint": "Up to {{count}}, beside the genre. They tell the world's mood.",
+  "typePicker.search": "Search a type",
+  "typePicker.current": "Current",
+  "typePicker.none": "No type contains “{{query}}”.",
+  "typePicker.move": "↑ ↓ move",
+  "typePicker.pick": "pick",
+  "typePicker.changeTitle": "Change the type"
 }

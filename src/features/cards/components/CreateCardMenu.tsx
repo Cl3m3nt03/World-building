@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import {
@@ -14,18 +14,12 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import type { CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { useCreateCard } from "../hooks/useCards";
+import { TypePicker } from "./TypePicker";
 
 /**
  * Creates a card of a type and opens it, with its title selected so it can
@@ -55,17 +49,11 @@ export function useCreateCardFlow() {
   return { createCard, create };
 }
 
-/** The pieces of a menu kind (dropdown or context menu). */
+/** The pieces of the context menu the creation items go in. */
 type MenuParts = {
-  Item: typeof DropdownMenuItem | typeof ContextMenuItem;
-  Label: typeof DropdownMenuLabel | typeof ContextMenuLabel;
-  Separator: typeof DropdownMenuSeparator | typeof ContextMenuSeparator;
-};
-
-const DROPDOWN: MenuParts = {
-  Item: DropdownMenuItem,
-  Label: DropdownMenuLabel,
-  Separator: DropdownMenuSeparator,
+  Item: typeof ContextMenuItem;
+  Label: typeof ContextMenuLabel;
+  Separator: typeof ContextMenuSeparator;
 };
 const CONTEXT: MenuParts = {
   Item: ContextMenuItem,
@@ -146,7 +134,10 @@ function useKeepNewCardFocus() {
   };
 }
 
-/** A button (the `children`, rendered `asChild`) opening the card creation menu. */
+/**
+ * A button (the `children`, rendered `asChild`) opening the type picker
+ * (V2-3.1): type to filter, arrows and Enter to create a card of that type.
+ */
 export function CreateCardMenu({
   children,
   align = "center",
@@ -154,18 +145,31 @@ export function CreateCardMenu({
   children: ReactNode;
   align?: "start" | "center" | "end";
 }) {
+  const { t } = useTranslation();
+  const types = useCardTypes();
+  const { createCard } = useCreateCardFlow();
+  const [open, setOpen] = useState(false);
   const focus = useKeepNewCardFocus();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
         align={align}
-        className={NO_EXIT_ANIMATION}
+        className="w-auto p-0 data-[state=closed]:animate-none"
         onCloseAutoFocus={focus.onCloseAutoFocus}
       >
-        <CreateCardItems parts={DROPDOWN} onCreate={focus.onCreate} />
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <TypePicker
+          title={t("cards.createWhich")}
+          types={types.data ?? []}
+          onPick={(type) => {
+            focus.onCreate();
+            setOpen(false);
+            void createCard(type);
+          }}
+          onNewType={() => setOpen(false)}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 

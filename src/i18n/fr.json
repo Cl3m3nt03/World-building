@@ -1642,5 +1642,11 @@
   "tone.cozy": "Cozy",
   "tone.comedy": "Humour",
   "tones.label": "Tonalités",
-  "tones.hint": "Jusqu'à {{count}}, en plus du genre. Elles disent l'ambiance du monde."
+  "tones.hint": "Jusqu'à {{count}}, en plus du genre. Elles disent l'ambiance du monde.",
+  "typePicker.search": "Rechercher un type",
+  "typePicker.current": "Actuel",
+  "typePicker.none": "Aucun type ne contient « {{query}} ».",
+  "typePicker.move": "↑ ↓ naviguer",
+  "typePicker.pick": "choisir",
+  "typePicker.changeTitle": "Changer de type"
 }

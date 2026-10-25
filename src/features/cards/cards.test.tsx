@@ -194,10 +194,15 @@ async function renderAt(path: string) {
 const callsOf = (command: string) => calls.filter((call) => call.command === command);
 
 /** Opens a Radix menu the keyboard way (Enter on its focused trigger). */
+/** Opens a menu (Enter on its trigger) or the type picker (a popover, opened by a click). */
 async function openMenu(trigger: HTMLElement) {
   await act(async () => {
-    trigger.focus();
-    fireEvent.keyDown(trigger, { key: "Enter" });
+    if (trigger.getAttribute("aria-haspopup") === "menu") {
+      trigger.focus();
+      fireEvent.keyDown(trigger, { key: "Enter" });
+    } else {
+      fireEvent.click(trigger);
+    }
   });
 }
 
@@ -206,7 +211,7 @@ test("the Card tile creates a card of the chosen type and opens it, title select
 
   await openMenu(screen.getByRole("button", { name: "Carte" }));
   await act(async () => {
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Ville" }));
+    fireEvent.click(await screen.findByRole("option", { name: "Ville" }));
   });
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/new"));
@@ -223,7 +228,7 @@ test("a card created from another card's page opens with its whole title selecte
 
   await openMenu(screen.getByRole("button", { name: "Nouvelle carte" }));
   await act(async () => {
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Lieu" }));
+    fireEvent.click(await screen.findByRole("option", { name: "Lieu" }));
   });
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/new"));
@@ -241,10 +246,30 @@ test("the creation menu offers to make a new type", async () => {
 
   await openMenu(screen.getByRole("button", { name: "Carte" }));
   await act(async () => {
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Nouveau type" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Nouveau type" }));
   });
 
   expect(useUiStore.getState().cardTypesOpen).toBe(true);
+});
+
+test("the type picker filters as typed and creates with Enter", async () => {
+  await renderAt("/world/demo/world");
+  await openMenu(screen.getByRole("button", { name: "Carte" }));
+  const search = await screen.findByRole("combobox", { name: "Rechercher un type" });
+  await waitFor(() => expect(document.activeElement).toBe(search));
+  fireEvent.change(search, { target: { value: "vil" } });
+  // The subtype brings its type along; the first match is active.
+  expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+    "Lieu",
+    "Ville",
+  ]);
+  fireEvent.keyDown(search, { key: "ArrowDown" });
+  await act(async () => {
+    fireEvent.keyDown(search, { key: "Enter" });
+  });
+  await waitFor(() =>
+    expect(callsOf("create_card")[0]?.payload).toEqual({ typeId: "city", title: "Ville sans nom" }),
+  );
 });
 
 test("the card page renames the card as typed", async () => {
@@ -264,7 +289,7 @@ test("changes the type, adds and removes aliases", async () => {
 
   await openMenu(await screen.findByRole("button", { name: "Type : Personnage. Changer le type" }));
   await act(async () => {
-    fireEvent.click(await screen.findByRole("menuitemradio", { name: "Ville" }));
+    fireEvent.click(await screen.findByRole("option", { name: "Ville" }));
   });
   expect(
     await screen.findByRole("button", { name: "Type : Lieu › Ville. Changer le type" }),
@@ -328,7 +353,7 @@ test("a right click in the sidebar and the New card button open the creation men
 
   await openMenu(screen.getByRole("button", { name: "Nouvelle carte" }));
   await act(async () => {
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Lieu" }));
+    fireEvent.click(await screen.findByRole("option", { name: "Lieu" }));
   });
   await waitFor(() =>
     expect(callsOf("create_card")[0]?.payload).toEqual({ typeId: "place", title: "Lieu sans nom" }),

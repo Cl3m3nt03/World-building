@@ -10,17 +10,15 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, CardType } from "@/lib/bindings";
 import { wikiCardRoute } from "@/lib/documentRoute";
 import { usePendingSave } from "@/lib/pendingSaves";
-import { cn } from "@/lib/utils";
 import type { BlockEditorHandle } from "../blocks/BlockEditor";
 import { effectiveTemplate } from "../blocks/template";
 import {
@@ -36,6 +34,7 @@ import { Backlinks } from "./Backlinks";
 import { CardContent } from "./CardContent";
 import { CardImage } from "./CardImage";
 import { CardProperties } from "./CardProperties";
+import { TypePicker } from "./TypePicker";
 
 /** Delay before a typed title is saved. */
 const SAVE_DELAY_MS = 500;
@@ -118,15 +117,17 @@ function TitleField({ card }: { card: Card }) {
   );
 }
 
-function TypePicker({ card, types }: { card: Card; types: CardType[] }) {
+/** The card's type chip: it opens the type picker, the current type marked (V2-3.1). */
+function CardTypeChip({ card, types }: { card: Card; types: CardType[] }) {
   const { t } = useTranslation();
   const setType = useSetCardType(card.id);
+  const [open, setOpen] = useState(false);
   const current = types.find((type) => type.id === card.typeId);
   const Icon = typeIcon(current?.icon ?? "shapes");
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <Button
           variant="secondary"
           size="sm"
@@ -137,28 +138,20 @@ function TypePicker({ card, types }: { card: Card; types: CardType[] }) {
           {current ? typeLabel(current, types) : t("cards.noType")}
           <ChevronDown />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
-        <DropdownMenuRadioGroup
-          value={card.typeId ?? ""}
-          onValueChange={(typeId) => setType.mutate(typeId)}
-        >
-          {types.map((type) => {
-            const TypeIcon = typeIcon(type.icon);
-            return (
-              <DropdownMenuRadioItem
-                key={type.id}
-                value={type.id}
-                className={cn(type.parentId && "pl-10")}
-              >
-                <TypeIcon aria-hidden style={{ color: typeColor(type.color) }} />
-                {type.name}
-              </DropdownMenuRadioItem>
-            );
-          })}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-0">
+        <TypePicker
+          title={t("typePicker.changeTitle")}
+          types={types}
+          current={card.typeId}
+          onPick={(type) => {
+            setOpen(false);
+            if (type.id !== card.typeId) setType.mutate(type.id);
+          }}
+          onNewType={() => setOpen(false)}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -319,7 +312,7 @@ export function CardPage() {
             </DropdownMenu>
           </div>
           <div>
-            <TypePicker card={card.data} types={all} />
+            <CardTypeChip card={card.data} types={all} />
           </div>
           <Aliases card={card.data} />
           <CardProperties key={`${card.data.id}-${card.data.typeId}`} cardId={card.data.id} />
