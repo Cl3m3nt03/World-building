@@ -1015,7 +1015,7 @@ function TreeItem({
       onClick={onClick}
       onFocus={onFocus}
       onKeyDown={onKeyDown}
-      className={`absolute left-0 flex w-full cursor-default items-center gap-1.5 rounded-md pr-2 text-sm text-muted-foreground outline-none select-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-secondary aria-[current=page]:text-foreground data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--color-primary)] data-[drop=before]:shadow-[inset_0_2px_0_0_var(--color-primary)] data-[drop=inside]:bg-primary/15 data-[drop=inside]:ring-1 data-[drop=inside]:ring-primary data-[drop=refused]:cursor-not-allowed data-[drop=refused]:bg-destructive/10 data-[drop=refused]:ring-1 data-[drop=refused]:ring-destructive data-context:opacity-60 ${isDragged ? "opacity-40" : ""}`}
+      className={`absolute left-0 flex w-full cursor-default items-center gap-1.5 rounded-md pr-2 text-sm text-muted-foreground outline-none select-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-[color-mix(in_oklab,var(--bz-accent)_14%,transparent)] aria-[current=page]:font-medium aria-[current=page]:text-foreground data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--color-primary)] data-[drop=before]:shadow-[inset_0_2px_0_0_var(--color-primary)] data-[drop=inside]:bg-primary/15 data-[drop=inside]:ring-1 data-[drop=inside]:ring-primary data-[drop=refused]:cursor-not-allowed data-[drop=refused]:bg-destructive/10 data-[drop=refused]:ring-1 data-[drop=refused]:ring-destructive data-context:opacity-60 ${isDragged ? "opacity-40" : ""}`}
       style={{
         height: ROW_HEIGHT,
         // `top`, not a transform: dnd-kit measures drop targets without
@@ -1042,7 +1042,9 @@ function TreeItem({
           onDone={onRenamed}
         />
       ) : (
-        <span className="truncate">{label}</span>
+        <span className="truncate" title={label}>
+          {label}
+        </span>
       )}
       {node.kind === "document" && node.document.wikiVisible && !editing && (
         <>
@@ -1098,7 +1100,9 @@ function DragPreview({ visual: { Icon, color, label } }: { visual: Visual }) {
   return (
     <div className="glass flex h-8 w-fit max-w-60 items-center gap-1.5 rounded-md px-2 text-sm shadow-md">
       <Icon aria-hidden className="size-4 shrink-0" style={color ? { color } : undefined} />
-      <span className="truncate">{label}</span>
+      <span className="truncate" title={label}>
+        {label}
+      </span>
     </div>
   );
 }

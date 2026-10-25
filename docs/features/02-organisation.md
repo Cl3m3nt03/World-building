@@ -6,6 +6,13 @@
 
 Retrouver instantanément n'importe quel document, même dans un monde qui en compte des milliers, et le ranger comme on veut.
 
+**V2 (ADR 0012)** : la sidebar est un panneau de verre qui s'adapte à **sa propre largeur**, de 200 à 480 px.
+
+- En dessous d'environ 240 px, le bouton « Nouvelle carte » du pied ne garde que son icône (son nom reste lu par les lecteurs d'écran et affiché en info-bulle). Le pied ne déborde plus et aucune barre de défilement horizontale n'apparaît.
+- La recherche (« Rechercher… ») affiche le raccourci « Ctrl K » à droite quand il y a la place et que rien n'est tapé.
+- La rubrique « Épinglés » est en petites capitales. Le document ouvert est surligné d'un voile doré, en gras. Le survol éclaire la ligne.
+- Un nom coupé par manque de place se lit en entier en info-bulle (arbre et épinglés).
+
 ## Structure de la sidebar
 
 De haut en bas :

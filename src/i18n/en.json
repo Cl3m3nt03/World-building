@@ -314,7 +314,7 @@
   "sidebar.pins.dropped": "Dropped {{name}} at position {{position}} of {{count}}.",
   "sidebar.pins.cancelled": "Moving cancelled: {{name}} stays at position {{position}} of {{count}}.",
   "sidebar.search.label": "Search the world",
-  "sidebar.search.placeholder": "Search… (Ctrl+K)",
+  "sidebar.search.placeholder": "Search…",
   "sidebar.search.clear": "Clear the search",
   "sidebar.search.results": "Search results",
   "sidebar.search.names": "Names",

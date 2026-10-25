@@ -131,8 +131,17 @@ export function SidebarSearch({ children, actions }: Props) {
               else return;
               event.preventDefault();
             }}
-            className="h-8 w-full rounded-md border border-border bg-background/50 pr-8 pl-8 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-search-cancel-button]:hidden"
+            className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-8 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 @[15rem]:pr-14 [&::-webkit-search-cancel-button]:hidden"
           />
+          {/* The shortcut, when there is room for it and nothing is typed. */}
+          {!searching && (
+            <kbd
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 rounded-sm border border-border px-1 font-sans text-[0.6875rem] text-muted-foreground @[15rem]:block"
+            >
+              {t("shell.actions.searchKeys")}
+            </kbd>
+          )}
           {searching && (
             <button
               type="button"
