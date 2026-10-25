@@ -110,7 +110,7 @@ describe("M1: worlds, preferences and relocation", () => {
     await createWorld(SECOND, "Science-fiction");
 
     await expect($(`h1=Bienvenue dans ${SECOND}`)).toBeDisplayed();
-    await expect($("dd=Science-fiction")).toBeDisplayed();
+    await expect($("p=Science-fiction")).toBeDisplayed();
     expect(await backdropSource()).toBeNull();
   });
 
@@ -122,7 +122,7 @@ describe("M1: worlds, preferences and relocation", () => {
 
     await firstCard.click();
     await currentWorldButton(FIRST).waitForDisplayed();
-    await expect($("dd=Fantasy")).toBeDisplayed();
+    await expect($("p=Fantasy")).toBeDisplayed();
     await browser.waitUntil(async () => (await backdropSource())?.includes("bzasset") ?? false);
   });
 
