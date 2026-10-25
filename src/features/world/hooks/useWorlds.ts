@@ -5,6 +5,7 @@ import { appKeys } from "@/features/settings";
 import {
   commands,
   type Genre,
+  type Tone,
   type WorldCalendar,
   type WorldInfo,
   type WorldPatch,
@@ -55,14 +56,17 @@ export function useCreateWorld() {
       parentDir,
       name,
       genre,
+      tones = [],
       id = null,
     }: {
       parentDir: string;
       name: string;
       genre: Genre;
+      /** Tones beside the genre (ADR 0013). */
+      tones?: Tone[];
       /** The id chosen by the interface (to preview the world's atlas). */
       id?: string | null;
-    }) => unwrap(commands.createWorld(parentDir, name, genre, id)),
+    }) => unwrap(commands.createWorld(parentDir, name, genre, tones, id)),
     onSuccess: async (world) => {
       onWorldOpened(queryClient, world);
       await navigate({ to: "/world/$worldId/home", params: { worldId: world.id } });

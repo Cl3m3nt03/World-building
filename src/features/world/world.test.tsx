@@ -2,7 +2,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { useUiStore } from "@/app/stores/ui";
@@ -15,6 +15,7 @@ const ELDEFLEUR: WorldInfo = {
   name: "Eldefleur",
   path: "C:/Worlds/Eldefleur",
   genre: "fantasy",
+  tones: [],
   description: "",
   mainImage: null,
   theme: { kind: "default" },
@@ -268,6 +269,35 @@ test("after a world is created, the next one starts blank with a new id", async 
     .map((call) => (call.payload as { id: string }).id);
   expect(ids).toHaveLength(2);
   expect(ids[0]).not.toBe(ids[1]);
+});
+
+test("tones are chosen beside the genre, six at most", async () => {
+  await renderStartScreen();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer un monde" }));
+  });
+  await waitFor(() =>
+    expect((screen.getByLabelText("Emplacement") as HTMLInputElement).value).not.toBe(""),
+  );
+  fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Cendres" } });
+  const tones = screen.getByRole("group", { name: "Tonalités" });
+  for (const name of ["Grimdark", "Mythologie", "Épique", "Horreur", "Survie", "Mystère"]) {
+    fireEvent.click(within(tones).getByRole("button", { name }));
+  }
+  expect(within(tones).getByRole("button", { name: "Grimdark" }).getAttribute("aria-pressed")).toBe(
+    "true",
+  );
+  // Six chosen: the others wait.
+  expect((within(tones).getByRole("button", { name: "Cozy" }) as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+  fireEvent.click(within(tones).getByRole("button", { name: "Mystère" }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+  });
+  expect(calls.find((call) => call.command === "create_world")?.payload).toMatchObject({
+    tones: ["grimdark", "mythology", "epic", "horror", "survival"],
+  });
 });
 
 test("says under the location when its folder already holds something", async () => {

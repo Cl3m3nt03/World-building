@@ -53,7 +53,7 @@ async fn create_lays_out_the_world_folder() {
 #[tokio::test]
 async fn create_records_the_genre() {
     let (_dir, root) = temp_root();
-    let world = create_with(&root, "Nébuleuse", Genre::ScienceFiction, None, &V1)
+    let world = create_with(&root, "Nébuleuse", Genre::ScienceFiction, &[], None, &V1)
         .await
         .unwrap();
     world.close().await;
@@ -67,7 +67,7 @@ async fn create_records_the_genre() {
 async fn create_keeps_the_id_chosen_by_the_interface() {
     let (_dir, root) = temp_root();
     let id = Uuid::parse_str("5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11").unwrap();
-    let world = create_with(&root, "Brume", Genre::Fantasy, Some(id), &V1)
+    let world = create_with(&root, "Brume", Genre::Fantasy, &[], Some(id), &V1)
         .await
         .unwrap();
     world.close().await;
@@ -249,6 +249,7 @@ async fn metadata_updates_survive_a_reopening() {
             name: Some("  Terres du Nord ".into()),
             genre: Some(Genre::ScienceFiction),
             description: Some("Une planète gelée.".into()),
+            ..WorldPatch::default()
         })
         .unwrap();
     world
@@ -712,4 +713,42 @@ async fn a_failed_duplicate_leaves_nothing_behind() {
     std::fs::remove_file(root.join(DB_FILE)).unwrap();
     assert!(duplicate(&root).await.is_err());
     assert!(!root.parent().unwrap().join("Brume (copie)").exists());
+}
+
+#[tokio::test]
+async fn tones_are_kept_with_the_world_and_changed_by_a_patch() {
+    use super::tones::Tone;
+    let (_dir, root) = temp_root();
+    let mut world = create_with(
+        &root,
+        "Brume",
+        Genre::Fantasy,
+        &[Tone::Grimdark, Tone::Grimdark, Tone::Mythology],
+        None,
+        &V1,
+    )
+    .await
+    .unwrap();
+    assert_eq!(world.info().tones, [Tone::Grimdark, Tone::Mythology]);
+    world
+        .update(WorldPatch {
+            tones: Some(vec![Tone::Cozy]),
+            ..WorldPatch::default()
+        })
+        .unwrap();
+    world.close().await;
+    assert_eq!(read_world_file(&root).unwrap().tones, [Tone::Cozy]);
+}
+
+#[test]
+fn a_world_without_tones_writes_none() {
+    // A V1 world.json has no `tones`: it reads as none and is written without them.
+    let file: WorldFile = serde_json::from_str(
+        r#"{ "format": "builderz-world", "id": "5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11", "name": "W",
+             "schemaVersion": 1, "createdAt": "2026-09-20T10:00:00Z", "updatedAt": "2026-09-20T10:00:00Z",
+             "lastOpenedAt": "2026-09-20T10:00:00Z" }"#,
+    )
+    .unwrap();
+    assert!(file.tones.is_empty());
+    assert!(!serde_json::to_string(&file).unwrap().contains("tones"));
 }

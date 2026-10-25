@@ -15,6 +15,7 @@ import { AssetImage, ImagePickerDialog } from "@/features/media";
 import {
   GENRES,
   isGenre,
+  TonePicker,
   useRevealWorld,
   useSetWorldMainImage,
   useUpdateWorld,
@@ -162,6 +163,8 @@ export function GeneralSection({ world }: { world: WorldInfo }) {
           </Select>
         </div>
       </div>
+
+      <TonePicker value={world.tones} onChange={(tones) => update.mutate({ tones })} />
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor={descriptionId} className="text-sm font-medium">

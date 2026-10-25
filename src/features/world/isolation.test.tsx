@@ -15,6 +15,7 @@ function world(id: string, name: string): WorldInfo {
     id,
     name,
     genre: "fantasy",
+    tones: [],
     description: "",
     mainImage: null,
     theme: { kind: "default" },

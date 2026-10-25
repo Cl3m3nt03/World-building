@@ -23,11 +23,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { commands, type Genre } from "@/lib/bindings";
+import { commands, type Genre, type Tone } from "@/lib/bindings";
 import { openDialog as pickFolder } from "@/lib/dialogs";
 import { errorKey, unwrap } from "@/lib/ipc";
 import { DEFAULT_GENRE, GENRES, genreLabel, isGenre } from "../genres";
 import { useCreateWorld } from "../hooks/useWorlds";
+import { TonePicker } from "./TonePicker";
 
 /** Suggested location for new worlds, from Rust (Documents\BuilderZ by default). */
 function defaultParentDir(): Promise<string> {
@@ -59,6 +60,7 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
   const createWorld = useCreateWorld();
   const [name, setName] = useState("");
   const [genre, setGenre] = useState<Genre>(DEFAULT_GENRE);
+  const [tones, setTones] = useState<Tone[]>([]);
   const [parentDir, setParentDir] = useState<string>();
   const [id, setId] = useState(() => crypto.randomUUID());
   const [triedEmpty, setTriedEmpty] = useState(false);
@@ -103,13 +105,17 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
     if (!canSubmit) return;
     // Closed through changeOpen: the dialog lives on (it is shared from the
     // app's root), so the next world starts blank, with a new id.
-    createWorld.mutate({ parentDir, name, genre, id }, { onSuccess: () => changeOpen(false) });
+    createWorld.mutate(
+      { parentDir, name, genre, tones, id },
+      { onSuccess: () => changeOpen(false) },
+    );
   };
 
   const changeOpen = (next: boolean) => {
     if (!next) {
       setName("");
       setGenre(DEFAULT_GENRE);
+      setTones([]);
       setId(crypto.randomUUID());
       setTriedEmpty(false);
       createWorld.reset();
@@ -177,6 +183,8 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
                 </RadioGroupPrimitive.Root>
                 <p className="text-xs text-muted-foreground">{t("createWorld.genreHint")}</p>
               </div>
+
+              <TonePicker value={tones} onChange={setTones} />
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor={locationId} className="text-sm font-medium">

@@ -11,6 +11,7 @@ use crate::settings::{self, AppSettings, RecentWorld};
 use crate::state::AppState;
 use crate::thumbnails;
 use crate::world::storage::{self, StorageUsage};
+use crate::world::tones::Tone;
 use crate::world::{
     self, Genre, OpenWorld, WorldCalendar, WorldInfo, WorldPatch, WorldPreferences, WorldTheme,
 };
@@ -25,6 +26,7 @@ pub async fn create_world(
     parent_dir: String,
     name: String,
     genre: Genre,
+    tones: Vec<Tone>,
     id: Option<String>,
 ) -> AppResult<WorldInfo> {
     let id = id
@@ -34,7 +36,7 @@ pub async fn create_world(
         })
         .transpose()?;
     let root = Path::new(&parent_dir).join(world::folder_name(&name)?);
-    let world = world::create_with(&root, &name, genre, id, &db::MIGRATOR).await?;
+    let world = world::create_with(&root, &name, genre, &tones, id, &db::MIGRATOR).await?;
     ensure_card_types(&state, &world).await;
     Ok(activate(&state, world).await)
 }

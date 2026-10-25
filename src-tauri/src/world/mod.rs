@@ -29,6 +29,7 @@ pub mod preferences;
 pub mod storage;
 pub mod theme;
 pub mod tiles;
+pub mod tones;
 
 pub use calendar::WorldCalendar;
 pub use preferences::WorldPreferences;
@@ -70,6 +71,13 @@ pub struct WorldFile {
     pub name: String,
     #[serde(default)]
     pub genre: Genre,
+    /// Tones beside the genre (V2, ADR 0013). Absent: none. Read tolerantly.
+    #[serde(
+        default,
+        deserialize_with = "tones::deserialize_lenient",
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub tones: Vec<tones::Tone>,
     #[serde(default)]
     pub description: String,
     /// Asset id (`<sha256>.<ext>`) of the main image, in `assets/`.
@@ -120,6 +128,8 @@ pub struct WorldInfo {
     pub id: String,
     pub name: String,
     pub genre: Genre,
+    /// Tones beside the genre (V2, ADR 0013).
+    pub tones: Vec<tones::Tone>,
     pub description: String,
     /// Asset id of the main image, if any.
     pub main_image: Option<String>,
@@ -151,6 +161,7 @@ impl OpenWorld {
             id: self.file.id.to_string(),
             name: self.file.name.clone(),
             genre: self.file.genre,
+            tones: self.file.tones.clone(),
             description: self.file.description.clone(),
             main_image: self.file.main_image.clone(),
             theme: self.file.theme.clone(),
@@ -177,6 +188,9 @@ impl OpenWorld {
         }
         if let Some(genre) = patch.genre {
             file.genre = genre;
+        }
+        if let Some(tones) = patch.tones {
+            file.tones = tones::normalize(&tones);
         }
         if let Some(description) = patch.description {
             if description.chars().count() > MAX_DESCRIPTION_LEN {
@@ -488,6 +502,7 @@ pub fn folder_name(name: &str) -> AppResult<String> {
 pub struct WorldPatch {
     pub name: Option<String>,
     pub genre: Option<Genre>,
+    pub tones: Option<Vec<tones::Tone>>,
     pub description: Option<String>,
 }
 
@@ -508,7 +523,7 @@ fn validate_name(name: &str) -> AppResult<String> {
 /// Creates a new world of the default genre (used by the tests).
 #[cfg(test)]
 pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
-    create_with(root, name, Genre::default(), None, migrator).await
+    create_with(root, name, Genre::default(), &[], None, migrator).await
 }
 
 /// Creates a new world of the given genre in `root`, which must not exist or
@@ -518,6 +533,7 @@ pub async fn create_with(
     root: &Path,
     name: &str,
     genre: Genre,
+    tones: &[tones::Tone],
     id: Option<Uuid>,
     migrator: &Migrator,
 ) -> AppResult<OpenWorld> {
@@ -535,7 +551,15 @@ pub async fn create_with(
         return Err(AppError::WorldAlreadyExists(root.display().to_string()));
     }
 
-    let result = create_in(root, name, genre, id.unwrap_or_else(Uuid::new_v4), migrator).await;
+    let result = create_in(
+        root,
+        name,
+        genre,
+        tones,
+        id.unwrap_or_else(Uuid::new_v4),
+        migrator,
+    )
+    .await;
     if result.is_err() {
         // Leave the disk as it was: remove what this call created.
         let cleanup = if existed {
@@ -566,6 +590,7 @@ async fn create_in(
     root: &Path,
     name: &str,
     genre: Genre,
+    tones: &[tones::Tone],
     id: Uuid,
     migrator: &Migrator,
 ) -> AppResult<OpenWorld> {
@@ -583,6 +608,7 @@ async fn create_in(
         id,
         name: name.into(),
         genre,
+        tones: tones::normalize(tones),
         description: String::new(),
         main_image: None,
         theme: WorldTheme::Default,

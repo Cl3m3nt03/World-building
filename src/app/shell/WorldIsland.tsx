@@ -8,6 +8,7 @@ import { AssetImage } from "@/features/media";
 import { useSettings } from "@/features/settings";
 import {
   genreLabel,
+  TONES,
   thumbnailUrl,
   useCloseWorld,
   useCurrentWorld,
@@ -97,7 +98,17 @@ export function WorldIsland() {
             />
           </div>
           <div className="flex flex-col gap-1.5 px-4 pb-3">
-            <span className="rubric">{t(genreLabel(world.genre))}</span>
+            <span className="rubric">
+              {[
+                world.genre ? t(genreLabel(world.genre)) : "",
+                ...world.tones.map((tone) => {
+                  const label = TONES.find((item) => item.value === tone)?.label;
+                  return label ? t(label) : "";
+                }),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
             <span className="font-heading text-xl leading-tight font-bold">{world.name}</span>
             {world.description ? (
               <p className="line-clamp-2 text-xs text-muted-foreground">{world.description}</p>

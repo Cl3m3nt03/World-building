@@ -69,6 +69,7 @@ beforeEach(() => {
           name: "Ombreval",
           path: (payload as { path: string }).path,
           genre: "fantasy",
+          tones: [],
           description: "",
           mainImage: null,
           theme: { kind: "default" },

@@ -9,7 +9,7 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useCardCounts, useWorldStats } from "@/features/cards";
 import { HomeGraphPreview } from "@/features/graphs";
 import { AssetImage, useAssets } from "@/features/media";
-import { genreLabel, useCurrentWorld } from "@/features/world";
+import { genreLabel, ToneList, useCurrentWorld } from "@/features/world";
 import { cn } from "@/lib/utils";
 import { RecentDocuments } from "./RecentDocuments";
 
@@ -129,9 +129,12 @@ export function HomeScreen() {
         </button>
 
         <div className="relative flex flex-col gap-3 p-6">
-          <p className="rubric glass-veil self-start rounded-full px-2.5 py-0.5">
-            {t(genreLabel(world.genre))}
-          </p>
+          <div className="flex flex-wrap items-center gap-1">
+            <p className="rubric glass-veil rounded-full px-2.5 py-0.5">
+              {t(genreLabel(world.genre))}
+            </p>
+            <ToneList tones={world.tones} className="contents" />
+          </div>
           <h1 className="text-5xl leading-tight font-bold">
             {t("home.welcomeTo", { name: world.name })}
           </h1>
