@@ -230,3 +230,12 @@ export function move<T>(blocks: T[], from: number, to: number): T[] {
   next.splice(to, 0, moved as T);
   return next;
 }
+
+/**
+ * A copy of a block, with its own id, on a line of its own (V2-3.4): the
+ * same text, images or settings, never the same identity.
+ */
+export function copyOfBlock(block: Block): Block {
+  const { row: _row, width: _width, ...rest } = structuredClone(block);
+  return { ...rest, id: newId() } as Block;
+}

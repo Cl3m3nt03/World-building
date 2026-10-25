@@ -215,6 +215,51 @@ test('"/" on an empty line opens the block menu; Escape gives the focus back to 
   await waitFor(() => expect(document.activeElement).toBe(text));
 });
 
+test('"/" turns its empty line into a heading, from the text family', async () => {
+  initial = [textBlock("t1", "")];
+  renderEditor();
+  const text = await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+  act(() => text.focus());
+  await act(async () => {
+    fireEvent.keyDown(text, { key: "/" });
+  });
+  // The text family shows its shortcuts, and how to close the menu.
+  const heading = await screen.findByRole("menuitem", { name: /^Titre 2/ });
+  expect(screen.getByText("Fermer le menu")).toBeTruthy();
+  await act(async () => {
+    fireEvent.click(heading);
+  });
+  await waitFor(() => expect(text.querySelector("h2")).not.toBeNull());
+});
+
+test("a block is copied right under it, with its own id, from its menu", async () => {
+  initial = [textBlock("a", "Arnor"), textBlock("b", "Bree")];
+  renderEditor();
+  await screen.findByRole("textbox", { name: "Bloc de texte 2" });
+  await openMenu(screen.getByRole("button", { name: "Actions du bloc 1" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Copier le bloc" }));
+  });
+  await waitFor(() => expect(lastSaved()).toHaveLength(3));
+  const [first, copy, last] = parseContent(saved.at(-1) ?? "[]");
+  expect(first?.id).toBe("a");
+  expect(last?.id).toBe("b");
+  expect(copy?.id).not.toBe("a");
+  expect(JSON.stringify(copy?.type === "text" && copy.doc)).toContain("Arnor");
+});
+
+test("a block folds to its first line and unfolds", async () => {
+  initial = [textBlock("a", "Arnor")];
+  renderEditor();
+  const fold = await screen.findByRole("button", { name: "Replier le bloc 1" });
+  expect(fold.getAttribute("aria-expanded")).toBe("true");
+  fireEvent.click(fold);
+  const unfold = screen.getByRole("button", { name: "Déplier le bloc 1" });
+  expect(unfold.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(unfold);
+  expect(screen.getByRole("button", { name: "Replier le bloc 1" })).toBeTruthy();
+});
+
 test("moving a block with the keyboard is announced in the app's language, by block name", async () => {
   initial = [textBlock("a", "Il était une fois"), textBlock("b", "La fin")];
   renderEditor();

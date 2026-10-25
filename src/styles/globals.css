@@ -375,6 +375,19 @@ h1[tabindex="-1"]:focus {
   outline: 2px solid var(--bz-accent);
   outline-offset: 1px;
 }
+/*
+ * The titles of a card's text read as section bars (V2-3.4, after vvd): the
+ * title in the serif, on a fine line that runs the whole width.
+ */
+.card-text :is(h1, h2) {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--bz-border-strong);
+  margin-bottom: 0.6rem;
+}
+.card-text h3 {
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--bz-border);
+}
 /* A mention just created from a typed or detected name ("Animate new links"). */
 .prose-bz .mention-fresh .mention-link {
   animation: bz-mention-appear 600ms ease-out;

@@ -1656,5 +1656,19 @@
   "properties.families.value": "Valeur",
   "properties.families.link": "Lien vers une carte",
   "properties.anyCard": "N'importe quelle carte",
-  "properties.severalCards": "Plusieurs cartes à la fois"
+  "properties.severalCards": "Plusieurs cartes à la fois",
+  "blocks.formatsTitle": "Cette ligne devient…",
+  "blocks.formats.paragraph": "Paragraphe",
+  "blocks.formats.h1": "Titre 1",
+  "blocks.formats.h2": "Titre 2",
+  "blocks.formats.h3": "Titre 3",
+  "blocks.formats.bullets": "Liste à puces",
+  "blocks.formats.numbers": "Liste numérotée",
+  "blocks.formats.quote": "Citation",
+  "blocks.closeMenu": "Fermer le menu",
+  "blocks.escapeKey": "Échap",
+  "blocks.addBelow": "Ajouter un bloc dessous",
+  "blocks.copy": "Copier le bloc",
+  "blocks.fold": "Replier le bloc {{index}}",
+  "blocks.unfold": "Déplier le bloc {{index}}"
 }
