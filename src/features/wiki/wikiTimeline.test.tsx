@@ -14,6 +14,7 @@ const WORLD: WorldInfo = {
   name: "Eldefleur",
   path: "C:/Worlds/Eldefleur",
   genre: "fantasy",
+  tones: [],
   description: "",
   mainImage: null,
   theme: { kind: "default" },

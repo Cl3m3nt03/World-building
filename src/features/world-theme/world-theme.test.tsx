@@ -75,6 +75,7 @@ const WORLD: WorldInfo = {
   id: "0b6c3f5e-8d1a-4c1b-9d4e-2f0a7b3c5d6e",
   name: "Aldoria",
   genre: "fantasy",
+  tones: [],
   description: "",
   mainImage: null,
   theme: { kind: "default" },

@@ -24,6 +24,7 @@ const WORLD = {
   name: "Westeros",
   path: "C:/Worlds/Westeros",
   genre: "fantasy",
+  tones: [],
   description: "",
   mainImage: null,
   theme: { kind: "default" },

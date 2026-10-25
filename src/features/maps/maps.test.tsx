@@ -17,6 +17,7 @@ const WORLD = {
   name: "Arda",
   path: "C:/Worlds/Arda",
   genre: "fantasy",
+  tones: [],
   description: "",
   mainImage: null,
   theme: { kind: "default" },

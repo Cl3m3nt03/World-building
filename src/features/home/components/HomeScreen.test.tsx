@@ -21,6 +21,7 @@ const WORLD: WorldInfo = {
   id: "demo",
   name: "Eldefleur",
   genre: "scienceFiction",
+  tones: [],
   description: "",
   mainImage: null,
   theme: { kind: "default" },

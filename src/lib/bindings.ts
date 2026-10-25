@@ -338,7 +338,7 @@ export const commands = {
 	 *  `parent_dir` (the folder is named after the world), and opens it. `id`,
 	 *  a UUID chosen by the interface, lets it preview the world's atlas.
 	 */
-	createWorld: (parentDir: string, name: string, genre: Genre, id: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre, id })),
+	createWorld: (parentDir: string, name: string, genre: Genre, tones: Tone[], id: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre, tones, id })),
 	/**
 	 *  Opens the world in `path`, migrating it if needed. Closes the world that
 	 *  was open, if any.
@@ -351,6 +351,8 @@ export const commands = {
 	id: string,
 	name: string,
 	genre: Genre,
+	/**  Tones beside the genre (V2, ADR 0013). */
+	tones: Tone[],
 	description: string,
 	/**  Asset id of the main image, if any. */
 	mainImage: string | null,
@@ -1358,6 +1360,8 @@ export type TimelineTrack = {
 /**  Where the title sits on the cover. */
 export type TitlePosition = "top" | "middle" | "bottom";
 
+export type Tone = "epic" | "grimdark" | "darkFantasy" | "mythology" | "historical" | "alternateHistory" | "dystopian" | "postApocalyptic" | "steampunk" | "solarpunk" | "gaslamp" | "horror" | "mystery" | "survival" | "western" | "cozy" | "comedy";
+
 /**  Something drawn over the tree. */
 export type TreeAnnotation = 
 /**  A free-hand stroke. */
@@ -1483,6 +1487,8 @@ export type WorldInfo = {
 	id: string,
 	name: string,
 	genre: Genre,
+	/**  Tones beside the genre (V2, ADR 0013). */
+	tones: Tone[],
 	description: string,
 	/**  Asset id of the main image, if any. */
 	mainImage: string | null,
@@ -1504,6 +1510,7 @@ export type WorldInfo = {
 export type WorldPatch = {
 	name?: string | null,
 	genre?: Genre | null,
+	tones?: Tone[] | null,
 	description?: string | null,
 };
 
