@@ -37,6 +37,18 @@ export function useRelocateRecentWorld() {
   );
 }
 
+/** Pins a world at the top of the list, or unpins it. */
+export function usePinRecentWorld() {
+  return useSettingsMutation(({ path, pinned }: { path: string; pinned: boolean }) =>
+    unwrap(commands.setRecentWorldPinned(path, pinned)),
+  );
+}
+
+/** Duplicates a world into « Name (copie) »; the copy joins the list, unopened. */
+export function useDuplicateWorld() {
+  return useSettingsMutation((path: string) => unwrap(commands.duplicateWorld(path)));
+}
+
 /** Shows a world folder in the Windows Explorer. */
 export function useRevealWorld() {
   return useMutation({

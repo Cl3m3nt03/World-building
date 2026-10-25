@@ -137,6 +137,8 @@
     "allow-count-type-cards",
     "allow-count-cards-by-type",
     "allow-world-stats",
+    "allow-set-recent-world-pinned",
+    "allow-duplicate-world",
     "allow-list-type-properties",
     "allow-card-properties",
     "allow-create-property",

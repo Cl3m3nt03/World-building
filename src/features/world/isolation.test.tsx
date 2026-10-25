@@ -64,6 +64,7 @@ const SETTINGS: AppSettings = {
     genre: w.genre,
     thumbnail: false,
     lastOpenedAt: w.lastOpenedAt,
+    pinned: false,
   })),
   defaultWorldsDir: null,
 };

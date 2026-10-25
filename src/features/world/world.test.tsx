@@ -43,6 +43,7 @@ const SETTINGS: AppSettings = {
       genre: "scienceFiction",
       thumbnail: true,
       lastOpenedAt: ELDEFLEUR.lastOpenedAt,
+      pinned: false,
     },
   ],
   defaultWorldsDir: null,

@@ -124,6 +124,8 @@ const COMMANDS: &[&str] = &[
     "count_type_cards",
     "count_cards_by_type",
     "world_stats",
+    "set_recent_world_pinned",
+    "duplicate_world",
     "list_type_properties",
     "card_properties",
     "create_property",

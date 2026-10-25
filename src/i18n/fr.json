@@ -1619,5 +1619,9 @@
   "home.graphEmptyTitle": "Rien à cartographier pour le moment",
   "home.statsWords_one": "mot",
   "home.statsDocuments_one": "document",
-  "home.statsConnections_one": "connexion"
+  "home.statsConnections_one": "connexion",
+  "worlds.pin": "Épingler en premier",
+  "worlds.unpin": "Désépingler",
+  "worlds.pinned": "Épinglé",
+  "worlds.duplicate": "Dupliquer le monde"
 }

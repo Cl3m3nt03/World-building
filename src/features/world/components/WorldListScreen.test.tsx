@@ -18,9 +18,22 @@ const world = (name: string, hoursAgo: number): RecentWorld => ({
   genre: "fantasy",
   thumbnail: false,
   lastOpenedAt: new Date(Date.now() - hoursAgo * 3600_000).toISOString(),
+  pinned: false,
 });
 
 let recentWorlds: RecentWorld[];
+const settingsOf = (worlds: RecentWorld[]): AppSettings => ({
+  preferences: {
+    language: "fr",
+    theme: "system",
+    transparencyEffects: true,
+    radioVolume: 70,
+    radioMode: "loop",
+    worldRail: false,
+  },
+  recentWorlds: worlds,
+  defaultWorldsDir: null,
+});
 let calls: { command: string; payload: unknown }[];
 
 beforeEach(() => {
@@ -45,6 +58,9 @@ beforeEach(() => {
         } satisfies AppSettings;
       case "missing_recent_worlds":
         return [];
+      case "set_recent_world_pinned":
+      case "duplicate_world":
+        return settingsOf(recentWorlds);
       case "current_world":
         return null;
       case "open_world":
@@ -169,4 +185,38 @@ test("the world rail switches world in one click, and folds", async () => {
   expect(useUiStore.getState().worldRail).toBe(false);
   // Folded, its button stays at hand.
   expect(screen.getByRole("button", { name: "Afficher le rail des mondes" })).toBeDefined();
+});
+
+test("a world's menu pins it first and duplicates it", async () => {
+  recentWorlds = [{ ...world("Eldefleur", 1), pinned: true }, world("Ombreval", 2)];
+  await renderList();
+  // The pinned world leads the list, said as such.
+  expect((await screen.findByRole("button", { name: "Ouvrir Eldefleur" })).textContent).toContain(
+    "Épinglé",
+  );
+  await act(async () => {
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Actions pour Ombreval" }), {
+      button: 0,
+      pointerType: "mouse",
+    });
+  });
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Épingler en premier" }));
+  });
+  expect(calls.find((call) => call.command === "set_recent_world_pinned")?.payload).toEqual({
+    path: "C:/Worlds/Ombreval",
+    pinned: true,
+  });
+  await act(async () => {
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Actions pour Ombreval" }), {
+      button: 0,
+      pointerType: "mouse",
+    });
+  });
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Dupliquer le monde" }));
+  });
+  expect(calls.find((call) => call.command === "duplicate_world")?.payload).toEqual({
+    path: "C:/Worlds/Ombreval",
+  });
 });

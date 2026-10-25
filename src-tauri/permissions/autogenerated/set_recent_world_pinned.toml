@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-recent-world-pinned"
+description = "Enables the set_recent_world_pinned command without any pre-configured scope."
+commands.allow = ["set_recent_world_pinned"]
+
+[[permission]]
+identifier = "deny-set-recent-world-pinned"
+description = "Denies the set_recent_world_pinned command without any pre-configured scope."
+commands.deny = ["set_recent_world_pinned"]

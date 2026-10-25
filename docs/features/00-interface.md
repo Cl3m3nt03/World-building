@@ -22,7 +22,9 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 - Les erreurs sont dites **sur place** : « Créer » sans nom signale le champ Nom (« Donnez un nom à votre monde. ») ; un dossier déjà occupé est signalé sous l'emplacement. Les autres erreurs s'affichent sous le formulaire.
 - L'image du monde ne se choisit pas à la création (elle entre dans la médiathèque du monde, qui n'existe pas encore) : la Home la propose ensuite.
 - Revenir à la liste des mondes (bouton « Mondes ») ferme le monde ouvert.
-- Chaque carte a un menu : Ouvrir, Afficher dans l'Explorateur, Retirer de la liste. Retirer demande une confirmation et ne touche jamais au dossier.
+- Chaque carte a un menu : Ouvrir, Afficher dans l'Explorateur, Dupliquer le monde, Épingler en premier (ou Désépingler), Retirer de la liste. Retirer demande une confirmation et ne touche jamais au dossier.
+- **Épingler en premier (V2-M2+, d'après vvd)** : un monde épinglé reste en tête de la liste et du rail, quel que soit le dernier ouvert. Le bandeau le dit (« Épinglé ») et ses folios portent une punaise. Il ne quitte jamais la liste quand elle déborde (dix mondes au plus). Désépinglé, il reprend sa place selon sa dernière ouverture. L'épingle est gardée dans les réglages de l'app.
+- **Dupliquer le monde (V2-M2+)** : une copie complète, à côté du monde, dans « Nom (copie) » (puis « Nom (copie 2) »…). On y trouve sa base (copiée de façon cohérente, même si le monde est ouvert), ses médias et ses réglages, avec un nouvel identifiant : la copie vit sa vie. Elle rejoint la liste sans s'ouvrir. Si la copie échoue, rien n'est laissé sur le disque.
 - Un monde introuvable, parce que son dossier a été déplacé ou supprimé, est signalé (« Introuvable ») au lieu d'échouer à l'ouverture. « Relocaliser » demande son nouveau dossier, qui doit contenir **le même monde** (même identifiant) ; il garde alors sa place dans la liste. Si le dossier choisi contient un autre monde, un message le dit (« Ce dossier contient un autre monde… ») et la liste ne change pas.
 
 ## Rail des mondes (V2-M2+, d'après vvd)
