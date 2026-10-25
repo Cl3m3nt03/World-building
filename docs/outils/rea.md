@@ -44,6 +44,8 @@ vvd demande un compte : c'est **Clément** qui s'y connecte, dans un Chrome à p
    rea capture-web-screenshot http://127.0.0.1:9222 <targetId>
    ```
 
+   En une fois, `tools/rea/vvd-capture.ps1 <écran>` (hors du dépôt) fait les deux dans `tools/rea/captures/<écran>` : `page.json` (structure, accessibilité, réseau) et `screenshot.png`. Testé le 2026-10-25 sur la page publique de vvd, avec un Chrome sans fenêtre (`--headless=new`, profil jetable).
+
 4. Pour une interaction (ouvrir un menu, créer un monde), Claude arme une observation et Clément fait le geste :
 
    ```powershell
