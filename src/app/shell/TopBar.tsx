@@ -1,14 +1,14 @@
-import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon } from "lucide-react";
+import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon, Search } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AssetImage } from "@/features/media";
 import { RadioButton } from "@/features/radio";
 import { SettingsButton } from "@/features/settings";
 import { useCloseWorld, useCurrentWorld } from "@/features/world";
 import type { TranslationKey } from "@/i18n";
+import { WorldIsland } from "./WorldIsland";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
 
@@ -26,45 +26,58 @@ type TopBarProps = {
    * inside it (the media library, under Home), it leads back to the tab.
    */
   onTabClick: (tab: ShellTab) => void;
+  /** The global search (Ctrl+K): the World tab and its search field. */
+  onSearch: () => void;
 };
 
-export function TopBar({ activeTab, onTabClick }: TopBarProps) {
+/**
+ * The pill under the active tab, which slides from one tab to the next (V2):
+ * its place is measured on the active trigger, again when the window or the
+ * labels change size.
+ */
+function useActivePill(activeTab: ShellTab) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const measure = () => {
+      const active = list.querySelector<HTMLElement>(`[data-tab="${activeTab}"]`);
+      if (active) setPill({ left: active.offsetLeft, width: active.offsetWidth });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const trigger of list.querySelectorAll("[data-tab]")) observer.observe(trigger);
+    return () => observer.disconnect();
+  }, [activeTab]);
+  return { listRef, pill };
+}
+
+export function TopBar({ activeTab, onTabClick, onSearch }: TopBarProps) {
   const { t } = useTranslation();
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
-  const settingsOpen = useUiStore((state) => state.worldSettings !== null);
-  const openWorldSettings = useUiStore((state) => state.openWorldSettings);
+  const { listRef, pill } = useActivePill(activeTab);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
       <div className="justify-self-start">
-        <Button
-          variant="ghost"
-          aria-label={t("shell.world.label", { name: world?.name ?? "" })}
-          aria-haspopup="dialog"
-          aria-expanded={settingsOpen}
-          onClick={() => openWorldSettings("general")}
-          disabled={!world}
-          className="glass-veil h-10 max-w-64 rounded-lg px-2.5 font-heading text-sm"
-        >
-          {world?.mainImage ? (
-            <AssetImage
-              assetId={world.mainImage}
-              alt=""
-              className="size-5 shrink-0 rounded-sm object-cover"
-            />
-          ) : (
-            <span aria-hidden className="size-5 shrink-0 rounded-sm bg-primary/80" />
-          )}
-          <span className="truncate">{world?.name}</span>
-        </Button>
+        <WorldIsland />
       </div>
 
       {/* Center island: modes */}
       <TabsList
+        ref={listRef}
         aria-label={t("shell.tabs.label")}
-        className="glass-veil h-10 gap-0.5 rounded-full p-1 group-data-horizontal/tabs:h-10"
+        className="glass-veil relative h-10 gap-0.5 rounded-full p-1 group-data-horizontal/tabs:h-10"
       >
+        {pill && (
+          <span
+            aria-hidden
+            className="absolute top-1 bottom-1 rounded-full bg-secondary shadow-(--bz-shadow-veil) transition-[left,width] duration-(--bz-duration-base) ease-atlas-spring"
+            style={{ left: pill.left, width: pill.width }}
+          />
+        )}
         {TABS.map(({ value, icon: Icon, label }) => {
           const active = value === activeTab;
           const trigger = (
@@ -72,8 +85,9 @@ export function TopBar({ activeTab, onTabClick }: TopBarProps) {
               onClick={() => onTabClick(value)}
               key={value}
               value={value}
+              data-tab={value}
               aria-label={t(label)}
-              className="h-8 flex-none rounded-full px-3 text-muted-foreground data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-secondary"
+              className="relative z-10 h-8 flex-none rounded-full px-3 text-muted-foreground data-[state=active]:border-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
             >
               <Icon />
               {active && <span>{t(label)}</span>}
@@ -95,6 +109,24 @@ export function TopBar({ activeTab, onTabClick }: TopBarProps) {
         aria-label={t("shell.actions.label")}
         className="glass-veil flex h-10 items-center gap-0.5 justify-self-end rounded-full px-1"
       >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
+              aria-label={t("shell.actions.search")}
+              aria-keyshortcuts="Control+K"
+              onClick={onSearch}
+            >
+              <Search />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t("shell.actions.search")}{" "}
+            <kbd className="ml-1 font-sans opacity-70">{t("shell.actions.searchKeys")}</kbd>
+          </TooltipContent>
+        </Tooltip>
         {world && <RadioButton worldId={world.id} />}
 
         <SettingsButton />

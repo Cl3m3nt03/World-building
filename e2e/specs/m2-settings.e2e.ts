@@ -14,14 +14,14 @@ import {
   currentWorldButton,
   openCard,
   openTab,
+  openWorldSettings,
 } from "../helpers";
 
 const WORLD = "Valinor";
 
 /** Opens the world settings on `section`. */
 async function openSettings(section: string) {
-  await currentWorldButton(WORLD).click();
-  await $('[role="dialog"]').waitForDisplayed();
+  await openWorldSettings(WORLD);
   await $(`//*[@role="dialog"]//*[@role="tab"][normalize-space()="${section}"]`).click();
   await $(`//*[@role="dialog"]//h2[normalize-space()="${section}"]`).waitForDisplayed();
 }

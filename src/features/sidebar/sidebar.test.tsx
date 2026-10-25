@@ -789,6 +789,15 @@ test("Ctrl+K from another tab opens the World tab with the search field focused"
   await waitFor(() => expect(document.activeElement).toBe(searchField()));
 });
 
+test("the search button of the top bar does what Ctrl+K does", async () => {
+  const router = await renderAt("/world/demo/home");
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Rechercher" }));
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
+  await waitFor(() => expect(document.activeElement).toBe(searchField()));
+});
+
 test("filters by card type and sorts by name; manual order comes back", async () => {
   const typedTypes: CardType[] = [
     TYPES[0] as CardType,

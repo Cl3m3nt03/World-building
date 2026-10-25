@@ -3,8 +3,16 @@
  * later). The app is in French (see wdio.conf.ts).
  */
 
-export const currentWorldButton = (name: string) =>
-  $(`aria/Monde courant : ${name}. Modifier le monde`);
+export const currentWorldButton = (name: string) => $(`aria/Monde courant : ${name}`);
+
+/** The world's settings: the world island opens the world's card, then its settings. */
+export async function openWorldSettings(name: string) {
+  await currentWorldButton(name).click();
+  await $('//*[@role="dialog"]//button[normalize-space()="Réglages du monde"]').click();
+  await $(
+    '//*[@role="dialog"][.//*[normalize-space()="Réglages du monde"]]//*[@role="tablist"]',
+  ).waitForDisplayed();
+}
 
 export async function createWorld(name: string, genre?: string) {
   await $("button=Créer un monde").click();
