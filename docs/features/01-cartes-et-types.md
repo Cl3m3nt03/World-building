@@ -37,6 +37,14 @@ La pastille du type d'une carte ouvre le même sélecteur, intitulé « Changer 
 - **Propriétés** : des champs structurés (voir plus bas).
 - **Contenu** : une suite de **blocs**.
 
+**V2-3.2 (d'après vvd)** : l'en-tête de la carte s'organise ainsi :
+- le **titre** en grand à gauche ; sur sa ligne, la pastille du **type**, un **œil** qui montre ou retire la carte du wiki (allumé ou barré, avec une info-bulle qui dit l'état), puis le menu « … » ;
+- l'**image en portrait à droite** ;
+- dessous, les **alias** sur une seule ligne : l'étiquette « Alias », les alias en pastilles (chacune se retire d'un clic) et un petit champ « + Ajouter » qui s'élargit au focus. Entrée ajoute l'alias, et le bouton « Ajouter » apparaît dès qu'on tape. L'explication sur les alias passe en info-bulle ;
+- puis les propriétés.
+
+Une carte neuve s'ouvre toujours avec son titre sélectionné.
+
 ## Blocs
 
 On ajoute des blocs avec un bouton « + » ou la commande `/` dans l'éditeur.

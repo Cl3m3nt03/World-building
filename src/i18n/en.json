@@ -1648,5 +1648,8 @@
   "typePicker.none": "No type contains “{{query}}”.",
   "typePicker.move": "↑ ↓ move",
   "typePicker.pick": "pick",
-  "typePicker.changeTitle": "Change the type"
+  "typePicker.changeTitle": "Change the type",
+  "cards.addAliasShort": "+ Add",
+  "cards.wikiVisible": "Shown in the wiki · click to hide it",
+  "cards.wikiHidden": "Not in the wiki · click to show it"
 }

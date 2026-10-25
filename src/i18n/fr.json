@@ -1648,5 +1648,8 @@
   "typePicker.none": "Aucun type ne contient « {{query}} ».",
   "typePicker.move": "↑ ↓ naviguer",
   "typePicker.pick": "choisir",
-  "typePicker.changeTitle": "Changer de type"
+  "typePicker.changeTitle": "Changer de type",
+  "cards.addAliasShort": "+ Ajouter",
+  "cards.wikiVisible": "Visible dans le wiki · cliquer pour la masquer",
+  "cards.wikiHidden": "Absente du wiki · cliquer pour l'y montrer"
 }

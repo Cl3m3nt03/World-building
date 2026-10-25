@@ -1,5 +1,16 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { BookOpen, ChevronDown, Globe, ListChecks, MoreHorizontal, Trash2, X } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Globe,
+  ListChecks,
+  MoreHorizontal,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
@@ -14,11 +25,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, CardType } from "@/lib/bindings";
 import { wikiCardRoute } from "@/lib/documentRoute";
 import { usePendingSave } from "@/lib/pendingSaves";
+import { cn } from "@/lib/utils";
 import type { BlockEditorHandle } from "../blocks/BlockEditor";
 import { effectiveTemplate } from "../blocks/template";
 import {
@@ -169,56 +182,67 @@ function Aliases({ card }: { card: Card }) {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <h2 className="rubric">{t("cards.aliases")}</h2>
-      <p className="-mt-1 text-xs text-muted-foreground">{t("cards.aliasesHint")}</p>
-      {card.aliases.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5">
-          {card.aliases.map((alias) => (
-            <li
-              key={alias}
-              className="flex items-center gap-1 rounded-full bg-secondary py-0.5 pr-0.5 pl-3 text-sm"
+    // One compact line (V2-3.2, after vvd): the aliases as pills, then a small field.
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center gap-1.5" title={t("cards.aliasesHint")}>
+        <span className="rubric flex items-center gap-1">
+          <Tag aria-hidden className="size-3.5" />
+          {t("cards.aliases")}
+        </span>
+        {card.aliases.map((alias) => (
+          <span
+            key={alias}
+            className="flex items-center gap-0.5 rounded-full bg-secondary py-0.5 pr-0.5 pl-2.5 text-sm"
+          >
+            {alias}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="rounded-full"
+              aria-label={t("cards.removeAlias", { alias })}
+              onClick={() => setAliases.mutate(card.aliases.filter((other) => other !== alias))}
             >
-              {alias}
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="rounded-full"
-                aria-label={t("cards.removeAlias", { alias })}
-                onClick={() => setAliases.mutate(card.aliases.filter((other) => other !== alias))}
-              >
-                <X />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <form onSubmit={add} className="flex gap-2">
-        <label htmlFor={id} className="sr-only">
-          {t("cards.newAlias")}
-        </label>
-        <Input
-          id={id}
-          value={draft}
-          maxLength={200}
-          placeholder={t("cards.newAlias")}
-          onChange={(event) => setDraft(event.target.value)}
-          className="max-w-72"
-        />
-        <Button
-          type="submit"
-          variant="secondary"
-          disabled={draft.trim() === "" || setAliases.isPending}
-        >
-          {t("cards.addAlias")}
-        </Button>
-      </form>
+              <X />
+            </Button>
+          </span>
+        ))}
+        <form onSubmit={add} className="flex items-center gap-1">
+          <label htmlFor={id} className="sr-only">
+            {t("cards.newAlias")}
+          </label>
+          <input
+            id={id}
+            value={draft}
+            maxLength={200}
+            placeholder={t("cards.addAliasShort")}
+            onChange={(event) => setDraft(event.target.value)}
+            // Stays wide while it holds a draft: a field shrinking on blur would
+            // slide the « Ajouter » button away from under the pointer.
+            className={cn(
+              "h-6 rounded-full border border-dashed border-border bg-transparent px-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-solid",
+              draft === "" ? "w-28 focus:w-44" : "w-44",
+              "focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas",
+            )}
+          />
+          {draft.trim() !== "" && (
+            <Button
+              type="submit"
+              variant="secondary"
+              size="xs"
+              className="rounded-full"
+              disabled={setAliases.isPending}
+            >
+              {t("cards.addAlias")}
+            </Button>
+          )}
+        </form>
+      </div>
       {setAliases.isError && <AppErrorMessage error={setAliases.error} />}
     </div>
   );
 }
 
-/** A card, opened in the World tab: image, title, type, aliases. */
+/** A card, opened in the World tab: title, type, wiki visibility, aliases, its portrait on the right (V2-3.2). */
 export function CardPage() {
   const { t } = useTranslation();
   const { worldId, cardId } = useParams({ from: "/world/$worldId/world/card/$cardId" });
@@ -255,69 +279,87 @@ export function CardPage() {
       className="glass mx-auto flex h-full max-w-4xl flex-col gap-6 overflow-y-auto rounded-lg p-6"
     >
       <header className="flex gap-6">
-        <CardImage card={card.data} type={type} />
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex items-start gap-2">
-            <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start gap-2">
+            <div className="min-w-0 flex-1 basis-64">
               {/* One field per card: a field kept from the previous card would
                   show its title for a moment, and the update to the new one
                   would drop the selection of a new card's title. */}
               <TitleField key={card.data.id} card={card.data} />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={t("cards.actions")}>
-                  <MoreHorizontal />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuCheckboxItem
-                  checked={inWiki}
-                  onCheckedChange={(checked) =>
-                    setWikiVisible.mutate({ id: cardId, visible: checked === true })
-                  }
-                >
-                  <Globe />
-                  {t("sidebar.document.wiki")}
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuItem
-                  disabled={!inWiki}
-                  onSelect={() => void navigate(wikiCardRoute(worldId, cardId))}
-                >
-                  <BookOpen />
-                  {t("wiki.openInWiki")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={template.length === 0}
-                  onSelect={() => blocksRef.current?.applyTemplate()}
-                >
-                  <ListChecks />
-                  {template.length > 0
-                    ? t("templates.apply", { type: templateSource?.name ?? "" })
-                    : t("templates.none")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={() =>
-                    trash.mutate(undefined, {
-                      onSuccess: () =>
-                        void navigate({ to: "/world/$worldId/world", params: { worldId } }),
-                    })
-                  }
-                >
-                  <Trash2 />
-                  {t("cards.trash")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div>
-            <CardTypeChip card={card.data} types={all} />
+            <div className="flex items-center gap-1 pt-1.5">
+              <CardTypeChip card={card.data} types={all} />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="rounded-full"
+                    aria-label={t("sidebar.document.wiki")}
+                    aria-pressed={inWiki}
+                    onClick={() => setWikiVisible.mutate({ id: cardId, visible: !inWiki })}
+                  >
+                    {inWiki ? <Eye /> : <EyeOff className="text-muted-foreground" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {inWiki ? t("cards.wikiVisible") : t("cards.wikiHidden")}
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label={t("cards.actions")}>
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuCheckboxItem
+                    checked={inWiki}
+                    onCheckedChange={(checked) =>
+                      setWikiVisible.mutate({ id: cardId, visible: checked === true })
+                    }
+                  >
+                    <Globe />
+                    {t("sidebar.document.wiki")}
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuItem
+                    disabled={!inWiki}
+                    onSelect={() => void navigate(wikiCardRoute(worldId, cardId))}
+                  >
+                    <BookOpen />
+                    {t("wiki.openInWiki")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={template.length === 0}
+                    onSelect={() => blocksRef.current?.applyTemplate()}
+                  >
+                    <ListChecks />
+                    {template.length > 0
+                      ? t("templates.apply", { type: templateSource?.name ?? "" })
+                      : t("templates.none")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() =>
+                      trash.mutate(undefined, {
+                        onSuccess: () =>
+                          void navigate({ to: "/world/$worldId/world", params: { worldId } }),
+                      })
+                    }
+                  >
+                    <Trash2 />
+                    {t("cards.trash")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
           <Aliases card={card.data} />
           <CardProperties key={`${card.data.id}-${card.data.typeId}`} cardId={card.data.id} />
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
+        {/* The portrait on the right, after vvd. */}
+        <CardImage card={card.data} type={type} />
       </header>
       <CardContent
         ref={blocksRef}
