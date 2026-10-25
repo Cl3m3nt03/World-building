@@ -150,6 +150,18 @@ export function useCardCounts() {
   });
 }
 
+/**
+ * The world in three figures (words, documents, connections) for its Home.
+ * Read again each time the Home shows, so it follows what was written since.
+ */
+export function useWorldStats() {
+  return useQuery({
+    queryKey: [...documentKeys.all(), "stats"],
+    queryFn: () => unwrap(commands.worldStats()),
+    staleTime: 0,
+  });
+}
+
 /** Records the opening of a document once per id (recent documents). */
 export function useMarkOpened(id: string) {
   const queryClient = useQueryClient();

@@ -137,3 +137,47 @@ pub async fn delete(tx: &mut Transaction<'_, Sqlite>, id: &str) -> AppResult<boo
         .await?;
     Ok(result.rows_affected() == 1)
 }
+
+/// Plain texts of the live cards, to count their words.
+pub async fn live_card_texts(pool: &SqlitePool) -> AppResult<Vec<String>> {
+    Ok(sqlx::query_scalar!(
+        "SELECT c.content_text FROM cards c JOIN documents d ON d.id = c.document_id
+         WHERE d.trashed_at IS NULL"
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
+/// Words of the chapters, each counted on the draft that counts.
+pub async fn chapter_words(pool: &SqlitePool) -> AppResult<i64> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COALESCE(SUM(dr.word_count), 0) AS "words!: i64"
+           FROM chapters ch JOIN drafts dr ON dr.id = ch.current_draft_id"#
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
+/// Number of documents outside the trash.
+pub async fn live_count(pool: &SqlitePool) -> AppResult<i64> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count!: i64" FROM documents WHERE trashed_at IS NULL"#
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
+/// Number of pairs of live documents linked in any way (both directions count once).
+pub async fn connection_count(pool: &SqlitePool) -> AppResult<i64> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count!: i64" FROM (
+             SELECT DISTINCT MIN(l.source_id, l.target_id), MAX(l.source_id, l.target_id)
+             FROM links l
+             JOIN documents s ON s.id = l.source_id AND s.trashed_at IS NULL
+             JOIN documents t ON t.id = l.target_id AND t.trashed_at IS NULL
+             WHERE l.source_id <> l.target_id
+           )"#
+    )
+    .fetch_one(pool)
+    .await?)
+}

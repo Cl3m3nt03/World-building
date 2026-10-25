@@ -17,5 +17,11 @@ export {
 } from "./components/CreateCardMenu";
 export { TrashDialog } from "./components/TrashDialog";
 export { cardKeys, documentKeys } from "./hooks/keys";
-export { useCard, useCardCounts, useCardList, useRecentDocuments } from "./hooks/useCards";
+export {
+  useCard,
+  useCardCounts,
+  useCardList,
+  useRecentDocuments,
+  useWorldStats,
+} from "./hooks/useCards";
 export { typeLabel } from "./typeLabel";

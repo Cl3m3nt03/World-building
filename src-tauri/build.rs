@@ -123,6 +123,7 @@ const COMMANDS: &[&str] = &[
     "set_card_content",
     "count_type_cards",
     "count_cards_by_type",
+    "world_stats",
     "list_type_properties",
     "card_properties",
     "create_property",

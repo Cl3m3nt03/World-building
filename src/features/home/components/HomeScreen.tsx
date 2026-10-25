@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Atlas } from "@/app/shell/Atlas";
 import { useUiStore } from "@/app/stores/ui";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { useCardCounts } from "@/features/cards";
+import { useCardCounts, useWorldStats } from "@/features/cards";
 import { HomeGraphPreview } from "@/features/graphs";
 import { AssetImage, useAssets } from "@/features/media";
 import { genreLabel, useCurrentWorld } from "@/features/world";
@@ -15,6 +15,21 @@ import { RecentDocuments } from "./RecentDocuments";
 
 const ENTRY_CLASS =
   "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm outline-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50";
+
+/** One figure of the world: the number, its name, a fine line ending in a gold dot (after vvd). */
+function Stat({ value, label }: { value: number | undefined; label: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="font-heading text-2xl leading-none font-bold lining-nums tabular-nums">
+        {value === undefined ? "–" : value.toLocaleString()}
+      </span>
+      <span aria-hidden className="relative h-px w-20 bg-border-strong">
+        <span className="absolute -top-0.5 right-0 size-1.5 rounded-full bg-primary" />
+      </span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
+  );
+}
 
 function Section({
   title,
@@ -50,6 +65,7 @@ export function HomeScreen() {
   const { data: world } = useCurrentWorld();
   const assets = useAssets({ kind: null, search: null });
   const cardCounts = useCardCounts();
+  const stats = useWorldStats();
   const types = useCardTypes();
   const openWorldSettings = useUiStore((state) => state.openWorldSettings);
   const openCardTypes = useUiStore((state) => state.setCardTypesOpen);
@@ -160,14 +176,31 @@ export function HomeScreen() {
         </div>
       </header>
 
+      {/* The world in three figures (V2-2+.2, after vvd's Home). */}
+      <section aria-label={t("home.stats")} className="flex flex-wrap gap-x-10 gap-y-3 px-2">
+        <Stat
+          value={stats.data?.words}
+          label={t("home.statsWords", { count: stats.data?.words ?? 0 })}
+        />
+        <Stat
+          value={stats.data?.documents}
+          label={t("home.statsDocuments", { count: stats.data?.documents ?? 0 })}
+        />
+        <Stat
+          value={stats.data?.connections}
+          label={t("home.statsConnections", { count: stats.data?.connections ?? 0 })}
+        />
+      </section>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_16rem]">
         <div className="flex min-w-0 flex-col gap-4">
-          <Section title={t("home.recent")}>
-            <RecentDocuments worldId={world.id} />
+          {/* The world's graph takes the centre of its Home. */}
+          <Section title={t("home.graph")}>
+            <HomeGraphPreview worldId={world.id} large />
           </Section>
 
-          <Section title={t("home.graph")}>
-            <HomeGraphPreview worldId={world.id} />
+          <Section title={t("home.recent")}>
+            <RecentDocuments worldId={world.id} />
           </Section>
         </div>
 

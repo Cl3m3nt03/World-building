@@ -63,6 +63,34 @@ impl DocumentKind {
     }
 }
 
+/// The world in three figures, for its Home (V2-2+.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldStats {
+    /// Words written: the live cards' texts and the chapters' current drafts.
+    pub words: u32,
+    /// Documents outside the trash.
+    pub documents: u32,
+    /// Pairs of live documents linked in any way.
+    pub connections: u32,
+}
+
+/// The figures of the open world.
+pub async fn stats(pool: &SqlitePool) -> AppResult<WorldStats> {
+    let card_words: usize = queries::live_card_texts(pool)
+        .await?
+        .iter()
+        .map(|text| text.split_whitespace().count())
+        .sum();
+    let figure = |value: i64| u32::try_from(value.max(0)).unwrap_or(u32::MAX);
+    let card_words = i64::try_from(card_words).unwrap_or(i64::MAX);
+    Ok(WorldStats {
+        words: figure(card_words.saturating_add(queries::chapter_words(pool).await?)),
+        documents: figure(queries::live_count(pool).await?),
+        connections: figure(queries::connection_count(pool).await?),
+    })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Document {

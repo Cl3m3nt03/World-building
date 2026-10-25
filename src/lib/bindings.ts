@@ -98,6 +98,8 @@ export const commands = {
 	countTypeCards: (typeId: string) => typedError<number, AppError>(__TAURI_INVOKE("count_type_cards", { typeId })),
 	/**  Number of live cards per type or subtype. */
 	countCardsByType: () => typedError<TypeCount[], AppError>(__TAURI_INVOKE("count_cards_by_type")),
+	/**  The open world in three figures (words, documents, connections), for its Home. */
+	worldStats: () => typedError<WorldStats, AppError>(__TAURI_INVOKE("world_stats")),
 	/**  Properties defined on a card type (not the inherited ones). */
 	listTypeProperties: (typeId: string) => typedError<PropertyDefinition[], AppError>(__TAURI_INVOKE("list_type_properties", { typeId })),
 	/**  The properties a card shows (its type's, then its own) with its values. */
@@ -1508,6 +1510,16 @@ export type WorldPreferences = {
 	autoMentionLinks: boolean,
 	/**  A mention created automatically shows with a short animation. */
 	animateNewLinks: boolean,
+};
+
+/**  The world in three figures, for its Home (V2-2+.2). */
+export type WorldStats = {
+	/**  Words written: the live cards' texts and the chapters' current drafts. */
+	words: number,
+	/**  Documents outside the trash. */
+	documents: number,
+	/**  Pairs of live documents linked in any way. */
+	connections: number,
 };
 
 export type WorldTheme = 
