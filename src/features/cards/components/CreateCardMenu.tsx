@@ -18,18 +18,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import type { CardType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
+import { useStartFromTemplate } from "../blocks/useCardContent";
 import { useCreateCard } from "../hooks/useCards";
 import { TypePicker } from "./TypePicker";
 
 /**
  * Creates a card of a type and opens it, with its title selected so it can
- * be typed over right away.
+ * be typed over right away, and its type's guided template already in it
+ * (unless the type says otherwise).
  */
 export function useCreateCardFlow() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { worldId } = useParams({ from: "/world/$worldId" });
   const create = useCreateCard();
+  const types = useCardTypes();
+  const startFromTemplate = useStartFromTemplate();
   const setFocusTitle = useUiStore((state) => state.setFocusCardTitle);
 
   // `mutateAsync`, not `mutate` callbacks: the menu item that starts the
@@ -38,7 +42,13 @@ export function useCreateCardFlow() {
   const createCard = (type: CardType) =>
     create
       .mutateAsync({ typeId: type.id, title: t("cards.untitled", { type: type.name }) })
-      .then((card) => {
+      .then(async (card) => {
+        // Saved before the card opens, so that it opens structured. A
+        // failure leaves an empty card (the template stays at hand in its
+        // menu) rather than no card at all.
+        await startFromTemplate(card.id, type, types.data ?? []).catch((error: unknown) =>
+          console.warn("Cannot apply the template to the new card", error),
+        );
         setFocusTitle(card.id);
         return navigate({
           to: "/world/$worldId/world/card/$cardId",

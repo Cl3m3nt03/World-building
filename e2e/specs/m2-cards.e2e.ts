@@ -3,6 +3,8 @@
  * acceptance criteria of docs/features/01-cartes-et-types.md:
  * - a type property shows on the cards of the type, old and new;
  * - a link property and a mention each give a backlink on their target;
+ * - a new card starts with its type's guided template, unless the type has
+ *   "Apply the template on creation" off (V2-3.5);
  * - a guided template applied to a card with text loses nothing.
  */
 
@@ -41,6 +43,10 @@ async function closeTypes() {
   await $('[role="dialog"]').waitForExist({ reverse: true });
 }
 
+/** A section title in the open card's content. */
+const contentHeading = (title: string) =>
+  $(`//section[@aria-label="Contenu"]//h2[normalize-space()="${title}"]`);
+
 /** "Cited in" entries of the open card, as their text. */
 async function backlinks(): Promise<string[]> {
   const section = await $('section[aria-label="Cité dans"]');
@@ -58,6 +64,10 @@ describe("M2: cards, properties, links and templates", () => {
   it("shows a type property on the cards of the type, created before and after it", async () => {
     await openTab("World");
     await createCard("Personnage", "Frodon");
+    // A new card starts with the sections of its type's template (V2-3.5).
+    for (const heading of ["Background", "Personnalité", "Apparence"]) {
+      await contentHeading(heading).waitForDisplayed();
+    }
 
     await openTypes();
     await addTypeProperty("Âge", "Nombre");
@@ -79,6 +89,13 @@ describe("M2: cards, properties, links and templates", () => {
     await openTypes();
     await addTypeProperty("Lieu de naissance", "Lien vers une carte");
     await $("button=Oui").click();
+    // Characters created from now on start empty.
+    const onCreate = await $(
+      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le modèle à la création"]/@for]',
+    );
+    await expect(onCreate).toHaveAttribute("aria-checked", "true");
+    await onCreate.click();
+    await expect(onCreate).toHaveAttribute("aria-checked", "false");
     await closeTypes();
 
     await openTab("World");

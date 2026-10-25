@@ -9,7 +9,14 @@
  *   the world.
  */
 
-import { createCard, createWorld, currentWorldButton, openCard, openTab } from "../helpers";
+import {
+  createCard,
+  createWorld,
+  currentWorldButton,
+  openCard,
+  openTab,
+  writeInCard,
+} from "../helpers";
 
 const WORLD = "Doriath";
 
@@ -89,8 +96,7 @@ describe("M5: the graph", () => {
     // Aragorn's alias and two mentions in his text.
     await $("aria/Nouvel alias").setValue("Grands-Pas");
     await $("button=Ajouter").click();
-    await $("button*=Commencez à écrire").click();
-    await $("aria/Bloc de texte 1").waitForDisplayed();
+    await writeInCard();
     for (const name of ["Arw", "Gond"]) {
       await browser.keys(`@${name}`);
       await $(`//*[@role="option"][contains(normalize-space(), "${name}")]`).waitForDisplayed();

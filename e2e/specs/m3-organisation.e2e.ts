@@ -9,7 +9,7 @@
  * - the sidebar state (open folders, filters) kept by the world.
  */
 
-import { createCard, createWorld, openTab, sidebarItem } from "../helpers";
+import { createCard, createWorld, openTab, sidebarItem, writeInCard } from "../helpers";
 
 const WORLD = "Arda";
 
@@ -158,7 +158,7 @@ describe("M3: organisation of the sidebar", () => {
     await $("aria/Nouvel alias").setValue("Grands-Pas");
     await $("button=Ajouter").click();
     await (await sidebarItem("Taverne")).click();
-    await $("button*=Commencez à écrire").click();
+    await writeInCard();
     await browser.keys("Le Poney Fringant, à Bree.");
     await browser.pause(1500);
 

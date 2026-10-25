@@ -9,8 +9,8 @@ import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { CardPicker, documentKeys, typeLabel } from "@/features/cards";
-import { type CueKind, commands } from "@/lib/bindings";
+import { CardPicker, documentKeys, typeLabel, useStartFromTemplate } from "@/features/cards";
+import { type CardType, type CueKind, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 
 /** The passage the menu acts on, kept while a picker is open (the editor loses the focus). */
@@ -186,8 +186,17 @@ function CreateCardPopover({
   const { t } = useTranslation();
   const types = useCardTypes();
   const queryClient = useQueryClient();
+  const startFromTemplate = useStartFromTemplate();
   const create = useMutation({
-    mutationFn: (typeId: string) => unwrap(commands.createCard(typeId, passage.text)),
+    mutationFn: async (type: CardType) => {
+      const card = await unwrap(commands.createCard(type.id, passage.text));
+      // Like any new card, it starts with its type's template; a failure
+      // there still leaves the card (and its mention).
+      await startFromTemplate(card.id, type, types.data ?? []).catch((error: unknown) =>
+        console.warn("Cannot apply the template to the new card", error),
+      );
+      return card;
+    },
     onSuccess: (card) => {
       void queryClient.invalidateQueries({ queryKey: documentKeys.all() });
       onCreated(card.id, card.title);
@@ -223,7 +232,7 @@ function CreateCardPopover({
                 <button
                   type="button"
                   disabled={create.isPending}
-                  onClick={() => create.mutate(type.id)}
+                  onClick={() => create.mutate(type)}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent"
                 >
                   <Icon aria-hidden className="size-4" style={{ color: typeColor(type.color) }} />

@@ -65,6 +65,7 @@ const TYPES: CardType[] = [
     guidedTemplate: [],
     orientation: "portrait",
     canvasFormat: "standard",
+    templateOnCreate: true,
     sortOrder: 0,
   },
 ];
