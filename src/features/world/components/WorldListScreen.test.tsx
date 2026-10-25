@@ -68,7 +68,9 @@ async function renderList() {
   });
 }
 
-test("welcomes the first launch with the two ways in", async () => {
+// The first test renders the whole router cold (every module imported): give it
+// time on the slower CI machines.
+test("welcomes the first launch with the two ways in", { timeout: 20_000 }, async () => {
   await renderList();
   const welcome = (await screen.findByRole("heading", { name: "Votre premier monde vous attend" }))
     .parentElement as HTMLElement;

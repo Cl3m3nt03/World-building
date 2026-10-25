@@ -115,7 +115,9 @@ async function renderStartScreen() {
   return router;
 }
 
-test("lists the recent worlds and reopens one on click", async () => {
+// The first test renders the whole router cold (every module imported): give it
+// time on the slower CI machines.
+test("lists the recent worlds and reopens one on click", { timeout: 20_000 }, async () => {
   const router = await renderStartScreen();
 
   const recent = await screen.findByRole("button", { name: "Ouvrir Eldefleur" });
