@@ -1,4 +1,14 @@
-import { ArrowRight, FolderOpen, FolderSearch, Globe, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  Copy,
+  FolderOpen,
+  FolderSearch,
+  Globe,
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  Trash2,
+} from "lucide-react";
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Atlas } from "@/app/shell/Atlas";
@@ -26,6 +36,8 @@ type WorldCardProps = {
   onRelocate: () => void;
   onReveal: () => void;
   onRemove: () => void;
+  onPin: () => void;
+  onDuplicate: () => void;
 };
 
 function Cover({ url, seed }: { url: string | undefined; seed: string }) {
@@ -66,6 +78,8 @@ export function WorldCard({
   onRelocate,
   onReveal,
   onRemove,
+  onPin,
+  onDuplicate,
 }: WorldCardProps) {
   const { t, i18n } = useTranslation();
   const thumbnail = missing ? undefined : thumbnailUrl(world);
@@ -101,8 +115,16 @@ export function WorldCard({
               <FolderOpen />
               {t("worlds.reveal")}
             </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onDuplicate}>
+              <Copy />
+              {t("worlds.duplicate")}
+            </DropdownMenuItem>
           </>
         )}
+        <DropdownMenuItem onSelect={onPin}>
+          {world.pinned ? <PinOff /> : <Pin />}
+          {world.pinned ? t("worlds.unpin") : t("worlds.pin")}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={onRemove}>
           <Trash2 />
@@ -151,7 +173,10 @@ export function WorldCard({
           {missingVeil}
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5">
             <div className="flex min-w-0 flex-col gap-1">
-              <span className="rubric">{t("worlds.lastOpened")}</span>
+              <span className="rubric flex items-center gap-1">
+                {world.pinned && <Pin aria-hidden className="size-3.5" />}
+                {world.pinned ? t("worlds.pinned") : t("worlds.lastOpened")}
+              </span>
               <span className="truncate font-heading text-4xl leading-tight font-bold">
                 {world.name}
               </span>
@@ -185,7 +210,12 @@ export function WorldCard({
           {missingVeil}
         </div>
         <div className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3">
-          <span className="truncate font-heading text-lg leading-snug font-bold">{world.name}</span>
+          <span className="flex items-center gap-1.5 truncate font-heading text-lg leading-snug font-bold">
+            {world.pinned && (
+              <Pin aria-label={t("worlds.pinned")} className="size-3.5 shrink-0 text-primary" />
+            )}
+            <span className="truncate">{world.name}</span>
+          </span>
           <span className="truncate text-xs text-muted-foreground">{meta}</span>
         </div>
       </button>

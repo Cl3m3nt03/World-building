@@ -268,6 +268,7 @@ pub async fn activate(state: &AppState, world: OpenWorld) -> WorldInfo {
         last_opened_at: OffsetDateTime::now_utc()
             .format(&Rfc3339)
             .unwrap_or_default(),
+        pinned: false,
     });
     if let Err(error) = settings::save(&state.config_dir, &settings) {
         // Not fatal: the world is open, only the recent list is not persisted.

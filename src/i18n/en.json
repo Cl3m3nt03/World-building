@@ -1619,5 +1619,9 @@
   "home.graphEmptyTitle": "Nothing to map yet",
   "home.statsWords_one": "word",
   "home.statsDocuments_one": "document",
-  "home.statsConnections_one": "connection"
+  "home.statsConnections_one": "connection",
+  "worlds.pin": "Pin first",
+  "worlds.unpin": "Unpin",
+  "worlds.pinned": "Pinned",
+  "worlds.duplicate": "Duplicate the world"
 }

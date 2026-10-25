@@ -90,6 +90,8 @@ pub struct RecentWorld {
     pub thumbnail: bool,
     /// RFC 3339 date.
     pub last_opened_at: String,
+    /// Kept at the top of the list, whatever was opened last (V2-2+.3).
+    pub pinned: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Type)]
@@ -112,6 +114,7 @@ struct RawRecentWorld {
     genre: Option<Genre>,
     thumbnail: bool,
     last_opened_at: String,
+    pinned: bool,
 }
 
 impl<'de> Deserialize<'de> for RecentWorld {
@@ -123,6 +126,7 @@ impl<'de> Deserialize<'de> for RecentWorld {
             genre,
             thumbnail,
             last_opened_at,
+            pinned,
         } = RawRecentWorld::deserialize(deserializer)?;
         Ok(Self {
             path,
@@ -131,6 +135,7 @@ impl<'de> Deserialize<'de> for RecentWorld {
             genre,
             thumbnail,
             last_opened_at,
+            pinned,
         })
     }
 }
@@ -309,13 +314,50 @@ impl AppSettings {
         Ok(())
     }
 
-    /// Moves (or adds) a world to the top of the recent list.
+    /// Moves (or adds) a world to the top of the recent list, below the
+    /// pinned worlds; it keeps its own pin. The pinned worlds never fall off
+    /// the end of the list.
     pub fn record_recent_world(&mut self, mut world: RecentWorld) {
         world.path = normalize_path(&world.path);
+        if let Some(known) = self
+            .recent_worlds
+            .iter()
+            .find(|recent| same_path(&recent.path, &world.path))
+        {
+            world.pinned = world.pinned || known.pinned;
+        }
         self.recent_worlds
             .retain(|recent| !same_path(&recent.path, &world.path));
         self.recent_worlds.insert(0, world);
-        self.recent_worlds.truncate(MAX_RECENT_WORLDS);
+        self.pinned_first();
+        while self.recent_worlds.len() > MAX_RECENT_WORLDS {
+            match self.recent_worlds.iter().rposition(|recent| !recent.pinned) {
+                Some(last) => self.recent_worlds.remove(last),
+                None => break,
+            };
+        }
+    }
+
+    /// Pins a recent world at the top of the list, or unpins it.
+    pub fn set_recent_world_pinned(&mut self, path: &str, pinned: bool) -> AppResult<()> {
+        let recent = self
+            .recent_worlds
+            .iter_mut()
+            .find(|recent| same_path(&recent.path, path))
+            .ok_or_else(|| AppError::InvalidInput(format!("not a recent world: {path}")))?;
+        recent.pinned = pinned;
+        self.pinned_first();
+        Ok(())
+    }
+
+    /// The pinned worlds first; in each group, the most recently opened first
+    /// (RFC 3339 dates sort as text; equal dates keep their order).
+    fn pinned_first(&mut self) {
+        self.recent_worlds.sort_by(|a, b| {
+            b.pinned
+                .cmp(&a.pinned)
+                .then_with(|| b.last_opened_at.cmp(&a.last_opened_at))
+        });
     }
 }
 
@@ -422,7 +464,47 @@ mod tests {
             genre: None,
             thumbnail: false,
             last_opened_at: String::new(),
+            pinned: false,
         }
+    }
+
+    #[test]
+    fn pinned_worlds_stay_first_and_never_fall_off() {
+        let mut settings = AppSettings::default();
+        // Opened at minute `i`, so the most recent comes first.
+        let at = |path: &str, minute: u32| RecentWorld {
+            last_opened_at: format!("2026-10-25T10:{minute:02}:00Z"),
+            ..recent(path)
+        };
+        for i in 0..3 {
+            settings.record_recent_world(at(&format!(r"C:\W{i}"), i));
+        }
+        // Most recent first: W2, W1, W0. Pin W0.
+        settings.set_recent_world_pinned(r"C:\W0", true).unwrap();
+        let paths = |s: &AppSettings| {
+            s.recent_worlds
+                .iter()
+                .map(|r| r.path.clone())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(paths(&settings), [r"C:\W0", r"C:\W2", r"C:\W1"]);
+
+        // Opening another world puts it under the pinned one; reopening W0 keeps its pin.
+        settings.record_recent_world(at(r"C:\W1", 20));
+        assert_eq!(paths(&settings), [r"C:\W0", r"C:\W1", r"C:\W2"]);
+        settings.record_recent_world(at(r"C:\W0", 21));
+        assert!(settings.recent_worlds[0].pinned);
+
+        // A full list drops the oldest unpinned world, never the pinned one.
+        for i in 3..15 {
+            settings.record_recent_world(at(&format!(r"C:\W{i}"), i + 20));
+        }
+        assert_eq!(settings.recent_worlds.len(), MAX_RECENT_WORLDS);
+        assert_eq!(settings.recent_worlds[0].path, r"C:\W0");
+
+        settings.set_recent_world_pinned(r"C:\W0", false).unwrap();
+        assert_eq!(settings.recent_worlds[0].path, r"C:\W14");
+        assert!(settings.set_recent_world_pinned("C:/nope", true).is_err());
     }
 
     #[test]

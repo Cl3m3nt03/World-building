@@ -667,3 +667,49 @@ async fn preferences_survive_a_reopening_and_defaults_are_not_written() {
     assert_eq!(reopened.info().preferences, off);
     reopened.close().await;
 }
+
+#[tokio::test]
+async fn duplicate_copies_the_world_under_a_new_id_and_leaves_the_original() {
+    let (_dir, root) = temp_root();
+    let world = create(&root, "Brume", &db::MIGRATOR).await.unwrap();
+    std::fs::write(root.join(ASSETS_DIR).join("carte.png"), b"png").unwrap();
+    sqlx::query("INSERT INTO meta (key, value) VALUES ('probe', 'kept')")
+        .execute(&world.pool)
+        .await
+        .unwrap();
+    let original = world.info();
+
+    // While the world is open: VACUUM INTO reads it consistently.
+    let (copy_root, copy) = duplicate(&root).await.unwrap();
+    world.close().await;
+    assert_eq!(copy.name, "Brume (copie)");
+    assert_ne!(copy.id.to_string(), original.id);
+    assert_eq!(copy_root.file_name().unwrap(), "Brume (copie)");
+
+    let reopened = open(&copy_root, &db::MIGRATOR).await.unwrap();
+    assert_eq!(reopened.info().id, copy.id.to_string());
+    let probe: String = sqlx::query_scalar("SELECT value FROM meta WHERE key = 'probe'")
+        .fetch_one(&reopened.pool)
+        .await
+        .unwrap();
+    assert_eq!(probe, "kept");
+    assert!(copy_root.join(ASSETS_DIR).join("carte.png").exists());
+    reopened.close().await;
+    assert_eq!(read_world_file(&root).unwrap().id.to_string(), original.id);
+
+    // A second copy takes the next free name.
+    let (second, file) = duplicate(&root).await.unwrap();
+    assert_eq!(file.name, "Brume (copie 2)");
+    assert!(second.exists());
+}
+
+#[tokio::test]
+async fn a_failed_duplicate_leaves_nothing_behind() {
+    let (_dir, root) = temp_root();
+    let world = create(&root, "Brume", &db::MIGRATOR).await.unwrap();
+    world.close().await;
+    // No database to copy: the copy fails and its folder is removed.
+    std::fs::remove_file(root.join(DB_FILE)).unwrap();
+    assert!(duplicate(&root).await.is_err());
+    assert!(!root.parent().unwrap().join("Brume (copie)").exists());
+}

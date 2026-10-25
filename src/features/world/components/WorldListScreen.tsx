@@ -25,7 +25,9 @@ import { SettingsButton, useSettings } from "@/features/settings";
 import type { RecentWorld } from "@/lib/bindings";
 import { openDialog as pickFolder } from "@/lib/dialogs";
 import {
+  useDuplicateWorld,
   useMissingWorlds,
+  usePinRecentWorld,
   useRelocateRecentWorld,
   useRemoveRecentWorld,
   useRevealWorld,
@@ -85,6 +87,8 @@ export function WorldListScreen() {
   const removeWorld = useRemoveRecentWorld();
   const relocateWorld = useRelocateRecentWorld();
   const revealWorld = useRevealWorld();
+  const pinWorld = usePinRecentWorld();
+  const duplicateWorld = useDuplicateWorld();
   const setCreateOpen = useUiStore((state) => state.setCreateWorldOpen);
   const railShown = useUiStore((state) => state.worldRail);
   const [removing, setRemoving] = useState<RecentWorld | null>(null);
@@ -98,7 +102,8 @@ export function WorldListScreen() {
   const firstLaunch = settings.isSuccess && recentWorlds.length === 0;
   const searchable = recentWorlds.length >= SEARCHABLE_FROM;
   const needle = query.trim().toLocaleLowerCase();
-  // The last opened world stands out, unless the list is searched or sorted by name.
+  // The first world (pinned, else the last opened) stands out, unless the
+  // list is searched or sorted by name.
   const featured = needle === "" && sort === "recent" ? recentWorlds[0] : undefined;
   const shown = (featured ? recentWorlds.slice(1) : recentWorlds)
     .filter((world) => !needle || world.name.toLocaleLowerCase().includes(needle))
@@ -124,7 +129,13 @@ export function WorldListScreen() {
     }
   };
 
-  const error = openWorld.error ?? relocateWorld.error ?? removeWorld.error ?? revealWorld.error;
+  const error =
+    openWorld.error ??
+    relocateWorld.error ??
+    removeWorld.error ??
+    revealWorld.error ??
+    pinWorld.error ??
+    duplicateWorld.error;
 
   const card = (world: RecentWorld, isFeatured = false) => (
     <WorldCard
@@ -136,6 +147,8 @@ export function WorldListScreen() {
       onRelocate={() => void relocate(world)}
       onReveal={() => revealWorld.mutate(world.path)}
       onRemove={() => setRemoving(world)}
+      onPin={() => pinWorld.mutate({ path: world.path, pinned: !world.pinned })}
+      onDuplicate={() => duplicateWorld.mutate(world.path)}
     />
   );
 

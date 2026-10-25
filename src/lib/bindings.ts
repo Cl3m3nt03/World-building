@@ -100,6 +100,14 @@ export const commands = {
 	countCardsByType: () => typedError<TypeCount[], AppError>(__TAURI_INVOKE("count_cards_by_type")),
 	/**  The open world in three figures (words, documents, connections), for its Home. */
 	worldStats: () => typedError<WorldStats, AppError>(__TAURI_INVOKE("world_stats")),
+	/**  Pins a recent world at the top of the list, or unpins it (V2-2+.3). */
+	setRecentWorldPinned: (path: string, pinned: boolean) => typedError<AppSettings, AppError>(__TAURI_INVOKE("set_recent_world_pinned", { path, pinned })),
+	/**
+	 *  Duplicates the world in `path` (open or not) into a sibling folder
+	 *  « Name (copie) » with a new id, and adds the copy to the recent worlds,
+	 *  without opening it (V2-2+.3).
+	 */
+	duplicateWorld: (path: string) => typedError<AppSettings, AppError>(__TAURI_INVOKE("duplicate_world", { path })),
 	/**  Properties defined on a card type (not the inherited ones). */
 	listTypeProperties: (typeId: string) => typedError<PropertyDefinition[], AppError>(__TAURI_INVOKE("list_type_properties", { typeId })),
 	/**  The properties a card shows (its type's, then its own) with its values. */
@@ -1115,6 +1123,8 @@ export type RecentWorld = {
 	thumbnail: boolean,
 	/**  RFC 3339 date. */
 	lastOpenedAt: string,
+	/**  Kept at the top of the list, whatever was opened last (V2-2+.3). */
+	pinned: boolean,
 };
 
 export type RelationCategory = "family" | "couple" | "other" | "custom";

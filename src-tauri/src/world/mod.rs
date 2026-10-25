@@ -337,6 +337,91 @@ pub fn read_world_file(root: &Path) -> AppResult<WorldFile> {
     Ok(file)
 }
 
+/// The first free sibling folder of `root` for a copy: « Name (copie) »,
+/// then « Name (copie 2) »…
+fn copy_folder(root: &Path, name: &str) -> AppResult<(PathBuf, String)> {
+    let parent = root
+        .parent()
+        .ok_or_else(|| AppError::InvalidInput(format!("no parent folder: {}", root.display())))?;
+    for n in 1..1000 {
+        let copy_name = if n == 1 {
+            format!("{name} (copie)")
+        } else {
+            format!("{name} (copie {n})")
+        };
+        let folder = parent.join(folder_name(&copy_name)?);
+        if !folder.exists() {
+            return Ok((folder, copy_name));
+        }
+    }
+    Err(AppError::WorldAlreadyExists(parent.display().to_string()))
+}
+
+/// Copies every file of `from` into `to`, except the database and its
+/// journals (copied apart, consistently).
+fn copy_files(from: &Path, to: &Path) -> AppResult<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        let name = entry.file_name();
+        let text = name.to_string_lossy();
+        if text.starts_with(DB_FILE) || text == WORLD_FILE {
+            continue;
+        }
+        let path = entry.path();
+        if entry.file_type()?.is_dir() {
+            copy_files(&path, &to.join(&name))?;
+        } else {
+            std::fs::copy(&path, to.join(&name))?;
+        }
+    }
+    Ok(())
+}
+
+/// Duplicates the world in `root` (open or not) into a sibling folder
+/// « Name (copie) »: its files, a consistent copy of its database (`VACUUM
+/// INTO`, safe while the world is open) and its `world.json` with a new id and
+/// the new name. Nothing is left behind if a step fails. Returns the copy's
+/// folder and its `world.json`.
+pub async fn duplicate(root: &Path) -> AppResult<(PathBuf, WorldFile)> {
+    let source = read_world_file(root)?;
+    let (target, name) = copy_folder(root, &source.name)?;
+    let result = duplicate_into(root, &target, source, name).await;
+    if result.is_err()
+        && let Err(error) = std::fs::remove_dir_all(&target)
+    {
+        tracing::warn!(%error, path = %target.display(), "cleanup after failed world copy");
+    }
+    result.map(|file| (target, file))
+}
+
+async fn duplicate_into(
+    root: &Path,
+    target: &Path,
+    source: WorldFile,
+    name: String,
+) -> AppResult<WorldFile> {
+    copy_files(root, target)?;
+    let pool = db::connect(&root.join(DB_FILE), false).await?;
+    let copied = sqlx::query("VACUUM INTO ?")
+        .bind(target.join(DB_FILE).to_string_lossy().into_owned())
+        .execute(&pool)
+        .await;
+    pool.close().await;
+    copied?;
+    let created = now();
+    let file = WorldFile {
+        id: Uuid::new_v4(),
+        name,
+        created_at: created,
+        updated_at: created,
+        last_opened_at: created,
+        ..source
+    };
+    write_world_file(target, &file)?;
+    Ok(file)
+}
+
 /// Removes the folder of the world `id` with `remove` (the Windows recycle
 /// bin in the app, a plain deletion in the tests), after checking that `root`
 /// still holds that world: a deletion never touches another folder. The

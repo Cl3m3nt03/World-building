@@ -3,7 +3,7 @@ use std::path::Path;
 use tauri::State;
 
 use crate::error::{AppError, AppResult};
-use crate::settings::{self, AppSettings, Preferences};
+use crate::settings::{self, AppSettings, Preferences, RecentWorld};
 use crate::state::AppState;
 use crate::world;
 
@@ -40,6 +40,48 @@ pub async fn remove_recent_world(
     let mut settings = state.settings.lock().await;
     let mut updated = settings.clone();
     updated.remove_recent_world(&path);
+    settings::save(&state.config_dir, &updated)?;
+    *settings = updated.clone();
+    Ok(updated)
+}
+
+/// Pins a recent world at the top of the list, or unpins it (V2-2+.3).
+#[tauri::command]
+#[specta::specta]
+pub async fn set_recent_world_pinned(
+    state: State<'_, AppState>,
+    path: String,
+    pinned: bool,
+) -> AppResult<AppSettings> {
+    let mut settings = state.settings.lock().await;
+    let mut updated = settings.clone();
+    updated.set_recent_world_pinned(&path, pinned)?;
+    settings::save(&state.config_dir, &updated)?;
+    *settings = updated.clone();
+    Ok(updated)
+}
+
+/// Duplicates the world in `path` (open or not) into a sibling folder
+/// « Name (copie) » with a new id, and adds the copy to the recent worlds,
+/// without opening it (V2-2+.3).
+#[tauri::command]
+#[specta::specta]
+pub async fn duplicate_world(state: State<'_, AppState>, path: String) -> AppResult<AppSettings> {
+    let (folder, file) = world::duplicate(Path::new(&path)).await?;
+    let mut settings = state.settings.lock().await;
+    let mut updated = settings.clone();
+    updated.record_recent_world(RecentWorld {
+        path: folder.to_string_lossy().into_owned(),
+        name: file.name.clone(),
+        id: Some(file.id.to_string()),
+        genre: Some(file.genre),
+        thumbnail: false,
+        last_opened_at: file
+            .last_opened_at
+            .format(&time::format_description::well_known::Rfc3339)
+            .unwrap_or_default(),
+        pinned: false,
+    });
     settings::save(&state.config_dir, &updated)?;
     *settings = updated.clone();
     Ok(updated)
