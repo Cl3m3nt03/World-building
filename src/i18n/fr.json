@@ -173,11 +173,8 @@
   "worldSettings.saving": "Enregistrement…",
   "home.welcomeTo": "Bienvenue dans {{name}}",
   "home.recent": "Documents récents",
-  "home.summary": "Le monde",
-  "home.files": "Médiathèque",
   "home.fileCount_one": "{{count}} fichier",
   "home.fileCount_other": "{{count}} fichiers",
-  "home.cards": "Cartes",
   "home.addDescription": "Ajouter une description…",
   "home.graph": "Aperçu du graph",
   "home.graphNoLinks": "Le graph montrera les liens entre vos cartes : reliez-les par des mentions @ dans leurs textes ou par des propriétés de type lien.",
@@ -1600,5 +1597,7 @@
   "createWorld.nameRequired": "Donnez un nom à votre monde.",
   "createWorld.locationHint": "Un dossier à son nom y sera créé.",
   "createWorld.previewName": "Votre monde",
-  "createWorld.previewHint": "Sa carte, à lui seul : elle l'accompagnera partout."
+  "createWorld.previewHint": "Sa carte, à lui seul : elle l'accompagnera partout.",
+  "home.addCover": "Ajouter une couverture",
+  "home.changeCover": "Changer la couverture"
 }

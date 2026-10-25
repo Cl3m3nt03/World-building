@@ -1,27 +1,54 @@
 import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import {
+  ChartGantt,
+  LayoutGrid,
+  type LucideIcon,
+  Map as MapIcon,
+  Network,
+  Plus,
+  Share2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { CreateCardMenu, useRecentDocuments } from "@/features/cards";
 import { AssetImage } from "@/features/media";
-import type { CardType, RecentDocument } from "@/lib/bindings";
+import type { CardType, DocumentKind, RecentDocument } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { formatRelative } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /** How many recent documents Home shows. */
 const RECENT_COUNT = 8;
 
-function DocumentIcon({ document, types }: { document: RecentDocument; types: CardType[] }) {
+/** The emblem of the documents that are not cards. */
+const KIND_ICONS: Record<Exclude<DocumentKind, "card">, LucideIcon> = {
+  map: MapIcon,
+  graph: Share2,
+  tree: Network,
+  canvas: LayoutGrid,
+  timeline: ChartGantt,
+};
+
+/** A card's type colour and icon, or the emblem of the document's kind. */
+function documentLook(document: RecentDocument, types: CardType[]) {
+  if (document.kind !== "card")
+    return { Icon: KIND_ICONS[document.kind], color: "var(--bz-accent)" };
   const type = types.find((candidate) => candidate.id === document.typeId);
-  const Icon = typeIcon(type?.icon ?? "shapes");
-  return (
-    <Icon
-      aria-hidden
-      className="size-4 shrink-0"
-      style={{ color: typeColor(type?.color ?? "slate") }}
-    />
-  );
+  return { Icon: typeIcon(type?.icon ?? "shapes"), color: typeColor(type?.color ?? "slate") };
+}
+
+function DocumentIcon({
+  document,
+  types,
+  className = "size-4",
+}: {
+  document: RecentDocument;
+  types: CardType[];
+  className?: string;
+}) {
+  const { Icon, color } = documentLook(document, types);
+  return <Icon aria-hidden className={cn("shrink-0", className)} style={{ color }} />;
 }
 
 /**
@@ -82,7 +109,7 @@ export function RecentDocuments({ worldId }: { worldId: string }) {
             <li key={document.id}>
               <Link
                 {...documentRoute(worldId, document.kind, document.id)}
-                className="group flex flex-col overflow-hidden rounded-lg border border-border outline-none hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="group flex flex-col overflow-hidden rounded-lg border border-border bg-(--bz-field) outline-none transition-[translate,box-shadow,border-color] duration-(--bz-duration-base) ease-atlas hover:-translate-y-0.5 hover:border-border-strong hover:shadow-(--bz-shadow-panel) focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-muted">
                   {document.imageAssetId ? (
@@ -92,16 +119,23 @@ export function RecentDocuments({ worldId }: { worldId: string }) {
                       className="size-full object-cover transition-transform group-hover:scale-105"
                     />
                   ) : (
+                    // No image: its emblem, large, on a paper tinted with its colour.
                     <div
                       className="flex size-full items-center justify-center"
-                      style={{ background: "var(--bz-backdrop-gradient)" }}
+                      style={{
+                        background: `radial-gradient(circle at 50% 45%, color-mix(in oklab, ${documentLook(document, all).color} 16%, transparent), transparent 70%)`,
+                      }}
                     >
-                      <DocumentIcon document={document} types={all} />
+                      <DocumentIcon
+                        document={document}
+                        types={all}
+                        className="size-10 opacity-80 transition-transform duration-(--bz-duration-slow) ease-atlas group-hover:scale-110 motion-reduce:transition-none"
+                      />
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col gap-0.5 p-2">
-                  <span className="truncate text-sm">{document.title}</span>
+                  <span className="truncate font-heading font-semibold">{document.title}</span>
                   <span className="text-xs text-muted-foreground">
                     {formatRelative(document.openedAt, i18n.language)}
                   </span>
