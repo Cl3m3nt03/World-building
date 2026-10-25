@@ -14,6 +14,7 @@ const saved: AppSettings = {
     transparencyEffects: false,
     radioVolume: 70,
     radioMode: "loop",
+    worldRail: false,
   },
   recentWorlds: [],
   defaultWorldsDir: null,
@@ -74,6 +75,7 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
       transparencyEffects: true,
       radioVolume: 70,
       radioMode: "loop",
+      worldRail: false,
     },
     {
       language: "fr",
@@ -81,6 +83,7 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
       transparencyEffects: false,
       radioVolume: 70,
       radioMode: "loop",
+      worldRail: false,
     },
     {
       language: "en",
@@ -88,6 +91,7 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
       transparencyEffects: false,
       radioVolume: 70,
       radioMode: "loop",
+      worldRail: false,
     },
   ]);
   await i18n.changeLanguage("fr");

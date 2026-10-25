@@ -60,6 +60,8 @@ pub struct Preferences {
     /// Radio volume, from 0 to 100.
     pub radio_volume: u8,
     pub radio_mode: RadioMode,
+    /// Whether the world rail (V2) is shown on the left.
+    pub world_rail: bool,
 }
 
 impl Default for Preferences {
@@ -70,6 +72,7 @@ impl Default for Preferences {
             transparency_effects: true,
             radio_volume: DEFAULT_RADIO_VOLUME,
             radio_mode: RadioMode::default(),
+            world_rail: false,
         }
     }
 }
@@ -147,6 +150,7 @@ struct RawPreferences {
     // the whole settings file look corrupted.
     radio_volume: serde_json::Value,
     radio_mode: serde_json::Value,
+    world_rail: bool,
 }
 
 impl Default for RawPreferences {
@@ -155,6 +159,7 @@ impl Default for RawPreferences {
             language,
             theme,
             transparency_effects,
+            world_rail,
             ..
         } = Preferences::default();
         Self {
@@ -163,6 +168,7 @@ impl Default for RawPreferences {
             transparency_effects,
             radio_volume: serde_json::Value::Null,
             radio_mode: serde_json::Value::Null,
+            world_rail,
         }
     }
 }
@@ -185,6 +191,7 @@ impl<'de> Deserialize<'de> for Preferences {
             transparency_effects,
             radio_volume: volume,
             radio_mode: mode,
+            world_rail,
         } = RawPreferences::deserialize(deserializer)?;
         Ok(Self {
             language,
@@ -192,6 +199,7 @@ impl<'de> Deserialize<'de> for Preferences {
             transparency_effects,
             radio_volume: radio_volume(&volume),
             radio_mode: serde_json::from_value(mode).unwrap_or_default(),
+            world_rail,
         })
     }
 }
@@ -461,6 +469,19 @@ mod tests {
         let settings = load(dir.path());
         assert_eq!(settings.preferences.theme, Theme::Dark);
         assert_eq!(settings.preferences.language, Language::Fr);
+    }
+
+    #[test]
+    fn the_world_rail_is_folded_unless_saved_shown() {
+        let dir = tempfile::tempdir().unwrap();
+        let write = |json: &str| std::fs::write(dir.path().join(SETTINGS_FILE), json).unwrap();
+
+        // Settings written before the rail existed.
+        write(r#"{ "preferences": { "theme": "dark" } }"#);
+        assert!(!load(dir.path()).preferences.world_rail);
+
+        write(r#"{ "preferences": { "worldRail": true } }"#);
+        assert!(load(dir.path()).preferences.world_rail);
     }
 
     #[test]

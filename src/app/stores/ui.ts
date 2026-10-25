@@ -26,6 +26,12 @@ type UiState = {
   radioMode: RadioMode;
   setRadioVolume: (volume: number) => void;
   setRadioMode: (mode: RadioMode) => void;
+  /** The world rail (V2-2+.1), shown or folded; saved in the app settings. */
+  worldRail: boolean;
+  setWorldRail: (shown: boolean) => void;
+  /** The « New world » dialog, opened from the world list or the rail. */
+  createWorldOpen: boolean;
+  setCreateWorldOpen: (open: boolean) => void;
   /**
    * World settings screen (top bar, and "Settings" on the Home tab): the
    * section shown, or `null` when closed.
@@ -62,6 +68,10 @@ export const useUiStore = create<UiState>()((set) => ({
     }
   },
   setRadioMode: (radioMode) => set({ radioMode }),
+  worldRail: false,
+  setWorldRail: (worldRail) => set({ worldRail }),
+  createWorldOpen: false,
+  setCreateWorldOpen: (createWorldOpen) => set({ createWorldOpen }),
   worldSettings: null,
   openWorldSettings: (section = "general") => set({ worldSettings: section }),
   closeWorldSettings: () => set({ worldSettings: null }),

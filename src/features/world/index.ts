@@ -1,3 +1,4 @@
+export { CreateWorldDialog } from "./components/CreateWorldDialog";
 export { WorldListScreen } from "./components/WorldListScreen";
 export { DEFAULT_GENRE, GENRES, genreLabel, isGenre } from "./genres";
 export { worldKeys } from "./hooks/keys";

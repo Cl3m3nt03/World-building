@@ -5,6 +5,7 @@ import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { createAppRouter } from "@/app/router";
+import { useUiStore } from "@/app/stores/ui";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppSettings, RecentWorld } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
@@ -20,11 +21,14 @@ const world = (name: string, hoursAgo: number): RecentWorld => ({
 });
 
 let recentWorlds: RecentWorld[];
+let calls: { command: string; payload: unknown }[];
 
 beforeEach(() => {
   mockConvertFileSrc("windows");
   recentWorlds = [];
-  mockIPC((command) => {
+  calls = [];
+  mockIPC((command, payload) => {
+    calls.push({ command, payload });
     switch (command) {
       case "get_settings":
         return {
@@ -34,6 +38,7 @@ beforeEach(() => {
             transparencyEffects: true,
             radioVolume: 70,
             radioMode: "loop",
+            worldRail: false,
           },
           recentWorlds,
           defaultWorldsDir: null,
@@ -42,6 +47,16 @@ beforeEach(() => {
         return [];
       case "current_world":
         return null;
+      case "open_world":
+        return {
+          id: "w-open",
+          name: "Ombreval",
+          path: (payload as { path: string }).path,
+          genre: "fantasy",
+          description: "",
+          mainImage: null,
+          theme: { kind: "default" },
+        };
       default:
         return undefined;
     }
@@ -50,6 +65,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  useUiStore.setState({ worldRail: false, createWorldOpen: false });
   clearMocks();
 });
 
@@ -129,4 +145,28 @@ test("says when a world was opened the way people say it", () => {
   expect(relativeTime("2026-10-24T12:00:00Z", "fr", now)).toBe("hier");
   expect(relativeTime("2026-10-24T12:00:00Z", "en", now)).toBe("yesterday");
   expect(relativeTime("not a date", "fr", now)).toBe("");
+});
+
+test("the world rail switches world in one click, and folds", async () => {
+  recentWorlds = [world("Eldefleur", 1), world("Ombreval", 2)];
+  useUiStore.setState({ worldRail: true });
+  await renderList();
+  const rail = await screen.findByRole("navigation", { name: "Mondes" });
+  // On the world list, « Tous les mondes » is the current place.
+  expect(
+    within(rail).getByRole("button", { name: "Tous les mondes" }).getAttribute("aria-current"),
+  ).toBe("page");
+  await act(async () => {
+    fireEvent.click(within(rail).getByRole("button", { name: "Ombreval" }));
+  });
+  expect(calls.find((call) => call.command === "open_world")?.payload).toEqual({
+    path: "C:/Worlds/Ombreval",
+  });
+  await act(async () => {
+    fireEvent.click(within(rail).getByRole("button", { name: "Replier le rail des mondes" }));
+  });
+  expect(screen.queryByRole("navigation", { name: "Mondes" })).toBeNull();
+  expect(useUiStore.getState().worldRail).toBe(false);
+  // Folded, its button stays at hand.
+  expect(screen.getByRole("button", { name: "Afficher le rail des mondes" })).toBeDefined();
 });

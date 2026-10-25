@@ -13,6 +13,8 @@ import { Backdrop } from "@/app/shell/Backdrop";
 import { RouteAnnouncer } from "@/app/shell/RouteAnnouncer";
 import { StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
+import { WorldRail } from "@/app/shell/WorldRail";
+import { useUiStore } from "@/app/stores/ui";
 import { CanvasPage } from "@/features/canvases";
 import { CardPage } from "@/features/cards";
 import { DesignSystemPage } from "@/features/design-system";
@@ -33,7 +35,7 @@ import { sidebarStateQuery } from "@/features/sidebar";
 import { TimelinePage } from "@/features/timelines";
 import { TreePage } from "@/features/trees";
 import { WikiCardPage, WikiHome, WikiLayout, WikiMapPage, WikiTimelinePage } from "@/features/wiki";
-import { currentWorldQuery, WorldListScreen } from "@/features/world";
+import { CreateWorldDialog, currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
  * Routes (code-based, fully typed):
@@ -65,16 +67,31 @@ import { currentWorldQuery, WorldListScreen } from "@/features/world";
 
 type RouterContext = { queryClient: QueryClient };
 
-const rootRoute = createRootRouteWithContext<RouterContext>()({
-  component: () => (
+/**
+ * The app's frame: the backdrop, the world rail (V2-2+.1) beside the page,
+ * the « New world » dialog shared by the list and the rail, and the route
+ * announcer.
+ */
+function Root() {
+  const createOpen = useUiStore((state) => state.createWorldOpen);
+  const setCreateOpen = useUiStore((state) => state.setCreateWorldOpen);
+  return (
     <>
       <Backdrop />
-      <div className="relative h-screen w-screen">
-        <Outlet />
+      <div className="relative flex h-screen w-screen">
+        <WorldRail />
+        <div className="relative min-w-0 flex-1">
+          <Outlet />
+        </div>
       </div>
+      <CreateWorldDialog open={createOpen} onOpenChange={setCreateOpen} />
       <RouteAnnouncer />
     </>
-  ),
+  );
+}
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: Root,
 });
 
 const worldListRoute = createRoute({

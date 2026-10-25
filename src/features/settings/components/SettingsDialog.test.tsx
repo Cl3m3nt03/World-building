@@ -33,6 +33,7 @@ beforeEach(async () => {
       transparencyEffects: true,
       radioVolume: 70,
       radioMode: "loop",
+      worldRail: false,
     },
     recentWorlds: [],
     defaultWorldsDir: "D:/Mondes",

@@ -1018,6 +1018,8 @@ export type Preferences = {
 	/**  Radio volume, from 0 to 100. */
 	radioVolume: number,
 	radioMode: RadioMode,
+	/**  Whether the world rail (V2) is shown on the left. */
+	worldRail: boolean,
 };
 
 export type PropertyDefinition = {

@@ -101,7 +101,9 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
       return;
     }
     if (!canSubmit) return;
-    createWorld.mutate({ parentDir, name, genre, id }, { onSuccess: () => onOpenChange(false) });
+    // Closed through changeOpen: the dialog lives on (it is shared from the
+    // app's root), so the next world starts blank, with a new id.
+    createWorld.mutate({ parentDir, name, genre, id }, { onSuccess: () => changeOpen(false) });
   };
 
   const changeOpen = (next: boolean) => {
