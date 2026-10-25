@@ -9,8 +9,8 @@
 ---
 
 ## V2-2.0 — Étude de vvd avec REA (#442)
-- [ ] Clément ouvre vvd dans un Chrome dédié (port de débogage local) ; Claude observe la liste des mondes, la création d'un monde, la Home, la barre du haut et la sidebar
-- [ ] Une note par écran : zones, hiérarchie, mesures, états, interactions, raccourcis, accessibilité ; écarts voulus avec BuilderZ (local, mono-utilisateur)
+- [x] Clément ouvre vvd dans un Chrome dédié (port de débogage local) ; Claude observe la liste des mondes, la création d'un monde, la Home, la barre du haut et la sidebar
+- [x] Une note par écran : zones, hiérarchie, mesures, états, interactions, raccourcis, accessibilité ; écarts voulus avec BuilderZ (local, mono-utilisateur)
 
 **Critères d'acceptation** : aucune ressource ni ligne de code de vvd dans le dépôt ; chaque issue suivante cite sa note.
 
@@ -55,4 +55,4 @@
 - [x] E2E mis à jour pour les nouveaux écrans (liste, création, Home, barre, sidebar) à 1028×749
 - [x] Captures dans l'app réelle, deux thèmes ; issue de recette pour Clément (#458)
 
-**Critères d'acceptation** : Clément valide l'accueil et la navigation avant V2-M3.
+**Critères d'acceptation** : Clément valide l'accueil et la navigation avant V2-M3. Validé le 2026-10-25 (recette #458) ; les ajouts tirés de la session REA vont dans V2-M2+.
