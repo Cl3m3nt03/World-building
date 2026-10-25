@@ -114,6 +114,8 @@ pub struct CardType {
     pub guided_template: Vec<TemplateSection>,
     pub orientation: Orientation,
     pub canvas_format: CanvasFormat,
+    /// A new card of this type receives the guided template at once (V2-3.5).
+    pub template_on_create: bool,
     pub sort_order: i32,
 }
 
@@ -125,6 +127,7 @@ impl From<CardTypeRow> for CardType {
             guided_template: serde_json::from_str(&row.guided_template).unwrap_or_default(),
             orientation: Orientation::parse(&row.orientation),
             canvas_format: CanvasFormat::parse(&row.canvas_format),
+            template_on_create: row.template_on_create != 0,
             sort_order: i32::try_from(row.sort_order).unwrap_or(i32::MAX),
             id: row.id,
             parent_id: row.parent_id,
@@ -155,6 +158,7 @@ pub struct CardTypePatch {
     pub guided_template: Option<Vec<TemplateSection>>,
     pub orientation: Option<Orientation>,
     pub canvas_format: Option<CanvasFormat>,
+    pub template_on_create: Option<bool>,
 }
 
 fn validate_name(name: &str) -> AppResult<String> {
@@ -258,6 +262,7 @@ pub async fn create(pool: &SqlitePool, new: NewCardType) -> AppResult<CardType> 
         guided_template: "[]".into(),
         orientation: Orientation::default().as_str().into(),
         canvas_format: CanvasFormat::default().as_str().into(),
+        template_on_create: 1,
         sort_order: next_order(pool, new.parent_id.as_deref()).await?,
         parent_id: new.parent_id,
         created_at: now(),
@@ -287,6 +292,9 @@ pub async fn update(pool: &SqlitePool, id: &str, patch: CardTypePatch) -> AppRes
     }
     if let Some(format) = patch.canvas_format {
         row.canvas_format = format.as_str().into();
+    }
+    if let Some(on) = patch.template_on_create {
+        row.template_on_create = i64::from(on);
     }
     queries::update(pool, &row).await?;
     Ok(row.into())
@@ -395,6 +403,7 @@ async fn seed(pool: &SqlitePool, genre: Genre, language: Language) -> AppResult<
             guided_template: template_json(&template)?,
             orientation: Orientation::default().as_str().into(),
             canvas_format: CanvasFormat::default().as_str().into(),
+            template_on_create: 1,
             sort_order: order,
             created_at: created_at.clone(),
         };

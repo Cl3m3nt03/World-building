@@ -240,6 +240,88 @@ async fn duplicate_copies_the_subtypes() {
 }
 
 #[tokio::test]
+async fn template_on_create_is_on_by_default_and_can_be_turned_off() {
+    let fx = Fixture::new().await;
+    ensure_defaults(fx.pool(), Genre::Fantasy, Language::Fr)
+        .await
+        .unwrap();
+    // Seeded types and their subtypes apply their template at creation.
+    assert!(
+        list(fx.pool())
+            .await
+            .unwrap()
+            .iter()
+            .all(|t| t.template_on_create)
+    );
+    let artifact = create(fx.pool(), new_type("Artefact", None)).await.unwrap();
+    assert!(artifact.template_on_create);
+
+    let off = update(
+        fx.pool(),
+        &artifact.id,
+        CardTypePatch {
+            template_on_create: Some(false),
+            ..CardTypePatch::default()
+        },
+    )
+    .await
+    .unwrap();
+    assert!(!off.template_on_create);
+    assert!(
+        !get(fx.pool(), &artifact.id)
+            .await
+            .unwrap()
+            .template_on_create
+    );
+
+    // A patch that leaves the field out keeps it.
+    let renamed = update(
+        fx.pool(),
+        &artifact.id,
+        CardTypePatch {
+            name: Some("Relique".into()),
+            ..CardTypePatch::default()
+        },
+    )
+    .await
+    .unwrap();
+    assert!(!renamed.template_on_create);
+
+    let on = update(
+        fx.pool(),
+        &artifact.id,
+        CardTypePatch {
+            template_on_create: Some(true),
+            ..CardTypePatch::default()
+        },
+    )
+    .await
+    .unwrap();
+    assert!(on.template_on_create);
+}
+
+#[tokio::test]
+async fn duplicate_keeps_the_template_on_create_choice() {
+    let fx = Fixture::new().await;
+    let artifact = create(fx.pool(), new_type("Artefact", None)).await.unwrap();
+    update(
+        fx.pool(),
+        &artifact.id,
+        CardTypePatch {
+            template_on_create: Some(false),
+            ..CardTypePatch::default()
+        },
+    )
+    .await
+    .unwrap();
+
+    let copy = duplicate(fx.pool(), &artifact.id, "Artefact (copie)")
+        .await
+        .unwrap();
+    assert!(!copy.template_on_create);
+}
+
+#[tokio::test]
 async fn reorder_needs_every_sibling() {
     let fx = Fixture::new().await;
     let a = create(fx.pool(), new_type("A", None)).await.unwrap();

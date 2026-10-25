@@ -608,6 +608,8 @@ export type CardType = {
 	guidedTemplate: TemplateSection[],
 	orientation: Orientation,
 	canvasFormat: CanvasFormat,
+	/**  A new card of this type receives the guided template at once (V2-3.5). */
+	templateOnCreate: boolean,
 	sortOrder: number,
 };
 
@@ -619,6 +621,7 @@ export type CardTypePatch = {
 	guidedTemplate?: TemplateSection[] | null,
 	orientation?: Orientation | null,
 	canvasFormat?: CanvasFormat | null,
+	templateOnCreate?: boolean | null,
 };
 
 /**  A chapter, with its drafts in their order. */
