@@ -18,6 +18,7 @@ function cardType(id: string, name: string, extra: Partial<CardType> = {}): Card
     guidedTemplate: [],
     orientation: "portrait",
     canvasFormat: "standard",
+    templateOnCreate: true,
     sortOrder: 0,
     ...extra,
   };
@@ -58,6 +59,7 @@ beforeEach(() => {
                 name: patch.name ?? type.name,
                 color: patch.color ?? type.color,
                 orientation: patch.orientation ?? type.orientation,
+                templateOnCreate: patch.templateOnCreate ?? type.templateOnCreate,
               }
             : type,
         );
@@ -150,6 +152,22 @@ test("color and orientation are radio choices", async () => {
   expect(callsOf("update_card_type").map((call) => call.payload)).toEqual([
     { id: "character", patch: { color: "violet" } },
     { id: "character", patch: { orientation: "landscape" } },
+  ]);
+});
+
+test("a switch turns the template on creation off and on again", async () => {
+  renderDialog();
+  await screen.findByLabelText("Nom du type");
+  const onCreate = screen.getByRole("switch", { name: "Appliquer le modèle à la création" });
+  expect(onCreate.getAttribute("aria-checked")).toBe("true");
+
+  fireEvent.click(onCreate);
+  await waitFor(() => expect(onCreate.getAttribute("aria-checked")).toBe("false"));
+  fireEvent.click(onCreate);
+  await waitFor(() => expect(onCreate.getAttribute("aria-checked")).toBe("true"));
+  expect(callsOf("update_card_type").map((call) => call.payload)).toEqual([
+    { id: "character", patch: { templateOnCreate: false } },
+    { id: "character", patch: { templateOnCreate: true } },
   ]);
 });
 

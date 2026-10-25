@@ -61,6 +61,24 @@ export async function createCard(type: string, title: string) {
   await sidebarItem(title).waitForDisplayed({ timeoutMsg: `${title} never showed in the sidebar` });
 }
 
+/**
+ * Puts the caret where text goes in the open card: its first text block,
+ * at the end. An empty card offers "Start writing"; a new card of a type
+ * with a guided template already has its sections (V2-3.5), and the caret
+ * then lands in the first section, under its title.
+ */
+export async function writeInCard() {
+  const start = () => $("button*=Commencez à écrire");
+  const first = () => $("aria/Bloc de texte 1");
+  await browser.waitUntil(async () => (await start().isExisting()) || first().isExisting(), {
+    timeoutMsg: "the card's content never showed",
+  });
+  if (await start().isExisting()) await start().click();
+  await first().waitForDisplayed();
+  await first().click();
+  await browser.keys(["Control", "End"]);
+}
+
 export async function openCard(title: string) {
   await sidebarItem(title).click();
   await browser.waitUntil(async () => (await $("aria/Nom de la carte").getValue()) === title, {

@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
@@ -29,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { TypeProperties } from "@/features/properties";
 import type { CanvasFormat, CardType, Orientation } from "@/lib/bindings";
 import { colorLabel, TYPE_COLORS, typeColor } from "../colors";
@@ -80,6 +82,7 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
   const [newSubtype, setNewSubtype] = useState("");
   const nameId = useId();
   const subtypeId = useId();
+  const onCreateId = useId();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const Icon = typeIcon(type.icon);
 
@@ -284,6 +287,14 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
 
       <Section title={t("templates.title")}>
         <p className="-mt-1 text-sm text-muted-foreground">{t("templates.hint")}</p>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor={onCreateId}>{t("templates.onCreate")}</Label>
+          <Switch
+            id={onCreateId}
+            checked={type.templateOnCreate}
+            onCheckedChange={(templateOnCreate) => patch({ templateOnCreate })}
+          />
+        </div>
         <TemplateEditor type={type} parent={parent} />
       </Section>
 

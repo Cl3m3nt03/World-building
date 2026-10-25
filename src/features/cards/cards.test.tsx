@@ -50,6 +50,7 @@ function cardType(id: string, name: string, extra: Partial<CardType> = {}): Card
     guidedTemplate: [],
     orientation: "portrait",
     canvasFormat: "standard",
+    templateOnCreate: true,
     sortOrder: 0,
     ...extra,
   };
@@ -59,11 +60,26 @@ const TYPES = [
   cardType("character", "Personnage"),
   cardType("place", "Lieu", { icon: "map-pin", color: "green", orientation: "landscape" }),
   cardType("city", "Ville", { parentId: "place", icon: "map-pin", color: "green" }),
+  cardType("faction", "Faction", {
+    guidedTemplate: [
+      { title: "Objectifs", prompt: "Que veut cette faction ?" },
+      { title: "Membres", prompt: "" },
+    ],
+  }),
+  // A subtype without a template of its own: its type's.
+  cardType("guild", "Guilde", { parentId: "faction" }),
+  cardType("lore", "Lore", {
+    guidedTemplate: [{ title: "Résumé", prompt: "" }],
+    templateOnCreate: false,
+  }),
 ];
 
 type Call = { command: string; payload: unknown };
 let calls: Call[];
 let cards: Map<string, Card>;
+/** Saved contents, by card id. */
+let contents: Map<string, string>;
+let contentSaveFails: boolean;
 
 function newCard(id: string, title: string, typeId: string): Card {
   return {
@@ -90,6 +106,8 @@ beforeEach(() => {
   useUiStore.setState({ focusCardTitle: null, cardTypesOpen: false });
   calls = [];
   cards = new Map([["aragorn", newCard("aragorn", "Aragorn", "character")]]);
+  contents = new Map();
+  contentSaveFails = false;
   mockIPC((command, payload) => {
     calls.push({ command, payload });
     const args = payload as Record<string, unknown>;
@@ -139,6 +157,12 @@ beforeEach(() => {
           : [];
       case "list_cards":
         return [...cards.values()].filter((card) => (card.trashedAt !== null) === args.trashed);
+      case "get_card_content":
+        return contents.get(args.id as string) ?? "[]";
+      case "set_card_content":
+        if (contentSaveFails) throw new Error("disk full");
+        contents.set(args.id as string, args.content as string);
+        return null;
       case "create_card": {
         const card = newCard("new", args.title as string, args.typeId as string);
         cards.set(card.id, card);
@@ -394,4 +418,68 @@ test("the trash restores, deletes for good and empties after confirmation", asyn
   );
   fireEvent.click(screen.getByRole("button", { name: "Vider définitivement" }));
   await waitFor(() => expect(callsOf("empty_trash")).toHaveLength(1));
+});
+
+/** Creates a card of `type` from the World "Card" tile and waits for it to open. */
+async function createFromTile(type: string) {
+  const router = await renderAt("/world/demo/world");
+  await openMenu(screen.getByRole("button", { name: "Carte" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("option", { name: type }));
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/new"));
+}
+
+/** Section titles of the saved content of the new card. */
+function savedHeadings(): string[] {
+  const blocks = JSON.parse(contents.get("new") ?? "[]") as {
+    doc?: { content?: { type: string; content?: { text: string }[] }[] };
+  }[];
+  return blocks.flatMap((block) =>
+    (block.doc?.content ?? [])
+      .filter((node) => node.type === "heading")
+      .map((node) => (node.content ?? []).map((child) => child.text).join("")),
+  );
+}
+
+test("a new card starts with its type's template, saved before it opens", async () => {
+  await createFromTile("Faction");
+
+  // Saved once, right after the creation and before the card opened.
+  const order = calls.map((call) => call.command);
+  expect(order.indexOf("set_card_content")).toBeGreaterThan(order.indexOf("create_card"));
+  expect(callsOf("set_card_content")).toHaveLength(1);
+  expect(savedHeadings()).toEqual(["Objectifs", "Membres"]);
+  expect(await screen.findByRole("heading", { level: 2, name: "Objectifs" })).toBeTruthy();
+  expect(screen.getByRole("heading", { level: 2, name: "Membres" })).toBeTruthy();
+  // The title keeps the focus, selected to be typed over.
+  const title = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  await waitFor(() => expect(document.activeElement).toBe(title));
+});
+
+test("a subtype without a template of its own starts with its type's", async () => {
+  await createFromTile("Guilde");
+  await waitFor(() => expect(savedHeadings()).toEqual(["Objectifs", "Membres"]));
+});
+
+test("a type with the template on creation off gives an empty card", async () => {
+  await createFromTile("Lore");
+  await screen.findByLabelText("Nom de la carte");
+  expect(callsOf("set_card_content")).toHaveLength(0);
+});
+
+test("a type without a template gives an empty card", async () => {
+  await createFromTile("Personnage");
+  await screen.findByLabelText("Nom de la carte");
+  expect(callsOf("set_card_content")).toHaveLength(0);
+});
+
+test("the card still opens when its template cannot be saved", async () => {
+  contentSaveFails = true;
+  await createFromTile("Faction");
+  expect(callsOf("set_card_content")).toHaveLength(1);
+  expect(vi.mocked(console.warn)).toHaveBeenCalledWith(
+    "Cannot apply the template to the new card",
+    expect.anything(),
+  );
 });

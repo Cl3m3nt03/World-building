@@ -57,6 +57,7 @@ function cardType(id: string, name: string, parentId: string | null = null): Car
     guidedTemplate: [],
     orientation: "portrait",
     canvasFormat: "standard",
+    templateOnCreate: true,
     sortOrder: 0,
   };
 }

@@ -32,6 +32,7 @@ function cardType(
     guidedTemplate: template,
     orientation: "portrait",
     canvasFormat: "standard",
+    templateOnCreate: true,
     sortOrder: 0,
   };
 }
