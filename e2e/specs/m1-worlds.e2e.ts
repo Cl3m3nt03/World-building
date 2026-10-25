@@ -46,7 +46,7 @@ async function pickNext(result: string) {
   }, result);
 }
 
-const currentWorldButton = (name: string) => $(`aria/Monde courant : ${name}. Modifier le monde`);
+const currentWorldButton = (name: string) => $(`aria/Monde courant : ${name}`);
 
 async function createWorld(name: string, genre?: string) {
   await $("button=Créer un monde").click();
@@ -94,6 +94,7 @@ describe("M1: worlds, preferences and relocation", () => {
     await expect($(`h1=Bienvenue dans ${FIRST}`)).toBeDisplayed();
 
     await currentWorldButton(FIRST).click();
+    await $('//*[@role="dialog"]//button[normalize-space()="Réglages du monde"]').click();
     await $("button=Choisir une image").click();
     await pickNext(fixtureImage());
     await $("button=Importer une image").click();

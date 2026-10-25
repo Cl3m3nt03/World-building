@@ -148,12 +148,20 @@ async function renderSettings() {
 
 const updates = () => calls.filter((call) => call.command === "update_world");
 
-test("the world button of the top bar opens the general section", async () => {
+test("the world island opens the world's card, which leads to the general section", async () => {
   await renderSettings();
   act(() => useUiStore.getState().closeWorldSettings());
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-  fireEvent.click(screen.getByRole("button", { name: /Monde courant : Aldoria/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Monde courant : Aldoria" }));
+  });
+  const card = await screen.findByRole("dialog", { name: "Le monde Aldoria" });
+  expect(within(card).getByRole("button", { name: "Thème" })).toBeTruthy();
+  expect(within(card).getByRole("button", { name: "Tous les mondes" })).toBeTruthy();
+  await act(async () => {
+    fireEvent.click(within(card).getByRole("button", { name: "Réglages du monde" }));
+  });
 
   const dialog = await screen.findByRole("dialog", { name: "Réglages du monde" });
   expect(within(dialog).getByRole("tab", { name: "Général" }).getAttribute("aria-selected")).toBe(

@@ -33,7 +33,7 @@ describe("BuilderZ smoke test", () => {
     await $("button=Créer").click();
 
     // Its accessible name says which world is open and that it can be edited.
-    const currentWorld = await $(`aria/Monde courant : ${WORLD_NAME}. Modifier le monde`);
+    const currentWorld = await $(`aria/Monde courant : ${WORLD_NAME}`);
     await currentWorld.waitForDisplayed();
     await expect(currentWorld).toHaveText(expect.stringContaining(WORLD_NAME));
     await expect(browser).toHaveUrl(expect.stringContaining("/home"));

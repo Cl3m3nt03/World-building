@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useUiStore } from "@/app/stores/ui";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CardTypesDialog } from "@/features/card-types";
@@ -40,19 +40,24 @@ export function WorldLayout() {
   const { data: world } = useCurrentWorld();
   const requestSearch = useUiStore((state) => state.requestSearch);
 
-  // Ctrl+K, from anywhere in the world: the World tab and its search field.
+  // The global search: the World tab and its search field.
+  const openSearch = useCallback(() => {
+    if (pathTab !== "world") void navigate({ to: TAB_ROUTES.world, params: { worldId } });
+    requestSearch();
+  }, [pathTab, navigate, worldId, requestSearch]);
+
+  // Ctrl+K, from anywhere in the world.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "k") return;
       if (event.altKey || event.shiftKey) return;
       event.preventDefault();
-      if (pathTab !== "world") void navigate({ to: TAB_ROUTES.world, params: { worldId } });
-      requestSearch();
+      openSearch();
     };
     // Capture: before an editor or a menu handles the keys itself.
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [pathTab, navigate, worldId, requestSearch]);
+  }, [openSearch]);
 
   return (
     <Tabs
@@ -66,6 +71,7 @@ export function WorldLayout() {
       <div className="atlas-settle">
         <TopBar
           activeTab={tab}
+          onSearch={openSearch}
           // A page outside the tabs (the media library, under Home) highlights
           // Home: a click on it must still lead back there. Within a tab (a card
           // in World), the click changes nothing.

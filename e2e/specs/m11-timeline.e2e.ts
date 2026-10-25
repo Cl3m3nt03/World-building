@@ -7,7 +7,14 @@
  * - an item moved a year later, kept after reopening the world.
  */
 
-import { createCard, createWorld, currentWorldButton, openTab, sidebarItem } from "../helpers";
+import {
+  createCard,
+  createWorld,
+  currentWorldButton,
+  openTab,
+  openWorldSettings,
+  sidebarItem,
+} from "../helpers";
 
 const WORLD = "Westeros";
 const TIMELINE = "Nouvelle frise";
@@ -66,7 +73,7 @@ describe("M11: the timeline", () => {
     await createCard("Personnage", "Robert Baratheon");
     await createCard("Personnage", "Eddard Stark");
 
-    await currentWorldButton(WORLD).click();
+    await openWorldSettings(WORLD);
     await dialog().$('//*[@role="tab"][normalize-space()="Calendrier"]').click();
     await dialog().$("button=Ajouter une ère").click();
     await dialog().$("aria/Nom de l'ère").setValue("Après la Conquête");

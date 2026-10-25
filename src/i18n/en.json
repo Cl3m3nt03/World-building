@@ -1,5 +1,5 @@
 {
-  "shell.world.label": "Current world: {{name}}. Edit the world",
+  "shell.world.label": "Current world: {{name}}",
   "shell.tabs.label": "Modes",
   "shell.tabs.home": "Home",
   "shell.tabs.world": "World",
@@ -1599,5 +1599,10 @@
   "createWorld.previewName": "Your world",
   "createWorld.previewHint": "Its very own map: it will follow it everywhere.",
   "home.addCover": "Add a cover",
-  "home.changeCover": "Change the cover"
+  "home.changeCover": "Change the cover",
+  "shell.world.card": "The world {{name}}",
+  "shell.world.switch": "Switch world",
+  "shell.world.allWorlds": "All worlds",
+  "shell.actions.search": "Search",
+  "shell.actions.searchKeys": "Ctrl K"
 }
