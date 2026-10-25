@@ -555,3 +555,68 @@ async fn every_image_of_a_gallery_is_a_usage() {
         }]
     );
 }
+
+#[tokio::test]
+async fn the_world_stats_count_words_documents_and_connections() {
+    use crate::domain::documents::{self, WorldStats};
+    use crate::domain::links::{self, LinkKind};
+
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let frodo = create(fx.pool(), &character, "Frodon").await.unwrap();
+    let sam = create(fx.pool(), &character, "Sam").await.unwrap();
+    let gone = create(fx.pool(), &character, "Gollum").await.unwrap();
+    let text = |words: &str| {
+        serde_json::json!([{ "id": "a", "type": "text", "doc": { "type": "doc", "content": [
+            { "type": "paragraph", "content": [{ "type": "text", "text": words }] }
+        ] } }])
+        .to_string()
+    };
+    set_content(fx.pool(), &frodo.id, &text("Porteur de l'Anneau"))
+        .await
+        .unwrap();
+    set_content(fx.pool(), &sam.id, &text("Jardinier fidèle"))
+        .await
+        .unwrap();
+    set_content(fx.pool(), &gone.id, &text("Mon précieux trésor"))
+        .await
+        .unwrap();
+    // Frodon and Sam cite each other: one connection. Gollum, trashed, counts for nothing.
+    links::replace(
+        fx.pool(),
+        &frodo.id,
+        LinkKind::Mention,
+        None,
+        std::slice::from_ref(&sam.id),
+    )
+    .await
+    .unwrap();
+    links::replace(
+        fx.pool(),
+        &sam.id,
+        LinkKind::Mention,
+        None,
+        std::slice::from_ref(&frodo.id),
+    )
+    .await
+    .unwrap();
+    links::replace(
+        fx.pool(),
+        &gone.id,
+        LinkKind::Mention,
+        None,
+        std::slice::from_ref(&frodo.id),
+    )
+    .await
+    .unwrap();
+    documents::trash(fx.pool(), &gone.id).await.unwrap();
+
+    assert_eq!(
+        documents::stats(fx.pool()).await.unwrap(),
+        WorldStats {
+            words: 5,
+            documents: 2,
+            connections: 1
+        }
+    );
+}

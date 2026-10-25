@@ -1611,5 +1611,13 @@
   "rail.label": "Worlds",
   "rail.worlds": "All worlds",
   "rail.show": "Show the world rail",
-  "rail.fold": "Fold the world rail"
+  "rail.fold": "Fold the world rail",
+  "home.stats": "The world in figures",
+  "home.statsWords_other": "words",
+  "home.statsDocuments_other": "documents",
+  "home.statsConnections_other": "connections",
+  "home.graphEmptyTitle": "Nothing to map yet",
+  "home.statsWords_one": "word",
+  "home.statsDocuments_one": "document",
+  "home.statsConnections_one": "connection"
 }

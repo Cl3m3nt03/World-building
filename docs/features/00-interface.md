@@ -61,6 +61,13 @@ C'est la page d'accueil du monde, qu'on voit quand on revient dessus (texte du b
 
 **V2 (ADR 0012)** : la Home s'ouvre sur l'**en-tête du monde**, un grand bandeau de verre. Il porte la couverture du monde (son image principale) ou, sans image, sa propre carte (l'atlas du monde). Par-dessus, sur un papier qui monte du bas : le genre en rubrique, « Bienvenue dans… » en serif, la description (ou « Ajouter une description… ») et les chiffres clés (cartes, fichiers, cartes par type). Un îlot en haut à droite propose « Ajouter une couverture » ou « Changer la couverture » : il ouvre les réglages du monde, où l'image se choisit dans la médiathèque. Le bloc « Le monde » disparaît, puisque son contenu est passé dans l'en-tête. En dessous viennent les documents récents et l'aperçu du graph, avec « Gérer » à droite. Une vignette de document sans image montre son emblème en grand, l'icône du type pour une carte, celle du genre de document sinon, sur un papier teinté de sa couleur. Les vignettes se soulèvent au survol.
 
+**V2-M2+ (d'après vvd)** : sous l'en-tête, **le monde en chiffres**, trois compteurs :
+- les **mots** écrits, ceux des cartes et du brouillon courant de chaque chapitre ;
+- les **documents** hors corbeille ;
+- les **connexions**, c'est-à-dire les paires de documents reliés, quel que soit le lien, comptées une fois.
+
+Chaque compteur est posé sur une fine barre terminée d'un point doré. Ils viennent de Rust (`world_stats`) et sont relus à chaque retour sur la Home. Le **graph du monde passe au centre**, en grand, devant les documents récents. Sans lien, il annonce « Rien à cartographier pour le moment » et dit comment relier les cartes.
+
 Tant que le Graph n'existe pas (M5), l'aperçu est remplacé par les épingles et un résumé du monde (nombre de cartes par type).
 
 **État en M5** : l'aperçu du graph est là : toutes les cartes et leurs liens, avec la loupe et les filtres du graph (rien n'y est enregistré) ; un clic fait ressortir une carte et ses voisins, un double-clic l'ouvre. Tant qu'aucune carte n'est reliée, un texte dit comment les relier (mentions @, propriétés de type lien).

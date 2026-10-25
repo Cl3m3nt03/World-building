@@ -26,8 +26,11 @@ const IGNORE_VIEW = () => undefined;
 export function HomeGraphPreview({
   worldId,
   onOpen,
+  large = false,
 }: {
   worldId: string;
+  /** The Home's central graph (V2-2+.2): taller, with a fuller empty state. */
+  large?: boolean;
   /** Opens a card somewhere else than World (Quill's world panel). */
   onOpen?: (cardId: string) => void;
 }) {
@@ -59,7 +62,14 @@ export function HomeGraphPreview({
   if (error) return <AppErrorMessage error={error} />;
   if (!data.data || !types.data || !shown) return null;
   if (data.data.edges.length === 0) {
-    return (
+    return large ? (
+      // The large Home graph, still empty: the place it will take, and how to fill it.
+      <div className="flex h-72 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center">
+        <Share2 aria-hidden className="size-7 text-muted-foreground" strokeWidth={1.5} />
+        <p className="font-heading text-lg">{t("home.graphEmptyTitle")}</p>
+        <p className="max-w-md text-sm text-muted-foreground">{t("home.graphNoLinks")}</p>
+      </div>
+    ) : (
       <p className="flex items-center gap-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
         <Share2 aria-hidden className="size-5 shrink-0" />
         {t("home.graphNoLinks")}
@@ -70,7 +80,7 @@ export function HomeGraphPreview({
     onOpen ? onOpen(id) : void navigate(documentRoute(worldId, "card", id));
 
   return (
-    <div className="relative h-80">
+    <div className={large ? "relative h-[30rem]" : "relative h-80"}>
       {shown.nodes.length === 0 ? (
         <p className="flex h-full items-center justify-center rounded-lg bg-muted p-6 text-center text-sm text-muted-foreground">
           {t("graphs.filters.none")}

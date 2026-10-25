@@ -136,6 +136,7 @@
     "allow-set-card-content",
     "allow-count-type-cards",
     "allow-count-cards-by-type",
+    "allow-world-stats",
     "allow-list-type-properties",
     "allow-card-properties",
     "allow-create-property",

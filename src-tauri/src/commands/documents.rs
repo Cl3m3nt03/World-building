@@ -92,3 +92,10 @@ pub async fn search_documents(
 ) -> AppResult<Vec<SearchHit>> {
     search::search(&pool(&state, "search_documents").await?, &query).await
 }
+
+/// The open world in three figures (words, documents, connections), for its Home.
+#[tauri::command]
+#[specta::specta]
+pub async fn world_stats(state: State<'_, AppState>) -> AppResult<documents::WorldStats> {
+    documents::stats(&pool(&state, "world_stats").await?).await
+}

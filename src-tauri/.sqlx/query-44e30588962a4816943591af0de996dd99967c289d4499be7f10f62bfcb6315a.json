@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(SUM(dr.word_count), 0) AS \"words!: i64\"\n           FROM chapters ch JOIN drafts dr ON dr.id = ch.current_draft_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "words!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "44e30588962a4816943591af0de996dd99967c289d4499be7f10f62bfcb6315a"
+}

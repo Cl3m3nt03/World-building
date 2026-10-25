@@ -94,6 +94,8 @@ beforeEach(() => {
         return graph;
       case "recent_documents":
         return recent;
+      case "world_stats":
+        return { words: 1234, documents: 5, connections: 1 };
       case "count_cards_by_type":
         return counts;
       case "list_cards":
@@ -160,6 +162,12 @@ test("welcomes to the open world and sums it up", async () => {
   ]);
   // No link between cards yet: the graph says how to make some.
   expect(await screen.findByText(/reliez-les par des mentions @/)).toBeTruthy();
+  // The world in three figures, after vvd's Home.
+  const figures = screen.getByRole("region", { name: "Le monde en chiffres" });
+  expect(figures.textContent).toContain("mots");
+  expect(figures.textContent).toContain("5documents");
+  expect(figures.textContent).toContain("1connexion");
+  expect(screen.getByText("Rien à cartographier pour le moment")).toBeTruthy();
 });
 
 test("with no card opened yet, invites to create the first one", async () => {

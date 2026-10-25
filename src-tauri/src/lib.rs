@@ -66,6 +66,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::cards::set_card_content,
         commands::cards::count_type_cards,
         commands::cards::count_cards_by_type,
+        commands::documents::world_stats,
         commands::properties::list_type_properties,
         commands::properties::card_properties,
         commands::properties::create_property,

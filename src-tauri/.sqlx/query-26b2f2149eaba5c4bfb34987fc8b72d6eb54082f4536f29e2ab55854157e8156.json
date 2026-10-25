@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.content_text FROM cards c JOIN documents d ON d.id = c.document_id\n         WHERE d.trashed_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "content_text",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "cards",
+            "name": "content_text"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "26b2f2149eaba5c4bfb34987fc8b72d6eb54082f4536f29e2ab55854157e8156"
+}

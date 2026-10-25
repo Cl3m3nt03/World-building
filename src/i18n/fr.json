@@ -1611,5 +1611,13 @@
   "rail.label": "Mondes",
   "rail.worlds": "Tous les mondes",
   "rail.show": "Afficher le rail des mondes",
-  "rail.fold": "Replier le rail des mondes"
+  "rail.fold": "Replier le rail des mondes",
+  "home.stats": "Le monde en chiffres",
+  "home.statsWords_other": "mots",
+  "home.statsDocuments_other": "documents",
+  "home.statsConnections_other": "connexions",
+  "home.graphEmptyTitle": "Rien à cartographier pour le moment",
+  "home.statsWords_one": "mot",
+  "home.statsDocuments_one": "document",
+  "home.statsConnections_one": "connexion"
 }

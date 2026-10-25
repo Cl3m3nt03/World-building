@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-world-stats"
+description = "Enables the world_stats command without any pre-configured scope."
+commands.allow = ["world_stats"]
+
+[[permission]]
+identifier = "deny-world-stats"
+description = "Denies the world_stats command without any pre-configured scope."
+commands.deny = ["world_stats"]
