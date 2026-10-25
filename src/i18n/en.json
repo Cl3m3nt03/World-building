@@ -34,7 +34,7 @@
   "notFound.title": "Page not found",
   "notFound.description": "This page does not exist.",
   "worlds.title": "Worlds",
-  "worlds.empty": "No recent worlds. Create a world or open an existing world folder.",
+  "worlds.empty": "Each world has its own folder, cards, maps and stories. Create the first one, or open a world folder you already have.",
   "about.title": "About BuilderZ",
   "about.description": "App version and folders used on this PC.",
   "about.version": "Version",
@@ -1586,5 +1586,15 @@
   "designSystem.radio.a": "First",
   "designSystem.radio.b": "Second",
   "designSystem.tooltip": "Hover me",
-  "designSystem.tooltipContent": "A tooltip"
+  "designSystem.tooltipContent": "A tooltip",
+  "worlds.kicker": "The atlas of your worlds",
+  "worlds.welcomeTitle": "Your first world awaits",
+  "worlds.lastOpened": "Last opened",
+  "worlds.resume": "Resume",
+  "worlds.others": "Other worlds",
+  "worlds.search": "Search a world",
+  "worlds.sort": "Sort the worlds",
+  "worlds.sortRecent": "Most recent",
+  "worlds.sortName": "By name",
+  "worlds.noMatch": "No world contains “{{query}}”."
 }
