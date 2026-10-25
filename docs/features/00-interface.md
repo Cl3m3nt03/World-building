@@ -10,7 +10,12 @@ Définir la coque de l'application : comment on choisit un monde, comment on cir
 
 C'est le premier écran au lancement, et on peut y revenir à tout moment par le bouton « Mondes » en haut à droite.
 
-- Les mondes sont affichés en grille, avec l'image principale, le nom, le genre et la date de dernière ouverture. L'image est une **vignette** mise en cache à part : elle s'affiche sans ouvrir le monde. Un monde sans image montre un visuel par défaut.
+- **V2 (ADR 0012)** : l'écran est l'« atlas de vos mondes ». Il est posé sur l'atlas vivant, avec un titre en serif et le bouton des réglages dans un îlot en haut à droite.
+- Le **dernier monde ouvert** est mis en avant dans un grand bandeau : sa couverture, son nom, son genre, depuis quand il a été ouvert, et « Reprendre ». Les autres sont des « folios » en grille, sous « Autres mondes » : couverture, nom en serif, genre et date relative (« il y a 2 heures », « hier »). Au survol, le folio se soulève.
+- L'image d'un monde est une **vignette** mise en cache à part : elle s'affiche sans ouvrir le monde. Un monde sans image montre un visuel par défaut.
+- Au clavier, Tab passe d'un monde à l'autre, les flèches se déplacent dans la grille (haut et bas d'une rangée à l'autre), Début et Fin vont aux extrémités, Entrée ouvre.
+- **À partir de 7 mondes**, une recherche par nom et un tri (« Les plus récents », « Par nom ») apparaissent. Pendant une recherche ou avec le tri par nom, le bandeau laisse sa place et tous les mondes sont dans la grille ; « Aucun monde ne contient… » si rien ne correspond.
+- **Premier lancement** (aucun monde) : un accueil au centre (« Votre premier monde vous attend ») avec les deux façons d'entrer, créer un monde ou ouvrir un dossier monde.
 - On peut créer un monde (nom, genre, dossier sur le disque), ouvrir un dossier monde existant ou retirer un monde de la liste. Retirer un monde de la liste ne le supprime pas du disque.
 - Un nouveau monde est créé dans un **nouveau dossier à son nom**, à l'emplacement choisi (par défaut `Documents\BuilderZ`). L'emplacement doit donc être le dossier parent, pas le dossier du monde lui-même.
 - Revenir à la liste des mondes (bouton « Mondes ») ferme le monde ouvert.

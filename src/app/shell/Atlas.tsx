@@ -67,7 +67,16 @@ function CompassRose({ x, y, size }: { x: number; y: number; size: number }) {
  * `draw`, the contour lines draw themselves when the atlas appears: the start
  * of the entry of a world.
  */
-export function Atlas({ seed, draw = false }: { seed: string; draw?: boolean }) {
+export function Atlas({
+  seed,
+  draw = false,
+  still: alwaysStill = false,
+}: {
+  seed: string;
+  draw?: boolean;
+  /** A small atlas (a world's cover) that never follows the pointer. */
+  still?: boolean;
+}) {
   const relief = useMemo(() => atlasRelief(seed), [seed]);
   const transparency = useUiStore((state) => state.transparency);
   const reliefRef = useRef<SVGGElement>(null);
@@ -75,6 +84,7 @@ export function Atlas({ seed, draw = false }: { seed: string; draw?: boolean }) 
 
   useEffect(() => {
     const still =
+      alwaysStill ||
       transparency === "off" ||
       window.matchMedia(REDUCED_MOTION).matches ||
       window.matchMedia(REDUCED_TRANSPARENCY).matches;
@@ -103,8 +113,10 @@ export function Atlas({ seed, draw = false }: { seed: string; draw?: boolean }) 
       cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", move);
     };
-  }, [transparency]);
+  }, [transparency, alwaysStill]);
 
+  // Shrunk into a cover, the lines keep their width instead of vanishing.
+  const lineEffect = alwaysStill ? "non-scaling-stroke" : undefined;
   const graticule = [];
   for (let x = 100; x < ATLAS_WIDTH; x += 200) {
     graticule.push(<line key={`x${x}`} x1={x} y1={-40} x2={x} y2={ATLAS_HEIGHT + 40} />);
@@ -127,12 +139,24 @@ export function Atlas({ seed, draw = false }: { seed: string; draw?: boolean }) 
       <g ref={reliefRef} className={DRIFT} fill="none">
         <g stroke="var(--bz-atlas-ink)" strokeWidth={0.9}>
           {relief.contours.map((d) => (
-            <path key={d} d={d} pathLength={1} className={draw ? "atlas-draw" : undefined} />
+            <path
+              key={d}
+              d={d}
+              pathLength={1}
+              className={draw ? "atlas-draw" : undefined}
+              vectorEffect={lineEffect}
+            />
           ))}
         </g>
         <g stroke="var(--bz-atlas-ink-strong)" strokeWidth={1.3}>
           {relief.indexContours.map((d) => (
-            <path key={d} d={d} pathLength={1} className={draw ? "atlas-draw" : undefined} />
+            <path
+              key={d}
+              d={d}
+              pathLength={1}
+              className={draw ? "atlas-draw" : undefined}
+              vectorEffect={lineEffect}
+            />
           ))}
         </g>
       </g>

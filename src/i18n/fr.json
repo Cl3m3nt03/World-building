@@ -34,7 +34,7 @@
   "notFound.title": "Page introuvable",
   "notFound.description": "Cette page n'existe pas.",
   "worlds.title": "Mondes",
-  "worlds.empty": "Aucun monde récent. Créez un monde ou ouvrez un dossier monde existant.",
+  "worlds.empty": "Chaque monde a son dossier, ses cartes, ses maps et ses récits. Créez le premier, ou ouvrez un dossier monde que vous avez déjà.",
   "about.title": "À propos de BuilderZ",
   "about.description": "Version de l'application et dossiers utilisés sur ce PC.",
   "about.version": "Version",
@@ -1586,5 +1586,15 @@
   "designSystem.radio.a": "Premier",
   "designSystem.radio.b": "Second",
   "designSystem.tooltip": "Survolez-moi",
-  "designSystem.tooltipContent": "Une infobulle"
+  "designSystem.tooltipContent": "Une infobulle",
+  "worlds.kicker": "L'atlas de vos mondes",
+  "worlds.welcomeTitle": "Votre premier monde vous attend",
+  "worlds.lastOpened": "Dernier ouvert",
+  "worlds.resume": "Reprendre",
+  "worlds.others": "Autres mondes",
+  "worlds.search": "Rechercher un monde",
+  "worlds.sort": "Trier les mondes",
+  "worlds.sortRecent": "Les plus récents",
+  "worlds.sortName": "Par nom",
+  "worlds.noMatch": "Aucun monde ne contient « {{query}} »."
 }
