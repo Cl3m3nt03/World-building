@@ -423,15 +423,17 @@ fn validate_name(name: &str) -> AppResult<String> {
 /// Creates a new world of the default genre (used by the tests).
 #[cfg(test)]
 pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
-    create_with(root, name, Genre::default(), migrator).await
+    create_with(root, name, Genre::default(), None, migrator).await
 }
 
 /// Creates a new world of the given genre in `root`, which must not exist or
-/// be an empty folder.
+/// be an empty folder. `id` is the world's id when the interface chose it (to
+/// preview the world's atlas before it exists), a new one otherwise.
 pub async fn create_with(
     root: &Path,
     name: &str,
     genre: Genre,
+    id: Option<Uuid>,
     migrator: &Migrator,
 ) -> AppResult<OpenWorld> {
     let name = validate_name(name)?;
@@ -448,7 +450,7 @@ pub async fn create_with(
         return Err(AppError::WorldAlreadyExists(root.display().to_string()));
     }
 
-    let result = create_in(root, name, genre, migrator).await;
+    let result = create_in(root, name, genre, id.unwrap_or_else(Uuid::new_v4), migrator).await;
     if result.is_err() {
         // Leave the disk as it was: remove what this call created.
         let cleanup = if existed {
@@ -479,6 +481,7 @@ async fn create_in(
     root: &Path,
     name: &str,
     genre: Genre,
+    id: Uuid,
     migrator: &Migrator,
 ) -> AppResult<OpenWorld> {
     std::fs::create_dir_all(root.join(ASSETS_DIR))?;
@@ -492,7 +495,7 @@ async fn create_in(
     let created = now();
     let file = WorldFile {
         format: FORMAT.into(),
-        id: Uuid::new_v4(),
+        id,
         name: name.into(),
         genre,
         description: String::new(),

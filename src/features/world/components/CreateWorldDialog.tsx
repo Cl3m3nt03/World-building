@@ -1,6 +1,17 @@
-import { FolderOpen } from "lucide-react";
-import { type FormEvent, useEffect, useId, useState } from "react";
+import {
+  Building2,
+  Castle,
+  Cpu,
+  FolderOpen,
+  Heart,
+  type LucideIcon,
+  Rocket,
+  Sparkles,
+} from "lucide-react";
+import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
+import { type CSSProperties, type FormEvent, useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Atlas } from "@/app/shell/Atlas";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,17 +23,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { commands, type Genre } from "@/lib/bindings";
 import { openDialog as pickFolder } from "@/lib/dialogs";
-import { unwrap } from "@/lib/ipc";
-import { DEFAULT_GENRE, GENRES, isGenre } from "../genres";
+import { errorKey, unwrap } from "@/lib/ipc";
+import { DEFAULT_GENRE, GENRES, genreLabel, isGenre } from "../genres";
 import { useCreateWorld } from "../hooks/useWorlds";
 
 /** Suggested location for new worlds, from Rust (Documents\BuilderZ by default). */
@@ -30,20 +34,39 @@ function defaultParentDir(): Promise<string> {
   return unwrap(commands.defaultWorldsDir());
 }
 
+/** The emblem of each genre on its tile. */
+const GENRE_ICONS: Record<Genre, LucideIcon> = {
+  fantasy: Castle,
+  scienceFiction: Rocket,
+  romance: Heart,
+  cyberpunk: Cpu,
+  contemporary: Building2,
+  other: Sparkles,
+};
+
 type CreateWorldDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
+/**
+ * A new world (V2): its name, its genre among illustrated tiles, its folder,
+ * and beside them the world as it will be, its own atlas under its name. The
+ * interface picks the world's id so that this atlas is the one it keeps.
+ */
 export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps) {
   const { t } = useTranslation();
   const createWorld = useCreateWorld();
   const [name, setName] = useState("");
   const [genre, setGenre] = useState<Genre>(DEFAULT_GENRE);
   const [parentDir, setParentDir] = useState<string>();
+  const [id, setId] = useState(() => crypto.randomUUID());
+  const [triedEmpty, setTriedEmpty] = useState(false);
   const nameId = useId();
+  const nameErrorId = useId();
   const genreId = useId();
   const locationId = useId();
+  const locationErrorId = useId();
 
   useEffect(() => {
     if (!open || parentDir !== undefined) return;
@@ -59,21 +82,34 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
       title: t("createWorld.pickerTitle"),
       ...(parentDir === undefined ? {} : { defaultPath: parentDir }),
     });
-    if (typeof folder === "string") setParentDir(folder);
+    if (typeof folder === "string") {
+      setParentDir(folder);
+      createWorld.reset();
+    }
   };
 
-  const canSubmit = name.trim() !== "" && parentDir !== undefined && !createWorld.isPending;
+  const nameMissing = name.trim() === "";
+  const canSubmit = parentDir !== undefined && !createWorld.isPending;
+  // A folder that already holds something is the location's problem: said there.
+  const folderTaken =
+    createWorld.isError && errorKey(createWorld.error) === "errors.world_already_exists";
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (nameMissing) {
+      setTriedEmpty(true);
+      return;
+    }
     if (!canSubmit) return;
-    createWorld.mutate({ parentDir, name, genre }, { onSuccess: () => onOpenChange(false) });
+    createWorld.mutate({ parentDir, name, genre, id }, { onSuccess: () => onOpenChange(false) });
   };
 
   const changeOpen = (next: boolean) => {
     if (!next) {
       setName("");
       setGenre(DEFAULT_GENRE);
+      setId(crypto.randomUUID());
+      setTriedEmpty(false);
       createWorld.reset();
     }
     onOpenChange(next);
@@ -81,71 +117,122 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
 
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={submit} className="flex flex-col gap-4">
+      <DialogContent className="sm:max-w-3xl">
+        <form onSubmit={submit} noValidate className="flex flex-col gap-5">
           <DialogHeader>
-            <DialogTitle>{t("createWorld.title")}</DialogTitle>
+            <DialogTitle className="text-2xl">{t("createWorld.title")}</DialogTitle>
             <DialogDescription>{t("createWorld.description")}</DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={nameId} className="text-sm font-medium">
-              {t("createWorld.name")}
-            </label>
-            <Input
-              id={nameId}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("createWorld.namePlaceholder")}
-              autoFocus
-              required
-              maxLength={200}
-            />
-          </div>
+          <div className="grid gap-6 md:grid-cols-[1fr_16rem]">
+            <div className="flex min-w-0 flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={nameId} className="text-sm font-medium">
+                  {t("createWorld.name")}
+                </label>
+                <Input
+                  id={nameId}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder={t("createWorld.namePlaceholder")}
+                  autoFocus
+                  maxLength={200}
+                  aria-invalid={triedEmpty && nameMissing}
+                  aria-describedby={triedEmpty && nameMissing ? nameErrorId : undefined}
+                />
+                {triedEmpty && nameMissing && (
+                  <p id={nameErrorId} className="text-xs text-destructive">
+                    {t("createWorld.nameRequired")}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={genreId} className="text-sm font-medium">
-              {t("createWorld.genre")}
-            </label>
-            <Select
-              value={genre}
-              onValueChange={(value) => {
-                if (isGenre(value)) setGenre(value);
-              }}
-            >
-              <SelectTrigger id={genreId} className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {GENRES.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>
-                    {t(label)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">{t("createWorld.genreHint")}</p>
-          </div>
+              <div className="flex flex-col gap-1.5">
+                <span id={genreId} className="text-sm font-medium">
+                  {t("createWorld.genre")}
+                </span>
+                <RadioGroupPrimitive.Root
+                  aria-labelledby={genreId}
+                  value={genre}
+                  onValueChange={(value) => {
+                    if (isGenre(value)) setGenre(value);
+                  }}
+                  className="grid grid-cols-3 gap-2"
+                >
+                  {GENRES.map(({ value, label }) => {
+                    const Icon = GENRE_ICONS[value];
+                    return (
+                      <RadioGroupPrimitive.Item
+                        key={value}
+                        value={value}
+                        className="flex flex-col items-center gap-1.5 rounded-md border border-border bg-(--bz-field) px-2 py-3 text-sm text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-(--bz-duration-fast) ease-atlas outline-none hover:border-[color-mix(in_oklab,var(--primary)_45%,var(--input))] hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=checked]:border-primary data-[state=checked]:bg-[color-mix(in_oklab,var(--primary)_12%,transparent)] data-[state=checked]:text-foreground"
+                      >
+                        <Icon aria-hidden className="size-5" strokeWidth={1.5} />
+                        {t(label)}
+                      </RadioGroupPrimitive.Item>
+                    );
+                  })}
+                </RadioGroupPrimitive.Root>
+                <p className="text-xs text-muted-foreground">{t("createWorld.genreHint")}</p>
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={locationId} className="text-sm font-medium">
-              {t("createWorld.location")}
-            </label>
-            <div className="flex gap-2">
-              <Input
-                id={locationId}
-                value={parentDir ?? ""}
-                readOnly
-                className="font-mono text-xs"
-              />
-              <Button type="button" variant="secondary" onClick={chooseLocation}>
-                <FolderOpen />
-                {t("createWorld.chooseLocation")}
-              </Button>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={locationId} className="text-sm font-medium">
+                  {t("createWorld.location")}
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id={locationId}
+                    value={parentDir ?? ""}
+                    readOnly
+                    className="font-mono text-xs"
+                    aria-invalid={folderTaken}
+                    aria-describedby={folderTaken ? locationErrorId : undefined}
+                  />
+                  <Button type="button" variant="outline" onClick={chooseLocation}>
+                    <FolderOpen />
+                    {t("createWorld.chooseLocation")}
+                  </Button>
+                </div>
+                {folderTaken ? (
+                  <p id={locationErrorId} className="text-xs text-destructive">
+                    {t("errors.world_already_exists")}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{t("createWorld.locationHint")}</p>
+                )}
+              </div>
             </div>
+
+            {/* The world as it will be: its own atlas, its name, its genre. */}
+            <figure
+              aria-hidden
+              className="glass-panel flex flex-col self-start overflow-hidden rounded-lg"
+            >
+              <div
+                className="relative aspect-[4/3] overflow-hidden"
+                style={
+                  {
+                    background: "var(--bz-backdrop-gradient)",
+                    "--bz-atlas-ink": "var(--bz-atlas-ink-strong)",
+                  } as CSSProperties
+                }
+              >
+                <Atlas seed={id} still />
+              </div>
+              <figcaption className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3">
+                <span className="truncate font-heading text-lg leading-snug font-bold">
+                  {name.trim() || t("createWorld.previewName")}
+                </span>
+                <span className="text-xs text-muted-foreground">{t(genreLabel(genre))}</span>
+                <span className="mt-2 text-xs text-muted-foreground">
+                  {t("createWorld.previewHint")}
+                </span>
+              </figcaption>
+            </figure>
           </div>
 
-          {createWorld.isError && <AppErrorMessage error={createWorld.error} />}
+          {createWorld.isError && !folderTaken && <AppErrorMessage error={createWorld.error} />}
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => changeOpen(false)}>

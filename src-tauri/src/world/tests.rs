@@ -53,13 +53,27 @@ async fn create_lays_out_the_world_folder() {
 #[tokio::test]
 async fn create_records_the_genre() {
     let (_dir, root) = temp_root();
-    let world = create_with(&root, "Nébuleuse", Genre::ScienceFiction, &V1)
+    let world = create_with(&root, "Nébuleuse", Genre::ScienceFiction, None, &V1)
         .await
         .unwrap();
     world.close().await;
 
     let reopened = open(&root, &V1).await.unwrap();
     assert_eq!(reopened.info().genre, Genre::ScienceFiction);
+    reopened.close().await;
+}
+
+#[tokio::test]
+async fn create_keeps_the_id_chosen_by_the_interface() {
+    let (_dir, root) = temp_root();
+    let id = Uuid::parse_str("5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11").unwrap();
+    let world = create_with(&root, "Brume", Genre::Fantasy, Some(id), &V1)
+        .await
+        .unwrap();
+    world.close().await;
+
+    let reopened = open(&root, &V1).await.unwrap();
+    assert_eq!(reopened.info().id, id.to_string());
     reopened.close().await;
 }
 
