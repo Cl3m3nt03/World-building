@@ -308,6 +308,16 @@ test("changes the type, adds and removes aliases", async () => {
   ]);
 });
 
+test("the eye beside the type shows or hides the card in the wiki", async () => {
+  await renderAt("/world/demo/world/card/aragorn");
+  const eye = await screen.findByRole("button", { name: "Visible dans le wiki" });
+  expect(eye.getAttribute("aria-pressed")).toBe("false");
+  await act(async () => {
+    fireEvent.click(eye);
+  });
+  expect(callsOf("set_wiki_visible")[0]?.payload).toEqual({ id: "aragorn", visible: true });
+});
+
 test("moving a card to the trash goes back to the empty workspace", async () => {
   const router = await renderAt("/world/demo/world/card/aragorn");
 
