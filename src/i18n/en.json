@@ -1656,5 +1656,19 @@
   "properties.families.value": "Value",
   "properties.families.link": "Link to a card",
   "properties.anyCard": "Any card",
-  "properties.severalCards": "Several cards at once"
+  "properties.severalCards": "Several cards at once",
+  "blocks.formatsTitle": "This line becomes…",
+  "blocks.formats.paragraph": "Paragraph",
+  "blocks.formats.h1": "Heading 1",
+  "blocks.formats.h2": "Heading 2",
+  "blocks.formats.h3": "Heading 3",
+  "blocks.formats.bullets": "Bulleted list",
+  "blocks.formats.numbers": "Numbered list",
+  "blocks.formats.quote": "Quote",
+  "blocks.closeMenu": "Close the menu",
+  "blocks.escapeKey": "Esc",
+  "blocks.addBelow": "Add a block below",
+  "blocks.copy": "Copy the block",
+  "blocks.fold": "Fold block {{index}}",
+  "blocks.unfold": "Unfold block {{index}}"
 }

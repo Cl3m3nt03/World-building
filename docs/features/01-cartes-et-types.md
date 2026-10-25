@@ -78,6 +78,12 @@ Les blocs peuvent être réordonnés par glisser-déposer et supprimés.
 - **Détection d'entités** : les noms déjà écrits (texte collé, écrit avant la carte, lien refusé par Retour arrière, liens automatiques désactivés) sont soulignés en pointillés. Quand on place le curseur sur l'un d'eux (clic, flèches), une petite pastille « Lier à « Gondor » » apparaît dessous ; elle le transforme en mention, comme `Alt+Entrée`. Elle n'apparaît jamais pendant la frappe.
 - **Animer les nouveaux liens** : une mention créée par un lien automatique ou par « Lier » apparaît avec une courte animation, jamais si Windows demande de réduire les animations.
 
+**V2-3.4 (d'après vvd)** :
+- Les **titres** du texte d'une carte (titre 1, 2 et 3) se lisent comme des **barres de section** : le titre en serif, posé sur une fine ligne qui court sur toute la largeur.
+- Chaque bloc a, à côté de sa poignée, un bouton pour le **replier** : il ne montre plus que sa première ligne, fondue, et son contenu est hors d'atteinte. Le même bouton le **déplie**. C'est un état d'affichage, non enregistré.
+- Le menu d'un bloc gagne « **Ajouter un bloc dessous** » (sous-menu des genres de blocs) et « **Copier le bloc** » : une copie du bloc, avec son propre identifiant, sur sa propre ligne, juste sous la ligne du bloc.
+- Le menu « / » d'un texte est rangé en familles. D'abord les blocs à insérer, puis « **Cette ligne devient…** » : paragraphe, titre 1 à 3, liste à puces, liste numérotée, citation. Chaque entrée affiche son raccourci (`#`, `##`, `###`, `-`, `1.`, `>`), et « Fermer le menu · Échap » est en pied. Choisir une forme transforme la ligne où « / » a été tapé, et le curseur y reste.
+
 ## Templates guidés
 
 Chaque type peut avoir un template guidé : une liste de sections avec un titre et une question d'aide. Par exemple, pour un personnage : *Background*, *Personnalité*, *Apparence*.

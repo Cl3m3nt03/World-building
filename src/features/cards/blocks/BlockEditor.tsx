@@ -25,12 +25,22 @@ import {
   ArrowRight,
   ArrowUp,
   ChartGantt,
+  ChevronDown,
+  ChevronRight,
   Columns2,
+  Copy,
   GripVertical,
+  Heading1,
+  Heading2,
+  Heading3,
   ImageIcon,
+  List,
+  ListOrdered,
   Map as MapIcon,
   MoreHorizontal,
+  Pilcrow,
   Plus,
+  Quote,
   Rows2,
   Swords,
   Trash2,
@@ -57,6 +67,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { TemplateSection } from "@/lib/bindings";
@@ -77,9 +92,9 @@ import {
   WIDTH_STEP,
 } from "./layout";
 import { MapBlockView } from "./MapBlockView";
-import { type Block, type BlockType, newBlock } from "./model";
+import { type Block, type BlockType, copyOfBlock, newBlock } from "./model";
 import { Stats5eBlockView } from "./stats/Stats5eBlockView";
-import { TextBlockEditor } from "./TextBlockEditor";
+import { TextBlockEditor, type TextFormat } from "./TextBlockEditor";
 import { TimelineBlockView } from "./TimelineBlockView";
 import { templateBlocks } from "./template";
 import { useCardContent, useSaveCardContent } from "./useCardContent";
@@ -122,15 +137,45 @@ const BLOCK_LABELS = {
   timeline: "blocks.timelineLabel",
 } as const satisfies Record<BlockType, string>;
 
-/** Menu of block types; `children` is the trigger, or the menu is controlled. */
+/** What « / » can make of its line, with the shortcut that does the same. */
+const TEXT_FORMATS: {
+  kind: TextFormat;
+  icon: typeof Type;
+  label:
+    | "blocks.formats.paragraph"
+    | "blocks.formats.h1"
+    | "blocks.formats.h2"
+    | "blocks.formats.h3"
+    | "blocks.formats.bullets"
+    | "blocks.formats.numbers"
+    | "blocks.formats.quote";
+  shortcut: string;
+}[] = [
+  { kind: "paragraph", icon: Pilcrow, label: "blocks.formats.paragraph", shortcut: "" },
+  { kind: "h1", icon: Heading1, label: "blocks.formats.h1", shortcut: "#" },
+  { kind: "h2", icon: Heading2, label: "blocks.formats.h2", shortcut: "##" },
+  { kind: "h3", icon: Heading3, label: "blocks.formats.h3", shortcut: "###" },
+  { kind: "bullets", icon: List, label: "blocks.formats.bullets", shortcut: "-" },
+  { kind: "numbers", icon: ListOrdered, label: "blocks.formats.numbers", shortcut: "1." },
+  { kind: "quote", icon: Quote, label: "blocks.formats.quote", shortcut: ">" },
+];
+
+/**
+ * Menu of block types; `children` is the trigger, or the menu is controlled.
+ * Opened by « / » in a text (V2-3.4, after vvd), it also offers what the
+ * line can become, in a second family, with each shortcut shown.
+ */
 function BlockTypeMenu({
   onPick,
+  onFormat,
   open,
   onOpenChange,
   onCloseAutoFocus,
   children,
 }: {
   onPick: (type: BlockType) => void;
+  /** The « / » menu of a text: the line's own formats. */
+  onFormat?: (kind: TextFormat) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   /** Where the focus goes when the menu closes (default: back to its trigger). */
@@ -156,6 +201,24 @@ function BlockTypeMenu({
             {t(label)}
           </DropdownMenuItem>
         ))}
+        {onFormat && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>{t("blocks.formatsTitle")}</DropdownMenuLabel>
+            {TEXT_FORMATS.map(({ kind, icon: Icon, label, shortcut }) => (
+              <DropdownMenuItem key={kind} onSelect={() => onFormat(kind)}>
+                <Icon />
+                {t(label)}
+                {shortcut && <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <p className="flex justify-between px-2 py-1 text-xs text-muted-foreground">
+              {t("blocks.closeMenu")}
+              <kbd className="font-sans">{t("blocks.escapeKey")}</kbd>
+            </p>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -254,6 +317,7 @@ function SortableBlock({
   place,
   onChange,
   onInsertAfter,
+  onCopy,
   onDelete,
 }: {
   cardId: string;
@@ -267,10 +331,14 @@ function SortableBlock({
   place: PlaceActions;
   onChange: (block: Block) => void;
   onInsertAfter: (type: BlockType) => void;
+  onCopy: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
   const [slashOpen, setSlashOpen] = useState(false);
+  // Folded (V2-3.4): the block shows its first line only, until unfolded.
+  const [folded, setFolded] = useState(false);
+  const formatSlashLine = useRef<((kind: TextFormat) => void) | null>(null);
   const removeSlashLine = useRef<(() => void) | null>(null);
   const refocusSlashLine = useRef<(() => void) | null>(null);
   const picked = useRef(false);
@@ -313,6 +381,19 @@ function SortableBlock({
           {...listeners}
         >
           <GripVertical />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={
+            folded
+              ? t("blocks.unfold", { index: index + 1 })
+              : t("blocks.fold", { index: index + 1 })
+          }
+          aria-expanded={!folded}
+          onClick={() => setFolded(!folded)}
+        >
+          {folded ? <ChevronRight /> : <ChevronDown />}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -360,6 +441,26 @@ function SortableBlock({
                 {t("blocks.joinPrevious")}
               </DropdownMenuItem>
             )}
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Plus />
+                {t("blocks.addBelow")}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
+                  <DropdownMenuItem key={type} onSelect={() => onInsertAfter(type)}>
+                    <Icon />
+                    {t(label)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem onSelect={onCopy}>
+              <Copy />
+              {t("blocks.copy")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={onDelete}>
               <Trash2 />
               {t("blocks.delete")}
@@ -367,7 +468,11 @@ function SortableBlock({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="relative min-w-0 flex-1">
+      <div
+        className={`relative min-w-0 flex-1 ${folded ? "max-h-10 overflow-hidden [mask-image:linear-gradient(to_bottom,black_40%,transparent)]" : ""}`}
+        // Folded, its content stays in the page but is out of reach.
+        inert={folded}
+      >
         {block.type === "text" ? (
           <TextBlockEditor
             cardId={cardId}
@@ -375,9 +480,10 @@ function SortableBlock({
             label={label}
             autoFocus={focus}
             onChange={(doc) => onChange({ ...block, doc })}
-            onSlash={(removeLine, refocus) => {
+            onSlash={(removeLine, refocus, format) => {
               removeSlashLine.current = removeLine;
               refocusSlashLine.current = refocus;
+              formatSlashLine.current = format;
               picked.current = false;
               setSlashOpen(true);
             }}
@@ -408,6 +514,15 @@ function SortableBlock({
             removeSlashLine.current?.();
             onInsertAfter(type);
           }}
+          {...(block.type === "text"
+            ? {
+                onFormat: (kind: TextFormat) => {
+                  picked.current = true;
+                  setSlashOpen(false);
+                  formatSlashLine.current?.(kind);
+                },
+              }
+            : {})}
         >
           <span aria-hidden className="absolute bottom-0 left-2 size-0" />
         </BlockTypeMenu>
@@ -529,6 +644,15 @@ export function BlockEditor({
   const insertAfter = (id: string, type: BlockType) => {
     const last = rowOf(current.current, id)?.row.blocks.at(-1);
     insert(current.current.findIndex((block) => block.id === last?.id) + 1, type);
+  };
+  /** A copy of the block `id` (new id, own line) right under its line. */
+  const copyAfter = (id: string) => {
+    const source = current.current.find((block) => block.id === id);
+    const last = rowOf(current.current, id)?.row.blocks.at(-1);
+    if (!source) return;
+    const copy = copyOfBlock(source);
+    const index = current.current.findIndex((block) => block.id === last?.id) + 1;
+    update((previous) => [...previous.slice(0, index), copy, ...previous.slice(index)], true);
   };
   const lines = rows(blocks);
   const hasLines = lines.some((line) => line.blocks.length > 1);
@@ -694,6 +818,7 @@ export function BlockEditor({
                             )
                           }
                           onInsertAfter={(type) => insertAfter(block.id, type)}
+                          onCopy={() => copyAfter(block.id)}
                           onDelete={() =>
                             update(
                               (previous) => previous.filter((other) => other.id !== block.id),
