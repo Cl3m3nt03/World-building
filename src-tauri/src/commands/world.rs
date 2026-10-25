@@ -16,7 +16,8 @@ use crate::world::{
 };
 
 /// Creates a world named `name`, of the given genre, in a new folder inside
-/// `parent_dir` (the folder is named after the world), and opens it.
+/// `parent_dir` (the folder is named after the world), and opens it. `id`,
+/// a UUID chosen by the interface, lets it preview the world's atlas.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_world(
@@ -24,9 +25,16 @@ pub async fn create_world(
     parent_dir: String,
     name: String,
     genre: Genre,
+    id: Option<String>,
 ) -> AppResult<WorldInfo> {
+    let id = id
+        .map(|id| {
+            uuid::Uuid::parse_str(&id)
+                .map_err(|_| AppError::InvalidInput(format!("world id is not a UUID: {id}")))
+        })
+        .transpose()?;
     let root = Path::new(&parent_dir).join(world::folder_name(&name)?);
-    let world = world::create_with(&root, &name, genre, &db::MIGRATOR).await?;
+    let world = world::create_with(&root, &name, genre, id, &db::MIGRATOR).await?;
     ensure_card_types(&state, &world).await;
     Ok(activate(&state, world).await)
 }

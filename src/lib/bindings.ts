@@ -325,9 +325,10 @@ export const commands = {
 	setSidebarState: (sidebar: SidebarState) => typedError<SidebarState, AppError>(__TAURI_INVOKE("set_sidebar_state", { sidebar })),
 	/**
 	 *  Creates a world named `name`, of the given genre, in a new folder inside
-	 *  `parent_dir` (the folder is named after the world), and opens it.
+	 *  `parent_dir` (the folder is named after the world), and opens it. `id`,
+	 *  a UUID chosen by the interface, lets it preview the world's atlas.
 	 */
-	createWorld: (parentDir: string, name: string, genre: Genre) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre })),
+	createWorld: (parentDir: string, name: string, genre: Genre, id: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre, id })),
 	/**
 	 *  Opens the world in `path`, migrating it if needed. Closes the world that
 	 *  was open, if any.

@@ -51,8 +51,18 @@ export function useCreateWorld() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   return useMutation({
-    mutationFn: ({ parentDir, name, genre }: { parentDir: string; name: string; genre: Genre }) =>
-      unwrap(commands.createWorld(parentDir, name, genre)),
+    mutationFn: ({
+      parentDir,
+      name,
+      genre,
+      id = null,
+    }: {
+      parentDir: string;
+      name: string;
+      genre: Genre;
+      /** The id chosen by the interface (to preview the world's atlas). */
+      id?: string | null;
+    }) => unwrap(commands.createWorld(parentDir, name, genre, id)),
     onSuccess: async (world) => {
       onWorldOpened(queryClient, world);
       await navigate({ to: "/world/$worldId/home", params: { worldId: world.id } });

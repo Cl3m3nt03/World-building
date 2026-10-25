@@ -1596,5 +1596,9 @@
   "worlds.sort": "Trier les mondes",
   "worlds.sortRecent": "Les plus récents",
   "worlds.sortName": "Par nom",
-  "worlds.noMatch": "Aucun monde ne contient « {{query}} »."
+  "worlds.noMatch": "Aucun monde ne contient « {{query}} ».",
+  "createWorld.nameRequired": "Donnez un nom à votre monde.",
+  "createWorld.locationHint": "Un dossier à son nom y sera créé.",
+  "createWorld.previewName": "Votre monde",
+  "createWorld.previewHint": "Sa carte, à lui seul : elle l'accompagnera partout."
 }

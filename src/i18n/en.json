@@ -1596,5 +1596,9 @@
   "worlds.sort": "Sort the worlds",
   "worlds.sortRecent": "Most recent",
   "worlds.sortName": "By name",
-  "worlds.noMatch": "No world contains “{{query}}”."
+  "worlds.noMatch": "No world contains “{{query}}”.",
+  "createWorld.nameRequired": "Give your world a name.",
+  "createWorld.locationHint": "A folder named after it will be created there.",
+  "createWorld.previewName": "Your world",
+  "createWorld.previewHint": "Its very own map: it will follow it everywhere."
 }

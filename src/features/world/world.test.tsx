@@ -169,15 +169,14 @@ test("creates a world of the chosen genre", async () => {
   );
   fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Nébuleuse" } });
 
-  const genre = screen.getByRole("combobox", { name: "Genre" });
-  expect(genre.textContent).toContain("Fantasy");
+  const genres = screen.getByRole("radiogroup", { name: "Genre" });
+  expect(screen.getByRole("radio", { name: "Fantasy" }).getAttribute("aria-checked")).toBe("true");
+  const scienceFiction = screen.getByRole("radio", { name: "Science-fiction" });
   await act(async () => {
-    fireEvent.pointerDown(genre, { button: 0, pointerType: "mouse" });
+    fireEvent.click(scienceFiction);
   });
-  await act(async () => {
-    fireEvent.click(await screen.findByRole("option", { name: "Science-fiction" }));
-  });
-  expect(genre.textContent).toContain("Science-fiction");
+  expect(scienceFiction.getAttribute("aria-checked")).toBe("true");
+  expect(genres.textContent).toContain("Romance");
 
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "Créer" }));
@@ -188,6 +187,58 @@ test("creates a world of the chosen genre", async () => {
     name: "Nébuleuse",
     genre: "scienceFiction",
   });
+});
+
+test("asks for a name on the spot, and sends the id of the previewed atlas", async () => {
+  await renderStartScreen();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer un monde" }));
+  });
+  await waitFor(() =>
+    expect((screen.getByLabelText("Emplacement") as HTMLInputElement).value).not.toBe(""),
+  );
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+  });
+  const name = screen.getByLabelText("Nom");
+  expect(name.getAttribute("aria-invalid")).toBe("true");
+  expect(screen.getByText("Donnez un nom à votre monde.")).toBeDefined();
+  expect(calls.some((call) => call.command === "create_world")).toBe(false);
+
+  fireEvent.change(name, { target: { value: "Brume" } });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+  });
+  const payload = calls.find((call) => call.command === "create_world")?.payload as {
+    id: string;
+  };
+  expect(payload.id).toMatch(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+  );
+});
+
+test("says under the location when its folder already holds something", async () => {
+  mockIPC((command) => {
+    if (command === "get_settings") return SETTINGS;
+    if (command === "default_worlds_dir") return "C:/Users/me/Documents/BuilderZ";
+    if (command === "create_world") {
+      throw { code: "world_already_exists", message: "C:/Users/me/Documents/BuilderZ/Brume" };
+    }
+    return null;
+  });
+  await renderStartScreen();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer un monde" }));
+  });
+  const location = await screen.findByLabelText("Emplacement");
+  await waitFor(() => expect((location as HTMLInputElement).value).not.toBe(""));
+  fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Brume" } });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+  });
+  await waitFor(() => expect(location.getAttribute("aria-invalid")).toBe("true"));
+  expect(location.getAttribute("aria-describedby")).toBeTruthy();
+  expect(screen.getByText(/Ce dossier n'est pas vide/)).toBeDefined();
 });
 
 test("shows a translated error when a world cannot be opened", async () => {

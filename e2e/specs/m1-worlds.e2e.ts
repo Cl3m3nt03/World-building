@@ -54,8 +54,7 @@ async function createWorld(name: string, genre?: string) {
   await nameInput.waitForDisplayed();
   await nameInput.setValue(name);
   if (genre) {
-    await $('[role="dialog"] button[role="combobox"]').click();
-    await $(`//*[@role="option"][normalize-space()="${genre}"]`).click();
+    await $(`//*[@role="dialog"]//*[@role="radio"][normalize-space()="${genre}"]`).click();
   }
   await $("button=Créer").click();
   await currentWorldButton(name).waitForDisplayed();
