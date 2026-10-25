@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/Cl3m3nt03/World-building/compare/v1.5.0...v1.6.0) (2026-10-25)
+
+
+### Fonctionnalités
+
+* **home:** open the world's Home on the world itself ([#454](https://github.com/Cl3m3nt03/World-building/issues/454)) ([87d33b6](https://github.com/Cl3m3nt03/World-building/commit/87d33b613c4383f0ec99779b846b7ab62df77537))
+* **shell:** navigations fade in and are announced ([#457](https://github.com/Cl3m3nt03/World-building/issues/457)) ([82ee488](https://github.com/Cl3m3nt03/World-building/commit/82ee488cf2f644d54c1633498af634541ad4ff6b)), closes [#448](https://github.com/Cl3m3nt03/World-building/issues/448)
+* **shell:** the world island, a sliding tab pill and a search button ([#455](https://github.com/Cl3m3nt03/World-building/issues/455)) ([52958fd](https://github.com/Cl3m3nt03/World-building/commit/52958fde7ec0ab4d5aa79b2a39207d1fedfec77f)), closes [#446](https://github.com/Cl3m3nt03/World-building/issues/446)
+* **sidebar:** a sidebar that fits its own width ([#456](https://github.com/Cl3m3nt03/World-building/issues/456)) ([afa176c](https://github.com/Cl3m3nt03/World-building/commit/afa176cbcd73d3870c27592ab0b28d3581e0ed3b)), closes [#447](https://github.com/Cl3m3nt03/World-building/issues/447)
+* **worlds:** create a world beside a preview of its atlas ([#452](https://github.com/Cl3m3nt03/World-building/issues/452)) ([4d97c75](https://github.com/Cl3m3nt03/World-building/commit/4d97c750c645bb50a0d5a63185c509a0c468e3a7))
+* **worlds:** the start screen as the atlas of your worlds ([#451](https://github.com/Cl3m3nt03/World-building/issues/451)) ([aa9e185](https://github.com/Cl3m3nt03/World-building/commit/aa9e1856b4943c16603b895c90f984c774c28abd)), closes [#443](https://github.com/Cl3m3nt03/World-building/issues/443) [#442](https://github.com/Cl3m3nt03/World-building/issues/442)
+
 ## [1.5.0](https://github.com/Cl3m3nt03/World-building/compare/v1.4.0...v1.5.0) (2026-10-23)
 
 
