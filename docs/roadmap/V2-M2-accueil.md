@@ -22,7 +22,7 @@
 **Critères d'acceptation** : clavier complet (flèches dans la grille, Entrée ouvre) ; 1028×749 sans débordement ; deux thèmes.
 
 ## V2-2.2 — Création d'un monde (#444)
-- [ ] Un dialogue en étapes courtes : nom, genre (choix illustrés), image (facultative), dossier ; aperçu du monde (son atlas, son accent)
+- [ ] Un dialogue court en deux colonnes : nom, genre (choix illustrés), dossier, et l'aperçu du monde (son atlas, son nom) ; l'image se choisit ensuite depuis la Home (V2-2.3), car elle entre dans la médiathèque du monde
 - [ ] Le monde s'ouvre sur sa Home avec la séquence d'entrée
 
 **Critères d'acceptation** : créable au clavier seul ; erreurs (nom vide, dossier existant, disque) expliquées sur place.
