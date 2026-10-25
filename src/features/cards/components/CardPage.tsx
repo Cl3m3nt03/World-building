@@ -31,6 +31,7 @@ import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, CardType } from "@/lib/bindings";
 import { wikiCardRoute } from "@/lib/documentRoute";
 import { usePendingSave } from "@/lib/pendingSaves";
+import { cn } from "@/lib/utils";
 import type { BlockEditorHandle } from "../blocks/BlockEditor";
 import { effectiveTemplate } from "../blocks/template";
 import {
@@ -215,7 +216,13 @@ function Aliases({ card }: { card: Card }) {
             maxLength={200}
             placeholder={t("cards.addAliasShort")}
             onChange={(event) => setDraft(event.target.value)}
-            className="h-6 w-28 rounded-full border border-dashed border-border bg-transparent px-2.5 text-sm outline-none placeholder:text-muted-foreground focus:w-44 focus:border-solid focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas"
+            // Stays wide while it holds a draft: a field shrinking on blur would
+            // slide the « Ajouter » button away from under the pointer.
+            className={cn(
+              "h-6 rounded-full border border-dashed border-border bg-transparent px-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-solid",
+              draft === "" ? "w-28 focus:w-44" : "w-44",
+              "focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas",
+            )}
           />
           {draft.trim() !== "" && (
             <Button
