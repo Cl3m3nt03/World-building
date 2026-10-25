@@ -25,6 +25,14 @@ C'est le premier écran au lancement, et on peut y revenir à tout moment par le
 - Chaque carte a un menu : Ouvrir, Afficher dans l'Explorateur, Retirer de la liste. Retirer demande une confirmation et ne touche jamais au dossier.
 - Un monde introuvable, parce que son dossier a été déplacé ou supprimé, est signalé (« Introuvable ») au lieu d'échouer à l'ouverture. « Relocaliser » demande son nouveau dossier, qui doit contenir **le même monde** (même identifiant) ; il garde alors sa place dans la liste. Si le dossier choisi contient un autre monde, un message le dit (« Ce dossier contient un autre monde… ») et la liste ne change pas.
 
+## Rail des mondes (V2-M2+, d'après vvd)
+
+Une colonne fine de verre, à gauche, sur la liste des mondes comme dans un monde. Elle est **repliée par défaut**. Un bouton l'affiche : en haut à gauche de la liste des mondes, ou devant l'îlot du monde dans la barre du haut. Le même bouton, en tête du rail, la replie. Ce choix est gardé dans les réglages de l'app (`worldRail`). Repliée, elle ne prend aucune place.
+
+- De haut en bas : « Tous les mondes » (la liste, en cours quand aucun monde n'est ouvert), puis un emblème rond par monde récent (sa couverture, ou sa propre carte), le monde ouvert cerclé d'or. Viennent ensuite « Créer un monde » (le même dialogue que la liste) et, tout en bas, les réglages de l'app.
+- Un clic sur un emblème ouvre ce monde, d'où qu'on soit. Chaque élément a son nom en info-bulle, à droite.
+- Au clavier : Tab entre dans le rail, les flèches haut et bas passent d'un élément à l'autre, Début et Fin vont aux extrémités, Entrée ouvre.
+
 ## Coque d'un monde ouvert
 
 - **En haut à gauche** : le monde courant, avec la miniature de son image principale. Un clic ouvre les **réglages du monde** (voir plus bas), sur la section Général.

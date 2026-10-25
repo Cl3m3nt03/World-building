@@ -1607,5 +1607,9 @@
   "shell.actions.searchKeys": "Ctrl K",
   "shell.appName": "BuilderZ",
   "shell.pageTitle": "{{title}} · BuilderZ",
-  "shell.pageAnnounce": "Page : {{title}}"
+  "shell.pageAnnounce": "Page : {{title}}",
+  "rail.label": "Mondes",
+  "rail.worlds": "Tous les mondes",
+  "rail.show": "Afficher le rail des mondes",
+  "rail.fold": "Replier le rail des mondes"
 }

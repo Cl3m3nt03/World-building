@@ -17,6 +17,7 @@ export async function loadPreferences(): Promise<Language> {
       transparency: preferences.transparencyEffects ? "on" : "off",
       radioVolume: preferences.radioVolume,
       radioMode: preferences.radioMode,
+      worldRail: preferences.worldRail,
     });
     return preferences.language;
   } catch (error) {
@@ -28,13 +29,14 @@ export async function loadPreferences(): Promise<Language> {
 function currentPreferences(): Preferences | undefined {
   const language = i18n.resolvedLanguage ?? i18n.language;
   if (!isLanguage(language)) return undefined;
-  const { theme, transparency, radioVolume, radioMode } = useUiStore.getState();
+  const { theme, transparency, radioVolume, radioMode, worldRail } = useUiStore.getState();
   return {
     language,
     theme,
     transparencyEffects: transparency === "on",
     radioVolume,
     radioMode,
+    worldRail,
   };
 }
 
@@ -57,7 +59,8 @@ export function usePreferencesSync(): void {
       if (
         state.theme !== previous.theme ||
         state.transparency !== previous.transparency ||
-        state.radioMode !== previous.radioMode
+        state.radioMode !== previous.radioMode ||
+        state.worldRail !== previous.worldRail
       ) {
         save();
       } else if (state.radioVolume !== previous.radioVolume) {

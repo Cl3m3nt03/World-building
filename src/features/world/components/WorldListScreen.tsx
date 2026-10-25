@@ -1,6 +1,8 @@
 import { Compass, FolderOpen, Plus, Search } from "lucide-react";
 import { type KeyboardEvent, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RailToggle } from "@/app/shell/WorldRail";
+import { useUiStore } from "@/app/stores/ui";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +31,6 @@ import {
   useRevealWorld,
 } from "../hooks/useRecentWorlds";
 import { useOpenWorld } from "../hooks/useWorlds";
-import { CreateWorldDialog } from "./CreateWorldDialog";
 import { WorldCard } from "./WorldCard";
 
 /** From this many worlds on, the list can be searched and sorted. */
@@ -84,7 +85,8 @@ export function WorldListScreen() {
   const removeWorld = useRemoveRecentWorld();
   const relocateWorld = useRelocateRecentWorld();
   const revealWorld = useRevealWorld();
-  const [createOpen, setCreateOpen] = useState(false);
+  const setCreateOpen = useUiStore((state) => state.setCreateWorldOpen);
+  const railShown = useUiStore((state) => state.worldRail);
   const [removing, setRemoving] = useState<RecentWorld | null>(null);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
@@ -153,6 +155,7 @@ export function WorldListScreen() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Outside the settling column: its animation would make it the button's frame. */}
+      {!railShown && <RailToggle className="glass-veil fixed top-3 left-3 z-10" />}
       <SettingsButton className="glass-veil fixed top-3 right-5 z-10 rounded-full" />
       <main className="atlas-settle mx-auto flex w-full max-w-5xl flex-col gap-6 px-8 pt-14 pb-10">
         <header className="flex flex-wrap items-end justify-between gap-4">
@@ -231,8 +234,6 @@ export function WorldListScreen() {
             )}
           </>
         )}
-
-        <CreateWorldDialog open={createOpen} onOpenChange={setCreateOpen} />
 
         <Dialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
           <DialogContent className="sm:max-w-md">

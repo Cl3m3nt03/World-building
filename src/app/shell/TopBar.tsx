@@ -1,6 +1,7 @@
 import { BookOpen, Feather, Globe, House, LayoutGrid, type LucideIcon, Search } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useUiStore } from "@/app/stores/ui";
 import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import { SettingsButton } from "@/features/settings";
 import { useCloseWorld, useCurrentWorld } from "@/features/world";
 import type { TranslationKey } from "@/i18n";
 import { WorldIsland } from "./WorldIsland";
+import { RailToggle } from "./WorldRail";
 
 export type ShellTab = "home" | "world" | "wiki" | "quill";
 
@@ -58,10 +60,12 @@ export function TopBar({ activeTab, onTabClick, onSearch }: TopBarProps) {
   const { data: world } = useCurrentWorld();
   const closeWorld = useCloseWorld();
   const { listRef, pill } = useActivePill(activeTab);
+  const railShown = useUiStore((state) => state.worldRail);
   return (
     <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
       {/* Left island: current world */}
-      <div className="justify-self-start">
+      <div className="flex items-center gap-1 justify-self-start">
+        {!railShown && <RailToggle className="glass-veil size-10" />}
         <WorldIsland />
       </div>
 

@@ -5,6 +5,7 @@ import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { createAppRouter } from "@/app/router";
+import { useUiStore } from "@/app/stores/ui";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppSettings, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
@@ -32,6 +33,7 @@ const SETTINGS: AppSettings = {
     transparencyEffects: true,
     radioVolume: 70,
     radioMode: "loop",
+    worldRail: false,
   },
   recentWorlds: [
     {
@@ -97,6 +99,8 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   clearMocks();
+  // The « New world » dialog lives in the UI store: closed for the next test.
+  useUiStore.setState({ createWorldOpen: false });
 });
 
 async function renderStartScreen() {

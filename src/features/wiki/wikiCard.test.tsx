@@ -40,6 +40,7 @@ const SETTINGS: AppSettings = {
     transparencyEffects: true,
     radioVolume: 70,
     radioMode: "loop",
+    worldRail: false,
   },
   recentWorlds: [],
   defaultWorldsDir: null,
