@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, parent_id, name, icon, color, guided_template, orientation,\n                canvas_format, sort_order, created_at\n         FROM card_types ORDER BY sort_order, created_at",
+  "query": "SELECT id, parent_id, name, icon, color, guided_template, orientation,\n                canvas_format, template_on_create, sort_order, created_at\n         FROM card_types WHERE parent_id IS ?\n         ORDER BY sort_order, created_at",
   "describe": {
     "columns": [
       {
@@ -92,8 +92,19 @@
         }
       },
       {
-        "name": "sort_order",
+        "name": "template_on_create",
         "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "card_types",
+            "name": "template_on_create"
+          }
+        }
+      },
+      {
+        "name": "sort_order",
+        "ordinal": 9,
         "type_info": "Integer",
         "origin": {
           "Table": {
@@ -104,7 +115,7 @@
       },
       {
         "name": "created_at",
-        "ordinal": 9,
+        "ordinal": 10,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -115,7 +126,7 @@
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false,
@@ -127,8 +138,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "1f49dc73d255214ac0413547128ab36b5ecd8cd685999e81f929948bf9fd4e06"
+  "hash": "692552f5f7d970cce917ae2d8b1c762a16cf300db9fc7f055edf2b34933c243a"
 }

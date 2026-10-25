@@ -14,6 +14,8 @@ pub struct CardTypeRow {
     pub guided_template: String,
     pub orientation: String,
     pub canvas_format: String,
+    /// The guided template is applied to a new card at once (V2-3.5).
+    pub template_on_create: i64,
     pub sort_order: i64,
     pub created_at: String,
 }
@@ -21,8 +23,9 @@ pub struct CardTypeRow {
 pub async fn insert(tx: &mut Transaction<'_, Sqlite>, row: &CardTypeRow) -> AppResult<()> {
     sqlx::query!(
         "INSERT INTO card_types (id, parent_id, name, icon, color, guided_template,
-                                 orientation, canvas_format, sort_order, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                 orientation, canvas_format, template_on_create, sort_order,
+                                 created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         row.id,
         row.parent_id,
         row.name,
@@ -31,6 +34,7 @@ pub async fn insert(tx: &mut Transaction<'_, Sqlite>, row: &CardTypeRow) -> AppR
         row.guided_template,
         row.orientation,
         row.canvas_format,
+        row.template_on_create,
         row.sort_order,
         row.created_at,
     )
@@ -43,7 +47,7 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Option<CardTypeRow>> 
     Ok(sqlx::query_as!(
         CardTypeRow,
         "SELECT id, parent_id, name, icon, color, guided_template, orientation,
-                canvas_format, sort_order, created_at
+                canvas_format, template_on_create, sort_order, created_at
          FROM card_types WHERE id = ?",
         id
     )
@@ -57,7 +61,7 @@ pub async fn list(pool: &SqlitePool) -> AppResult<Vec<CardTypeRow>> {
     Ok(sqlx::query_as!(
         CardTypeRow,
         "SELECT id, parent_id, name, icon, color, guided_template, orientation,
-                canvas_format, sort_order, created_at
+                canvas_format, template_on_create, sort_order, created_at
          FROM card_types ORDER BY sort_order, created_at"
     )
     .fetch_all(pool)
@@ -69,7 +73,7 @@ pub async fn siblings(pool: &SqlitePool, parent_id: Option<&str>) -> AppResult<V
     Ok(sqlx::query_as!(
         CardTypeRow,
         "SELECT id, parent_id, name, icon, color, guided_template, orientation,
-                canvas_format, sort_order, created_at
+                canvas_format, template_on_create, sort_order, created_at
          FROM card_types WHERE parent_id IS ?
          ORDER BY sort_order, created_at",
         parent_id
@@ -82,7 +86,7 @@ pub async fn update(pool: &SqlitePool, row: &CardTypeRow) -> AppResult<()> {
     sqlx::query!(
         "UPDATE card_types
          SET name = ?, icon = ?, color = ?, guided_template = ?, orientation = ?,
-             canvas_format = ?
+             canvas_format = ?, template_on_create = ?
          WHERE id = ?",
         row.name,
         row.icon,
@@ -90,6 +94,7 @@ pub async fn update(pool: &SqlitePool, row: &CardTypeRow) -> AppResult<()> {
         row.guided_template,
         row.orientation,
         row.canvas_format,
+        row.template_on_create,
         row.id,
     )
     .execute(pool)
