@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { ErrorScreen, NotFoundScreen } from "@/app/ErrorScreen";
 import { Backdrop } from "@/app/shell/Backdrop";
+import { RouteAnnouncer } from "@/app/shell/RouteAnnouncer";
 import { StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
 import { CanvasPage } from "@/features/canvases";
@@ -71,6 +72,7 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
       <div className="relative h-screen w-screen">
         <Outlet />
       </div>
+      <RouteAnnouncer />
     </>
   ),
 });

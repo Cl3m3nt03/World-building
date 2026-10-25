@@ -191,6 +191,23 @@ test("creates a world of the chosen genre", async () => {
   });
 });
 
+test("each navigation is announced and titles the window", async () => {
+  const router = await renderStartScreen();
+  await waitFor(() => expect(document.title).toBe("Mondes · BuilderZ"));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("button", { name: "Ouvrir Eldefleur" }));
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/w-1/home"));
+  await waitFor(() =>
+    expect(screen.getByRole("status").textContent).toBe("Page : Bienvenue dans Eldefleur"),
+  );
+  expect(document.title).toBe("Bienvenue dans Eldefleur · BuilderZ");
+  // The button clicked is gone: the focus is on the new page's title.
+  expect(document.activeElement).toBe(
+    screen.getByRole("heading", { name: "Bienvenue dans Eldefleur" }),
+  );
+});
+
 test("asks for a name on the spot, and sends the id of the previewed atlas", async () => {
   await renderStartScreen();
   await act(async () => {

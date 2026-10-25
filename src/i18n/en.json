@@ -1604,5 +1604,8 @@
   "shell.world.switch": "Switch world",
   "shell.world.allWorlds": "All worlds",
   "shell.actions.search": "Search",
-  "shell.actions.searchKeys": "Ctrl K"
+  "shell.actions.searchKeys": "Ctrl K",
+  "shell.appName": "BuilderZ",
+  "shell.pageTitle": "{{title}} · BuilderZ",
+  "shell.pageAnnounce": "Page: {{title}}"
 }
