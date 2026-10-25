@@ -15,6 +15,7 @@ import {
   openCard,
   openTab,
   openWorldSettings,
+  writeInCard,
 } from "../helpers";
 
 const WORLD = "Valinor";
@@ -67,8 +68,7 @@ describe("M2: world settings, theme and writing preferences", () => {
   it("turns a typed card name into a mention, and no longer once switched off", async () => {
     await openTab("World");
     await openCard("Aragorn");
-    await $("button*=Commencez à écrire").click();
-    await $("aria/Bloc de texte 1").waitForDisplayed();
+    await writeInCard();
     await browser.keys("Né au Gondor ");
     await browser.waitUntil(async () => (await mentionCount("Gondor")) === 1, {
       timeoutMsg: "the typed name did not become a mention",
