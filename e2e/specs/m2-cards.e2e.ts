@@ -87,7 +87,7 @@ describe("M2: cards, properties, links and templates", () => {
     await $("button=Oui").click();
     // Characters created from now on start empty.
     const onCreate = await $(
-      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le modèle à la création"]/@for]',
+      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le template à la création"]/@for]',
     );
     await expect(onCreate).toHaveAttribute("aria-checked", "true");
     await onCreate.click();

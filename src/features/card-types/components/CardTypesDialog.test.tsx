@@ -158,7 +158,7 @@ test("color and orientation are radio choices", async () => {
 test("a switch turns the template on creation off and on again", async () => {
   renderDialog();
   await screen.findByLabelText("Nom du type");
-  const onCreate = screen.getByRole("switch", { name: "Appliquer le modèle à la création" });
+  const onCreate = screen.getByRole("switch", { name: "Appliquer le template à la création" });
   expect(onCreate.getAttribute("aria-checked")).toBe("true");
 
   fireEvent.click(onCreate);
