@@ -22,6 +22,7 @@ import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import { useCreateTimeline } from "@/features/timelines";
 import { useCreateTree } from "@/features/trees";
+import { usePageFade } from "./navigation";
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
 
@@ -131,6 +132,10 @@ export function StartWith() {
  */
 export function WorldWorkspace() {
   const { t } = useTranslation();
+  // Another document: the workspace fades in.
+  const { cardId, mapId, graphId, treeId, canvasId, timelineId } = useParams({ strict: false });
+  const page = useRef<HTMLElement>(null);
+  usePageFade(page, cardId ?? mapId ?? graphId ?? treeId ?? canvasId ?? timelineId ?? null);
   const sidebar = useSidebarState();
   const panel = useRef<PanelImperativeHandle>(null);
   const expandButton = useRef<HTMLButtonElement>(null);
@@ -183,7 +188,7 @@ export function WorldWorkspace() {
         className="w-1 rounded-full bg-transparent hover:bg-border-strong focus-visible:bg-primary"
       />
       <ResizablePanel>
-        <main className="relative h-full">
+        <main ref={page} className="relative h-full">
           {collapsed && (
             <Button
               ref={expandButton}

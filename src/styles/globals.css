@@ -190,7 +190,8 @@
   animation: bz-atlas-draw calc(var(--bz-duration-slow) * 3) var(--bz-ease-in-out) both;
 }
 @utility atlas-settle {
-  animation: bz-atlas-settle var(--bz-duration-slow) var(--bz-ease-out) both;
+  /* backwards: hidden until it starts, then nothing left (no lasting transform). */
+  animation: bz-atlas-settle var(--bz-duration-slow) var(--bz-ease-out) backwards;
   animation-delay: calc(var(--bz-duration-slow) * var(--bz-settle-step, 1));
 }
 @keyframes bz-atlas-draw {
@@ -209,7 +210,11 @@
 }
 /* A floating panel that a gesture opens (the timeline's card, its player). */
 @utility float-in {
-  animation: bz-float-in var(--bz-duration-base) var(--bz-ease-out) both;
+  animation: bz-float-in var(--bz-duration-base) var(--bz-ease-out) backwards;
+}
+/* A heading that takes the focus after a navigation (RouteAnnouncer): no ring. */
+h1[tabindex="-1"]:focus {
+  outline: none;
 }
 @keyframes bz-float-in {
   from {

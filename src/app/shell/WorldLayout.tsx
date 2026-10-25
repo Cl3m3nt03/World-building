@@ -1,10 +1,11 @@
 import { Outlet, useLocation, useNavigate, useParams } from "@tanstack/react-router";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useUiStore } from "@/app/stores/ui";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CardTypesDialog } from "@/features/card-types";
 import { useCurrentWorld } from "@/features/world";
 import { WorldSettingsDialog } from "@/features/world-settings";
+import { usePageFade } from "./navigation";
 import { type ShellTab, TopBar } from "./TopBar";
 
 export const SHELL_TABS = ["home", "world", "wiki", "quill"] as const satisfies readonly ShellTab[];
@@ -39,6 +40,9 @@ export function WorldLayout() {
   const setCardTypesOpen = useUiStore((state) => state.setCardTypesOpen);
   const { data: world } = useCurrentWorld();
   const requestSearch = useUiStore((state) => state.requestSearch);
+  // Another tab: the page fades in.
+  const page = useRef<HTMLDivElement>(null);
+  usePageFade(page, pathTab ?? "page");
 
   // The global search: the World tab and its search field.
   const openSearch = useCallback(() => {
@@ -81,7 +85,9 @@ export function WorldLayout() {
         />
       </div>
       <TabsContent value={tab} className="atlas-settle min-h-0 flex-1 [--bz-settle-step:1.5]">
-        <Outlet />
+        <div ref={page} className="h-full">
+          <Outlet />
+        </div>
       </TabsContent>
       <CardTypesDialog open={cardTypesOpen} onOpenChange={setCardTypesOpen} />
       {world && <WorldSettingsDialog world={world} />}
