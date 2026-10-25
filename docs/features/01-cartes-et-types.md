@@ -18,6 +18,14 @@ Dans les trois cas, on choisit d'abord un type (ou un sous-type). La carte s'ouv
 
 **Réalisé en M2 (2.4)** : la tuile « Carte » de l'espace vide ouvre le menu de création : les types, leurs sous-types en retrait dessous, puis « Nouveau type » (qui ouvre l'écran des types). La carte créée s'appelle « <Type> sans nom » (« Untitled <Type> » en anglais) et s'ouvre avec ce nom sélectionné. Le même menu s'ouvre par le bouton « Nouvelle carte » en bas de la sidebar et par un clic droit n'importe où dans la sidebar (2.5). Après Échap, le focus revient là où il était ; après une création, il reste sur le nom de la nouvelle carte.
 
+**V2-3.1 (d'après vvd)** : « Nouvelle carte » (sidebar, Home, tuile « Carte » de « Commencer avec… ») ouvre le **sélecteur de types**, un petit panneau :
+- en tête, une recherche qui garde le focus (sans casse ni accents : « eve » trouve « Événement ») ;
+- puis la liste des types, leurs sous-types en retrait. Un sous-type qui correspond à la recherche fait aussi apparaître son type ;
+- les flèches (et Début, Fin) se déplacent dans la liste, Entrée crée la carte du type en surbrillance, Échap ferme ;
+- en pied, « Nouveau type » et un rappel du clavier.
+
+La pastille du type d'une carte ouvre le même sélecteur, intitulé « Changer de type », le type actuel marqué « Actuel ». Le clic droit dans la sidebar garde son menu de création.
+
 ## Anatomie d'une carte
 
 - **Nom**, modifiable directement.
