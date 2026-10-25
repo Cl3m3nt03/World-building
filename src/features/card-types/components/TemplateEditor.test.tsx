@@ -100,3 +100,23 @@ test("a subtype without its own template says it uses its type's", () => {
     ),
   ).toBeTruthy();
 });
+
+test("a new section takes the focus, to be titled at once", async () => {
+  renderEditor(cardType("character", [{ title: "A", prompt: "" }]));
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une section" }));
+
+  await waitFor(() =>
+    expect(document.activeElement).toBe(
+      screen.getByRole("textbox", { name: "Titre de la section 2" }),
+    ),
+  );
+});
+
+test("a subtype without its own template shows its type's sections", () => {
+  const place = cardType("place", [{ title: "Géographie", prompt: "Où est-ce ?" }]);
+  renderEditor(cardType("city", [], "place"), place);
+
+  expect(screen.getByText("Géographie")).toBeTruthy();
+  expect(screen.getByText("Où est-ce ?")).toBeTruthy();
+});

@@ -20,6 +20,14 @@ export function TemplateEditor({ type, parent }: { type: CardType; parent: CardT
   const [sections, setSections] = useState<TemplateSection[]>(type.guidedTemplate);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pending = useRef<TemplateSection[] | null>(null);
+  // A section just added takes the focus, to be titled at once.
+  const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  const focusRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (focusIndex === null) return;
+    focusRef.current?.focus();
+    setFocusIndex(null);
+  }, [focusIndex]);
 
   const flush = () => {
     clearTimeout(timer.current);
@@ -56,30 +64,56 @@ export function TemplateEditor({ type, parent }: { type: CardType; parent: CardT
     change(next, true);
   };
 
+  const inherited = parent && sections.length === 0 ? parent.guidedTemplate : [];
+  // Fields drawn like the section bars of a card: no frame until hovered or focused.
+  const field =
+    "h-7 border-transparent bg-transparent px-1.5 shadow-none hover:border-border focus-visible:border-ring dark:bg-transparent";
+
   return (
-    <div className="flex flex-col gap-2">
-      {parent && sections.length === 0 && parent.guidedTemplate.length > 0 && (
-        <p className="text-sm text-muted-foreground">
-          {t("templates.inherits", { name: parent.name })}
-        </p>
+    <div className="flex flex-col gap-1.5">
+      {inherited.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-muted-foreground">
+            {t("templates.inherits", { name: parent?.name ?? "" })}
+          </p>
+          <ol className="flex flex-col gap-0.5 border-l-2 border-border pl-3 text-sm text-muted-foreground">
+            {inherited.map((section, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: sections have no id
+              <li key={index} className="flex min-w-0 items-baseline gap-2">
+                <span className="shrink-0 font-heading font-bold">{section.title}</span>
+                {section.prompt && <span className="truncate italic">{section.prompt}</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
-      {sections.length === 0 && !(parent && parent.guidedTemplate.length > 0) && (
+      {sections.length === 0 && inherited.length === 0 && (
         <p className="text-sm text-muted-foreground">{t("templates.empty")}</p>
       )}
-      <ol className="flex flex-col gap-2">
+      <ol className="flex flex-col">
         {sections.map((section, index) => (
           // Sections have no id: the index is their identity while editing.
-          // biome-ignore lint/suspicious/noArrayIndexKey: see above
-          <li key={index} className="flex items-start gap-2 rounded-lg border border-border p-2">
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <li
+            // biome-ignore lint/suspicious/noArrayIndexKey: see above
+            key={index}
+            className="group flex items-start gap-2 border-b border-border py-1.5 last:border-b-0"
+          >
+            <span
+              aria-hidden
+              className="w-5 shrink-0 pt-1 text-right font-heading text-base font-bold text-primary tabular-nums"
+            >
+              {index + 1}
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col">
               <Input
+                ref={index === focusIndex ? focusRef : undefined}
                 aria-label={t("templates.sectionTitle", { index: index + 1 })}
                 placeholder={t("templates.titlePlaceholder")}
                 value={section.title}
                 maxLength={80}
                 onChange={(event) => set(index, "title", event.target.value)}
                 onBlur={() => flushRef.current()}
-                className="font-medium"
+                className={`${field} font-heading text-base font-bold md:text-base`}
               />
               <Input
                 aria-label={t("templates.sectionPrompt", { index: index + 1 })}
@@ -88,10 +122,11 @@ export function TemplateEditor({ type, parent }: { type: CardType; parent: CardT
                 maxLength={200}
                 onChange={(event) => set(index, "prompt", event.target.value)}
                 onBlur={() => flushRef.current()}
-                className="text-sm"
+                className={`${field} text-sm text-muted-foreground italic`}
               />
             </div>
-            <div className="flex flex-col">
+            {/* The tools show on hover, and whenever one of them has the focus. */}
+            <div className="flex items-center gap-0.5 pt-0.5 opacity-0 transition-opacity duration-(--bz-duration-fast) ease-atlas group-focus-within:opacity-100 group-hover:opacity-100">
               <Button
                 variant="ghost"
                 size="icon-xs"
@@ -120,7 +155,7 @@ export function TemplateEditor({ type, parent }: { type: CardType; parent: CardT
                     true,
                   )
                 }
-                className="text-destructive"
+                className="text-destructive hover:text-destructive"
               >
                 <Trash2 />
               </Button>
@@ -130,10 +165,13 @@ export function TemplateEditor({ type, parent }: { type: CardType; parent: CardT
       </ol>
       {update.isError && <AppErrorMessage error={update.error} />}
       <Button
-        variant="secondary"
+        variant="ghost"
         size="sm"
         className="self-start"
-        onClick={() => change([...sections, { title: "", prompt: "" }])}
+        onClick={() => {
+          setFocusIndex(sections.length);
+          change([...sections, { title: "", prompt: "" }]);
+        }}
       >
         <Plus />
         {t("templates.addSection")}

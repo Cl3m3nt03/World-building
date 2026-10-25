@@ -117,19 +117,22 @@ test("adding a type property asks whether to apply it to the existing cards", as
   renderWith(<TypeProperties typeId="character" types={[]} />);
   await screen.findByRole("button", { name: "Modifier la propriété Titre" });
 
+  // The same small window as on a card: its name, then its kind.
   fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
-
-  // The new property opens in its editor, to be named.
-  const name = await screen.findByLabelText("Nom");
-  expect((name as HTMLInputElement).value).toBe("Nouvelle propriété");
-  fireEvent.change(name, { target: { value: "Âge" } });
-  fireEvent.blur(name);
+  fireEvent.change(await screen.findByLabelText("Nom de la propriété"), {
+    target: { value: "Âge" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Nombre" }));
   await waitFor(() =>
-    expect(callsOf("rename_property")[0]?.payload).toMatchObject({ label: "Âge" }),
+    expect(callsOf("create_property")[0]?.payload).toEqual({
+      owner: { on: "type", typeId: "character" },
+      label: "Âge",
+      kind: "number",
+    }),
   );
 
   expect(
-    screen.getByText("Appliquer les changements à toutes les cartes de ce type ?"),
+    await screen.findByText("Appliquer les changements à toutes les cartes de ce type ?"),
   ).toBeTruthy();
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "Oui" }));
@@ -145,10 +148,31 @@ test("skipping leaves the existing cards as they are", async () => {
   await screen.findByRole("button", { name: "Modifier la propriété Titre" });
 
   fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Texte" }));
   fireEvent.click(await screen.findByRole("button", { name: "Ignorer" }));
 
   expect(screen.queryByRole("button", { name: "Oui" })).toBeNull();
   expect(callsOf("apply_property_to_existing")).toHaveLength(0);
+});
+
+test("a type's link property says which types it accepts", async () => {
+  typeProps = [definition("home", "Foyer", { kind: "card", targetTypeIds: ["place"] })];
+  const place = {
+    id: "place",
+    parentId: null,
+    name: "Lieu",
+    icon: "map-pin",
+    color: "green",
+    guidedTemplate: [],
+    orientation: "portrait" as const,
+    canvasFormat: "standard" as const,
+    sortOrder: 0,
+  };
+  renderWith(<TypeProperties typeId="character" types={[place]} />);
+
+  const row = await screen.findByRole("button", { name: "Modifier la propriété Foyer" });
+  expect(row.textContent).toContain("Lien vers une carte");
+  expect(row.textContent).toContain("Lieu");
 });
 
 test("deleting a property says how many values would be lost", async () => {

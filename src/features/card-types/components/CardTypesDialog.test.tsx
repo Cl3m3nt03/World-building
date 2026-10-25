@@ -246,3 +246,57 @@ test("a type with cards asks where they go before deleting", async () => {
   // No destination chosen yet: nothing can be deleted.
   expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(true);
 });
+
+test("the search ignores accents and case", async () => {
+  types = [...types, cardType("event", "Événement")];
+  renderDialog();
+  await screen.findByRole("button", { name: "Personnage" });
+
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "evene" } });
+
+  expect(screen.getByRole("button", { name: "Événement" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Personnage" })).toBeNull();
+});
+
+test("the arrows move between the types of the list", async () => {
+  renderDialog();
+  const first = await screen.findByRole("button", { name: "Personnage" });
+  first.focus();
+
+  fireEvent.keyDown(first, { key: "ArrowDown" });
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Lieu" }));
+  fireEvent.keyDown(document.activeElement as Element, { key: "ArrowUp" });
+  expect(document.activeElement).toBe(first);
+  fireEvent.keyDown(first, { key: "End" });
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Lieu" }));
+});
+
+test("a subtype leads back to its type; its type lists it as a chip", async () => {
+  renderDialog();
+  fireEvent.click(await screen.findByRole("button", { name: "Lieu" }));
+  // The subtypes of the selected type, as chips, and their count in the list.
+  fireEvent.click(await screen.findByRole("button", { name: "Ville" }));
+  await waitFor(() =>
+    expect((screen.getByLabelText("Nom du type") as HTMLInputElement).value).toBe("Ville"),
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Sous-type de Lieu" }));
+  await waitFor(() =>
+    expect((screen.getByLabelText("Nom du type") as HTMLInputElement).value).toBe("Lieu"),
+  );
+});
+
+test("the sections of the sheet are labelled", async () => {
+  renderDialog();
+  await screen.findByLabelText("Nom du type");
+
+  for (const name of [
+    "Sous-types",
+    "Propriétés par défaut",
+    "Template guidé",
+    "Réglages de carte par défaut",
+  ]) {
+    expect(screen.getByRole("region", { name })).toBeTruthy();
+  }
+  expect(screen.getByText("2 types")).toBeTruthy();
+});
