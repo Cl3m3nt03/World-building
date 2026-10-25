@@ -183,7 +183,7 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
 
   return (
     <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <header className="flex items-start gap-4 px-8 pt-7 pb-6">
+      <header className="flex items-start gap-4 pt-7 pr-14 pb-6 pl-8">
         <Popover>
           <PopoverTrigger asChild>
             <button
