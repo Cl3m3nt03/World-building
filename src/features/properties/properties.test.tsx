@@ -166,6 +166,7 @@ test("a type's link property says which types it accepts", async () => {
     guidedTemplate: [],
     orientation: "portrait" as const,
     canvasFormat: "standard" as const,
+    templateOnCreate: true,
     sortOrder: 0,
   };
   renderWith(<TypeProperties typeId="character" types={[place]} />);
