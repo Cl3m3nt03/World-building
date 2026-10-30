@@ -55,7 +55,7 @@ const typeChip = (label: string) => $(`aria/Type : ${label}. Changer le type`);
 /** Fills the add property window of the open card, then closes the editor it opens. */
 async function addCardProperty(label: string, pick: () => Promise<void>) {
   await $("button=Ajouter une propriété").click();
-  await popover().$("input").waitForDisplayed();
+  await popover().waitForDisplayed();
   await browser.waitUntil(
     async () => browser.execute(() => document.activeElement?.tagName === "INPUT"),
     { timeoutMsg: "the name of the new property did not take the focus" },
@@ -63,7 +63,7 @@ async function addCardProperty(label: string, pick: () => Promise<void>) {
   await browser.keys(label);
   await pick();
   await $(`aria/Modifier la propriété ${label}`).waitForDisplayed();
-  await popover().$("input").waitForDisplayed();
+  await popover().waitForDisplayed();
   await browser.keys("Escape");
   await popover().waitForExist({ reverse: true });
 }
@@ -232,7 +232,7 @@ describe("V2-M3: the cards", () => {
 
     const pick = async (title: string) => {
       await $("aria/Choisir une carte pour Terres").click();
-      await popover().$('input[role="combobox"]').waitForDisplayed();
+      await popover().waitForDisplayed();
       await browser.waitUntil(async () => popover().$('input[role="combobox"]').isFocused(), {
         timeoutMsg: "the card picker's search did not take the focus",
       });
@@ -249,6 +249,7 @@ describe("V2-M3: the cards", () => {
       await option(title).waitForDisplayed();
       await browser.keys("Enter");
       await $(`ul[aria-label="Terres"]`).$(`a=${title}`).waitForDisplayed();
+      await popover().waitForExist({ reverse: true });
     }
   });
 
