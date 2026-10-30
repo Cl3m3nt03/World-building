@@ -270,6 +270,21 @@ function PropertyValue({ ctx, property }: { ctx: SiteContext; property: CardProp
   if (!value) return null;
   if (value.kind === "text") return <>{value.value}</>;
   if (value.kind === "number") return <>{value.value ?? ""}</>;
+  if (value.kind === "select") {
+    const { options } = property.definition;
+    return (
+      <>
+        {options
+          .filter((option) => value.value.includes(option.id))
+          .map((option) => option.label)
+          .join(", ")}
+      </>
+    );
+  }
+  if (value.kind === "date") {
+    const { days, precision } = value.value;
+    return <>{formatDate(ctx.data.calendar, days, precision, calendarWords(ctx.t))}</>;
+  }
   const ids = value.kind === "card" ? [value.value] : value.value;
   const names = ids.flatMap((id) => {
     const card = ctx.data.cards.find((candidate) => candidate.id === id);

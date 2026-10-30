@@ -1,4 +1,4 @@
-import { Hash, Link2, Trash2, Type } from "lucide-react";
+import { CalendarDays, Hash, Link2, ListChecks, Trash2, Type } from "lucide-react";
 import { type ReactNode, useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
@@ -22,15 +22,18 @@ import {
   useSetPropertyKind,
   useSetPropertyRelation,
 } from "../hooks/useProperties";
+import { PropertyOptions } from "./PropertyOptions";
 
 /** The Select's value for « just a link » (a Select item cannot be empty). */
 const NO_RELATION = "none";
 
 /** Kinds a property can have. */
-export const PROPERTY_KINDS: PropertyKind[] = ["text", "number", "card", "cards"];
+export const PROPERTY_KINDS: PropertyKind[] = ["text", "number", "select", "date", "card", "cards"];
 
 export function kindIcon(kind: PropertyKind) {
   if (kind === "number") return Hash;
+  if (kind === "select") return ListChecks;
+  if (kind === "date") return CalendarDays;
   if (kind === "card" || kind === "cards") return Link2;
   return Type;
 }
@@ -71,6 +74,10 @@ export function PropertyEditor({
   const kindId = useId();
 
   useEffect(() => setLabel(property.label), [property.label]);
+  // A property just added can already be in the list when it is said to open.
+  useEffect(() => {
+    if (defaultOpen) setOpen(true);
+  }, [defaultOpen]);
 
   const saveLabel = () => {
     const trimmed = label.trim();
@@ -93,7 +100,10 @@ export function PropertyEditor({
       }}
     >
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent align="start" className="glass flex w-72 flex-col gap-3">
+      <PopoverContent
+        align="start"
+        className="glass flex max-h-(--radix-popover-content-available-height) w-72 flex-col gap-3 overflow-y-auto"
+      >
         <div className="flex flex-col gap-1.5">
           <label htmlFor={labelId} className="text-xs font-bold text-muted-foreground">
             {t("properties.name")}
@@ -135,6 +145,7 @@ export function PropertyEditor({
           </Select>
           <p className="text-xs text-muted-foreground">{t("properties.kindHint")}</p>
         </div>
+        {property.kind === "select" && <PropertyOptions property={property} />}
         {isLink(property.kind) && (
           <fieldset className="flex flex-col gap-1 border-0">
             <legend className="mb-1 text-xs font-bold text-muted-foreground">

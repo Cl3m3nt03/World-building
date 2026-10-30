@@ -167,10 +167,24 @@ Renommer une propriété de type la renomme partout. La supprimer demande une co
 
 **V2-3.3 (d'après vvd)** : « + Ajouter une propriété » ouvre une petite fenêtre :
 - en tête, le **nom** de la propriété, qui a le focus ; Entrée seule crée une propriété texte ;
-- puis son genre, en deux familles. **Valeur** : texte, nombre. **Lien vers une carte** : n'importe quelle carte, ou une carte d'un type principal précis. La case « Plusieurs cartes à la fois » fait de ce lien une liste de cartes ;
+- puis son genre, en deux familles. **Valeur** : texte, nombre, sélection, date. **Lien vers une carte** : n'importe quelle carte, ou une carte d'un type principal précis. La case « Plusieurs cartes à la fois » fait de ce lien une liste de cartes ;
 - un clic sur un genre crée la propriété, propre à cette carte, et ouvre son réglage comme avant. Sans nom, elle s'appelle « Nouvelle propriété ».
 
-Les lignes de propriétés sont plus serrées (libellé, puis valeur). Les genres « Sélection » et « Date » vus dans vvd viendront avec #482.
+Les lignes de propriétés sont plus serrées (libellé, puis valeur).
+
+**V2-3.3b (d'après vvd, ADR 0014)** : deux genres de plus dans la famille **Valeur**, sur les cartes comme sur l'écran des types.
+
+- **Sélection** : une liste de choix propre à la propriété (Statut : vivant, mort, disparu).
+  - Sa petite fenêtre liste les choix : on les renomme sur place, on les monte ou descend, « Ajouter un choix » (Entrée) en ajoute un. Elle s'ouvre seule quand on vient de créer la propriété.
+  - Sur la carte, les choix retenus sont des pastilles, à retirer d'un clic. Le menu « Choisir » les propose, au clavier (flèches, Entrée).
+  - « Plusieurs choix par carte » permet d'en cocher plusieurs : le menu reste alors ouvert. Désactivée, l'option ne retire rien : une carte garde ce qu'elle a, peut en retirer, et un nouveau choix remplace le tout.
+  - Une carte retient l'identifiant du choix : le renommer ne change aucune valeur. Retirer un choix qu'au moins une carte utilise dit combien de cartes le perdront et demande confirmation.
+  - Dans l'écran des types, la ligne de la propriété dit son nombre de choix.
+- **Date** : une date du calendrier du monde (`09-frise.md`), celui des frises. Un clic ouvre le même champ que la frise (jour, mois, année comptée dans son ère, ère), où mois et jour sont facultatifs.
+  - La date s'enregistre quand la fenêtre se ferme (« OK », Entrée dans un champ, Échap ou un clic à côté). Une fenêtre fermée sans rien changer n'enregistre rien ; « OK » sur une date vide retient la date affichée. « Effacer la date » retire la valeur.
+  - Changer le calendrier ne change pas la valeur : la date s'écrit autrement, comme un élément de frise.
+
+Une valeur illisible, ou qui ne cite que des choix disparus, s'affiche comme une valeur vide : la carte s'ouvre toujours.
 
 ## Rétroliens
 

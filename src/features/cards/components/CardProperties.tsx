@@ -17,6 +17,7 @@ import { type DocumentLink, useDocumentLink } from "@/lib/documentLinks";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { useCardList } from "../hooks/useCards";
 import { CardPicker } from "./CardPicker";
+import { ChoiceValue, DateValueField } from "./ChoiceAndDateValues";
 
 /** Delay before a typed value is saved. */
 const SAVE_DELAY_MS = 500;
@@ -228,6 +229,7 @@ function PropertyRow({
   const types = useCardTypes();
   const { definition } = property;
   const link = definition.kind === "card" || definition.kind === "cards";
+  const select = definition.kind === "select";
 
   return (
     <div className="grid grid-cols-[8.5rem_1fr] items-center gap-2">
@@ -242,7 +244,7 @@ function PropertyRow({
             <Settings2 aria-hidden className="size-3 shrink-0" />
           </button>
         </PropertyEditor>
-      ) : link ? (
+      ) : link || select ? (
         <span className="truncate text-sm text-muted-foreground">{definition.label}</span>
       ) : (
         <label htmlFor={id} className="truncate text-sm text-muted-foreground">
@@ -251,6 +253,10 @@ function PropertyRow({
       )}
       {link ? (
         <LinkValue cardId={cardId} property={property} inputId={id} />
+      ) : select ? (
+        <ChoiceValue cardId={cardId} property={property} inputId={id} />
+      ) : definition.kind === "date" ? (
+        <DateValueField cardId={cardId} property={property} inputId={id} />
       ) : (
         <TextValue cardId={cardId} property={property} inputId={id} />
       )}

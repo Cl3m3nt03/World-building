@@ -119,6 +119,13 @@ export const commands = {
 	setPropertyKind: (id: string, kind: PropertyKind, targetTypeIds: string[]) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("set_property_kind", { id, kind, targetTypeIds })),
 	/**  Makes a link property a relation of the world (`None`: just a link). */
 	setPropertyRelation: (id: string, relationTypeId: string | null) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("set_property_relation", { id, relationTypeId })),
+	/**
+	 *  Replaces the choices of a select property; a choice left out is removed
+	 *  from the cards holding it.
+	 */
+	setPropertyOptions: (id: string, options: PropertyOptionInput[], multiple: boolean) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("set_property_options", { id, options, multiple })),
+	/**  Number of cards holding a choice, to warn before removing it. */
+	countPropertyOptionValues: (id: string, optionId: string) => typedError<number, AppError>(__TAURI_INVOKE("count_property_option_values", { id, optionId })),
 	/**  Shows a type property on the cards created before it too. */
 	applyPropertyToExisting: (id: string) => typedError<PropertyDefinition, AppError>(__TAURI_INVOKE("apply_property_to_existing", { id })),
 	reorderProperties: (ids: string[]) => typedError<null, AppError>(__TAURI_INVOKE("reorder_properties", { ids })),
@@ -130,7 +137,9 @@ export const commands = {
 /**  A card id. */
 { kind: "card"; value: string } | 
 /**  Card ids. */
-{ kind: "cards"; value: string[] } | null) => typedError<CardProperty[], AppError>(__TAURI_INVOKE("set_property_value", { cardId, propertyId, value })),
+{ kind: "cards"; value: string[] } | 
+/**  Ids of the property's choices (one, unless it is `multiple`). */
+{ kind: "select"; value: string[] } | { kind: "date"; value: PropertyDate } | null) => typedError<CardProperty[], AppError>(__TAURI_INVOKE("set_property_value", { cardId, propertyId, value })),
 	/**  Documents citing a card ("cited in"), with how they cite it. */
 	cardBacklinks: (cardId: string) => typedError<Backlink[], AppError>(__TAURI_INVOKE("card_backlinks", { cardId })),
 	/**
@@ -1037,6 +1046,15 @@ export type Preferences = {
 	worldRail: boolean,
 };
 
+/**
+ *  A date of the world's calendar, as the timelines keep theirs (ADR 0011):
+ *  days from the year 0, and what it names.
+ */
+export type PropertyDate = {
+	days: number,
+	precision: DatePrecision,
+};
+
 export type PropertyDefinition = {
 	id: string,
 	owner: PropertyOwner,
@@ -1049,6 +1067,10 @@ export type PropertyDefinition = {
 	 *  property (« Parents » = parent of), ADR 0007. `None`: just a link.
 	 */
 	relationTypeId: string | null,
+	/**  For a select: its choices, in order. */
+	options: PropertyOption[],
+	/**  For a select: whether a card can hold several of them. */
+	multiple: boolean,
 	/**  For a type property: whether cards created before it show it too. */
 	appliesToExisting: boolean,
 	sortOrder: number,
@@ -1060,7 +1082,26 @@ export type PropertyKind = "text" | "number" |
 /**  A link to one card. */
 "card" | 
 /**  Links to several cards. */
-"cards";
+"cards" | 
+/**  One or several of the choices listed on the property (ADR 0014). */
+"select" | 
+/**  A date of the world's calendar (ADR 0014). */
+"date";
+
+/**
+ *  A choice of a "select" property. Cards store its `id`, so its label can
+ *  change without touching them.
+ */
+export type PropertyOption = {
+	id: string,
+	label: string,
+};
+
+/**  A choice as the interface sends it back: `id` is `None` for a new one. */
+export type PropertyOptionInput = {
+	id: string | null,
+	label: string,
+};
 
 /**  Where a property is defined. */
 export type PropertyOwner = 
@@ -1074,7 +1115,9 @@ export type PropertyValue = { kind: "text"; value: string } | { kind: "number"; 
 /**  A card id. */
 { kind: "card"; value: string } | 
 /**  Card ids. */
-{ kind: "cards"; value: string[] };
+{ kind: "cards"; value: string[] } | 
+/**  Ids of the property's choices (one, unless it is `multiple`). */
+{ kind: "select"; value: string[] } | { kind: "date"; value: PropertyDate };
 
 /**  How the radio moves on at the end of a track. */
 export type RadioMode = 
