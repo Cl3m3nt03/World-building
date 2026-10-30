@@ -120,6 +120,16 @@ const BLOCK_CHOICES: {
   { type: "stats5e", icon: Swords, label: "blocks.types.stats5e" },
 ];
 
+/**
+ * Gives the focus to the text of the block `id`, if it has one. A menu keeps
+ * the focus until it is gone, so a new block cannot take it before.
+ */
+function focusBlockText(id: string): boolean {
+  const text = document.querySelector<HTMLElement>(`[data-block="${id}"] [role="textbox"]`);
+  text?.focus();
+  return text !== null;
+}
+
 /** While a block is dropped beside another, the others do not make room. */
 const stayInPlace: SortingStrategy = () => null;
 
@@ -330,7 +340,8 @@ function SortableBlock({
   style: CSSProperties | undefined;
   place: PlaceActions;
   onChange: (block: Block) => void;
-  onInsertAfter: (type: BlockType) => void;
+  /** Returns the new block's id. */
+  onInsertAfter: (type: BlockType) => string;
   onCopy: () => void;
   onDelete: () => void;
 }) {
@@ -342,6 +353,8 @@ function SortableBlock({
   const removeSlashLine = useRef<(() => void) | null>(null);
   const refocusSlashLine = useRef<(() => void) | null>(null);
   const picked = useRef(false);
+  /** The block just added from a menu of this block, until the menu has closed. */
+  const added = useRef<string | null>(null);
   const {
     attributes,
     listeners,
@@ -405,7 +418,16 @@ function SortableBlock({
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent
+            align="start"
+            // A new text block takes the focus here; any other close (or a
+            // block without text) goes back to the button.
+            onCloseAutoFocus={(event) => {
+              const id = added.current;
+              added.current = null;
+              if (id !== null && focusBlockText(id)) event.preventDefault();
+            }}
+          >
             <DropdownMenuItem disabled={!place.canMoveUp} onSelect={() => place.onMoveRow(-1)}>
               <ArrowUp />
               {place.column ? t("blocks.moveRowUp") : t("blocks.moveUp")}
@@ -449,7 +471,12 @@ function SortableBlock({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
-                  <DropdownMenuItem key={type} onSelect={() => onInsertAfter(type)}>
+                  <DropdownMenuItem
+                    key={type}
+                    onSelect={() => {
+                      added.current = onInsertAfter(type);
+                    }}
+                  >
                     <Icon />
                     {t(label)}
                   </DropdownMenuItem>
@@ -503,16 +530,18 @@ function SortableBlock({
           onOpenChange={setSlashOpen}
           // The menu's trigger cannot take the focus: closed without a choice
           // (Escape), the focus goes back to the line where "/" was typed; a
-          // new block takes it itself.
+          // new text block takes it here.
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             if (!picked.current) refocusSlashLine.current?.();
+            else if (added.current !== null) focusBlockText(added.current);
+            added.current = null;
           }}
           onPick={(type) => {
             picked.current = true;
             setSlashOpen(false);
             removeSlashLine.current?.();
-            onInsertAfter(type);
+            added.current = onInsertAfter(type);
           }}
           {...(block.type === "text"
             ? {
@@ -643,7 +672,7 @@ export function BlockEditor({
   /** A new block right under the line of the block `id`. */
   const insertAfter = (id: string, type: BlockType) => {
     const last = rowOf(current.current, id)?.row.blocks.at(-1);
-    insert(current.current.findIndex((block) => block.id === last?.id) + 1, type);
+    return insert(current.current.findIndex((block) => block.id === last?.id) + 1, type);
   };
   /** A copy of the block `id` (new id, own line) right under its line. */
   const copyAfter = (id: string) => {
@@ -859,7 +888,7 @@ export function BlockEditor({
           addedId.current = null;
           if (added === null) return;
           event.preventDefault();
-          document.querySelector<HTMLElement>(`[data-block="${added}"] [role="textbox"]`)?.focus();
+          focusBlockText(added);
         }}
         onPick={(type) => {
           addedId.current = insert(blocks.length, type);
