@@ -12,7 +12,7 @@
 
 import { createWorld, nameNewCard, openCard, openTab, typeInPicker } from "../helpers";
 
-const WORLD = "Fiches";
+const WORLD = "Atlas Fiches";
 
 const popover = () => $('[data-slot="popover-content"]');
 const content = () => $('section[aria-label="Contenu"]');
