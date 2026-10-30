@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-property-options"
+description = "Enables the set_property_options command without any pre-configured scope."
+commands.allow = ["set_property_options"]
+
+[[permission]]
+identifier = "deny-set-property-options"
+description = "Denies the set_property_options command without any pre-configured scope."
+commands.deny = ["set_property_options"]

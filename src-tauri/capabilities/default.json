@@ -145,6 +145,8 @@
     "allow-rename-property",
     "allow-set-property-kind",
     "allow-set-property-relation",
+    "allow-set-property-options",
+    "allow-count-property-option-values",
     "allow-apply-property-to-existing",
     "allow-reorder-properties",
     "allow-count-property-values",

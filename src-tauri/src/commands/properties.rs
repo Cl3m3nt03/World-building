@@ -2,7 +2,8 @@ use sqlx::SqlitePool;
 use tauri::State;
 
 use crate::domain::properties::{
-    self, CardProperty, PropertyDefinition, PropertyKind, PropertyOwner, PropertyValue,
+    self, CardProperty, PropertyDefinition, PropertyKind, PropertyOptionInput, PropertyOwner,
+    PropertyValue,
 };
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
@@ -74,6 +75,41 @@ pub async fn set_property_kind(
         &id,
         kind,
         &target_type_ids,
+    )
+    .await
+}
+
+/// Replaces the choices of a select property; a choice left out is removed
+/// from the cards holding it.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_property_options(
+    state: State<'_, AppState>,
+    id: String,
+    options: Vec<PropertyOptionInput>,
+    multiple: bool,
+) -> AppResult<PropertyDefinition> {
+    properties::set_options(
+        &pool(&state, "set_property_options").await?,
+        &id,
+        &options,
+        multiple,
+    )
+    .await
+}
+
+/// Number of cards holding a choice, to warn before removing it.
+#[tauri::command]
+#[specta::specta]
+pub async fn count_property_option_values(
+    state: State<'_, AppState>,
+    id: String,
+    option_id: String,
+) -> AppResult<u32> {
+    properties::count_option_values(
+        &pool(&state, "count_property_option_values").await?,
+        &id,
+        &option_id,
     )
     .await
 }

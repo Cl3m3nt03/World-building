@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE property_definitions SET options = ?, multiple = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "2d524a1a66ad3e7a3872de68de903d9ee3cd6212a072dcdbce9674ffdce4e90d"
+}

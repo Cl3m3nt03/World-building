@@ -183,11 +183,50 @@ const PROPERTIES: CardProperty[] = [
       kind: "cards",
       targetTypeIds: [],
       relationTypeId: null,
+      options: [],
+      multiple: false,
       appliesToExisting: true,
       sortOrder: 0,
       createdAt: "2026-09-27T09:00:00Z",
     },
     value: { kind: "cards", value: ["apex", "ghost"] },
+  },
+  {
+    definition: {
+      id: "status",
+      owner: { on: "type", typeId: "character" },
+      label: "Statut",
+      kind: "select",
+      targetTypeIds: [],
+      relationTypeId: null,
+      options: [
+        { id: "alive", label: "Vivant" },
+        { id: "cursed", label: "Maudit" },
+        { id: "hunted", label: "Traqué" },
+      ],
+      multiple: true,
+      appliesToExisting: true,
+      sortOrder: 1,
+      createdAt: "2026-09-27T09:00:00Z",
+    },
+    value: { kind: "select", value: ["hunted", "alive"] },
+  },
+  {
+    definition: {
+      id: "birth",
+      owner: { on: "type", typeId: "character" },
+      label: "Naissance",
+      kind: "date",
+      targetTypeIds: [],
+      relationTypeId: null,
+      options: [],
+      multiple: false,
+      appliesToExisting: true,
+      sortOrder: 2,
+      createdAt: "2026-09-27T09:00:00Z",
+    },
+    // Year 12: 12 × 360 days.
+    value: { kind: "date", value: { days: 4320, precision: "year" } },
   },
 ];
 
@@ -393,6 +432,9 @@ test("the timeline page: drawn without script, its chronicle, hidden items left 
   // An item standing for a card with a page links to it, under the card's name.
   expect(ages).toContain('<a class="bubble"');
   expect(ages).toContain('href="../pages/apex.html">Apex</a>');
+  // Choices by their labels, in the property's order; a date in the world's calendar.
+  expect(file("pages/alvar.html")).toContain("<dd>Vivant, Traqué</dd>");
+  expect(file("pages/alvar.html")).toContain("<dd>12 AG</dd>");
   // Dates in the world's calendar.
   expect(ages).toContain("12 AG");
   expect(ages).toContain("20 AG – 23 AG");

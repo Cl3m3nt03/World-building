@@ -503,3 +503,465 @@ async fn a_relation_deleted_leaves_its_properties_plain_links() {
         None
     );
 }
+
+// --- Select and date (ADR 0014) ---------------------------------------------
+
+fn new_option(label: &str) -> PropertyOptionInput {
+    PropertyOptionInput {
+        id: None,
+        label: label.into(),
+    }
+}
+
+fn kept(option: &PropertyOption) -> PropertyOptionInput {
+    PropertyOptionInput {
+        id: Some(option.id.clone()),
+        label: option.label.clone(),
+    }
+}
+
+/// A card, and a select property of its type offering the given choices.
+async fn select_fixture(fx: &Fixture, labels: &[&str]) -> (String, PropertyDefinition) {
+    let character = fx.new_type("Personnage", None).await;
+    let status = create(
+        fx.pool(),
+        on_type(&character),
+        "Statut",
+        PropertyKind::Select,
+    )
+    .await
+    .unwrap();
+    tick().await;
+    let card = fx.card(&character, "Aragorn").await;
+    let options: Vec<_> = labels.iter().map(|label| new_option(label)).collect();
+    let status = set_options(fx.pool(), &status.id, &options, false)
+        .await
+        .unwrap();
+    (card, status)
+}
+
+fn value_of(properties: &[CardProperty], id: &str) -> Option<PropertyValue> {
+    properties
+        .iter()
+        .find(|property| property.definition.id == id)
+        .and_then(|property| property.value.clone())
+}
+
+fn select(ids: &[&String]) -> PropertyValue {
+    PropertyValue::Select(ids.iter().map(|id| (*id).clone()).collect())
+}
+
+#[tokio::test]
+async fn a_renamed_choice_keeps_the_values_and_its_id() {
+    let fx = Fixture::new().await;
+    let (card, status) = select_fixture(&fx, &["Vivant", "Mort"]).await;
+    let alive = status.options[0].id.clone();
+    set_value(fx.pool(), &card, &status.id, Some(select(&[&alive])))
+        .await
+        .unwrap();
+
+    let renamed = set_options(
+        fx.pool(),
+        &status.id,
+        &[
+            PropertyOptionInput {
+                id: Some(alive.clone()),
+                label: " En vie ".into(),
+            },
+            kept(&status.options[1]),
+        ],
+        false,
+    )
+    .await
+    .unwrap();
+    assert_eq!(renamed.options[0].id, alive);
+    assert_eq!(renamed.options[0].label, "En vie");
+    assert_eq!(
+        value_of(&of_card(fx.pool(), &card).await.unwrap(), &status.id),
+        Some(select(&[&alive]))
+    );
+}
+
+#[tokio::test]
+async fn removing_a_choice_takes_it_off_the_cards_and_says_how_many_had_it() {
+    let fx = Fixture::new().await;
+    let (card, status) = select_fixture(&fx, &["Vivant", "Mort", "Disparu"]).await;
+    let [alive, dead, gone] = [
+        status.options[0].clone(),
+        status.options[1].clone(),
+        status.options[2].clone(),
+    ];
+    let status = set_options(
+        fx.pool(),
+        &status.id,
+        &[kept(&alive), kept(&dead), kept(&gone)],
+        true,
+    )
+    .await
+    .unwrap();
+    set_value(
+        fx.pool(),
+        &card,
+        &status.id,
+        Some(select(&[&alive.id, &gone.id])),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        count_option_values(fx.pool(), &status.id, &gone.id)
+            .await
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        count_option_values(fx.pool(), &status.id, &dead.id)
+            .await
+            .unwrap(),
+        0
+    );
+
+    // The card keeps its other choice…
+    set_options(fx.pool(), &status.id, &[kept(&alive), kept(&dead)], true)
+        .await
+        .unwrap();
+    assert_eq!(
+        value_of(&of_card(fx.pool(), &card).await.unwrap(), &status.id),
+        Some(select(&[&alive.id]))
+    );
+    // … and a card left without one has no value.
+    set_options(fx.pool(), &status.id, &[kept(&dead)], true)
+        .await
+        .unwrap();
+    assert_eq!(
+        value_of(&of_card(fx.pool(), &card).await.unwrap(), &status.id),
+        None
+    );
+    assert_eq!(count_values(fx.pool(), &status.id).await.unwrap(), 0);
+}
+
+#[tokio::test]
+async fn a_single_choice_property_holds_one_choice() {
+    let fx = Fixture::new().await;
+    let (card, status) = select_fixture(&fx, &["Vivant", "Mort"]).await;
+    let (alive, dead) = (&status.options[0], &status.options[1]);
+
+    let refused = set_value(
+        fx.pool(),
+        &card,
+        &status.id,
+        Some(select(&[&alive.id, &dead.id])),
+    )
+    .await;
+    assert!(matches!(refused, Err(AppError::InvalidInput(_))));
+
+    let unknown = "not-a-choice".to_owned();
+    let refused = set_value(fx.pool(), &card, &status.id, Some(select(&[&unknown]))).await;
+    assert!(matches!(refused, Err(AppError::InvalidInput(_))));
+
+    // A choice listed twice is one choice.
+    let shown = set_value(
+        fx.pool(),
+        &card,
+        &status.id,
+        Some(select(&[&alive.id, &alive.id])),
+    )
+    .await
+    .unwrap();
+    assert_eq!(value_of(&shown, &status.id), Some(select(&[&alive.id])));
+
+    // No choice left is no value.
+    let shown = set_value(fx.pool(), &card, &status.id, Some(select(&[])))
+        .await
+        .unwrap();
+    assert_eq!(value_of(&shown, &status.id), None);
+}
+
+#[tokio::test]
+async fn going_back_to_a_single_choice_keeps_what_cards_hold() {
+    let fx = Fixture::new().await;
+    let (card, status) = select_fixture(&fx, &["A", "B", "C", "D"]).await;
+    let options = status.options.clone();
+    let all: Vec<_> = options.iter().map(kept).collect();
+    set_options(fx.pool(), &status.id, &all, true)
+        .await
+        .unwrap();
+    let three = select(&[&options[0].id, &options[1].id, &options[2].id]);
+    set_value(fx.pool(), &card, &status.id, Some(three.clone()))
+        .await
+        .unwrap();
+
+    set_options(fx.pool(), &status.id, &all, false)
+        .await
+        .unwrap();
+    let shown = of_card(fx.pool(), &card).await.unwrap();
+    assert_eq!(value_of(&shown, &status.id), Some(three));
+
+    // It can lose some, gain none, or be replaced.
+    let two = select(&[&options[0].id, &options[1].id]);
+    set_value(fx.pool(), &card, &status.id, Some(two))
+        .await
+        .unwrap();
+    let more = select(&[&options[0].id, &options[3].id]);
+    assert!(
+        set_value(fx.pool(), &card, &status.id, Some(more))
+            .await
+            .is_err()
+    );
+    let other = select(&[&options[3].id]);
+    let shown = set_value(fx.pool(), &card, &status.id, Some(other.clone()))
+        .await
+        .unwrap();
+    assert_eq!(value_of(&shown, &status.id), Some(other));
+}
+
+#[tokio::test]
+async fn choices_are_checked() {
+    let fx = Fixture::new().await;
+    let (_, status) = select_fixture(&fx, &["Vivant"]).await;
+
+    let empty = set_options(fx.pool(), &status.id, &[new_option("  ")], false).await;
+    assert!(matches!(empty, Err(AppError::InvalidInput(_))));
+
+    let long = new_option(&"x".repeat(MAX_OPTION_LEN + 1));
+    let too_long = set_options(fx.pool(), &status.id, &[long], false).await;
+    assert!(matches!(too_long, Err(AppError::InvalidInput(_))));
+
+    let many: Vec<_> = (0..=MAX_OPTIONS)
+        .map(|index| new_option(&index.to_string()))
+        .collect();
+    let too_many = set_options(fx.pool(), &status.id, &many, false).await;
+    assert!(matches!(too_many, Err(AppError::InvalidInput(_))));
+
+    let invented = PropertyOptionInput {
+        id: Some("invented".into()),
+        label: "Inventé".into(),
+    };
+    let unknown = set_options(fx.pool(), &status.id, &[invented], false).await;
+    assert!(matches!(unknown, Err(AppError::InvalidInput(_))));
+
+    let twice = kept(&status.options[0]);
+    let repeated = set_options(fx.pool(), &status.id, &[twice.clone(), twice], false).await;
+    assert!(matches!(repeated, Err(AppError::InvalidInput(_))));
+
+    // Only a select has choices.
+    let character = fx.new_type("Autre", None).await;
+    let text = create(fx.pool(), on_type(&character), "Titre", PropertyKind::Text)
+        .await
+        .unwrap();
+    let not_select = set_options(fx.pool(), &text.id, &[new_option("A")], false).await;
+    assert!(matches!(not_select, Err(AppError::InvalidInput(_))));
+}
+
+#[tokio::test]
+async fn leaving_the_select_kind_drops_its_values_and_its_choices() {
+    let fx = Fixture::new().await;
+    let (card, status) = select_fixture(&fx, &["Vivant"]).await;
+    let chosen = status.options[0].id.clone();
+    set_value(fx.pool(), &card, &status.id, Some(select(&[&chosen])))
+        .await
+        .unwrap();
+
+    let same = set_kind(fx.pool(), &status.id, PropertyKind::Select, &[])
+        .await
+        .unwrap();
+    assert_eq!(same.options.len(), 1);
+    assert_eq!(count_values(fx.pool(), &status.id).await.unwrap(), 1);
+
+    let text = set_kind(fx.pool(), &status.id, PropertyKind::Text, &[])
+        .await
+        .unwrap();
+    assert!(text.options.is_empty());
+    assert!(!text.multiple);
+    assert_eq!(count_values(fx.pool(), &status.id).await.unwrap(), 0);
+}
+
+#[tokio::test]
+async fn a_date_keeps_its_days_and_its_precision() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let birth = create(
+        fx.pool(),
+        on_type(&character),
+        "Naissance",
+        PropertyKind::Date,
+    )
+    .await
+    .unwrap();
+    tick().await;
+    let card = fx.card(&character, "Aragorn").await;
+    let date = PropertyValue::Date(PropertyDate {
+        days: -1234,
+        precision: DatePrecision::Month,
+    });
+    let shown = set_value(fx.pool(), &card, &birth.id, Some(date.clone()))
+        .await
+        .unwrap();
+    assert_eq!(value_of(&shown, &birth.id), Some(date));
+
+    let wrong = set_value(
+        fx.pool(),
+        &card,
+        &birth.id,
+        Some(PropertyValue::Text("hier".into())),
+    )
+    .await;
+    assert!(matches!(wrong, Err(AppError::InvalidInput(_))));
+
+    let cleared = set_value(fx.pool(), &card, &birth.id, None).await.unwrap();
+    assert_eq!(value_of(&cleared, &birth.id), None);
+}
+
+#[tokio::test]
+async fn an_unreadable_value_never_keeps_a_card_from_opening() {
+    let fx = Fixture::new().await;
+    let (card, status) = select_fixture(&fx, &["Vivant"]).await;
+    let character = cards::get(fx.pool(), &card).await.unwrap().type_id.unwrap();
+    let birth = create(
+        fx.pool(),
+        on_type(&character),
+        "Naissance",
+        PropertyKind::Date,
+    )
+    .await
+    .unwrap();
+    apply_to_existing(fx.pool(), &birth.id).await.unwrap();
+
+    let alive = status.options[0].id.clone();
+    let partly_known = format!(r#"{{"kind":"select","value":["gone","{alive}"]}}"#);
+    let cases: [(&String, &str, Option<PropertyValue>); 8] = [
+        (&status.id, "not json", None),
+        (&status.id, r#"{"kind":"select","value":"x"}"#, None),
+        (&status.id, r#"{"kind":"select","value":["gone"]}"#, None),
+        (&status.id, r#"{"kind":"text","value":"Vivant"}"#, None),
+        (&status.id, &partly_known, Some(select(&[&alive]))),
+        (&birth.id, r#"{"kind":"date","value":{"days":"x"}}"#, None),
+        (&birth.id, r#"{"kind":"date","value":12}"#, None),
+        (
+            &birth.id,
+            r#"{"kind":"date","value":{"days":1,"precision":"century"}}"#,
+            None,
+        ),
+    ];
+    for (property, json, expected) in cases {
+        queries::set_value(fx.pool(), &card, property, json)
+            .await
+            .unwrap();
+        let shown = of_card(fx.pool(), &card).await.unwrap();
+        assert_eq!(value_of(&shown, property), expected, "{json}");
+    }
+
+    // Unreadable choices read as none.
+    sqlx::query("UPDATE property_definitions SET options = 'not json' WHERE id = ?")
+        .bind(&status.id)
+        .execute(fx.pool())
+        .await
+        .unwrap();
+    let shown = of_card(fx.pool(), &card).await.unwrap();
+    assert!(
+        shown
+            .iter()
+            .find(|property| property.definition.id == status.id)
+            .is_some_and(|property| property.definition.options.is_empty())
+    );
+}
+
+#[tokio::test]
+async fn a_duplicated_card_keeps_its_own_choices_and_values() {
+    let fx = Fixture::new().await;
+    let character = fx.new_type("Personnage", None).await;
+    let card = fx.card(&character, "Aragorn").await;
+    let status = create(
+        fx.pool(),
+        PropertyOwner::Card {
+            card_id: card.clone(),
+        },
+        "Statut",
+        PropertyKind::Select,
+    )
+    .await
+    .unwrap();
+    let status = set_options(fx.pool(), &status.id, &[new_option("Vivant")], true)
+        .await
+        .unwrap();
+    let chosen = status.options[0].id.clone();
+    set_value(fx.pool(), &card, &status.id, Some(select(&[&chosen])))
+        .await
+        .unwrap();
+
+    let copy = cards::duplicate(fx.pool(), &card, "Copie").await.unwrap();
+    let shown = of_card(fx.pool(), &copy.id).await.unwrap();
+    assert_eq!(shown[0].definition.options, status.options);
+    assert!(shown[0].definition.multiple);
+    assert_ne!(shown[0].definition.id, status.id);
+    assert_eq!(shown[0].value, Some(select(&[&chosen])));
+}
+
+/// A world made before migration 0025, with its properties and values.
+#[tokio::test]
+async fn the_migration_keeps_existing_properties_and_values() {
+    use sqlx::Row;
+    use sqlx::migrate::Migrator;
+
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("old.db");
+    let pool = db::connect(&path, true).await.unwrap();
+    let up_to = |version: i64| Migrator {
+        migrations: db::MIGRATOR
+            .migrations
+            .iter()
+            .filter(|migration| migration.version <= version)
+            .cloned()
+            .collect::<Vec<_>>()
+            .into(),
+        ..Migrator::DEFAULT
+    };
+    up_to(24).run(&pool).await.unwrap();
+
+    let statements = [
+        "INSERT INTO documents (id, kind, title, sort_order, created_at, updated_at)
+         VALUES ('c1', 'card', 'Aragorn', 0, '2026-01-01', '2026-01-01')",
+        "INSERT INTO cards (document_id) VALUES ('c1')",
+        "INSERT INTO relation_types (id, builtin, name, icon, inverse_id, category, sort_order)
+         VALUES ('r1', NULL, 'Rival', 'swords', NULL, 'other', 99)",
+        "INSERT INTO property_definitions (id, card_id, label, kind, target_type_ids,
+             relation_type_id, applies_to_existing, sort_order, created_at)
+         VALUES ('age', 'c1', 'Âge', 'number', '[]', NULL, 1, 0, '2026-01-01'),
+                ('foe', 'c1', 'Rival', 'cards', '[\"t1\"]', 'r1', 0, 1, '2026-01-01')",
+        r#"INSERT INTO property_values (card_id, property_id, value)
+           VALUES ('c1', 'age', '{"kind":"number","value":87.0}'),
+                  ('c1', 'foe', '{"kind":"cards","value":["c1"]}')"#,
+    ];
+    for statement in statements {
+        sqlx::query(statement).execute(&pool).await.unwrap();
+    }
+
+    db::MIGRATOR.run(&pool).await.unwrap();
+
+    let foe = queries::get(&pool, "foe").await.unwrap().unwrap();
+    assert_eq!(foe.kind, "cards");
+    assert_eq!(foe.target_type_ids, r#"["t1"]"#);
+    assert_eq!(foe.relation_type_id.as_deref(), Some("r1"));
+    assert_eq!(foe.options, "[]");
+    assert_eq!(foe.multiple, 0);
+    assert_eq!(foe.sort_order, 1);
+    let age = queries::get(&pool, "age").await.unwrap().unwrap();
+    assert_eq!(age.applies_to_existing, 1);
+
+    let rows = sqlx::query("SELECT property_id, value FROM property_values ORDER BY property_id")
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0].get::<String, _>("property_id"), "age");
+    assert_eq!(
+        rows[0].get::<String, _>("value"),
+        r#"{"kind":"number","value":87.0}"#
+    );
+
+    // The rebuilt table cascades as before.
+    sqlx::query("DELETE FROM property_definitions WHERE id = 'age'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    assert_eq!(queries::count_values(&pool, "age").await.unwrap(), 0);
+}
