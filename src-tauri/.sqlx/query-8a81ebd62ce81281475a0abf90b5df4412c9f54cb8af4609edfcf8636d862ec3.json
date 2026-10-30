@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT card_id, value FROM property_values WHERE property_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "card_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "property_values",
+            "name": "card_id"
+          }
+        }
+      },
+      {
+        "name": "value",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "property_values",
+            "name": "value"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "8a81ebd62ce81281475a0abf90b5df4412c9f54cb8af4609edfcf8636d862ec3"
+}

@@ -132,6 +132,8 @@ const COMMANDS: &[&str] = &[
     "rename_property",
     "set_property_kind",
     "set_property_relation",
+    "set_property_options",
+    "count_property_option_values",
     "apply_property_to_existing",
     "reorder_properties",
     "count_property_values",

@@ -75,6 +75,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::properties::rename_property,
         commands::properties::set_property_kind,
         commands::properties::set_property_relation,
+        commands::properties::set_property_options,
+        commands::properties::count_property_option_values,
         commands::properties::apply_property_to_existing,
         commands::properties::reorder_properties,
         commands::properties::count_property_values,

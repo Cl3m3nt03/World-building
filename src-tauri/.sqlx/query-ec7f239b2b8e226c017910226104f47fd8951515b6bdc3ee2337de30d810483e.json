@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE property_values SET value = ? WHERE card_id = ? AND property_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "ec7f239b2b8e226c017910226104f47fd8951515b6bdc3ee2337de30d810483e"
+}
