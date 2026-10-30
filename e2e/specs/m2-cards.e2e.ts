@@ -14,20 +14,16 @@ const WORLD = "Terre du Milieu";
 
 const popover = () => $('[data-slot="popover-content"]');
 
-/** In the open types screen, adds a property to the selected type. */
+/**
+ * In the open types screen, adds a property to the selected type: its name,
+ * then its kind in the small window (V2-3.6, as on a card).
+ */
 async function addTypeProperty(label: string, kind: string) {
   await $("button=Ajouter une propriété").click();
   const name = await popover().$("input");
   await name.waitForDisplayed();
   await name.setValue(label);
-  await popover().$('button[role="combobox"]').click();
-  await $(`//*[@role="option"][normalize-space()="${kind}"]`).click();
-  await browser.waitUntil(
-    async () => (await popover().$('button[role="combobox"]').getText()).includes(kind),
-    { timeoutMsg: `the kind ${kind} was not chosen` },
-  );
-  // Closing the small window saves the name.
-  await browser.keys("Escape");
+  await popover().$(`button=${kind}`).click();
   await popover().waitForExist({ reverse: true });
   await $(`aria/Modifier la propriété ${label}`).waitForDisplayed();
 }
@@ -87,11 +83,11 @@ describe("M2: cards, properties, links and templates", () => {
 
   it("gives a backlink to the target of a link property and of a mention", async () => {
     await openTypes();
-    await addTypeProperty("Lieu de naissance", "Lien vers une carte");
+    await addTypeProperty("Lieu de naissance", "N'importe quelle carte");
     await $("button=Oui").click();
     // Characters created from now on start empty.
     const onCreate = await $(
-      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le modèle à la création"]/@for]',
+      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le template à la création"]/@for]',
     );
     await expect(onCreate).toHaveAttribute("aria-checked", "true");
     await onCreate.click();

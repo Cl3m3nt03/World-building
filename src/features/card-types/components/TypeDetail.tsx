@@ -1,7 +1,8 @@
 import {
   Copy,
+  CornerLeftUp,
   LayoutGrid,
-  Plus,
+  Pencil,
   RectangleHorizontal,
   RectangleVertical,
   Square,
@@ -31,8 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TypeProperties } from "@/features/properties";
 import type { CanvasFormat, CardType, Orientation } from "@/lib/bindings";
+import { cn } from "@/lib/utils";
 import { colorLabel, TYPE_COLORS, typeColor } from "../colors";
 import {
   useCreateCardType,
@@ -44,9 +47,14 @@ import {
 import { TYPE_ICON_NAMES, typeIcon } from "../icons";
 import { ChoiceTiles } from "./ChoiceTiles";
 import { TemplateEditor } from "./TemplateEditor";
+import { TypeBadge } from "./TypeBadge";
 
 /** Delay before a typed name is saved. */
 const SAVE_DELAY_MS = 500;
+
+/** A tile of the V2 choice groups (after the genres of « Create a world »). */
+const TILE =
+  "rounded-md border-border bg-(--bz-field) transition-[color,background-color,border-color,box-shadow] duration-(--bz-duration-fast) ease-atlas hover:border-[color-mix(in_oklab,var(--primary)_45%,var(--input))] hover:bg-(--bz-field) hover:text-foreground data-[state=checked]:bg-[color-mix(in_oklab,var(--primary)_12%,transparent)]";
 
 type TypeDetailProps = {
   type: CardType;
@@ -59,19 +67,69 @@ type TypeDetailProps = {
   onSelect: (id: string | null) => void;
 };
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/** A part of the type's sheet: its rubric on a fine line, like a card's section bars. */
+function Section({
+  title,
+  hint,
+  aside,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  /** At the end of the bar: a setting of the whole section. */
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
   const id = useId();
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-2">
-      <h3 id={id} className="text-sm font-bold">
-        {title}
-      </h3>
+    <section aria-labelledby={id} className="flex flex-col gap-2.5">
+      <div className="flex min-h-7 items-center gap-3">
+        <h3 id={id} className="rubric shrink-0">
+          {title}
+        </h3>
+        <span aria-hidden className="h-px flex-1 bg-border" />
+        {aside}
+      </div>
+      {hint && <p className="-mt-1.5 text-xs text-muted-foreground">{hint}</p>}
       {children}
     </section>
   );
 }
 
-/** Right side of the types screen: everything about one type or subtype. */
+/** An icon button with its name in a tooltip. */
+function IconAction({
+  label,
+  onClick,
+  disabled,
+  className,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={label}
+          disabled={disabled}
+          onClick={onClick}
+          className={className}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** Right side of the types screen: the sheet of one type or subtype (V2-3.6). */
 export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeDetailProps) {
   const { t } = useTranslation();
   const update = useUpdateCardType();
@@ -84,7 +142,6 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
   const subtypeId = useId();
   const onCreateId = useId();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const Icon = typeIcon(type.icon);
 
   // Another type selected, or the name changed elsewhere.
   useEffect(() => setName(type.name), [type.name]);
@@ -125,26 +182,37 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
   const error = update.error ?? duplicate.error ?? create.error;
 
   return (
-    <div className="flex min-h-0 flex-col gap-6 overflow-y-auto p-5">
-      <header className="flex items-center gap-2">
+    <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <header className="flex items-start gap-4 pt-7 pr-14 pb-6 pl-8">
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              type="button"
               aria-label={t("cardTypes.chooseIcon")}
-              className="size-10 shrink-0 rounded-lg border border-border"
+              title={t("cardTypes.chooseIcon")}
+              className="group relative mt-1 shrink-0 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <Icon style={{ color: typeColor(type.color) }} className="size-5" />
-            </Button>
+              <TypeBadge
+                type={type}
+                size="lg"
+                className="transition-transform duration-(--bz-duration-fast) ease-atlas group-hover:scale-[1.04]"
+              />
+              <span
+                aria-hidden
+                className="absolute -right-1.5 -bottom-1.5 flex size-5 items-center justify-center rounded-full glass-float text-muted-foreground group-hover:text-foreground"
+              >
+                <Pencil className="size-3" />
+              </span>
+            </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="glass w-auto">
+          <PopoverContent align="start" className="w-auto p-2">
+            <p className="rubric px-1 pb-1.5">{t("cardTypes.icon")}</p>
             <ChoiceTiles
               label={t("cardTypes.icon")}
               value={type.icon}
               onChange={(icon) => patch({ icon })}
               className="grid grid-cols-8 gap-1"
-              tileClassName="size-9"
+              tileClassName="size-9 rounded-md border-transparent"
               choices={TYPE_ICON_NAMES.map((iconName) => {
                 const Choice = typeIcon(iconName);
                 return {
@@ -156,192 +224,214 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
             />
           </PopoverContent>
         </Popover>
-        <label htmlFor={nameId} className="sr-only">
-          {t("cardTypes.name")}
-        </label>
-        <Input
-          id={nameId}
-          value={name}
-          maxLength={80}
-          onChange={(event) => {
-            setName(event.target.value);
-            clearTimeout(timer.current);
-            const value = event.target.value;
-            timer.current = setTimeout(() => saveName(value), SAVE_DELAY_MS);
-          }}
-          onBlur={() => saveName(name)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") saveName(name);
-          }}
-          aria-invalid={name.trim() === ""}
-          className="h-10 font-heading text-lg font-bold"
-        />
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("cardTypes.duplicate")}
-          title={t("cardTypes.duplicate")}
-          disabled={duplicate.isPending}
-          onClick={() =>
-            duplicate.mutate(
-              { id: type.id, name: t("cardTypes.copyName", { name: type.name }) },
-              { onSuccess: (copy) => onSelect(copy.id) },
-            )
-          }
-        >
-          <Copy />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("cardTypes.delete")}
-          title={t("cardTypes.delete")}
-          onClick={() => setDeleting(true)}
-          className="text-destructive"
-        >
-          <Trash2 />
-        </Button>
-      </header>
 
-      {parent && (
-        <p className="-mt-4 text-sm text-muted-foreground">
-          {t("cardTypes.subtypeOf", { name: parent.name })}
-        </p>
-      )}
-      {name.trim() === "" && (
-        <p className="-mt-4 text-xs text-destructive">{t("cardTypes.nameRequired")}</p>
-      )}
-      {error && <AppErrorMessage error={error} />}
-
-      <Section title={t("cardTypes.colorTitle")}>
-        <ChoiceTiles
-          label={t("cardTypes.colorTitle")}
-          value={type.color}
-          onChange={(color) => patch({ color })}
-          tileClassName="size-8 rounded-full"
-          choices={TYPE_COLORS.map((color) => ({
-            value: color,
-            label: t(colorLabel(color)),
-            content: (
-              <span
-                aria-hidden
-                className="size-4 rounded-full"
-                style={{ background: typeColor(color) }}
-              />
-            ),
-          }))}
-        />
-      </Section>
-
-      {!parent && (
-        <Section title={t("cardTypes.subtypes")}>
-          {subtypes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("cardTypes.noSubtypes")}</p>
-          ) : (
-            <ul className="flex flex-wrap gap-2">
-              {subtypes.map((sub) => (
-                <li key={sub.id}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => onSelect(sub.id)}
-                  >
-                    {sub.name}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <form onSubmit={addSubtype} className="flex gap-2">
-            <label htmlFor={subtypeId} className="sr-only">
-              {t("cardTypes.newSubtype")}
-            </label>
-            <Input
-              id={subtypeId}
-              value={newSubtype}
-              maxLength={80}
-              placeholder={t("cardTypes.newSubtype")}
-              onChange={(event) => setNewSubtype(event.target.value)}
-            />
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={newSubtype.trim() === "" || create.isPending}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          {parent && (
+            <button
+              type="button"
+              onClick={() => onSelect(parent.id)}
+              className="rubric flex items-center gap-1 self-start rounded-sm px-1 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <Plus />
-              {t("cardTypes.addSubtype")}
-            </Button>
-          </form>
-        </Section>
-      )}
-
-      <Section title={t("properties.title")}>
-        {parent && (
-          <p className="-mt-1 text-sm text-muted-foreground">
-            {t("properties.inherits", { name: parent.name })}
-          </p>
-        )}
-        <TypeProperties typeId={type.id} types={allTypes} />
-      </Section>
-
-      <Section title={t("templates.title")}>
-        <p className="-mt-1 text-sm text-muted-foreground">{t("templates.hint")}</p>
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor={onCreateId}>{t("templates.onCreate")}</Label>
-          <Switch
-            id={onCreateId}
-            checked={type.templateOnCreate}
-            onCheckedChange={(templateOnCreate) => patch({ templateOnCreate })}
+              <CornerLeftUp aria-hidden className="size-3.5" />
+              {t("cardTypes.subtypeOf", { name: parent.name })}
+            </button>
+          )}
+          <label htmlFor={nameId} className="sr-only">
+            {t("cardTypes.name")}
+          </label>
+          <Input
+            id={nameId}
+            value={name}
+            maxLength={80}
+            onChange={(event) => {
+              setName(event.target.value);
+              clearTimeout(timer.current);
+              const value = event.target.value;
+              timer.current = setTimeout(() => saveName(value), SAVE_DELAY_MS);
+            }}
+            onBlur={() => saveName(name)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") saveName(name);
+            }}
+            aria-invalid={name.trim() === ""}
+            className="h-auto border-transparent bg-transparent px-1 py-0.5 font-heading text-3xl font-bold shadow-none hover:border-border focus-visible:border-ring md:text-3xl dark:bg-transparent"
+          />
+          {name.trim() === "" && (
+            <p className="px-1 text-xs text-destructive">{t("cardTypes.nameRequired")}</p>
+          )}
+          <ChoiceTiles
+            label={t("cardTypes.colorTitle")}
+            value={type.color}
+            onChange={(color) => patch({ color })}
+            className="gap-1 px-0.5 pt-1"
+            tileClassName="size-7 rounded-full border-transparent hover:bg-muted data-[state=checked]:border-primary data-[state=checked]:bg-transparent"
+            choices={TYPE_COLORS.map((color) => ({
+              value: color,
+              label: t(colorLabel(color)),
+              content: (
+                <span
+                  aria-hidden
+                  className="size-4 rounded-full"
+                  style={{ background: typeColor(color) }}
+                />
+              ),
+            }))}
           />
         </div>
-        <TemplateEditor type={type} parent={parent} />
-      </Section>
 
-      <Section title={t("cardTypes.defaults")}>
-        <p className="-mt-1 text-sm text-muted-foreground">{t("cardTypes.defaultsHint")}</p>
-        <h4 className="text-xs font-bold text-muted-foreground">
-          {t("cardTypes.orientationTitle")}
-        </h4>
-        <ChoiceTiles
-          label={t("cardTypes.orientationTitle")}
-          value={type.orientation}
-          onChange={(orientation) => patch({ orientation })}
-          className="grid grid-cols-2"
-          tileClassName="flex-col gap-1 py-4 text-sm"
-          choices={orientations.map(({ value, label, icon: TileIcon }) => ({
-            value,
-            label,
-            content: (
-              <>
-                <TileIcon aria-hidden className="size-6" />
-                <span>{label}</span>
-              </>
-            ),
-          }))}
-        />
-        <h4 className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
-          <LayoutGrid aria-hidden className="size-3.5" />
-          {t("cardTypes.formatTitle")}
-        </h4>
-        <ChoiceTiles
-          label={t("cardTypes.formatTitle")}
-          value={type.canvasFormat}
-          onChange={(canvasFormat) => patch({ canvasFormat })}
-          className="grid grid-cols-4"
-          tileClassName="flex-col gap-1 py-3 text-xs"
-          choices={formats.map(({ value, label, icon: TileIcon }) => ({
-            value,
-            label,
-            content: (
-              <>
-                <TileIcon aria-hidden className="size-5" />
-                <span>{label}</span>
-              </>
-            ),
-          }))}
-        />
-      </Section>
+        <div className="flex shrink-0 items-center gap-0.5 pt-1.5">
+          <IconAction
+            label={t("cardTypes.duplicate")}
+            disabled={duplicate.isPending}
+            onClick={() =>
+              duplicate.mutate(
+                { id: type.id, name: t("cardTypes.copyName", { name: type.name }) },
+                { onSuccess: (copy) => onSelect(copy.id) },
+              )
+            }
+          >
+            <Copy />
+          </IconAction>
+          <IconAction
+            label={t("cardTypes.delete")}
+            onClick={() => setDeleting(true)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 />
+          </IconAction>
+        </div>
+      </header>
+
+      <div className="flex flex-col gap-7 px-8 pb-8">
+        {error && <AppErrorMessage error={error} />}
+
+        {!parent && (
+          <Section title={t("cardTypes.subtypes")}>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {subtypes.length === 0 && (
+                <span className="pr-1 text-sm text-muted-foreground">
+                  {t("cardTypes.noSubtypes")}
+                </span>
+              )}
+              {subtypes.map((sub) => (
+                <Button
+                  key={sub.id}
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 gap-1.5 rounded-full pr-3 pl-0.5"
+                  onClick={() => onSelect(sub.id)}
+                >
+                  <TypeBadge type={sub} size="sm" className="rounded-full" />
+                  {sub.name}
+                </Button>
+              ))}
+              <form onSubmit={addSubtype} className="flex items-center gap-1">
+                <label htmlFor={subtypeId} className="sr-only">
+                  {t("cardTypes.newSubtype")}
+                </label>
+                <input
+                  id={subtypeId}
+                  value={newSubtype}
+                  maxLength={80}
+                  placeholder={t("cardTypes.newSubtypeShort")}
+                  onChange={(event) => setNewSubtype(event.target.value)}
+                  // Stays wide while it holds a draft, like the aliases' field: a
+                  // field shrinking on blur would slide « Add » from under the pointer.
+                  className={cn(
+                    "h-7 rounded-full border border-dashed border-border bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-solid",
+                    newSubtype === "" ? "w-40 focus:w-52" : "w-52",
+                    "transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  )}
+                />
+                {newSubtype.trim() !== "" && (
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    size="xs"
+                    className="rounded-full"
+                    disabled={create.isPending}
+                  >
+                    {t("cardTypes.addSubtype")}
+                  </Button>
+                )}
+              </form>
+            </div>
+          </Section>
+        )}
+
+        <Section
+          title={t("cardTypes.propertiesTitle")}
+          hint={
+            parent ? t("properties.inherits", { name: parent.name }) : t("cardTypes.propertiesHint")
+          }
+        >
+          <TypeProperties typeId={type.id} types={allTypes} />
+        </Section>
+
+        <Section title={t("templates.title")} hint={t("templates.hint")}>
+          <div className="flex items-center gap-2.5 rounded-md bg-muted px-3 py-2">
+            <Switch
+              id={onCreateId}
+              checked={type.templateOnCreate}
+              onCheckedChange={(templateOnCreate) => patch({ templateOnCreate })}
+            />
+            <Label htmlFor={onCreateId} className="font-normal">
+              {t("templates.onCreate")}
+            </Label>
+          </div>
+          <TemplateEditor type={type} parent={parent} />
+        </Section>
+
+        <Section title={t("cardTypes.defaults")} hint={t("cardTypes.defaultsHint")}>
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4">
+            <div className="flex flex-col gap-1.5">
+              <h4 className="text-xs font-medium text-muted-foreground">
+                {t("cardTypes.orientationTitle")}
+              </h4>
+              <ChoiceTiles
+                label={t("cardTypes.orientationTitle")}
+                value={type.orientation}
+                onChange={(orientation) => patch({ orientation })}
+                className="grid grid-cols-2"
+                tileClassName={cn(TILE, "flex-col gap-1 py-3 text-xs")}
+                choices={orientations.map(({ value, label, icon: TileIcon }) => ({
+                  value,
+                  label,
+                  content: (
+                    <>
+                      <TileIcon aria-hidden className="size-5" strokeWidth={1.5} />
+                      <span>{label}</span>
+                    </>
+                  ),
+                }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h4 className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                <LayoutGrid aria-hidden className="size-3.5" />
+                {t("cardTypes.formatTitle")}
+              </h4>
+              <ChoiceTiles
+                label={t("cardTypes.formatTitle")}
+                value={type.canvasFormat}
+                onChange={(canvasFormat) => patch({ canvasFormat })}
+                className="grid grid-cols-4"
+                tileClassName={cn(TILE, "flex-col gap-1 py-3 text-xs")}
+                choices={formats.map(({ value, label, icon: TileIcon }) => ({
+                  value,
+                  label,
+                  content: (
+                    <>
+                      <TileIcon aria-hidden className="size-5" strokeWidth={1.5} />
+                      <span>{label}</span>
+                    </>
+                  ),
+                }))}
+              />
+            </div>
+          </div>
+        </Section>
+      </div>
 
       <DeleteTypeDialog
         type={deleting ? type : null}
