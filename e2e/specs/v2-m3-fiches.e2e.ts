@@ -66,6 +66,13 @@ async function addCardProperty(label: string, pick: () => Promise<void>) {
   await popover().waitForDisplayed();
   await browser.keys("Escape");
   await popover().waitForExist({ reverse: true });
+  // The focus comes back a moment later, and would close a window opened before.
+  await browser.waitUntil(
+    async () =>
+      (await browser.execute(() => document.activeElement?.getAttribute("aria-label"))) ===
+      `Modifier la propriété ${label}`,
+    { timeoutMsg: `the focus did not come back to the property ${label}` },
+  );
 }
 
 describe("V2-M3: the cards", () => {
@@ -231,7 +238,7 @@ describe("V2-M3: the cards", () => {
     });
 
     const pick = async (title: string) => {
-      await $("aria/Choisir une carte pour Terres").click();
+      await $('button[aria-label="Choisir une carte pour Terres"]').click();
       await popover().waitForDisplayed();
       await browser.waitUntil(async () => popover().$('input[role="combobox"]').isFocused(), {
         timeoutMsg: "the card picker's search did not take the focus",
