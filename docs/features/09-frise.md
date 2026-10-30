@@ -112,3 +112,5 @@ Lâchée **sur un élément** (sa bulle, son segment ou sa barre, entouré penda
 - Un calendrier à deux ères et douze mois nommés affiche « 12 du 3e mois 298 DC ».
 - Une période de Robert (283–298 DC) et un événement (298 DC) liés à leurs cartes apparaissent sur deux pistes. La carte montre la frise dans « Cité dans ».
 - Le zoom passe des siècles aux jours sans perdre le centre.
+
+**Dates des cartes (V2-3.3b, ADR 0014)** : une propriété « Date » d'une carte utilise le calendrier du monde et le même champ de date que la frise. Elle ne crée aucun élément de frise.

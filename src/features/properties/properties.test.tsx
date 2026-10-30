@@ -58,7 +58,11 @@ beforeEach(() => {
       case "create_property": {
         const owner = args.owner as PropertyDefinition["owner"];
         const kind = args.kind as PropertyDefinition["kind"];
-        const created = definition(`new-${calls.length}`, args.label as string, { owner, kind });
+        // The links need a router: they stay out of these rows.
+        const created = definition(`new-${calls.length}`, args.label as string, {
+          owner,
+          kind: kind === "select" || kind === "date" ? kind : "text",
+        });
         if (owner.on === "type") typeProps = [...typeProps, created];
         else cardProps = [...cardProps, { definition: created, value: null }];
         return created;
