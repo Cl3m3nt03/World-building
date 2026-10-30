@@ -52,7 +52,10 @@ describe("V2-3.3b: select and date properties", () => {
     await $("aria/Modifier la propriété Statut").click();
     const name = await $("aria/Nom du choix Vivant");
     await name.waitForDisplayed();
-    await name.setValue("En vie");
+    // Not setValue: its clear leaves the field, and an empty name goes back to the old one.
+    await name.click();
+    await browser.keys(["Control", "a"]);
+    await browser.keys("En vie");
     await browser.keys("Enter");
     await $("aria/Nom du choix En vie").waitForDisplayed();
     await closeWindow();
