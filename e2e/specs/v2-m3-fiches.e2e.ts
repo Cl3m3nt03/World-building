@@ -244,7 +244,9 @@ describe("V2-M3: the cards", () => {
     };
     // A character is not a location: not offered.
     await pick("Bran");
-    await $("*=Aucune carte ne correspond").waitForDisplayed();
+    await expect($('[data-slot="popover-content"]')).toHaveText(
+      expect.stringContaining("Aucune carte ne correspond"),
+    );
     await browser.keys("Escape");
     await popover().waitForExist({ reverse: true });
 
