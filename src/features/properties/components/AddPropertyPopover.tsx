@@ -1,4 +1,4 @@
-import { Hash, Link2, Plus, Type } from "lucide-react";
+import { CalendarDays, Hash, Link2, ListChecks, Plus, Type } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,8 @@ function Family({ title, children }: { title: string; children: ReactNode }) {
 /**
  * « + Ajouter une propriété » (V2-3.3, after vvd): a small window with the
  * property's name first, then its kind in two families, a value (text,
- * number) or a link to a card (any card, or a card of a given type; one or
- * several). Picking a kind creates the property.
+ * number, select, date) or a link to a card (any card, or a card of a given
+ * type; one or several). Picking a kind creates the property.
  */
 export function AddPropertyPopover({
   owner,
@@ -99,6 +99,19 @@ export function AddPropertyPopover({
           >
             <Hash aria-hidden className="size-4 text-muted-foreground" />
             {t("properties.kinds.number")}
+          </button>
+          <button
+            type="button"
+            className={ENTRY}
+            disabled={busy}
+            onClick={() => void add("select")}
+          >
+            <ListChecks aria-hidden className="size-4 text-muted-foreground" />
+            {t("properties.kinds.select")}
+          </button>
+          <button type="button" className={ENTRY} disabled={busy} onClick={() => void add("date")}>
+            <CalendarDays aria-hidden className="size-4 text-muted-foreground" />
+            {t("properties.kinds.date")}
           </button>
         </Family>
         <Family title={t("properties.families.link")}>

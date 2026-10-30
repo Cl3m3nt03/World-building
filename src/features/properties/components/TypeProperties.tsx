@@ -17,6 +17,9 @@ function KindSummary({ property, types }: { property: PropertyDefinition; types:
   return (
     <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
       {t(`properties.kinds.${property.kind}`)}
+      {property.kind === "select" && (
+        <span>{t("properties.optionCount", { count: property.options.length })}</span>
+      )}
       {targets.map((type) => {
         const Icon = typeIcon(type.icon);
         return (
@@ -42,6 +45,8 @@ export function TypeProperties({ typeId, types }: { typeId: string; types: CardT
   const apply = useApplyPropertyToExisting();
   // Properties added while this type is open and not yet applied to its cards.
   const [pending, setPending] = useState<string[]>([]);
+  // A select just added: its window opens to list its choices.
+  const [justAdded, setJustAdded] = useState<string | null>(null);
 
   const applyAll = async () => {
     for (const id of pending) await apply.mutateAsync(id);
@@ -73,7 +78,11 @@ export function TypeProperties({ typeId, types }: { typeId: string; types: CardT
             const Icon = kindIcon(property.kind);
             return (
               <li key={property.id} className="border-b border-border last:border-b-0">
-                <PropertyEditor property={property} types={types}>
+                <PropertyEditor
+                  property={property}
+                  types={types}
+                  defaultOpen={property.id === justAdded}
+                >
                   <button
                     type="button"
                     aria-label={t("properties.edit", { name: property.label })}
@@ -93,7 +102,10 @@ export function TypeProperties({ typeId, types }: { typeId: string; types: CardT
       <AddPropertyPopover
         owner={{ on: "type", typeId }}
         types={types}
-        onCreated={(property) => setPending((ids) => [...ids, property.id])}
+        onCreated={(property) => {
+          setPending((ids) => [...ids, property.id]);
+          if (property.kind === "select") setJustAdded(property.id);
+        }}
       />
     </div>
   );
