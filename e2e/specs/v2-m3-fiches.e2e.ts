@@ -218,7 +218,12 @@ describe("V2-M3: the cards", () => {
     await option("Lieu").waitForDisplayed();
     await browser.keys("Enter");
     await nameNewCard("Lieu", "Hautecombe");
-    await openCard("Sacre");
+    await $("button=Nouvelle carte").click();
+    await typeInPicker("Personnage");
+    await option("Personnage").waitForDisplayed();
+    await browser.keys("Enter");
+    await nameNewCard("Personnage", "Bran");
+    await openCard("Aldor");
 
     await addCardProperty("Terres", async () => {
       await popover().$("label=Plusieurs cartes à la fois").click();
@@ -234,7 +239,7 @@ describe("V2-M3: the cards", () => {
       await browser.keys(title);
     };
     // A character is not a location: not offered.
-    await pick("Aldor");
+    await pick("Bran");
     await $("*=Aucune carte ne correspond").waitForDisplayed();
     await browser.keys("Escape");
     await popover().waitForExist({ reverse: true });
@@ -318,8 +323,8 @@ describe("V2-M3: the cards", () => {
     await browser.keys("Backspace");
 
     await slash("Titre 2");
-    await browser.keys("Grand sacre");
-    await textBlock(1).$('.//h2[normalize-space()="Grand sacre"]').waitForDisplayed();
+    await browser.keys("Grand banquet");
+    await textBlock(1).$('.//h2[normalize-space()="Grand banquet"]').waitForDisplayed();
 
     await browser.keys("Enter");
     await slash("Liste à puces");
@@ -358,7 +363,7 @@ describe("V2-M3: the cards", () => {
     await menuEntry("Copier le bloc");
     await menuGone();
     await textBlock(2).waitForDisplayed();
-    await expect(textBlock(2)).toHaveText(expect.stringContaining("Grand sacre"));
+    await expect(textBlock(2)).toHaveText(expect.stringContaining("Grand banquet"));
 
     await $("aria/Actions du bloc 1").click();
     await menuEntry("Ajouter un bloc dessous");
@@ -373,8 +378,8 @@ describe("V2-M3: the cards", () => {
 
     await openCard("Sacre");
     await openCard("Annales");
-    await expect(textBlock(1)).toHaveText(expect.stringContaining("Grand sacre"));
+    await expect(textBlock(1)).toHaveText(expect.stringContaining("Grand banquet"));
     await expect(textBlock(2)).toHaveText("Entre les deux");
-    await expect(textBlock(3)).toHaveText(expect.stringContaining("Grand sacre"));
+    await expect(textBlock(3)).toHaveText(expect.stringContaining("Grand banquet"));
   });
 });
