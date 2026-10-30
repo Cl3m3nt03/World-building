@@ -66,7 +66,10 @@ export function AddPropertyPopover({
           {t("properties.add")}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="flex w-80 flex-col gap-1 p-2">
+      <PopoverContent
+        align="start"
+        className="flex max-h-(--radix-popover-content-available-height) w-80 flex-col gap-1 overflow-y-auto p-2"
+      >
         <label htmlFor={nameId} className="sr-only">
           {t("properties.nameLabel")}
         </label>

@@ -60,7 +60,11 @@ export function PropertyOptions({ property }: { property: PropertyDefinition }) 
     commit(options.filter((each) => each.id !== option.id)).then(() => setRemoving(null));
 
   const askRemove = async (option: PropertyOption) => {
-    const cards = await count.mutateAsync({ id: property.id, optionId: option.id }).catch(() => 0);
+    // Without the count, nothing is removed: the failure is shown below.
+    const cards = await count
+      .mutateAsync({ id: property.id, optionId: option.id })
+      .catch(() => null);
+    if (cards === null) return;
     if (cards > 0) setRemoving({ option, cards });
     else void remove(option);
   };
