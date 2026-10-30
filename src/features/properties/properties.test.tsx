@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CardProperties } from "@/features/cards/components/CardProperties";
 import type { CardProperty, PropertyDefinition, PropertyValue } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
+import { PropertyEditor } from "./components/PropertyEditor";
 import { TypeProperties } from "./components/TypeProperties";
 
 function definition(
@@ -281,4 +282,22 @@ test("a property can be added to one card only", async () => {
   expect(
     await screen.findByRole("button", { name: "Modifier la propriété Nouvelle propriété" }),
   ).toBeTruthy();
+});
+
+test("the editor opens when its property is marked as just created after it showed", async () => {
+  const property = definition("motto", "Devise", { owner: { on: "card", cardId: "aragorn" } });
+  const editor = (justCreated: boolean) => (
+    <QueryClientProvider client={createQueryClient()}>
+      <PropertyEditor property={property} types={[]} defaultOpen={justCreated}>
+        <button type="button" aria-label="Devise" />
+      </PropertyEditor>
+    </QueryClientProvider>
+  );
+  // A link to a given type takes two saves: its row shows before the second ends.
+  const { rerender } = render(editor(false));
+  expect(screen.queryByLabelText("Nom")).toBeNull();
+
+  rerender(editor(true));
+
+  expect(await screen.findByLabelText("Nom")).toBeTruthy();
 });
