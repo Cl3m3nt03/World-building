@@ -1,6 +1,6 @@
 //! Queries on `property_definitions` and `property_values`.
 
-use sqlx::{Sqlite, SqlitePool, Transaction};
+use sqlx::{Sqlite, SqliteConnection, SqlitePool, Transaction};
 
 use crate::error::AppResult;
 
@@ -14,6 +14,9 @@ pub struct DefinitionRow {
     pub target_type_ids: String,
     /// A relation type, for a link property that is a relation.
     pub relation_type_id: Option<String>,
+    /// For a select: its choices, JSON.
+    pub options: String,
+    pub multiple: i64,
     pub applies_to_existing: i64,
     pub sort_order: i64,
     pub created_at: String,
@@ -22,9 +25,9 @@ pub struct DefinitionRow {
 pub async fn insert(pool: &SqlitePool, row: &DefinitionRow) -> AppResult<()> {
     sqlx::query!(
         "INSERT INTO property_definitions (id, type_id, card_id, label, kind, target_type_ids,
-                                           relation_type_id, applies_to_existing, sort_order,
-                                           created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                           relation_type_id, options, multiple,
+                                           applies_to_existing, sort_order, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         row.id,
         row.type_id,
         row.card_id,
@@ -32,6 +35,8 @@ pub async fn insert(pool: &SqlitePool, row: &DefinitionRow) -> AppResult<()> {
         row.kind,
         row.target_type_ids,
         row.relation_type_id,
+        row.options,
+        row.multiple,
         row.applies_to_existing,
         row.sort_order,
         row.created_at,
@@ -44,8 +49,8 @@ pub async fn insert(pool: &SqlitePool, row: &DefinitionRow) -> AppResult<()> {
 pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Option<DefinitionRow>> {
     Ok(sqlx::query_as!(
         DefinitionRow,
-        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,
-                sort_order, created_at
+        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, options, multiple,
+                applies_to_existing, sort_order, created_at
          FROM property_definitions WHERE id = ?",
         id
     )
@@ -57,8 +62,8 @@ pub async fn get(pool: &SqlitePool, id: &str) -> AppResult<Option<DefinitionRow>
 pub async fn of_type(pool: &SqlitePool, type_id: &str) -> AppResult<Vec<DefinitionRow>> {
     Ok(sqlx::query_as!(
         DefinitionRow,
-        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,
-                sort_order, created_at
+        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, options, multiple,
+                applies_to_existing, sort_order, created_at
          FROM property_definitions WHERE type_id = ?
          ORDER BY sort_order, created_at",
         type_id
@@ -71,8 +76,8 @@ pub async fn of_type(pool: &SqlitePool, type_id: &str) -> AppResult<Vec<Definiti
 pub async fn of_card(pool: &SqlitePool, card_id: &str) -> AppResult<Vec<DefinitionRow>> {
     Ok(sqlx::query_as!(
         DefinitionRow,
-        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,
-                sort_order, created_at
+        "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, options, multiple,
+                applies_to_existing, sort_order, created_at
          FROM property_definitions WHERE card_id = ?
          ORDER BY sort_order, created_at",
         card_id
@@ -116,6 +121,26 @@ pub async fn set_kind(pool: &SqlitePool, id: &str, kind: &str, targets: &str) ->
         id
     )
     .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Sets the choices of a select property (JSON) and whether a card can hold
+/// several of them.
+pub async fn set_options(
+    tx: &mut Transaction<'_, Sqlite>,
+    id: &str,
+    options: &str,
+    multiple: bool,
+) -> AppResult<()> {
+    let multiple = i64::from(multiple);
+    sqlx::query!(
+        "UPDATE property_definitions SET options = ?, multiple = ? WHERE id = ?",
+        options,
+        multiple,
+        id
+    )
+    .execute(&mut **tx)
     .await?;
     Ok(())
 }
@@ -181,6 +206,57 @@ pub async fn values_of(pool: &SqlitePool, card_id: &str) -> AppResult<Vec<(Strin
         .collect())
 }
 
+/// Values of a property, by card id.
+pub async fn values_of_property(
+    connection: &mut SqliteConnection,
+    property_id: &str,
+) -> AppResult<Vec<(String, String)>> {
+    let rows = sqlx::query!(
+        "SELECT card_id, value FROM property_values WHERE property_id = ?",
+        property_id
+    )
+    .fetch_all(connection)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.card_id, row.value))
+        .collect())
+}
+
+/// Replaces a value that exists, as part of a larger change.
+pub async fn update_value(
+    tx: &mut Transaction<'_, Sqlite>,
+    card_id: &str,
+    property_id: &str,
+    value: &str,
+) -> AppResult<()> {
+    sqlx::query!(
+        "UPDATE property_values SET value = ? WHERE card_id = ? AND property_id = ?",
+        value,
+        card_id,
+        property_id
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+/// Removes a value, as part of a larger change.
+pub async fn delete_value(
+    tx: &mut Transaction<'_, Sqlite>,
+    card_id: &str,
+    property_id: &str,
+) -> AppResult<()> {
+    sqlx::query!(
+        "DELETE FROM property_values WHERE card_id = ? AND property_id = ?",
+        card_id,
+        property_id
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
 pub async fn set_value(
     pool: &SqlitePool,
     card_id: &str,
@@ -233,10 +309,10 @@ pub async fn copy_definition(
 ) -> AppResult<()> {
     sqlx::query!(
         "INSERT INTO property_definitions (id, type_id, card_id, label, kind, target_type_ids,
-                                           relation_type_id, applies_to_existing, sort_order,
-                                           created_at)
-         SELECT ?, NULL, ?, label, kind, target_type_ids, relation_type_id, applies_to_existing,
-                sort_order, ?
+                                           relation_type_id, options, multiple,
+                                           applies_to_existing, sort_order, created_at)
+         SELECT ?, NULL, ?, label, kind, target_type_ids, relation_type_id, options, multiple,
+                applies_to_existing, sort_order, ?
          FROM property_definitions WHERE id = ?",
         id,
         card_id,

@@ -21,6 +21,8 @@ function definition(
     kind: "text",
     targetTypeIds: [],
     relationTypeId: null,
+    options: [],
+    multiple: false,
     appliesToExisting: false,
     sortOrder: 0,
     createdAt: "2026-09-27T10:00:00Z",
@@ -33,6 +35,7 @@ let calls: Call[];
 let typeProps: PropertyDefinition[];
 let cardProps: CardProperty[];
 let valueCount: number;
+let optionUses: number;
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -43,6 +46,7 @@ beforeEach(() => {
     { definition: definition("title", "Titre"), value: { kind: "text", value: "Roi" } },
   ];
   valueCount = 3;
+  optionUses = 0;
   mockIPC((command, payload) => {
     calls.push({ command, payload });
     const args = payload as Record<string, unknown>;
@@ -53,7 +57,12 @@ beforeEach(() => {
         return cardProps;
       case "create_property": {
         const owner = args.owner as PropertyDefinition["owner"];
-        const created = definition(`new-${calls.length}`, args.label as string, { owner });
+        const kind = args.kind as PropertyDefinition["kind"];
+        // The links need a router: they stay out of these rows.
+        const created = definition(`new-${calls.length}`, args.label as string, {
+          owner,
+          kind: kind === "select" || kind === "date" ? kind : "text",
+        });
         if (owner.on === "type") typeProps = [...typeProps, created];
         else cardProps = [...cardProps, { definition: created, value: null }];
         return created;
@@ -66,6 +75,29 @@ beforeEach(() => {
       }
       case "apply_property_to_existing":
         return typeProps.find((p) => p.id === args.id);
+      case "set_property_options": {
+        const options = (args.options as { id: string | null; label: string }[]).map(
+          (option, index) => ({ id: option.id ?? `option-${index}`, label: option.label }),
+        );
+        const multiple = args.multiple as boolean;
+        const change = (p: PropertyDefinition) =>
+          p.id === args.id ? { ...p, options, multiple } : p;
+        typeProps = typeProps.map(change);
+        cardProps = cardProps.map((p) => ({ ...p, definition: change(p.definition) }));
+        return typeProps.find((p) => p.id === args.id);
+      }
+      case "count_property_option_values":
+        return optionUses;
+      case "current_world":
+        return {
+          calendar: {
+            eras: [],
+            months: [
+              { name: "Givre", days: 30 },
+              { name: "", days: 30 },
+            ],
+          },
+        };
       case "count_property_values":
         return valueCount;
       case "list_relation_types":
@@ -281,4 +313,254 @@ test("a property can be added to one card only", async () => {
   expect(
     await screen.findByRole("button", { name: "Modifier la propriété Nouvelle propriété" }),
   ).toBeTruthy();
+});
+
+const OPTIONS = [
+  { id: "alive", label: "Vivant" },
+  { id: "dead", label: "Mort" },
+];
+
+function selectProperty(extra: Partial<PropertyDefinition> = {}) {
+  return definition("status", "Statut", { kind: "select", options: OPTIONS, ...extra });
+}
+
+/** Opens a Radix menu by its trigger (it listens to the pointer, not the click). */
+function openMenu(trigger: HTMLElement) {
+  fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+}
+
+test("the kinds select and date are offered in the Value family", async () => {
+  renderWith(<CardProperties cardId="aragorn" />);
+  await screen.findByRole("textbox", { name: "Âge" });
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Sélection" }));
+  await waitFor(() =>
+    expect(callsOf("create_property")[0]?.payload).toEqual({
+      owner: { on: "card", cardId: "aragorn" },
+      label: "Nouvelle propriété",
+      kind: "select",
+    }),
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Date" }));
+  await waitFor(() =>
+    expect(callsOf("create_property")[1]?.payload).toMatchObject({ kind: "date" }),
+  );
+});
+
+test("a new select opens its window on the types screen, to list its choices", async () => {
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  await screen.findByRole("button", { name: "Modifier la propriété Titre" });
+
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une propriété" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Sélection" }));
+
+  expect(await screen.findByRole("group", { name: "Choix" })).toBeTruthy();
+});
+
+test("choices are added, renamed and ordered by sending the whole list with their ids", async () => {
+  typeProps = [selectProperty()];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
+
+  const add = await screen.findByRole("textbox", { name: "Ajouter un choix" });
+  fireEvent.change(add, { target: { value: " Disparu " } });
+  fireEvent.keyDown(add, { key: "Enter" });
+  await waitFor(() =>
+    expect(callsOf("set_property_options")[0]?.payload).toEqual({
+      id: "status",
+      options: [...OPTIONS, { id: null, label: "Disparu" }],
+      multiple: false,
+    }),
+  );
+
+  const name = await screen.findByRole("textbox", { name: "Nom du choix Vivant" });
+  fireEvent.change(name, { target: { value: "En vie" } });
+  fireEvent.blur(name);
+  await waitFor(() => expect(callsOf("set_property_options")).toHaveLength(2));
+  expect(callsOf("set_property_options")[1]?.payload).toMatchObject({
+    options: [{ id: "alive", label: "En vie" }, { id: "dead" }, { label: "Disparu" }],
+  });
+
+  fireEvent.click(await screen.findByRole("button", { name: "Descendre le choix En vie" }));
+  await waitFor(() => expect(callsOf("set_property_options")).toHaveLength(3));
+  expect(callsOf("set_property_options")[2]?.payload).toMatchObject({
+    options: [{ id: "dead" }, { id: "alive" }, { label: "Disparu" }],
+  });
+});
+
+test("an emptied choice name goes back to the old one and saves nothing", async () => {
+  typeProps = [selectProperty()];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
+
+  const name = await screen.findByRole<HTMLInputElement>("textbox", {
+    name: "Nom du choix Vivant",
+  });
+  fireEvent.change(name, { target: { value: "  " } });
+  fireEvent.blur(name);
+
+  expect(name.value).toBe("Vivant");
+  expect(callsOf("set_property_options")).toHaveLength(0);
+});
+
+test("removing a choice that cards hold says how many, then asks", async () => {
+  typeProps = [selectProperty()];
+  optionUses = 2;
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
+
+  fireEvent.click(await screen.findByRole("button", { name: "Retirer le choix Mort" }));
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Retirer « Mort » ? 2 cartes le perdront.");
+  expect(callsOf("set_property_options")).toHaveLength(0);
+
+  fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_options")[0]?.payload).toMatchObject({
+      options: [{ id: "alive", label: "Vivant" }],
+    }),
+  );
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+});
+
+test("removing a choice no card holds asks nothing", async () => {
+  typeProps = [selectProperty()];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
+
+  fireEvent.click(await screen.findByRole("button", { name: "Retirer le choix Mort" }));
+  await waitFor(() => expect(callsOf("set_property_options")).toHaveLength(1));
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+test("a select can allow several choices", async () => {
+  typeProps = [selectProperty()];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
+
+  fireEvent.click(await screen.findByRole("switch", { name: "Plusieurs choix par carte" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_options")[0]?.payload).toMatchObject({ multiple: true }),
+  );
+});
+
+test("a card picks one choice, shown as a chip that can be removed", async () => {
+  cardProps = [{ definition: selectProperty(), value: null }];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  openMenu(await screen.findByRole("button", { name: "Choisir pour Statut" }));
+  fireEvent.click(await screen.findByRole("menuitemradio", { name: "Mort" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_value")[0]?.payload).toEqual({
+      cardId: "aragorn",
+      propertyId: "status",
+      value: { kind: "select", value: ["dead"] },
+    }),
+  );
+
+  expect((await screen.findByRole("list", { name: "Statut" })).textContent).toContain("Mort");
+  fireEvent.click(screen.getByRole("button", { name: "Retirer Mort" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_value")[1]?.payload).toMatchObject({ value: null }),
+  );
+});
+
+test("a card ticks several choices when the property allows it", async () => {
+  cardProps = [
+    {
+      definition: selectProperty({ multiple: true }),
+      value: { kind: "select", value: ["alive"] },
+    },
+  ];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  openMenu(await screen.findByRole("button", { name: "Choisir pour Statut" }));
+  fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Mort" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_value")[0]?.payload).toMatchObject({
+      value: { kind: "select", value: ["alive", "dead"] },
+    }),
+  );
+});
+
+test("a select without choices says so in its menu", async () => {
+  cardProps = [{ definition: selectProperty({ options: [] }), value: null }];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  openMenu(await screen.findByRole("button", { name: "Choisir pour Statut" }));
+  expect(await screen.findByText("Aucun choix pour l'instant")).toBeTruthy();
+});
+
+test("a date is written in the world's calendar", async () => {
+  cardProps = [
+    {
+      definition: definition("birth", "Naissance", { kind: "date" }),
+      // 60 days a year: the 3rd day of the first month of the year 2.
+      value: { kind: "date", value: { days: 122, precision: "day" } },
+    },
+  ];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  expect(await screen.findByText("3 Givre 2")).toBeTruthy();
+});
+
+test("an untouched date field saves nothing; OK keeps the date it shows", async () => {
+  cardProps = [{ definition: definition("birth", "Naissance", { kind: "date" }), value: null }];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  const field = await screen.findByRole("button", { name: "Naissance : aucune date" });
+  fireEvent.click(field);
+  await screen.findByRole("group", { name: "Naissance" });
+  fireEvent.keyDown(document.activeElement ?? field, { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("group", { name: "Naissance" })).toBeNull());
+  expect(callsOf("set_property_value")).toHaveLength(0);
+
+  fireEvent.click(field);
+  fireEvent.click(await screen.findByRole("button", { name: "OK" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_value")[0]?.payload).toMatchObject({
+      value: { kind: "date", value: { days: 0, precision: "year" } },
+    }),
+  );
+});
+
+test("a date changed in its window is saved once when the window closes", async () => {
+  cardProps = [
+    {
+      definition: definition("birth", "Naissance", { kind: "date" }),
+      value: { kind: "date", value: { days: 120, precision: "year" } },
+    },
+  ];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  fireEvent.click(await screen.findByRole("button", { name: "Naissance : 2" }));
+  const year = await screen.findByRole("spinbutton", { name: "Année" });
+  fireEvent.change(year, { target: { value: "3" } });
+  fireEvent.change(year, { target: { value: "31" } });
+  expect(callsOf("set_property_value")).toHaveLength(0);
+
+  fireEvent.keyDown(year, { key: "Enter" });
+  await waitFor(() => expect(callsOf("set_property_value")).toHaveLength(1));
+  expect(callsOf("set_property_value")[0]?.payload).toMatchObject({
+    value: { kind: "date", value: { days: 1860, precision: "year" } },
+  });
+});
+
+test("a date can be cleared", async () => {
+  cardProps = [
+    {
+      definition: definition("birth", "Naissance", { kind: "date" }),
+      value: { kind: "date", value: { days: 120, precision: "year" } },
+    },
+  ];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  fireEvent.click(await screen.findByRole("button", { name: "Naissance : 2" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Effacer la date" }));
+  await waitFor(() =>
+    expect(callsOf("set_property_value")[0]?.payload).toMatchObject({ value: null }),
+  );
 });
