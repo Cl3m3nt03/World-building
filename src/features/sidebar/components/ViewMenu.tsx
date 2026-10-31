@@ -11,6 +11,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
@@ -44,9 +47,14 @@ type Props = {
   onChange: (change: Partial<TreeView> | ((latest: TreeView) => Partial<TreeView>)) => void;
 };
 
+/** A sub-menu fits the window, however many card types there are. */
+const SUB_CONTENT = "max-h-(--radix-dropdown-menu-content-available-height) w-64 overflow-y-auto";
+
 /**
  * Filters (kinds of document, card types) and sort of the sidebar, next to
- * its search field. The menu stays open while choices are made.
+ * its search field. Card types and sort are sub-menus, which say what is
+ * chosen, so that the menu fits a small window. The menus stay open while
+ * choices are made.
  */
 export function ViewMenu({ view, onChange }: Props) {
   const { t } = useTranslation();
@@ -55,6 +63,7 @@ export function ViewMenu({ view, onChange }: Props) {
   const toggle = <T,>(list: T[], value: T) =>
     list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
   const keepOpen = (event: Event) => event.preventDefault();
+  const sortLabel = SORTS.find((candidate) => candidate.sort === view.sort)?.label;
 
   return (
     <DropdownMenu>
@@ -72,7 +81,7 @@ export function ViewMenu({ view, onChange }: Props) {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
+      <DropdownMenuContent align="end" collisionPadding={8} className="w-64">
         <DropdownMenuLabel>{t("sidebar.view.kinds")}</DropdownMenuLabel>
         {KINDS.map(({ kind, label, milestone }) => (
           <DropdownMenuCheckboxItem
@@ -99,47 +108,63 @@ export function ViewMenu({ view, onChange }: Props) {
           {t("sidebar.view.wikiOnly")}
         </DropdownMenuCheckboxItem>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>{t("sidebar.view.types")}</DropdownMenuLabel>
-        {(types.data ?? []).map((type) => {
-          const Icon = typeIcon(type.icon);
-          return (
-            <DropdownMenuCheckboxItem
-              key={type.id}
-              checked={view.typeIds.includes(type.id)}
-              onSelect={keepOpen}
-              onCheckedChange={() =>
-                onChange((latest) => ({ typeIds: toggle(latest.typeIds, type.id) }))
-              }
-              className={cn(type.parentId && "pl-12")}
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <span className="flex-1">{t("sidebar.view.types")}</span>
+            {view.typeIds.length > 0 && (
+              <span className="text-xs text-muted-foreground">{view.typeIds.length}</span>
+            )}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent collisionPadding={8} className={SUB_CONTENT}>
+            {(types.data ?? []).map((type) => {
+              const Icon = typeIcon(type.icon);
+              return (
+                <DropdownMenuCheckboxItem
+                  key={type.id}
+                  checked={view.typeIds.includes(type.id)}
+                  onSelect={keepOpen}
+                  onCheckedChange={() =>
+                    onChange((latest) => ({ typeIds: toggle(latest.typeIds, type.id) }))
+                  }
+                  className={cn(type.parentId && "pl-12")}
+                >
+                  <Icon aria-hidden style={{ color: typeColor(type.color) }} />
+                  {type.name}
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <span className="flex-1">{t("sidebar.view.sortBy")}</span>
+            {sortLabel && <span className="text-xs text-muted-foreground">{t(sortLabel)}</span>}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent collisionPadding={8} className={SUB_CONTENT}>
+            <DropdownMenuRadioGroup
+              value={view.sort}
+              onValueChange={(sort) => {
+                const chosen = SORTS.find((candidate) => candidate.sort === sort);
+                if (chosen) onChange({ sort: chosen.sort });
+              }}
             >
-              <Icon aria-hidden style={{ color: typeColor(type.color) }} />
-              {type.name}
+              {SORTS.map(({ sort, label }) => (
+                <DropdownMenuRadioItem key={sort} value={sort} onSelect={keepOpen}>
+                  {t(label)}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={view.reversed}
+              disabled={view.sort === "manual"}
+              onSelect={keepOpen}
+              onCheckedChange={(reversed) => onChange({ reversed: reversed === true })}
+            >
+              {view.sort === "created" ? t("sidebar.view.newestFirst") : t("sidebar.view.reversed")}
             </DropdownMenuCheckboxItem>
-          );
-        })}
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>{t("sidebar.view.sortBy")}</DropdownMenuLabel>
-        <DropdownMenuRadioGroup
-          value={view.sort}
-          onValueChange={(sort) => {
-            const chosen = SORTS.find((candidate) => candidate.sort === sort);
-            if (chosen) onChange({ sort: chosen.sort });
-          }}
-        >
-          {SORTS.map(({ sort, label }) => (
-            <DropdownMenuRadioItem key={sort} value={sort} onSelect={keepOpen}>
-              {t(label)}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-        <DropdownMenuCheckboxItem
-          checked={view.reversed}
-          disabled={view.sort === "manual"}
-          onSelect={keepOpen}
-          onCheckedChange={(reversed) => onChange({ reversed: reversed === true })}
-        >
-          {view.sort === "created" ? t("sidebar.view.newestFirst") : t("sidebar.view.reversed")}
-        </DropdownMenuCheckboxItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={!changed} onSelect={() => onChange(DEFAULT_VIEW)}>
           {t("sidebar.view.reset")}

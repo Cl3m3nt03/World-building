@@ -44,6 +44,8 @@ La sidebar peut être redimensionnée et repliée. Sa largeur et l'état ouvert/
 
 **État en M2** : en attendant M3, la sidebar de l'onglet World est une liste simple des cartes du monde, par nom (icône et couleur de leur type). Un clic ouvre la carte, qui est mise en évidence. Un clic droit n'importe où ouvre le menu de création ; en bas, « Nouvelle fiche » ouvre le même menu et l'icône **Corbeille** ouvre la corbeille du monde : chaque carte s'y restaure ou s'y supprime définitivement, et « Vider la corbeille » demande une confirmation qui indique le nombre de cartes.
 
+**Audit design, lot 3 (#529)** : le globe « visible dans le wiki » d'une ligne n'apparaît qu'au survol ou au focus de cette ligne, sans déplacer le libellé. Une carte épinglée montre son image de fond ; chaque nature de document garde son icône (posée sur l'image quand il y en a une), et le nom tient sur deux lignes. Dans le menu **Filtres et tri**, **Types de fiches** et **Trier par** deviennent des sous-menus qui indiquent le nombre de types choisis et le tri actif, restent ouverts pendant les choix et tiennent dans la fenêtre, comme le menu. Dans un extrait de recherche, les blocs sont séparés par « · », sans réindexer les mondes existants.
+
 ## Recherche
 
 - La recherche porte sur les noms, les alias et le texte des documents (FTS5).

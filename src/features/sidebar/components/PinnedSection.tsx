@@ -27,12 +27,13 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
+import { useCardTypes } from "@/features/card-types";
 import { AssetImage } from "@/features/media";
 import type { DocumentTree, TreeDocument } from "@/lib/bindings";
 import { documentRoute } from "@/lib/documentRoute";
 import { useMovePin, useSetPinned } from "../hooks/useDocumentTree";
 import { pinnedDocuments } from "../tree";
+import { documentVisual } from "./documentVisual";
 
 type Props = {
   tree: DocumentTree;
@@ -141,8 +142,7 @@ function PinTile({
   const { worldId } = useParams({ from: "/world/$worldId" });
   const types = useCardTypes();
   const type = types.data?.find((candidate) => candidate.id === document.typeId);
-  const Icon = typeIcon(type?.icon ?? "shapes");
-  const color = typeColor(type?.color ?? "slate");
+  const { Icon, color } = documentVisual(document.kind, type);
   const sortable = useSortable({ id: document.id });
 
   return (
@@ -162,25 +162,30 @@ function PinTile({
             // Of dnd-kit's attributes, only the instructions: the link keeps its role.
             aria-describedby={sortable.attributes["aria-describedby"]}
             aria-current={isCurrent ? "page" : undefined}
-            className="group flex flex-col overflow-hidden rounded-md border border-border bg-(--bz-field) text-xs text-muted-foreground outline-none select-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:border-border-strong hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+            className="group flex h-full flex-col overflow-hidden rounded-md border border-border bg-(--bz-field) text-xs text-muted-foreground outline-none select-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:border-border-strong hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:border-primary aria-[current=page]:text-foreground"
           >
-            <span className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
+            <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
               {document.imageAssetId ? (
-                <AssetImage
-                  assetId={document.imageAssetId}
-                  alt=""
-                  draggable={false}
-                  className="size-full object-cover"
-                />
+                <>
+                  <AssetImage
+                    assetId={document.imageAssetId}
+                    alt=""
+                    draggable={false}
+                    className="size-full object-cover"
+                  />
+                  <span className="absolute bottom-1 left-1 flex size-5 items-center justify-center rounded-sm bg-popover">
+                    <Icon aria-hidden className="size-3" style={{ color }} />
+                  </span>
+                </>
               ) : (
                 <Icon aria-hidden className="size-6" style={{ color }} />
               )}
             </span>
-            <span className="flex items-center gap-1 px-1.5 py-1">
-              <Icon aria-hidden className="size-3 shrink-0" style={{ color }} />
-              <span className="truncate" title={document.title}>
-                {document.title}
-              </span>
+            <span
+              className="line-clamp-2 px-1.5 py-1 leading-tight wrap-anywhere"
+              title={document.title}
+            >
+              {document.title}
             </span>
           </Link>
         </ContextMenuTrigger>

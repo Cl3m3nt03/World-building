@@ -68,8 +68,9 @@ pub struct TreeDocument {
     pub pinned_order: Option<i32>,
     /// RFC 3339.
     pub created_at: String,
-    /// For a card: its type and image.
+    /// For a card: its type.
     pub type_id: Option<String>,
+    /// A card's image, or the background of a map.
     pub image_asset_id: Option<String>,
     /// Marked « Visible dans le wiki » (cards and maps, M8).
     pub wiki_visible: bool,

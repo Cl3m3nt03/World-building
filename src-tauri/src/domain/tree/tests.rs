@@ -559,6 +559,27 @@ async fn pins(fx: &Fixture) -> Vec<String> {
 }
 
 #[tokio::test]
+async fn a_map_shows_its_background_as_its_image() {
+    let fx = Fixture::new().await;
+    let map = documents::create(fx.pool(), DocumentKind::Map, "Carte")
+        .await
+        .unwrap()
+        .id;
+    sqlx::query(
+        "INSERT INTO maps (document_id, background_asset_id, width, height)
+         VALUES (?, 'fond.png', 1, 1)",
+    )
+    .bind(&map)
+    .execute(fx.pool())
+    .await
+    .unwrap();
+
+    let tree = tree(fx.pool()).await.unwrap();
+    let document = tree.documents.iter().find(|d| d.id == map).unwrap();
+    assert_eq!(document.image_asset_id.as_deref(), Some("fond.png"));
+}
+
+#[tokio::test]
 async fn pinning_appends_and_unpinning_closes_the_gap() {
     let fx = Fixture::new().await;
     let a = fx.doc("A").await;

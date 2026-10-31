@@ -53,7 +53,7 @@ import {
   ContextMenuSeparator,
   ContextMenuShortcut,
 } from "@/components/ui/context-menu";
-import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
+import { useCardTypes } from "@/features/card-types";
 import { CreateCardContextMenu } from "@/features/cards";
 import { useSetWikiVisible } from "@/features/wiki";
 import type { CardType, DocumentTree } from "@/lib/bindings";
@@ -84,6 +84,7 @@ import {
   viewTree,
   visibleRows,
 } from "../tree";
+import { documentVisual } from "./documentVisual";
 import { DeleteFolderDialog, FolderIconDialog, folderIcon } from "./FolderDialogs";
 import { MoveToDialog } from "./MoveToDialog";
 
@@ -931,17 +932,8 @@ function nodeVisual(
       node.folder.icon === "folder" && isOpen ? FolderOpen : folderIcon(node.folder.icon);
     return { Icon, label: node.folder.name };
   }
-  if (node.document.kind === "map") return { Icon: MapIcon, label: node.document.title };
-  if (node.document.kind === "graph") return { Icon: Share2, label: node.document.title };
-  if (node.document.kind === "tree") return { Icon: Network, label: node.document.title };
-  if (node.document.kind === "canvas") return { Icon: LayoutGrid, label: node.document.title };
-  if (node.document.kind === "timeline") return { Icon: ChartGantt, label: node.document.title };
   const type = node.document.typeId ? typesById.get(node.document.typeId) : undefined;
-  return {
-    Icon: typeIcon(type?.icon ?? "shapes"),
-    color: typeColor(type?.color ?? "slate"),
-    label: node.document.title,
-  };
+  return { ...documentVisual(node.document.kind, type), label: node.document.title };
 }
 
 type TreeItemProps = {
@@ -1015,7 +1007,7 @@ function TreeItem({
       onClick={onClick}
       onFocus={onFocus}
       onKeyDown={onKeyDown}
-      className={`absolute left-0 flex w-full cursor-default items-center gap-1.5 rounded-md pr-2 text-sm text-muted-foreground outline-none select-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-[color-mix(in_oklab,var(--bz-accent)_14%,transparent)] aria-[current=page]:font-medium aria-[current=page]:text-foreground data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--color-primary)] data-[drop=before]:shadow-[inset_0_2px_0_0_var(--color-primary)] data-[drop=inside]:bg-primary/15 data-[drop=inside]:ring-1 data-[drop=inside]:ring-primary data-[drop=refused]:cursor-not-allowed data-[drop=refused]:bg-destructive/10 data-[drop=refused]:ring-1 data-[drop=refused]:ring-destructive data-context:opacity-60 ${isDragged ? "opacity-40" : ""}`}
+      className={`group/row absolute left-0 flex w-full cursor-default items-center gap-1.5 rounded-md pr-2 text-sm text-muted-foreground outline-none select-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-[color-mix(in_oklab,var(--bz-accent)_14%,transparent)] aria-[current=page]:font-medium aria-[current=page]:text-foreground data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--color-primary)] data-[drop=before]:shadow-[inset_0_2px_0_0_var(--color-primary)] data-[drop=inside]:bg-primary/15 data-[drop=inside]:ring-1 data-[drop=inside]:ring-primary data-[drop=refused]:cursor-not-allowed data-[drop=refused]:bg-destructive/10 data-[drop=refused]:ring-1 data-[drop=refused]:ring-destructive data-context:opacity-60 ${isDragged ? "opacity-40" : ""}`}
       style={{
         height: ROW_HEIGHT,
         // `top`, not a transform: dnd-kit measures drop targets without
@@ -1048,7 +1040,10 @@ function TreeItem({
       )}
       {node.kind === "document" && node.document.wikiVisible && !editing && (
         <>
-          <Globe aria-hidden className="ml-auto size-3 shrink-0 text-muted-foreground" />
+          <Globe
+            aria-hidden
+            className="ml-auto size-3 shrink-0 text-muted-foreground opacity-0 group-hover/row:opacity-100 group-focus-visible/row:opacity-100"
+          />
           <span className="sr-only">{t("sidebar.document.wikiMark")}</span>
         </>
       )}

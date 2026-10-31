@@ -17,7 +17,8 @@ pub struct FolderRow {
     pub created_at: String,
 }
 
-/// A live document as the sidebar shows it, with the card's type and image.
+/// A live document as the sidebar shows it, with the card's type and its
+/// image: the card's, or the background of a map.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TreeDocumentRow {
     pub id: String,
@@ -62,8 +63,12 @@ pub async fn live_documents(pool: &SqlitePool) -> AppResult<Vec<TreeDocumentRow>
     Ok(sqlx::query_as!(
         TreeDocumentRow,
         r#"SELECT d.id AS "id!", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,
-                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id, d.wiki_visible
-           FROM documents d LEFT JOIN cards c ON c.document_id = d.id
+                  d.pinned_order, d.created_at, c.type_id,
+                  COALESCE(c.image_asset_id, m.background_asset_id) AS "image_asset_id?: String",
+                  d.wiki_visible
+           FROM documents d
+           LEFT JOIN cards c ON c.document_id = d.id
+           LEFT JOIN maps m ON m.document_id = d.id
            WHERE d.trashed_at IS NULL
            ORDER BY d.sort_order, d.created_at"#
     )

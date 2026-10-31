@@ -103,6 +103,24 @@ async fn finds_by_name_prefix_ignoring_accents_and_case() {
 }
 
 #[tokio::test]
+async fn an_excerpt_separates_the_blocks_it_crosses() {
+    let fx = Fixture::new().await;
+    let card = fx.card("Gondor").await;
+    let doc = serde_json::json!([{ "id": "a", "type": "text", "doc": { "type": "doc", "content": [
+        { "type": "heading", "content": [{ "type": "text", "text": "Portrait" }] },
+        { "type": "paragraph", "content": [{ "type": "text", "text": "Depuis la Nuit" }] },
+    ] } }]);
+    cards::set_content(fx.pool(), &card, &doc.to_string())
+        .await
+        .unwrap();
+
+    assert_eq!(
+        fx.find("nuit").await,
+        ["Gondor (contenu Portrait · Depuis la [Nuit])"]
+    );
+}
+
+#[tokio::test]
 async fn names_and_aliases_come_before_content_with_an_excerpt() {
     let fx = Fixture::new().await;
     let aragorn = fx.card("Aragorn").await;
