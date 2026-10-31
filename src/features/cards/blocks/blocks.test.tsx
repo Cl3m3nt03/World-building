@@ -205,6 +205,23 @@ const pause = () =>
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
+test('"Add a block below" shows its kinds outside the block menu, which clips what it holds', async () => {
+  initial = [textBlock("a", "A")];
+  renderEditor();
+  await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  await openMenu(screen.getByRole("button", { name: "Actions du bloc 1" }));
+  const menu = await screen.findByRole("menu");
+  await act(async () => {
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "Ajouter un bloc dessous" }), {
+      key: "Enter",
+    });
+  });
+
+  const kind = await screen.findByRole("menuitem", { name: "Texte" });
+  expect(menu.contains(kind)).toBe(false);
+});
+
 test('"Add a block below" gives the focus to the new block, not to the button', async () => {
   const endAnimation = animateMenus();
   initial = [textBlock("a", "A")];
