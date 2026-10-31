@@ -12,6 +12,7 @@ use crate::db;
 use crate::db::properties::{self as queries, DefinitionRow};
 use crate::domain::documents::now;
 use crate::domain::links::{self, LinkKind};
+use crate::domain::timelines::DatePrecision;
 use crate::domain::trees;
 use crate::domain::{card_types, cards};
 use crate::error::{AppError, AppResult};
@@ -25,6 +26,10 @@ pub const MAX_LABEL_LEN: usize = 80;
 pub const MAX_TEXT_LEN: usize = 10_000;
 /// Most cards a "links to several cards" value holds.
 pub const MAX_LINKED_CARDS: usize = 200;
+/// Most choices a "select" property offers.
+pub const MAX_OPTIONS: usize = 100;
+/// Longest choice label, in characters.
+pub const MAX_OPTION_LEN: usize = 80;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -35,6 +40,10 @@ pub enum PropertyKind {
     Card,
     /// Links to several cards.
     Cards,
+    /// One or several of the choices listed on the property (ADR 0014).
+    Select,
+    /// A date of the world's calendar (ADR 0014).
+    Date,
 }
 
 impl PropertyKind {
@@ -44,6 +53,8 @@ impl PropertyKind {
             Self::Number => "number",
             Self::Card => "card",
             Self::Cards => "cards",
+            Self::Select => "select",
+            Self::Date => "date",
         }
     }
 
@@ -53,6 +64,8 @@ impl PropertyKind {
             "number" => Self::Number,
             "card" => Self::Card,
             "cards" => Self::Cards,
+            "select" => Self::Select,
+            "date" => Self::Date,
             other => {
                 return Err(AppError::Internal(format!(
                     "unknown property kind: {other}"
@@ -74,6 +87,23 @@ pub enum PropertyOwner {
     Card { card_id: String },
 }
 
+/// A choice of a "select" property. Cards store its `id`, so its label can
+/// change without touching them.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PropertyOption {
+    pub id: String,
+    pub label: String,
+}
+
+/// A choice as the interface sends it back: `id` is `None` for a new one.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PropertyOptionInput {
+    pub id: Option<String>,
+    pub label: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyDefinition {
@@ -86,6 +116,10 @@ pub struct PropertyDefinition {
     /// For links: the relation each chosen card is of the card holding the
     /// property (« Parents » = parent of), ADR 0007. `None`: just a link.
     pub relation_type_id: Option<String>,
+    /// For a select: its choices, in order.
+    pub options: Vec<PropertyOption>,
+    /// For a select: whether a card can hold several of them.
+    pub multiple: bool,
     /// For a type property: whether cards created before it show it too.
     pub applies_to_existing: bool,
     pub sort_order: i32,
@@ -111,6 +145,9 @@ impl TryFrom<DefinitionRow> for PropertyDefinition {
             kind: PropertyKind::parse(&row.kind)?,
             target_type_ids: serde_json::from_str(&row.target_type_ids).unwrap_or_default(),
             relation_type_id: row.relation_type_id,
+            // Unreadable choices read as none.
+            options: serde_json::from_str(&row.options).unwrap_or_default(),
+            multiple: row.multiple != 0,
             applies_to_existing: row.applies_to_existing != 0,
             sort_order: i32::try_from(row.sort_order).unwrap_or(i32::MAX),
             id: row.id,
@@ -119,6 +156,15 @@ impl TryFrom<DefinitionRow> for PropertyDefinition {
             created_at: row.created_at,
         })
     }
+}
+
+/// A date of the world's calendar, as the timelines keep theirs (ADR 0011):
+/// days from the year 0, and what it names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PropertyDate {
+    pub days: i32,
+    pub precision: DatePrecision,
 }
 
 /// A card's value for a property.
@@ -131,6 +177,9 @@ pub enum PropertyValue {
     Card(String),
     /// Card ids.
     Cards(Vec<String>),
+    /// Ids of the property's choices (one, unless it is `multiple`).
+    Select(Vec<String>),
+    Date(PropertyDate),
 }
 
 impl PropertyValue {
@@ -140,6 +189,8 @@ impl PropertyValue {
             Self::Number(_) => PropertyKind::Number,
             Self::Card(_) => PropertyKind::Card,
             Self::Cards(_) => PropertyKind::Cards,
+            Self::Select(_) => PropertyKind::Select,
+            Self::Date(_) => PropertyKind::Date,
         }
     }
 
@@ -148,7 +199,7 @@ impl PropertyValue {
         match self {
             Self::Card(id) => vec![id.clone()],
             Self::Cards(ids) => ids.clone(),
-            Self::Text(_) | Self::Number(_) => Vec::new(),
+            Self::Text(_) | Self::Number(_) | Self::Select(_) | Self::Date(_) => Vec::new(),
         }
     }
 }
@@ -236,6 +287,8 @@ pub async fn create(
         kind: kind.as_str().into(),
         target_type_ids: "[]".into(),
         relation_type_id: None,
+        options: "[]".into(),
+        multiple: 0,
         applies_to_existing: 0,
         sort_order: order,
         created_at: now(),
@@ -265,7 +318,9 @@ pub async fn set_kind(
     }
     let targets = match kind {
         PropertyKind::Card | PropertyKind::Cards => to_json(&target_type_ids)?,
-        PropertyKind::Text | PropertyKind::Number => "[]".into(),
+        PropertyKind::Text | PropertyKind::Number | PropertyKind::Select | PropertyKind::Date => {
+            "[]".into()
+        }
     };
     if before.kind != kind {
         queries::clear_values(pool, id).await?;
@@ -273,10 +328,121 @@ pub async fn set_kind(
     }
     queries::set_kind(pool, id, kind.as_str(), &targets).await?;
     // Only a link is a relation.
-    if matches!(kind, PropertyKind::Text | PropertyKind::Number) {
+    if !matches!(kind, PropertyKind::Card | PropertyKind::Cards) {
         queries::set_relation(pool, id, None).await?;
     }
+    // Only a select has choices.
+    if before.kind == PropertyKind::Select && kind != PropertyKind::Select {
+        let mut tx = db::begin_write(pool).await?;
+        queries::set_options(&mut tx, id, "[]", false).await?;
+        tx.commit().await?;
+    }
     get(pool, id).await
+}
+
+/// The choices a select property will have: labels checked, an id for each
+/// new one, known ids kept.
+fn checked_options(
+    before: &[PropertyOption],
+    options: &[PropertyOptionInput],
+) -> AppResult<Vec<PropertyOption>> {
+    if options.len() > MAX_OPTIONS {
+        return Err(AppError::InvalidInput(format!(
+            "a property offers at most {MAX_OPTIONS} choices"
+        )));
+    }
+    let mut next: Vec<PropertyOption> = Vec::with_capacity(options.len());
+    for option in options {
+        let label = option.label.trim();
+        if label.is_empty() {
+            return Err(AppError::InvalidInput("a choice cannot be empty".into()));
+        }
+        if label.chars().count() > MAX_OPTION_LEN {
+            return Err(AppError::InvalidInput(format!(
+                "a choice is at most {MAX_OPTION_LEN} characters"
+            )));
+        }
+        let id = match &option.id {
+            None => Uuid::new_v4().to_string(),
+            Some(id) if !before.iter().any(|known| known.id == *id) => {
+                return Err(AppError::InvalidInput(format!("unknown choice: {id}")));
+            }
+            Some(id) if next.iter().any(|kept| kept.id == *id) => {
+                return Err(AppError::InvalidInput(format!("choice listed twice: {id}")));
+            }
+            Some(id) => id.clone(),
+        };
+        next.push(PropertyOption {
+            id,
+            label: label.to_owned(),
+        });
+    }
+    Ok(next)
+}
+
+/// Replaces the choices of a select property (ADR 0014): they are added,
+/// renamed and reordered in `options`, and one left out is removed from the
+/// cards that held it. A card can keep several choices when `multiple` goes
+/// off: nothing is lost until it is edited.
+pub async fn set_options(
+    pool: &SqlitePool,
+    id: &str,
+    options: &[PropertyOptionInput],
+    multiple: bool,
+) -> AppResult<PropertyDefinition> {
+    let before = get(pool, id).await?;
+    if before.kind != PropertyKind::Select {
+        return Err(AppError::InvalidInput(
+            "only a select property has choices".into(),
+        ));
+    }
+    let next = checked_options(&before.options, options)?;
+    let removed: Vec<&str> = before
+        .options
+        .iter()
+        .filter(|option| !next.iter().any(|kept| kept.id == option.id))
+        .map(|option| option.id.as_str())
+        .collect();
+
+    let mut tx = db::begin_write(pool).await?;
+    if !removed.is_empty() {
+        for (card_id, json) in queries::values_of_property(&mut tx, id).await? {
+            let Ok(PropertyValue::Select(ids)) = serde_json::from_str(&json) else {
+                continue;
+            };
+            let kept: Vec<String> = ids
+                .iter()
+                .filter(|option| !removed.contains(&option.as_str()))
+                .cloned()
+                .collect();
+            if kept.is_empty() {
+                queries::delete_value(&mut tx, &card_id, id).await?;
+            } else if kept.len() != ids.len() {
+                let value = to_json(&PropertyValue::Select(kept))?;
+                queries::update_value(&mut tx, &card_id, id, &value).await?;
+            }
+        }
+    }
+    queries::set_options(&mut tx, id, &to_json(&next)?, multiple).await?;
+    tx.commit().await?;
+    get(pool, id).await
+}
+
+/// Number of cards that removing the choice `option_id` would change.
+pub async fn count_option_values(pool: &SqlitePool, id: &str, option_id: &str) -> AppResult<u32> {
+    get(pool, id).await?;
+    let mut connection = pool.acquire().await?;
+    let count = queries::values_of_property(&mut connection, id)
+        .await?
+        .iter()
+        .filter(|(_, json)| {
+            matches!(
+                serde_json::from_str(json),
+                Ok(PropertyValue::Select(ids)) if ids.iter().any(|known| known == option_id)
+            )
+        })
+        .count();
+    Ok(u32::try_from(count).unwrap_or(u32::MAX))
 }
 
 /// Makes a link property a relation of the world, or just a link again
@@ -387,11 +553,59 @@ pub async fn of_card(pool: &SqlitePool, card_id: &str) -> AppResult<Vec<CardProp
             let value = values
                 .iter()
                 .find(|(property, _)| *property == definition.id)
-                .and_then(|(_, json)| serde_json::from_str::<PropertyValue>(json).ok())
-                .filter(|value| value.kind() == definition.kind);
+                .and_then(|(_, json)| readable_value(json, &definition));
             CardProperty { definition, value }
         })
         .collect())
+}
+
+/// A stored value as a card shows it. What cannot be read is no value, and
+/// a choice the property no longer offers is left out: a card always opens.
+fn readable_value(json: &str, definition: &PropertyDefinition) -> Option<PropertyValue> {
+    let value = serde_json::from_str::<PropertyValue>(json)
+        .ok()
+        .filter(|value| value.kind() == definition.kind)?;
+    let PropertyValue::Select(ids) = value else {
+        return Some(value);
+    };
+    let known: Vec<String> = ids
+        .into_iter()
+        .filter(|id| definition.options.iter().any(|option| option.id == *id))
+        .collect();
+    (!known.is_empty()).then_some(PropertyValue::Select(known))
+}
+
+/// Checks the choices a card is given, and drops those listed twice. A
+/// property set to one choice accepts one; a card that held several before
+/// the switch can still lose some.
+fn checked_choices(
+    definition: &PropertyDefinition,
+    previous: Option<&PropertyValue>,
+    ids: &[String],
+) -> AppResult<Vec<String>> {
+    let mut unique: Vec<String> = Vec::with_capacity(ids.len());
+    for id in ids {
+        if !definition.options.iter().any(|option| option.id == *id) {
+            return Err(AppError::InvalidInput(format!(
+                "property {} does not offer the choice {id}",
+                definition.id
+            )));
+        }
+        if !unique.contains(id) {
+            unique.push(id.clone());
+        }
+    }
+    let held: &[String] = match previous {
+        Some(PropertyValue::Select(held)) => held,
+        _ => &[],
+    };
+    if !definition.multiple && unique.len() > 1 && unique.iter().any(|id| !held.contains(id)) {
+        return Err(AppError::InvalidInput(format!(
+            "property {} holds a single choice",
+            definition.id
+        )));
+    }
+    Ok(unique)
 }
 
 fn validate_value(value: &PropertyValue) -> AppResult<()> {
@@ -418,10 +632,10 @@ pub async fn set_value(
     value: Option<PropertyValue>,
 ) -> AppResult<Vec<CardProperty>> {
     let shown = of_card(pool, card_id).await?;
-    let definition = shown
+    let (definition, previous) = shown
         .iter()
         .find(|property| property.definition.id == property_id)
-        .map(|property| property.definition.clone())
+        .map(|property| (property.definition.clone(), property.value.clone()))
         .ok_or_else(|| {
             AppError::InvalidInput(format!(
                 "card {card_id} does not show property {property_id}"
@@ -431,8 +645,8 @@ pub async fn set_value(
     // A value made empty is no value.
     let value = value.filter(|v| match v {
         PropertyValue::Text(text) => !text.trim().is_empty(),
-        PropertyValue::Cards(ids) => !ids.is_empty(),
-        PropertyValue::Number(_) | PropertyValue::Card(_) => true,
+        PropertyValue::Cards(ids) | PropertyValue::Select(ids) => !ids.is_empty(),
+        PropertyValue::Number(_) | PropertyValue::Card(_) | PropertyValue::Date(_) => true,
     });
 
     match &value {
@@ -445,6 +659,12 @@ pub async fn set_value(
                 )));
             }
             validate_value(value)?;
+            let value = match value {
+                PropertyValue::Select(ids) => {
+                    PropertyValue::Select(checked_choices(&definition, previous.as_ref(), ids)?)
+                }
+                other => other.clone(),
+            };
             for target in value.targets() {
                 let card = cards::get(pool, &target).await?;
                 if card.trashed_at.is_some() {
@@ -470,7 +690,7 @@ pub async fn set_value(
                     )));
                 }
             }
-            queries::set_value(pool, card_id, property_id, &to_json(value)?).await?;
+            queries::set_value(pool, card_id, property_id, &to_json(&value)?).await?;
         }
     }
     let targets = value

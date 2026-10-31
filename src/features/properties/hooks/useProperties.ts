@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   commands,
   type PropertyKind,
+  type PropertyOptionInput,
   type PropertyOwner,
   type PropertyValue,
 } from "@/lib/bindings";
@@ -67,6 +68,31 @@ export function useSetPropertyKind() {
     mutationFn: ({ id, kind, targets }: { id: string; kind: PropertyKind; targets: string[] }) =>
       unwrap(commands.setPropertyKind(id, kind, targets)),
     onSuccess: invalidate,
+  });
+}
+
+/** Replaces the choices of a select property; one left out leaves the cards. */
+export function useSetPropertyOptions() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({
+      id,
+      options,
+      multiple,
+    }: {
+      id: string;
+      options: PropertyOptionInput[];
+      multiple: boolean;
+    }) => unwrap(commands.setPropertyOptions(id, options, multiple)),
+    onSuccess: invalidate,
+  });
+}
+
+/** Cards holding a choice, asked just before removing it. */
+export function useCountOptionValues() {
+  return useMutation({
+    mutationFn: ({ id, optionId }: { id: string; optionId: string }) =>
+      unwrap(commands.countPropertyOptionValues(id, optionId)),
   });
 }
 

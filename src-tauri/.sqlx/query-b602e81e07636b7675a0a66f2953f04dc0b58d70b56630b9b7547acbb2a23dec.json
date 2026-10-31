@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, applies_to_existing,\n                sort_order, created_at\n         FROM property_definitions WHERE type_id = ?\n         ORDER BY sort_order, created_at",
+  "query": "SELECT id, type_id, card_id, label, kind, target_type_ids, relation_type_id, options, multiple,\n                applies_to_existing, sort_order, created_at\n         FROM property_definitions WHERE card_id = ?\n         ORDER BY sort_order, created_at",
   "describe": {
     "columns": [
       {
@@ -81,8 +81,30 @@
         }
       },
       {
-        "name": "applies_to_existing",
+        "name": "options",
         "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "property_definitions",
+            "name": "options"
+          }
+        }
+      },
+      {
+        "name": "multiple",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "property_definitions",
+            "name": "multiple"
+          }
+        }
+      },
+      {
+        "name": "applies_to_existing",
+        "ordinal": 9,
         "type_info": "Integer",
         "origin": {
           "Table": {
@@ -93,7 +115,7 @@
       },
       {
         "name": "sort_order",
-        "ordinal": 8,
+        "ordinal": 10,
         "type_info": "Integer",
         "origin": {
           "Table": {
@@ -104,7 +126,7 @@
       },
       {
         "name": "created_at",
-        "ordinal": 9,
+        "ordinal": 11,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -127,8 +149,10 @@
       true,
       false,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "ad96ebb6750ae75accf4c76a0b6810ed58a5f12b5fc01e440f5b867c31621e2f"
+  "hash": "b602e81e07636b7675a0a66f2953f04dc0b58d70b56630b9b7547acbb2a23dec"
 }

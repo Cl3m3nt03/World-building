@@ -161,4 +161,22 @@ describe("M2: cards, properties, links and templates", () => {
     ).waitForDisplayed();
     await expect($("aria/Bloc de texte 1")).toHaveText(expect.stringContaining("Ami de"));
   });
+
+  it("gives a long help question its own height", async () => {
+    await openTypes();
+    await $('//*[@role="dialog"]//button[starts-with(normalize-space(), "Lieu")]').click();
+    await $("aria/Question d'aide de la section 1").setValue(
+      "Une question d'aide bien plus longue qu'une ligne ".repeat(6),
+    );
+    await browser.pause(800);
+    await closeTypes();
+
+    await openTab("World");
+    await createCard("Lieu", "Rohan");
+    await contentHeading("Géographie").waitForDisplayed();
+    const height = await browser.execute(
+      () => document.querySelector(".card-text p.is-empty")?.getBoundingClientRect().height ?? 0,
+    );
+    expect(height).toBeGreaterThan(40);
+  });
 });
