@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+  dropSide,
   leaveRow,
   MAX_ROW_BLOCKS,
   moveInRow,
@@ -9,6 +10,7 @@ import {
   placeBeside,
   resize,
   rows,
+  SIDE_INTENT,
 } from "./layout";
 import type { Block } from "./model";
 
@@ -118,4 +120,21 @@ test("resizing snaps to 10 % and keeps both columns at least 20 %", () => {
   expect(widths(resize(blocks, "a", 0.9))).toEqual([0.8, 0.2]);
   // The last column has no border on its right.
   expect(resize(blocks, "b", 0.1)).toBe(blocks);
+});
+
+const TARGET = { left: 300, width: 600 };
+
+test("a drag straight down from the handle reorders, though it is in the left quarter", () => {
+  expect(dropSide(310, 0, TARGET)).toBeNull();
+  expect(dropSide(310 + SIDE_INTENT - 1, SIDE_INTENT - 1, TARGET)).toBeNull();
+});
+
+test("a drag carried sideways goes beside the block", () => {
+  expect(dropSide(380, SIDE_INTENT, TARGET)).toBe("left");
+  expect(dropSide(350, -SIDE_INTENT, TARGET)).toBe("left");
+  expect(dropSide(800, 490, TARGET)).toBe("right");
+});
+
+test("a drag carried to the middle of a block stays a reorder", () => {
+  expect(dropSide(600, 290, TARGET)).toBeNull();
 });

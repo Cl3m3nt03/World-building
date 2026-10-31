@@ -78,6 +78,7 @@ import type { TemplateSection } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { ImageBlockView } from "./ImageBlockView";
 import {
+  dropSide,
   leaveRow,
   MAX_ROW_BLOCKS,
   MIN_WIDTH,
@@ -132,9 +133,6 @@ function focusBlockText(id: string): boolean {
 
 /** While a block is dropped beside another, the others do not make room. */
 const stayInPlace: SortingStrategy = () => null;
-
-/** Share of a block's width, on each side, where a dropped block goes beside it. */
-const SIDE_ZONE = 0.25;
 
 /** Where a dragged block would land, shown on the block under it. */
 type DropHint = "left" | "right" | "before" | "after";
@@ -721,8 +719,8 @@ export function BlockEditor({
   };
 
   /**
-   * With the pointer, a block dragged over the left or right quarter of
-   * another goes beside it (unless that line is full); elsewhere it goes
+   * With the pointer, a block carried sideways over the left or right quarter
+   * of another goes beside it (unless that line is full); otherwise it goes
    * before or after the other's whole line.
    */
   const onDragMove = ({ active, over, activatorEvent, delta }: DragMoveEvent) => {
@@ -730,10 +728,7 @@ export function BlockEditor({
     const id = String(over.id);
     const pointer = activatorEvent as Partial<MouseEvent>;
     if (typeof pointer.clientX === "number") {
-      const x = pointer.clientX + delta.x;
-      const { left, width } = over.rect;
-      const side =
-        x < left + width * SIDE_ZONE ? "left" : x > left + width * (1 - SIDE_ZONE) ? "right" : null;
+      const side = dropSide(pointer.clientX + delta.x, delta.x, over.rect);
       const line = rowOf(current.current, id)?.row.blocks ?? [];
       const room = line.some((block) => block.id === active.id) || line.length < MAX_ROW_BLOCKS;
       if (side && room) return setDrop({ id, hint: side });
