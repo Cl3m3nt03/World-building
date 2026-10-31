@@ -164,6 +164,8 @@ export function WorldWorkspace() {
         maxSize={SIDEBAR_WIDTH.max}
         collapsible
         collapsedSize={0}
+        // The window's size is not the user's choice of width (`onResize` saves it).
+        groupResizeBehavior="preserve-pixel-size"
         onResize={(size) => {
           const nowCollapsed = size.inPixels < 1;
           const nowWidth = Math.round(size.inPixels);
