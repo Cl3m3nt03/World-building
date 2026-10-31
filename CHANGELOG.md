@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.7.1](https://github.com/Cl3m3nt03/World-building/compare/v1.7.0...v1.7.1) (2026-10-31)
+
+
+### Corrections
+
+* **app:** keep Ctrl+Z in a field from undoing another one ([#519](https://github.com/Cl3m3nt03/World-building/issues/519)) ([3bdec6c](https://github.com/Cl3m3nt03/World-building/commit/3bdec6c2b2be752193f7894b8be86ab380626250))
+* **canvas:** hand Ctrl+Z to Excalidraw from outside its tree ([#518](https://github.com/Cl3m3nt03/World-building/issues/518)) ([df1a28d](https://github.com/Cl3m3nt03/World-building/commit/df1a28dcc9925cacc0bd7df34c5516169fec6fa1))
+* **map:** let Ctrl+Z through while a pin has the focus ([#516](https://github.com/Cl3m3nt03/World-building/issues/516)) ([24aaa2c](https://github.com/Cl3m3nt03/World-building/commit/24aaa2c635db52d184faf8899e3f3932192a0121))
+* **tree:** let Ctrl+Z through a link's bar and a relation menu ([#517](https://github.com/Cl3m3nt03/World-building/issues/517)) ([8876dcb](https://github.com/Cl3m3nt03/World-building/commit/8876dcb613d7a10571be31876d8e8cd82ebe8a4f)), closes [#513](https://github.com/Cl3m3nt03/World-building/issues/513)
+
 ## [1.7.0](https://github.com/Cl3m3nt03/World-building/compare/v1.6.0...v1.7.0) (2026-10-31)
 
 
