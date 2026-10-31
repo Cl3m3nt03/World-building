@@ -165,7 +165,7 @@ export function CardTypesDialog({ open, onOpenChange }: CardTypesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex h-[min(48rem,calc(100vh-3rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
+        className="flex h-[min(48rem,calc(100vh-3rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(64rem,calc(100%-2rem))]"
         onEscapeKeyDown={(event) => {
           if (isMovingProperty(event.target)) event.preventDefault();
         }}
