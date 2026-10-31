@@ -133,7 +133,9 @@ export function StartWith() {
 export function WorldWorkspace() {
   const { t } = useTranslation();
   // Another document: the workspace fades in.
-  const { cardId, mapId, graphId, treeId, canvasId, timelineId } = useParams({ strict: false });
+  const { worldId, cardId, mapId, graphId, treeId, canvasId, timelineId } = useParams({
+    strict: false,
+  });
   const page = useRef<HTMLElement>(null);
   usePageFade(page, cardId ?? mapId ?? graphId ?? treeId ?? canvasId ?? timelineId ?? null);
   const sidebar = useSidebarState();
@@ -143,6 +145,9 @@ export function WorldWorkspace() {
   // Collapsing or expanding with a button moves the focus to what is now
   // there (the button that undoes it, or the sidebar's search field).
   const moveFocus = useRef(false);
+  // The sidebar's size when this world opened. It must not follow the saved
+  // width: a new `defaultSize` registers the panel again, which ends a drag.
+  const opening = useRef<{ worldId: string | undefined; size: number } | null>(null);
   const state = sidebar.state;
   const collapsed = state?.collapsed ?? false;
   useEffect(() => {
@@ -154,12 +159,21 @@ export function WorldWorkspace() {
   if (sidebar.error) return <AppErrorMessage error={sidebar.error} />;
   if (!state) return null;
   const width = state.width ?? SIDEBAR_WIDTH.default;
+  const previous = opening.current;
+  const openingSize =
+    previous && previous.worldId === worldId ? previous.size : collapsed ? 0 : width;
+  opening.current = { worldId, size: openingSize };
 
   return (
-    <ResizablePanelGroup elementRef={group} orientation="horizontal" className="gap-1">
+    <ResizablePanelGroup
+      key={worldId}
+      elementRef={group}
+      orientation="horizontal"
+      className="gap-1"
+    >
       <ResizablePanel
         panelRef={panel}
-        defaultSize={collapsed ? 0 : width}
+        defaultSize={openingSize}
         minSize={SIDEBAR_WIDTH.min}
         maxSize={SIDEBAR_WIDTH.max}
         collapsible
