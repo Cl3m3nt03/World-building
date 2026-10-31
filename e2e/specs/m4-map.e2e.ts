@@ -108,7 +108,7 @@ async function pickNext(result: string | string[]) {
   }, result);
 }
 
-const mapArea = () => $('[role="application"][aria-label^="Map "]');
+const mapArea = () => $('[role="application"][aria-label^="Carte "]');
 
 /** Clicks the map at (dx, dy) px from its centre. */
 async function clickMap(dx: number, dy: number) {
@@ -134,11 +134,11 @@ const drawn = () =>
 describe("M4: the map", () => {
   it("creates a world with a card, then a map on an image", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Lieu", "Gondor");
 
-    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
-    await $('//*[@role="menuitem"][normalize-space()="Nouvelle map"]').click();
+    await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
+    await $('//*[@role="menuitem"][normalize-space()="Nouvelle carte"]').click();
     await $('[role="dialog"]').waitForDisplayed();
     await pickNext(image("arda.png"));
     await $("button=Importer une image").click();
@@ -150,7 +150,7 @@ describe("M4: the map", () => {
         browser.execute(() => {
           const image = document.querySelector(".leaflet-image-layer")?.getBoundingClientRect();
           const area = document
-            .querySelector('[role="application"][aria-label^="Map "]')
+            .querySelector('[role="application"][aria-label^="Carte "]')
             ?.getBoundingClientRect();
           if (!image || !area) return false;
           const fits = image.width <= area.width + 1 && image.height <= area.height + 1;
@@ -159,7 +159,7 @@ describe("M4: the map", () => {
         }),
       { timeoutMsg: "the new map does not open on the whole image" },
     );
-    await typeOver("aria/Nom de la map", "Arda des Valar");
+    await typeOver("aria/Nom de la carte", "Arda des Valar");
     await browser.keys("Enter");
     await browser.waitUntil(
       async () =>
@@ -173,14 +173,14 @@ describe("M4: the map", () => {
   });
 
   it("puts a plain pin and a card's pin", async () => {
-    await $("button=Ajouter un pin").click();
-    await pinNamed("Pin Repère").waitForExist();
+    await $("button=Ajouter une épingle").click();
+    await pinNamed("Épingle Repère").waitForExist();
     await typeOver("aria/Libellé", "Minas Tirith");
-    await pinNamed("Pin Minas Tirith").waitForExist();
+    await pinNamed("Épingle Minas Tirith").waitForExist();
 
-    await $("button=Ajouter une carte").click();
+    await $("button=Ajouter une fiche").click();
     await $('//*[@role="option"][contains(normalize-space(), "Gondor")]').click();
-    await pinNamed("Pin de la carte Gondor").waitForExist();
+    await pinNamed("Épingle de la fiche Gondor").waitForExist();
   });
 
   it("traces a zone of 10 vertices, closes it on its first point and links it to a card", async () => {
@@ -196,8 +196,8 @@ describe("M4: the map", () => {
     await clickMap(points[0]?.[0] as number, points[0]?.[1] as number);
     await $("h2=Zone").waitForDisplayed({ timeoutMsg: "the zone did not close" });
 
-    await typeOver("aria/Label", "Mordor");
-    await $("button=Lier à une carte").click();
+    await typeOver("aria/Libellé", "Mordor");
+    await $("button=Lier à une fiche").click();
     await $('//*[@role="option"][contains(normalize-space(), "Gondor")]').click();
     await $("a*=Gondor").waitForDisplayed();
     await browser.waitUntil(async () => (await drawn()).includes("Zone Mordor"));
@@ -233,22 +233,22 @@ describe("M4: the map", () => {
     // Keyboard: the pin focused, Delete removes it.
     await browser.execute(
       (pin) => (pin as unknown as HTMLElement).focus(),
-      await pinNamed("Pin Minas Tirith"),
+      await pinNamed("Épingle Minas Tirith"),
     );
     await browser.keys("Delete");
-    await browser.waitUntil(async () => !(await drawn()).includes("Pin Minas Tirith"));
+    await browser.waitUntil(async () => !(await drawn()).includes("Épingle Minas Tirith"));
     await $("aria/Annuler (Ctrl+Z)").click();
-    await pinNamed("Pin Minas Tirith").waitForExist();
+    await pinNamed("Épingle Minas Tirith").waitForExist();
     await $("aria/Rétablir (Ctrl+Y)").click();
-    await browser.waitUntil(async () => !(await drawn()).includes("Pin Minas Tirith"));
+    await browser.waitUntil(async () => !(await drawn()).includes("Épingle Minas Tirith"));
     await $("aria/Annuler (Ctrl+Z)").click();
-    await pinNamed("Pin Minas Tirith").waitForExist();
+    await pinNamed("Épingle Minas Tirith").waitForExist();
   });
 
   it("keeps everything on a new background, even of another ratio", async () => {
     await $("button=Recentrer").click();
     await browser.pause(800);
-    const before = await relativePosition("Pin Minas Tirith");
+    const before = await relativePosition("Épingle Minas Tirith");
     expect(before).not.toBeNull();
     await $("button=Fond").click();
     await $('[role="dialog"]').waitForDisplayed();
@@ -260,10 +260,15 @@ describe("M4: the map", () => {
       timeoutMsg: "the map's content is not drawn on the new background",
     });
     expect((await drawn()).sort()).toEqual(
-      ["Pin Minas Tirith", "Pin de la carte Gondor", "Texte Royaumes", "Zone Mordor"].sort(),
+      [
+        "Épingle Minas Tirith",
+        "Épingle de la fiche Gondor",
+        "Texte Royaumes",
+        "Zone Mordor",
+      ].sort(),
     );
     await browser.pause(500);
-    const after = await relativePosition("Pin Minas Tirith");
+    const after = await relativePosition("Épingle Minas Tirith");
     expect(after).not.toBeNull();
     expect(Math.abs((after?.x ?? 9) - (before?.x ?? 0))).toBeLessThan(0.02);
     expect(Math.abs((after?.y ?? 9) - (before?.y ?? 0))).toBeLessThan(0.02);
@@ -275,7 +280,7 @@ describe("M4: the map", () => {
     await $("h1=Mondes").waitForDisplayed();
     await $(`aria/Ouvrir ${WORLD}`).click();
     await currentWorldButton(WORLD).waitForDisplayed();
-    await openTab("World");
+    await openTab("Monde");
     await $('//aside//*[@role="treeitem"][normalize-space()="Arda des Valar"]').click();
     await mapArea().waitForDisplayed();
     await browser.waitUntil(async () => (await drawn()).length === 4, {

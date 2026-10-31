@@ -456,13 +456,13 @@ test("Add cards places the chosen cards on a track, undone as one", async () => 
     add.focus();
     fireEvent.keyDown(add, { key: "Enter" });
   });
-  fireEvent.click(await screen.findByRole("menuitem", { name: "Des cartes…" }));
-  const dialog = await screen.findByRole("dialog", { name: "Ajouter des cartes" });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Des fiches…" }));
+  const dialog = await screen.findByRole("dialog", { name: "Ajouter des fiches" });
   expect(within(dialog).getByText("déjà sur la frise")).toBeTruthy();
 
   fireEvent.click(within(dialog).getByRole("checkbox", { name: /Robert Baratheon/ }));
   fireEvent.change(within(dialog).getByLabelText("Année"), { target: { value: "300" } });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Placer 1 carte" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Placer 1 fiche" }));
 
   await waitFor(() => expect(stored?.items).toHaveLength(4));
   const placed = stored?.items.find((item) => item.cardId === "robert" && item.id !== "crowned");

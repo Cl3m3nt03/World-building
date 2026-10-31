@@ -177,7 +177,7 @@ afterEach(() => {
 /** Picks `entry` in the sidebar's « New document » menu. */
 async function newDocument(entry: string) {
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre, canvas, frise…)",
+    name: "Nouveau document (carte, graphe, arbre, atelier, frise…)",
   });
   await act(async () => {
     trigger.focus();
@@ -205,20 +205,22 @@ async function renderAt(path: string) {
 test('"New graph" in the sidebar creates a graph showing every card, and opens it', async () => {
   const router = await renderAt("/world/demo/world");
 
-  await newDocument("Nouveau graph");
+  await newDocument("Nouveau graphe");
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/graph/g1"));
-  expect(calls).toContainEqual({ command: "create_graph", payload: { title: "Graph sans nom" } });
+  expect(calls).toContainEqual({ command: "create_graph", payload: { title: "Graphe sans nom" } });
   expect(
-    await screen.findByRole("img", { name: "Graph Graph sans nom : 3 cartes, 1 liens" }),
+    await screen.findByRole("img", { name: "Graphe Graphe sans nom : 3 fiches, 1 liens" }),
   ).toBeTruthy();
-  expect(await screen.findByRole("treeitem", { name: "Graph sans nom" })).toBeTruthy();
-  expect((screen.getByLabelText("Nom du graph") as HTMLInputElement).value).toBe("Graph sans nom");
+  expect(await screen.findByRole("treeitem", { name: "Graphe sans nom" })).toBeTruthy();
+  expect((screen.getByLabelText("Nom du graphe") as HTMLInputElement).value).toBe(
+    "Graphe sans nom",
+  );
 });
 
 test("the « Graph » tile of the empty workspace creates a graph too", async () => {
   const router = await renderAt("/world/demo/world");
-  fireEvent.click(await screen.findByRole("button", { name: "Graph" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Graphe" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/graph/g1"));
 });
 
@@ -230,7 +232,7 @@ test("a world without cards says how the graph builds itself", async () => {
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   await renderAt("/world/demo/world/graph/g1");
-  expect(await screen.findByText(/le graph se construit tout seul/)).toBeTruthy();
+  expect(await screen.findByText(/le graphe se construit tout seul/)).toBeTruthy();
 });
 
 test("settings missing from a saved graph take their default value", () => {
@@ -285,7 +287,7 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   const router = await renderAt("/world/demo/world/graph/g1");
-  const list = await screen.findByRole("listbox", { name: "3 cartes" });
+  const list = await screen.findByRole("listbox", { name: "3 fiches" });
   const options = () => within(list).getAllByRole("option");
   expect(options().map((option) => option.textContent)).toEqual(["Aragorn", "Arwen", "Gimli"]);
 
@@ -296,7 +298,7 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
   // Nothing was selected: the first card is.
   expect(options()[0]?.getAttribute("aria-selected")).toBe("true");
   expect(list.getAttribute("aria-activedescendant")).toBe(options()[0]?.id);
-  const linked = screen.getByRole("region", { name: "Cartes liées à Aragorn" });
+  const linked = screen.getByRole("region", { name: "Fiches liées à Aragorn" });
   expect(
     within(linked)
       .getAllByRole("button")
@@ -312,7 +314,7 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
 
   fireEvent.keyDown(list, { key: "End" });
   expect(options()[2]?.getAttribute("aria-selected")).toBe("true");
-  expect(screen.getByRole("region", { name: "Cartes liées à Gimli" }).textContent).toContain(
+  expect(screen.getByRole("region", { name: "Fiches liées à Gimli" }).textContent).toContain(
     "Aucun lien.",
   );
 
@@ -321,15 +323,15 @@ test("the list of the shown cards: arrows select, the neighbours show, Enter ope
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/arwen"));
 });
 
-test("« À quoi sert le Graph ? » explains it from the toolbar", async () => {
+test("« À quoi sert le Graphe ? » explains it from the toolbar", async () => {
   stored = {
     id: "g1",
     title: "Royaume",
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   await renderAt("/world/demo/world/graph/g1");
-  fireEvent.click(await screen.findByRole("button", { name: "À quoi sert le Graph ?" }));
-  expect(await screen.findByText(/chaque point est une carte/)).toBeTruthy();
+  fireEvent.click(await screen.findByRole("button", { name: "À quoi sert le Graphe ?" }));
+  expect(await screen.findByText(/chaque point est une fiche/)).toBeTruthy();
   expect(screen.getByText(/une relation tracée dans un arbre/)).toBeTruthy();
 });
 
@@ -348,16 +350,16 @@ test("the magnifying glass opens a field; the count is announced; Escape closes 
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   await renderAt("/world/demo/world/graph/g1");
-  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
-  fireEvent.click(within(toolbar).getByRole("button", { name: "Rechercher dans le graph" }));
-  const field = screen.getByRole("searchbox", { name: "Rechercher une carte dans le graph" });
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graphe" });
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Rechercher dans le graphe" }));
+  const field = screen.getByRole("searchbox", { name: "Rechercher une fiche dans le graphe" });
   expect(document.activeElement).toBe(field);
   fireEvent.change(field, { target: { value: "ar" } });
-  expect(within(toolbar).getByText("2 cartes")).toBeTruthy();
+  expect(within(toolbar).getByText("2 fiches")).toBeTruthy();
   fireEvent.keyDown(field, { key: "Escape" });
   expect(screen.queryByRole("searchbox")).toBeNull();
   expect(document.activeElement).toBe(
-    within(toolbar).getByRole("button", { name: "Rechercher dans le graph" }),
+    within(toolbar).getByRole("button", { name: "Rechercher dans le graphe" }),
   );
 });
 
@@ -409,7 +411,7 @@ test("the filters menu checks types; with no card left, it says so and can show 
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   await renderAt("/world/demo/world/graph/g1");
-  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graphe" });
   const open = async () => {
     const trigger = within(toolbar).getByRole("button", { name: /^Filtrer par type/ });
     await act(async () => {
@@ -419,12 +421,12 @@ test("the filters menu checks types; with no card left, it says so and can show 
   };
   await open();
   fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Lieu" }));
-  expect(await screen.findByText("Aucune carte ne correspond aux filtres.")).toBeTruthy();
+  expect(await screen.findByText("Aucune fiche ne correspond aux filtres.")).toBeTruthy();
   expect(
     within(toolbar).getByRole("button", { name: "Filtrer par type (actif)", hidden: true }),
   ).toBeTruthy();
   fireEvent.click(screen.getByRole("menuitem", { name: "Tout afficher" }));
-  expect(await screen.findByRole("listbox", { name: "1 carte" })).toBeTruthy();
+  expect(await screen.findByRole("listbox", { name: "1 fiche" })).toBeTruthy();
 });
 
 test("the settings: hiding the cards without links, a force slider, back to the defaults", async () => {
@@ -434,14 +436,14 @@ test("the settings: hiding the cards without links, a force slider, back to the 
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   await renderAt("/world/demo/world/graph/g1");
-  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
-  fireEvent.click(within(toolbar).getByRole("button", { name: "Réglages du graph" }));
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graphe" });
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Réglages du graphe" }));
   const dialog = await screen.findByRole("dialog");
-  expect(screen.getByRole("listbox", { name: "3 cartes", hidden: true })).toBeTruthy();
+  expect(screen.getByRole("listbox", { name: "3 fiches", hidden: true })).toBeTruthy();
 
-  fireEvent.click(within(dialog).getByRole("switch", { name: "Masquer les cartes sans lien" }));
+  fireEvent.click(within(dialog).getByRole("switch", { name: "Masquer les fiches sans lien" }));
   // Gimli has no link.
-  expect(screen.getByRole("listbox", { name: "2 cartes", hidden: true })).toBeTruthy();
+  expect(screen.getByRole("listbox", { name: "2 fiches", hidden: true })).toBeTruthy();
 
   const repulsion = within(dialog).getByLabelText(/Répulsion/);
   fireEvent.change(repulsion, { target: { value: "900" } });
@@ -449,7 +451,7 @@ test("the settings: hiding the cards without links, a force slider, back to the 
 
   fireEvent.click(within(dialog).getByRole("button", { name: "Revenir aux réglages par défaut" }));
   expect(within(dialog).getByText("120")).toBeTruthy();
-  expect(screen.getByRole("listbox", { name: "3 cartes", hidden: true })).toBeTruthy();
+  expect(screen.getByRole("listbox", { name: "3 fiches", hidden: true })).toBeTruthy();
 });
 
 test("the selected card is pinned and unpinned from the list; the list marks it", async () => {
@@ -459,7 +461,7 @@ test("the selected card is pinned and unpinned from the list; the list marks it"
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   await renderAt("/world/demo/world/graph/g1");
-  const list = await screen.findByRole("listbox", { name: "3 cartes" });
+  const list = await screen.findByRole("listbox", { name: "3 fiches" });
   // The simulation has given the nodes a place.
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -484,8 +486,8 @@ test("the configuration saves itself; « Save as… » makes a named copy of it 
     config: { filters: {}, settings: {}, pinned: [], viewport: null },
   };
   const router = await renderAt("/world/demo/world/graph/g1");
-  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graph" });
-  fireEvent.click(within(toolbar).getByRole("button", { name: "Réglages du graph" }));
+  const toolbar = await screen.findByRole("toolbar", { name: "Outils du graphe" });
+  fireEvent.click(within(toolbar).getByRole("button", { name: "Réglages du graphe" }));
   const dialog = await screen.findByRole("dialog");
   fireEvent.click(within(dialog).getByRole("switch", { name: "Afficher les noms" }));
   // Saved after a short pause.
@@ -496,7 +498,7 @@ test("the configuration saves itself; « Save as… » makes a named copy of it 
   const saveAs = await screen.findByRole("dialog", {
     name: "Enregistrer cette vue sous un nouveau nom",
   });
-  fireEvent.change(within(saveAs).getByLabelText("Nom du nouveau graph"), {
+  fireEvent.change(within(saveAs).getByLabelText("Nom du nouveau graphe"), {
     target: { value: "Famille Stark" },
   });
   fireEvent.click(within(saveAs).getByRole("button", { name: "Enregistrer" }));

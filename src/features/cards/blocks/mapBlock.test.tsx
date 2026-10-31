@@ -76,7 +76,7 @@ async function renderBlock(block: MapBlock, onChange: (block: MapBlock) => void)
   const world = createRoute({
     getParentRoute: () => root,
     path: "/world/$worldId",
-    component: () => <MapBlockView block={block} label="Bloc map 1" onChange={onChange} />,
+    component: () => <MapBlockView block={block} label="Bloc carte 1" onChange={onChange} />,
   });
   const router = createRouter({
     routeTree: root.addChildren([world]),
@@ -97,15 +97,15 @@ async function renderBlock(block: MapBlock, onChange: (block: MapBlock) => void)
 test("a map block chooses a map of the world, then shows it read-only with a link", async () => {
   const onChange = vi.fn();
   await renderBlock({ id: "b", type: "map", mapId: null }, onChange);
-  fireEvent.click(await screen.findByRole("combobox", { name: "Map à afficher" }));
+  fireEvent.click(await screen.findByRole("combobox", { name: "Carte à afficher" }));
   fireEvent.click(await screen.findByRole("option", { name: "Arda" }));
   expect(onChange).toHaveBeenCalledWith({ id: "b", type: "map", mapId: "m1" });
 });
 
 test("a chosen map shows with its pins, and opens", async () => {
   await renderBlock({ id: "b", type: "map", mapId: "m1" }, () => {});
-  expect(await screen.findByRole("application", { name: "Map Arda" })).toBeTruthy();
-  const link = await screen.findByRole("link", { name: "Ouvrir la map" });
+  expect(await screen.findByRole("application", { name: "Carte Arda" })).toBeTruthy();
+  const link = await screen.findByRole("link", { name: "Ouvrir la carte" });
   expect(link.getAttribute("href")).toBe("/world/demo/world/map/m1");
   await waitFor(() => expect(document.querySelector('[aria-label="Minas Tirith"]')).not.toBeNull());
   expect(parseContent(JSON.stringify([{ id: "b", type: "map", mapId: "" }]))).toEqual([
@@ -117,9 +117,9 @@ test("« Changer » then the same map, or Escape, shows the map again", async ()
   const onChange = vi.fn();
   await renderBlock({ id: "b", type: "map", mapId: "m1" }, onChange);
   fireEvent.click(await screen.findByRole("button", { name: "Changer" }));
-  fireEvent.click(await screen.findByRole("combobox", { name: "Map à afficher" }));
+  fireEvent.click(await screen.findByRole("combobox", { name: "Carte à afficher" }));
   fireEvent.click(await screen.findByRole("option", { name: "Arda" }));
 
-  expect(await screen.findByRole("application", { name: "Map Arda" })).toBeTruthy();
+  expect(await screen.findByRole("application", { name: "Carte Arda" })).toBeTruthy();
   expect(onChange).not.toHaveBeenCalled();
 });

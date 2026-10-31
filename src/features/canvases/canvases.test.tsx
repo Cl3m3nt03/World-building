@@ -111,26 +111,29 @@ async function renderAt(path: string) {
 test('"New canvas" in the sidebar creates an empty canvas and opens it', async () => {
   const router = await renderAt("/world/demo/world");
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre, canvas, frise…)",
+    name: "Nouveau document (carte, graphe, arbre, atelier, frise…)",
   });
   await act(async () => {
     trigger.focus();
     fireEvent.keyDown(trigger, { key: "Enter" });
   });
-  fireEvent.click(await screen.findByRole("menuitem", { name: "Nouveau canvas" }));
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Nouvel atelier" }));
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/canvas/c1"));
-  expect(calls).toContainEqual({ command: "create_canvas", payload: { title: "Canvas sans nom" } });
-  const view = await screen.findByRole("region", { name: "Canvas Canvas sans nom" });
+  expect(calls).toContainEqual({
+    command: "create_canvas",
+    payload: { title: "Atelier sans nom" },
+  });
+  const view = await screen.findByRole("region", { name: "Atelier Atelier sans nom" });
   expect(view.textContent).toBe('{"elements":[]}');
-  expect(await screen.findByRole("treeitem", { name: "Canvas sans nom" })).toBeTruthy();
-  expect((screen.getByLabelText("Nom du canvas") as HTMLInputElement).value).toBe(
-    "Canvas sans nom",
+  expect(await screen.findByRole("treeitem", { name: "Atelier sans nom" })).toBeTruthy();
+  expect((screen.getByLabelText("Nom de l'atelier") as HTMLInputElement).value).toBe(
+    "Atelier sans nom",
   );
 });
 
 test("the « Canvas » tile of the empty workspace creates a canvas too", async () => {
   const router = await renderAt("/world/demo/world");
-  fireEvent.click(await screen.findByRole("button", { name: "Canvas" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Atelier" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/canvas/c1"));
 });

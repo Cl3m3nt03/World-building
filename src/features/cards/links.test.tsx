@@ -173,14 +173,14 @@ const callsOf = (command: string) => calls.filter((call) => call.command === com
 
 async function openPicker() {
   const trigger = await screen.findByRole("button", {
-    name: "Choisir une carte pour Lieu de naissance",
+    name: "Choisir une fiche pour Lieu de naissance",
   });
   await act(async () => {
     trigger.focus();
     fireEvent.keyDown(trigger, { key: "Enter" });
     fireEvent.click(trigger);
   });
-  return screen.findByRole("combobox", { name: "Choisir une carte pour Lieu de naissance" });
+  return screen.findByRole("combobox", { name: "Choisir une fiche pour Lieu de naissance" });
 }
 
 test("the picker only offers the allowed types, a subtype counting as its type", async () => {
@@ -314,5 +314,5 @@ test("cited in lists the Quill chapters that mention this card, and opens them",
 
 test("no backlink: says so", async () => {
   await renderAt("/world/demo/world/card/gondor");
-  expect(await screen.findByText("Rien ne cite cette carte pour l'instant.")).toBeTruthy();
+  expect(await screen.findByText("Rien ne cite cette fiche pour l'instant.")).toBeTruthy();
 });

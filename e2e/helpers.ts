@@ -26,7 +26,7 @@ export async function createWorld(name: string, genre?: string) {
   await currentWorldButton(name).waitForDisplayed();
 }
 
-export async function openTab(name: "Home" | "World") {
+export async function openTab(name: "Accueil" | "Monde") {
   await $(`//*[@role="tab"][@aria-label="${name}"]`).click();
 }
 
@@ -36,7 +36,7 @@ export const sidebarItem = (title: string) =>
 
 /** Creates a card of `type` from the sidebar and names it `title`. */
 export async function createCard(type: string, title: string) {
-  await $("button=Nouvelle carte").click();
+  await $("button=Nouvelle fiche").click();
   await $(`//*[@role="option"][normalize-space()="${type}"]`).click();
   await nameNewCard(type, title);
 }
@@ -58,7 +58,7 @@ export async function typeInPicker(text: string) {
 export async function nameNewCard(type: string, title: string) {
   // The new card opens with its title selected: typing at once replaces it
   // (keys typed while the menu was still closing used to be lost, #122).
-  const titleField = await $("aria/Nom de la carte");
+  const titleField = await $("aria/Nom de la fiche");
   await browser.waitUntil(
     async () =>
       browser.execute(() => {
@@ -99,7 +99,7 @@ export async function writeInCard() {
 
 export async function openCard(title: string) {
   await sidebarItem(title).click();
-  await browser.waitUntil(async () => (await $("aria/Nom de la carte").getValue()) === title, {
+  await browser.waitUntil(async () => (await $("aria/Nom de la fiche").getValue()) === title, {
     timeoutMsg: `the card ${title} did not open`,
   });
 }

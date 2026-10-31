@@ -150,7 +150,7 @@ test("the map lists its pages on visible layers, and a pin of a page opens it", 
   const router = await renderAt("/world/demo/wiki/map/arda");
   const article = await screen.findByRole("article", { name: "Arda" });
   expect(within(article).getByRole("heading", { level: 1, name: "Arda" })).toBeTruthy();
-  const list = await screen.findByRole("region", { name: "Sur cette map" });
+  const list = await screen.findByRole("region", { name: "Sur cette carte" });
   expect(
     within(list)
       .getAllByRole("link")
@@ -170,5 +170,5 @@ test("the map lists its pages on visible layers, and a pin of a page opens it", 
 test("a map without a page says so", async () => {
   pages = [];
   await renderAt("/world/demo/wiki/map/arda");
-  expect(await screen.findByText("Cette map n'est pas visible dans le wiki.")).toBeTruthy();
+  expect(await screen.findByText("Cette carte n'est pas visible dans le wiki.")).toBeTruthy();
 });

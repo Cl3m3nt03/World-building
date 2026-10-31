@@ -76,12 +76,12 @@ describe("V2-M3: the cards", () => {
   it("creates a world", async () => {
     await $("h1=Mondes").waitForDisplayed({ timeout: 30_000 });
     await createWorld(WORLD, "Fantasy");
-    await openTab("World");
-    await $("button=Nouvelle carte").waitForDisplayed({ timeout: 20_000 });
+    await openTab("Monde");
+    await $("button=Nouvelle fiche").waitForDisplayed({ timeout: 20_000 });
   });
 
   it("creates a card with the keyboard alone in the type panel", async () => {
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("eve");
     await browser.waitUntil(async () => (await options()).length === 1, {
       timeoutMsg: "the search without accents did not narrow the list to Événement",
@@ -93,14 +93,14 @@ describe("V2-M3: the cards", () => {
   });
 
   it("brings a subtype's type along and closes on Escape", async () => {
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("ham");
     await browser.waitUntil(async () => (await options()).join() === ["Lieu", "Hameau"].join(), {
       timeoutMsg: "the subtype Hameau did not show under its type",
     });
     await browser.keys("Escape");
     await $('[role="listbox"]').waitForExist({ reverse: true });
-    await expect($("button=Nouvelle carte")).toBeFocused();
+    await expect($("button=Nouvelle fiche")).toBeFocused();
   });
 
   it("changes the type from the chip, the current type marked", async () => {
@@ -134,7 +134,7 @@ describe("V2-M3: the cards", () => {
     });
     await row().waitForExist();
     // The card's menu says the same.
-    await $("aria/Actions de la carte").click();
+    await $("aria/Actions de la fiche").click();
     await expect(
       $('//*[@role="menuitemcheckbox"][normalize-space()="Visible dans le wiki"]'),
     ).toHaveAttribute("aria-checked", "true");
@@ -198,7 +198,7 @@ describe("V2-M3: the cards", () => {
     await $('input[aria-label="Convives"]').setValue("300");
 
     // Saved without a button: they are there after coming back.
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("Personnage");
     await option("Personnage").waitForDisplayed();
     await browser.keys("Enter");
@@ -212,17 +212,17 @@ describe("V2-M3: the cards", () => {
   });
 
   it("links to cards of a given type, several at a time", async () => {
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("Lieu");
     await option("Lieu").waitForDisplayed();
     await browser.keys("Enter");
     await nameNewCard("Lieu", "Valmorne");
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("Lieu");
     await option("Lieu").waitForDisplayed();
     await browser.keys("Enter");
     await nameNewCard("Lieu", "Hautecombe");
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("Personnage");
     await option("Personnage").waitForDisplayed();
     await browser.keys("Enter");
@@ -230,12 +230,12 @@ describe("V2-M3: the cards", () => {
     await openCard("Aldor");
 
     await addCardProperty("Terres", async () => {
-      await popover().$("label=Plusieurs cartes à la fois").click();
+      await popover().$("label=Plusieurs fiches à la fois").click();
       await popover().$('.//button[normalize-space()="Lieu"]').click();
     });
 
     const pick = async (title: string) => {
-      await $('button[aria-label="Choisir une carte pour Terres"]').click();
+      await $('button[aria-label="Choisir une fiche pour Terres"]').click();
       await popover().waitForDisplayed();
       await browser.waitUntil(async () => popover().$('input[role="combobox"]').isFocused(), {
         timeoutMsg: "the card picker's search did not take the focus",
@@ -245,7 +245,7 @@ describe("V2-M3: the cards", () => {
     // A character is not a location: not offered.
     await pick("Bran");
     await expect($('[data-slot="popover-content"]')).toHaveText(
-      expect.stringContaining("Aucune carte ne correspond"),
+      expect.stringContaining("Aucune fiche ne correspond"),
     );
     await browser.keys("Escape");
     await popover().waitForExist({ reverse: true });
@@ -260,7 +260,7 @@ describe("V2-M3: the cards", () => {
   });
 
   it("gives a new card of a subtype its type's template", async () => {
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("ham");
     await option("Lieu").waitForDisplayed();
     await browser.keys("ArrowDown");
@@ -271,7 +271,7 @@ describe("V2-M3: the cards", () => {
   });
 
   it("opens the types screen from the panel, for a type without a template", async () => {
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await $('[role="listbox"]').waitForDisplayed();
     await $("button=Nouveau type").click();
     await $('[role="listbox"]').waitForExist({ reverse: true });
@@ -290,13 +290,13 @@ describe("V2-M3: the cards", () => {
     await browser.keys("Escape");
     await $('[role="dialog"]').waitForExist({ reverse: true });
 
-    await $("button=Nouvelle carte").click();
+    await $("button=Nouvelle fiche").click();
     await typeInPicker("Chronique");
     await option("Chronique").waitForDisplayed();
     await browser.keys("Enter");
     await nameNewCard("Chronique", "Annales");
     await $("button*=Commencez à écrire").waitForDisplayed();
-    await expect($("button*=Utiliser le template")).not.toBeExisting();
+    await expect($("button*=Utiliser le modèle")).not.toBeExisting();
     await expect(content().$("h2")).not.toBeExisting();
   });
 

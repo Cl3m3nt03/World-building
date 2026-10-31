@@ -40,13 +40,13 @@ async function reopenWorld() {
   await currentWorldButton(WORLD).waitForDisplayed();
 }
 
-const mentionCount = (title: string) => $$(`aria/Ouvrir la carte ${title}`).length;
+const mentionCount = (title: string) => $$(`aria/Ouvrir la fiche ${title}`).length;
 
 describe("M2: world settings, theme and writing preferences", () => {
   it("creates a world with two cards", async () => {
     await $("h1=Mondes").waitForDisplayed({ timeout: 30_000 });
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Lieu", "Gondor");
     await createCard("Personnage", "Aragorn");
   });
@@ -66,7 +66,7 @@ describe("M2: world settings, theme and writing preferences", () => {
   });
 
   it("turns a typed card name into a mention, and no longer once switched off", async () => {
-    await openTab("World");
+    await openTab("Monde");
     await openCard("Aragorn");
     await writeInCard();
     await browser.keys("Né au Gondor ");
@@ -86,7 +86,7 @@ describe("M2: world settings, theme and writing preferences", () => {
 
     // Closed right after typing: the text was saved all the same (#106).
     await reopenWorld();
-    await openTab("World");
+    await openTab("Monde");
     await openCard("Aragorn");
     await browser.waitUntil(async () => (await mentionCount("Gondor")) === 1, {
       timeoutMsg: "the text typed before closing the world was lost",
@@ -103,9 +103,9 @@ describe("M2: world settings, theme and writing preferences", () => {
     await $("button=Mondes").click();
     await $("h1=Mondes").waitForDisplayed();
     await createWorld("Númenor", "Science-fiction");
-    await openTab("World");
+    await openTab("Monde");
     await expect($("aside [role=treeitem]")).not.toBeExisting();
-    await openTab("Home");
+    await openTab("Accueil");
     await $("button=Types").click();
     await $('//*[@role="dialog"]//button[normalize-space()="Vaisseau"]').waitForDisplayed();
     await expect(

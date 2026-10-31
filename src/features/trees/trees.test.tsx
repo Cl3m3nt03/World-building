@@ -229,7 +229,7 @@ test('"New tree" in the sidebar creates a tree with one empty character, and ope
   const router = await renderAt("/world/demo/world");
 
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre, canvas, frise…)",
+    name: "Nouveau document (carte, graphe, arbre, atelier, frise…)",
   });
   await act(async () => {
     trigger.focus();
@@ -252,7 +252,7 @@ test('"New tree" in the sidebar creates a tree with one empty character, and ope
 
 test("the « Relation tree » tile of the empty workspace creates a tree too", async () => {
   const router = await renderAt("/world/demo/world");
-  fireEvent.click(await screen.findByRole("button", { name: "Arbre de relations" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Arbre" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/tree/t1"));
 });
 
@@ -265,7 +265,7 @@ test("a blank tree offers to start from the known relations, placed by generatio
   ];
   await renderAt("/world/demo/world/tree/t1");
   const offer = await screen.findByRole("region", { name: "Partir de ce que le monde sait ?" });
-  expect(offer.textContent).toContain("3 cartes sont déjà reliées par 3 relations");
+  expect(offer.textContent).toContain("3 fiches sont déjà reliées par 3 relations");
 
   fireEvent.click(screen.getByRole("button", { name: "Reprendre ces relations" }));
 
@@ -323,7 +323,7 @@ test("clicking the empty node fills it with a card found by an alias, or with a 
   await renderAt("/world/demo/world/tree/t1");
 
   fireEvent.click(await screen.findByText("Nouveau personnage"));
-  const search = await screen.findByRole("combobox", { name: "Carte ou nom du nœud" });
+  const search = await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" });
   fireEvent.change(search, { target: { value: "grands" } });
   fireEvent.keyDown(search, { key: "Enter" });
   expect(await screen.findByText("Aragorn")).toBeTruthy();
@@ -331,7 +331,7 @@ test("clicking the empty node fills it with a card found by an alias, or with a 
 
   // The selected node's bar replaces it with a plain name.
   fireEvent.click(screen.getByRole("button", { name: "Remplacer" }));
-  const again = await screen.findByRole("combobox", { name: "Carte ou nom du nœud" });
+  const again = await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" });
   fireEvent.change(again, { target: { value: "Gilraen" } });
   fireEvent.click(await screen.findByRole("option", { name: "Utiliser le nom « Gilraen »" }));
   expect(await screen.findByText("Gilraen")).toBeTruthy();
@@ -344,10 +344,10 @@ test("« Ajouter un nœud » adds an empty node ready to fill; the bar deletes i
   await screen.findByText("Nouveau personnage");
 
   fireEvent.click(screen.getByRole("button", { name: "Ajouter un nœud" }));
-  expect(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" })).toBeTruthy();
+  expect(await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" })).toBeTruthy();
   await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(2));
   await waitFor(() => expect(savedNodes()).toHaveLength(2));
-  fireEvent.keyDown(screen.getByRole("combobox", { name: "Carte ou nom du nœud" }), {
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Fiche ou nom du nœud" }), {
     key: "Escape",
   });
 
@@ -373,7 +373,7 @@ test("a node whose card is gone says so", async () => {
   const content = stored.variants[0]?.content;
   if (content) content.nodes = [{ id: "n1", cardId: "gone", label: "", x: 0, y: 0 }];
   await renderAt("/world/demo/world/tree/t1");
-  expect(await screen.findByText("Carte introuvable")).toBeTruthy();
+  expect(await screen.findByText("Fiche introuvable")).toBeTruthy();
 });
 
 /** The saved content of the first variant. */
@@ -404,7 +404,7 @@ test("a « + » adds an empty relative on its side, linked by the picked relatio
   }
   await plus("au-dessus de", "Parent");
   // The new node is selected, its search open, and already linked.
-  expect(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" })).toBeTruthy();
+  expect(await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" })).toBeTruthy();
   await waitFor(() => expect(savedContent()?.nodes).toHaveLength(2));
   const [aragorn, parent] = savedContent()?.nodes ?? [];
   expect((parent?.y ?? 0) < (aragorn?.y ?? 0)).toBe(true);
@@ -431,7 +431,7 @@ test("« Skip for now » links without a type; « Custom relation… » names a 
   const [, right] = savedContent()?.nodes ?? [];
   expect((right?.x ?? 0) > 0).toBe(true);
 
-  fireEvent.keyDown(screen.getByRole("combobox", { name: "Carte ou nom du nœud" }), {
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Fiche ou nom du nœud" }), {
     key: "Escape",
   });
   fireEvent.click(await screen.findByText("Aragorn"));
@@ -454,7 +454,7 @@ test("the world's own relations are offered next to the provided ones", async ()
   stored = emptyTree("Lignée", "Variante 1");
   await renderAt("/world/demo/world/tree/t1");
   fireEvent.click(await screen.findByText("Nouveau personnage"));
-  fireEvent.keyDown(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" }), {
+  fireEvent.keyDown(await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" }), {
     key: "Escape",
   });
   const button = await screen.findByRole("button", { name: "Ajouter une relation" });
@@ -610,7 +610,7 @@ test("Ctrl+Z works with the focus on a relation menu's button, which keeps its o
   stored = emptyTree("Lignée", "Variante 1");
   await renderAt("/world/demo/world/tree/t1");
   fireEvent.click(await screen.findByRole("button", { name: "Ajouter un nœud" }));
-  fireEvent.keyDown(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" }), {
+  fireEvent.keyDown(await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" }), {
     key: "Escape",
   });
   await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(2));
@@ -629,7 +629,7 @@ test("Ctrl+Z undoes and Ctrl+Y redoes the variant's changes; the buttons too", a
 
   for (let i = 0; i < 2; i++) {
     fireEvent.click(screen.getByRole("button", { name: "Ajouter un nœud" }));
-    fireEvent.keyDown(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" }), {
+    fireEvent.keyDown(await screen.findByRole("combobox", { name: "Fiche ou nom du nœud" }), {
       key: "Escape",
     });
   }

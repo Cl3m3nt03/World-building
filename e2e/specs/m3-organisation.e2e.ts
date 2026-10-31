@@ -86,7 +86,7 @@ const pins = () =>
 describe("M3: organisation of the sidebar", () => {
   it("creates a world with a few cards", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     for (const [type, title] of [
       ["Lieu", "Royaume"],
       ["Lieu", "Ville"],
@@ -207,7 +207,7 @@ describe("M3: organisation of the sidebar", () => {
     await $("button=Mondes").click();
     await $("h1=Mondes").waitForDisplayed();
     await $(`aria/Ouvrir ${WORLD}`).click();
-    await openTab("World");
+    await openTab("Monde");
     await browser.waitUntil(async () => (await rows()).join("|") === before.join("|"), {
       timeoutMsg: `state not kept: ${(await rows()).join("|")} instead of ${before.join("|")}`,
     });

@@ -68,7 +68,7 @@ describe("V2-3.3b: select and date properties", () => {
     await $("aria/Retirer le choix En vie").click();
     const alert = await popover().$('[role="alert"]');
     await alert.waitForDisplayed();
-    await expect(alert).toHaveText(expect.stringContaining("1 carte le perdra"));
+    await expect(alert).toHaveText(expect.stringContaining("1 fiche le perdra"));
     await alert.$("button=Retirer").click();
     await $("aria/Nom du choix En vie").waitForExist({ reverse: true });
     await closeWindow();
