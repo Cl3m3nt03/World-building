@@ -10,18 +10,23 @@ const WORLD = "Ordre";
 const popover = () => $('[data-slot="popover-content"]');
 const properties = () => $('section[aria-label="Propriétés"]');
 
-async function addProperty(button: ReturnType<typeof $>, label: string) {
+async function addProperty(button: ReturnType<typeof $>, label: string, onCard = false) {
   await button.click();
   const name = await popover().$("input");
   await name.waitForDisplayed();
   await name.setValue(label);
   await browser.keys("Enter");
-  await popover().waitForExist({ reverse: true });
   await $(`aria/Modifier la propriété ${label}`).waitForDisplayed();
+  if (onCard) {
+    // The new property's window opens to set it up.
+    await $('[data-slot="popover-content"][data-state="open"]').waitForDisplayed();
+    await browser.keys("Escape");
+  }
+  await popover().waitForExist({ reverse: true });
 }
 
-/** Moves a property up one row with the keyboard: Space, arrow, Space. */
-async function moveUp(label: string) {
+/** Picks a property up with the keyboard and moves it up one row. */
+async function pickUpAndRaise(label: string) {
   await browser.execute(
     (name) =>
       document
@@ -33,6 +38,11 @@ async function moveUp(label: string) {
   await browser.pause(150);
   await browser.keys("ArrowUp");
   await browser.pause(150);
+}
+
+/** Moves a property up one row: Space, arrow, Space. */
+async function moveUp(label: string) {
+  await pickUpAndRaise(label);
   await browser.keys(" ");
 }
 
@@ -60,6 +70,14 @@ describe("V2-3.3c: reordering properties", () => {
     await addProperty(add, "Force");
     await addProperty(add, "Courage");
 
+    // Escape cancels the move and leaves the types screen open.
+    await pickUpAndRaise("Courage");
+    await browser.keys("Escape");
+    await browser.pause(300);
+    await expect($("aria/Nom du type")).toBeDisplayed();
+    const untouched = await names("Modifier la propriété ");
+    expect(untouched.indexOf("Force")).toBeLessThan(untouched.indexOf("Courage"));
+
     await moveUp("Courage");
     await browser.waitUntil(
       async () => {
@@ -80,8 +98,8 @@ describe("V2-3.3c: reordering properties", () => {
 
   it("orders a card's own properties, and leaves its type's alone", async () => {
     const add = properties().$("button=Ajouter une propriété");
-    await addProperty(add, "Épée");
-    await addProperty(add, "Cheval");
+    await addProperty(add, "Épée", true);
+    await addProperty(add, "Cheval", true);
     expect(await names("Déplacer la propriété ")).toEqual([
       "Épée (Espace, puis flèches)",
       "Cheval (Espace, puis flèches)",

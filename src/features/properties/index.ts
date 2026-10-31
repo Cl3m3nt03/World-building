@@ -1,6 +1,6 @@
 export { AddPropertyPopover } from "./components/AddPropertyPopover";
 export { kindIcon, PropertyEditor } from "./components/PropertyEditor";
-export { SortablePropertyList } from "./components/SortablePropertyList";
+export { isMovingProperty, SortablePropertyList } from "./components/SortablePropertyList";
 export { TypeProperties } from "./components/TypeProperties";
 export {
   propertyKeys,

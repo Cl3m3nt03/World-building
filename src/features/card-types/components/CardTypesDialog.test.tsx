@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { CardType, CardTypePatch, NewCardType } from "@/lib/bindings";
+import type { CardType, CardTypePatch, NewCardType, PropertyDefinition } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 import { CardTypesDialog } from "./CardTypesDialog";
 
@@ -44,6 +44,22 @@ beforeEach(() => {
         return types;
       case "count_type_cards":
         return 0;
+      case "list_type_properties":
+        return ["Âge", "Titre"].map(
+          (label): PropertyDefinition => ({
+            id: label,
+            owner: { on: "type", typeId: "character" },
+            label,
+            kind: "text",
+            targetTypeIds: [],
+            relationTypeId: null,
+            options: [],
+            multiple: false,
+            appliesToExisting: false,
+            sortOrder: 0,
+            createdAt: "2026-09-27T10:00:00Z",
+          }),
+        );
       case "create_card_type": {
         const { cardType: next } = payload as { cardType: NewCardType };
         const created = cardType(`new-${types.length}`, next.name, next);
@@ -299,4 +315,34 @@ test("the sections of the sheet are labelled", async () => {
     expect(screen.getByRole("region", { name })).toBeTruthy();
   }
   expect(screen.getByText("2 types")).toBeTruthy();
+});
+
+test("Escape cancels moving a property and leaves the screen open, then closes it", async () => {
+  const onOpenChange = vi.fn();
+  render(
+    <QueryClientProvider client={createQueryClient()}>
+      <TooltipProvider>
+        <CardTypesDialog open onOpenChange={onOpenChange} />
+      </TooltipProvider>
+    </QueryClientProvider>,
+  );
+  const handle = await screen.findByRole("button", {
+    name: "Déplacer la propriété Titre (Espace, puis flèches)",
+  });
+  await act(async () => {
+    handle.focus();
+    fireEvent.keyDown(handle, { code: "Space", key: " " });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  await waitFor(() => expect(handle.dataset.moving).toBe("true"));
+
+  await act(async () => {
+    fireEvent.keyDown(handle, { code: "Escape", key: "Escape" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  await waitFor(() => expect(handle.dataset.moving).toBeUndefined());
+  expect(onOpenChange).not.toHaveBeenCalled();
+
+  fireEvent.keyDown(handle, { code: "Escape", key: "Escape" });
+  expect(onOpenChange).toHaveBeenCalledWith(false);
 });

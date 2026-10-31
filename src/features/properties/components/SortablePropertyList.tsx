@@ -23,6 +23,14 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/**
+ * Whether a key comes from a handle holding a property. A dialog around the
+ * list checks it: Escape then cancels the move, it does not close the dialog.
+ */
+export function isMovingProperty(target: EventTarget | null) {
+  return target instanceof Element && target.closest("[data-moving]") !== null;
+}
+
 type Props<T> = {
   items: T[];
   idOf: (item: T) => string;
@@ -158,6 +166,7 @@ function SortableRow({
       aria-label={t("properties.drag", { name })}
       // Of dnd-kit's attributes, only the instructions: its role description is not translated.
       aria-describedby={attributes["aria-describedby"]}
+      data-moving={isDragging || undefined}
       className="shrink-0 cursor-grab touch-none opacity-40 transition-opacity duration-(--bz-duration-fast) ease-atlas group-focus-within/property:opacity-100 group-hover/property:opacity-100"
       {...listeners}
     >
