@@ -204,7 +204,7 @@ function BlockTypeMenu({
         className="flex w-56 flex-col overflow-hidden"
         {...(onCloseAutoFocus === undefined ? {} : { onCloseAutoFocus })}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           <DropdownMenuLabel>{t("blocks.insert")}</DropdownMenuLabel>
           {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
             <DropdownMenuItem key={type} onSelect={() => onPick(type)}>
