@@ -20,7 +20,7 @@
 
 ## V2-3.3 — Propriétés (#474)
 - [ ] « + Ajouter une propriété » ouvre un popover : son nom, puis son genre en familles (texte, nombre, sélection, date ; lien vers une carte d'un type donné)
-- [ ] Lignes de propriétés compactes (libellé, valeur), réordonnables comme aujourd'hui
+- [ ] Lignes de propriétés compactes (libellé, valeur), réordonnables (poignée sur l'écran des types et sur les propriétés propres d'une carte, #501)
 
 **Critères d'acceptation** : toutes les propriétés de M2 (types, propres à la carte, liens) gardent leur comportement et leurs tests.
 

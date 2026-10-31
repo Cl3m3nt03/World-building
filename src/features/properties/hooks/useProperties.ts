@@ -1,6 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  type CardProperty,
   commands,
+  type PropertyDefinition,
   type PropertyKind,
   type PropertyOptionInput,
   type PropertyOwner,
@@ -120,6 +122,58 @@ export function useDeleteProperty() {
     mutationFn: (id: string) => unwrap(commands.deleteProperty(id)),
     onSuccess: invalidate,
   });
+}
+
+/** `items` with those named by `ids` in that order; the others keep their place. */
+function inOrder<T>(items: T[], ids: string[], idOf: (item: T) => string): T[] {
+  const byId = new Map(items.map((item) => [idOf(item), item]));
+  let next = 0;
+  return items.map((item) => {
+    if (!ids.includes(idOf(item))) return item;
+    const id = ids[next];
+    next += 1;
+    return (id !== undefined && byId.get(id)) || item;
+  });
+}
+
+const reorderKey = () => [...propertyKeys.all(), "reorder"] as const;
+
+/**
+ * Sends a new order, already shown in the list under `queryKey`. The list
+ * changes before the mutation starts: a row moved later would lose the focus
+ * that the drag has just given back to its handle. Moves run one after the
+ * other, the lists are read back after the last one, and a failure brings the
+ * saved order back.
+ */
+function useReorder<T>(queryKey: QueryKey, idOf: (item: T) => string) {
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidate();
+  const mutation = useMutation({
+    mutationKey: reorderKey(),
+    scope: { id: "properties-reorder" },
+    mutationFn: (ids: string[]) => unwrap(commands.reorderProperties(ids)),
+    onSettled: () =>
+      queryClient.isMutating({ mutationKey: reorderKey() }) === 1 ? invalidate() : undefined,
+  });
+  const reorder = (ids: string[]) => {
+    void queryClient.cancelQueries({ queryKey });
+    queryClient.setQueryData<T[]>(queryKey, (items) => items && inOrder(items, ids, idOf));
+    mutation.mutate(ids);
+  };
+  return { reorder, error: mutation.error };
+}
+
+/** Orders a type's properties; the cards of the type follow. */
+export function useReorderTypeProperties(typeId: string) {
+  return useReorder(propertyKeys.ofType(typeId), (property: PropertyDefinition) => property.id);
+}
+
+/** Orders the properties a card owns; those of its type do not move. */
+export function useReorderCardProperties(cardId: string) {
+  return useReorder(
+    propertyKeys.ofCard(cardId),
+    (property: CardProperty) => property.definition.id,
+  );
 }
 
 /** Values a property holds, to warn before deleting it. */

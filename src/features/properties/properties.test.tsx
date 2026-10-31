@@ -37,6 +37,7 @@ let typeProps: PropertyDefinition[];
 let cardProps: CardProperty[];
 let valueCount: number;
 let optionUses: number;
+let reorderFails: boolean;
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -48,6 +49,7 @@ beforeEach(() => {
   ];
   valueCount = 3;
   optionUses = 0;
+  reorderFails = false;
   mockIPC((command, payload) => {
     calls.push({ command, payload });
     const args = payload as Record<string, unknown>;
@@ -86,6 +88,16 @@ beforeEach(() => {
         typeProps = typeProps.map(change);
         cardProps = cardProps.map((p) => ({ ...p, definition: change(p.definition) }));
         return typeProps.find((p) => p.id === args.id);
+      }
+      case "reorder_properties": {
+        if (reorderFails) throw { kind: "Sqlite", message: "disk full" };
+        const ids = args.ids as string[];
+        typeProps = ids.includes(typeProps[0]?.id ?? "")
+          ? ids.flatMap((id) => typeProps.filter((p) => p.id === id))
+          : typeProps;
+        const moved = ids.flatMap((id) => cardProps.filter((p) => p.definition.id === id));
+        cardProps = [...cardProps.filter((p) => !ids.includes(p.definition.id)), ...moved];
+        return null;
       }
       case "count_property_option_values":
         return optionUses;
@@ -582,4 +594,126 @@ test("a date can be cleared", async () => {
   await waitFor(() =>
     expect(callsOf("set_property_value")[0]?.payload).toMatchObject({ value: null }),
   );
+});
+
+/** jsdom lays nothing out: each row of a list gets its own place for dnd-kit. */
+function layOutRows() {
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+    const index =
+      this.tagName === "LI" ? [...(this.parentElement?.children ?? [])].indexOf(this) : 0;
+    return new DOMRect(0, index * 40, 300, 40);
+  });
+}
+
+async function press(code: "Space" | "ArrowDown" | "ArrowUp" | "Escape") {
+  await act(async () => {
+    const key = code === "Space" ? " " : code;
+    fireEvent.keyDown(document.activeElement ?? document.body, { code, key });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
+
+async function pickUp(name: string) {
+  const handle = await screen.findByRole("button", {
+    name: `Déplacer la propriété ${name} (Espace, puis flèches)`,
+  });
+  act(() => handle.focus());
+  await press("Space");
+}
+
+const editButtons = () =>
+  screen
+    .getAllByRole("button", { name: /^Modifier la propriété / })
+    .map((button) => button.getAttribute("aria-label")?.replace("Modifier la propriété ", ""));
+
+const liveRegion = () => document.querySelector("[id^=DndLiveRegion]")?.textContent;
+
+test("orders a type's properties with the keyboard and sends the whole list", async () => {
+  layOutRows();
+  typeProps = [definition("a", "Âge"), definition("t", "Titre"), definition("o", "Origine")];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+
+  await pickUp("Âge");
+  await waitFor(() => expect(liveRegion()).toBe("Âge saisie, position 1 sur 3."));
+  await press("ArrowDown");
+  await waitFor(() => expect(liveRegion()).toBe("Âge en position 2 sur 3."));
+  await press("Space");
+
+  await waitFor(() => expect(callsOf("reorder_properties")).toHaveLength(1));
+  expect(callsOf("reorder_properties")[0]?.payload).toMatchObject({ ids: ["t", "a", "o"] });
+  await waitFor(() => expect(editButtons()).toEqual(["Titre", "Âge", "Origine"]));
+  expect(liveRegion()).toBe("Âge déposée en position 2 sur 3.");
+  expect(document.activeElement).toBe(
+    screen.getByRole("button", { name: "Déplacer la propriété Âge (Espace, puis flèches)" }),
+  );
+});
+
+test("Escape puts the property back and saves nothing", async () => {
+  layOutRows();
+  typeProps = [definition("a", "Âge"), definition("t", "Titre")];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+
+  await pickUp("Âge");
+  await press("ArrowDown");
+  await press("Escape");
+
+  await waitFor(() =>
+    expect(liveRegion()).toBe("Déplacement annulé : Âge reste en position 1 sur 2."),
+  );
+  expect(callsOf("reorder_properties")).toHaveLength(0);
+  expect(editButtons()).toEqual(["Âge", "Titre"]);
+});
+
+test("a lone property has no handle", async () => {
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  await screen.findByRole("button", { name: "Modifier la propriété Titre" });
+  expect(screen.queryByRole("button", { name: /^Déplacer la propriété/ })).toBeNull();
+});
+
+test("a failed move says so and brings the saved order back", async () => {
+  layOutRows();
+  reorderFails = true;
+  typeProps = [definition("a", "Âge"), definition("t", "Titre")];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+
+  await pickUp("Âge");
+  await press("ArrowDown");
+  await press("Space");
+
+  await screen.findByRole("alert");
+  await waitFor(() => expect(editButtons()).toEqual(["Âge", "Titre"]));
+});
+
+test("a card moves its own properties only, after those of its type", async () => {
+  layOutRows();
+  const owner = { on: "card", cardId: "aragorn" } as const;
+  cardProps = [
+    { definition: definition("age", "Âge"), value: null },
+    { definition: definition("title", "Titre"), value: null },
+    { definition: definition("sword", "Épée", { owner }), value: null },
+    { definition: definition("horse", "Cheval", { owner }), value: null },
+  ];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  await screen.findByRole("list", { name: "Propriétés propres à cette carte" });
+  expect(
+    screen
+      .getAllByRole("button", { name: /^Déplacer la propriété/ })
+      .map((handle) => handle.getAttribute("aria-label")),
+  ).toEqual([
+    "Déplacer la propriété Épée (Espace, puis flèches)",
+    "Déplacer la propriété Cheval (Espace, puis flèches)",
+  ]);
+
+  await pickUp("Épée");
+  await press("ArrowDown");
+  await press("Space");
+
+  await waitFor(() => expect(callsOf("reorder_properties")).toHaveLength(1));
+  expect(callsOf("reorder_properties")[0]?.payload).toMatchObject({ ids: ["horse", "sword"] });
+  await waitFor(() => expect(editButtons()).toEqual(["Cheval", "Épée"]));
+  const labels = [...document.querySelectorAll("section label, section li button")].map(
+    (element) => element.textContent,
+  );
+  expect(labels.filter(Boolean).slice(0, 4)).toEqual(["Âge", "Titre", "Cheval", "Épée"]);
 });

@@ -9,7 +9,9 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import {
   AddPropertyPopover,
   PropertyEditor,
+  SortablePropertyList,
   useCardProperties,
+  useReorderCardProperties,
   useSetPropertyValue,
 } from "@/features/properties";
 import type { CardProperty, PropertyValue } from "@/lib/bindings";
@@ -218,11 +220,14 @@ function PropertyRow({
   cardId,
   property,
   editorOpen,
+  handle = null,
 }: {
   cardId: string;
   property: CardProperty;
   /** The property was just added: its editor opens to name it. */
   editorOpen: boolean;
+  /** Moves the row among the card's own properties. */
+  handle?: ReactNode;
 }) {
   const { t } = useTranslation();
   const id = useId();
@@ -234,16 +239,19 @@ function PropertyRow({
   return (
     <div className="grid grid-cols-[8.5rem_1fr] items-center gap-2">
       {definition.owner.on === "card" ? (
-        <PropertyEditor property={definition} types={types.data ?? []} defaultOpen={editorOpen}>
-          <button
-            type="button"
-            aria-label={t("properties.edit", { name: definition.label })}
-            className="flex items-center gap-1 truncate rounded-sm text-left text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <span className="truncate">{definition.label}</span>
-            <Settings2 aria-hidden className="size-3 shrink-0" />
-          </button>
-        </PropertyEditor>
+        <div className="flex min-w-0 items-center gap-0.5">
+          {handle}
+          <PropertyEditor property={definition} types={types.data ?? []} defaultOpen={editorOpen}>
+            <button
+              type="button"
+              aria-label={t("properties.edit", { name: definition.label })}
+              className="flex min-w-0 items-center gap-1 truncate rounded-sm text-left text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <span className="truncate">{definition.label}</span>
+              <Settings2 aria-hidden className="size-3 shrink-0" />
+            </button>
+          </PropertyEditor>
+        </div>
       ) : link || select ? (
         <span className="truncate text-sm text-muted-foreground">{definition.label}</span>
       ) : (
@@ -264,26 +272,54 @@ function PropertyRow({
   );
 }
 
-/** "Properties" of a card: its type's, then its own, with their values. */
+/**
+ * "Properties" of a card: its type's, then its own, with their values. Only
+ * its own have a handle: the order of the type's is set on the types screen,
+ * for all its cards.
+ */
 export function CardProperties({ cardId }: { cardId: string }) {
   const { t } = useTranslation();
   const properties = useCardProperties(cardId);
   const types = useCardTypes();
   const [justCreated, setJustCreated] = useState<string | null>(null);
+  const order = useReorderCardProperties(cardId);
   const shown = properties.data ?? [];
+  const own = shown.filter((property) => property.definition.owner.on === "card");
 
   return (
     <section aria-label={t("properties.title")} className="flex flex-col gap-2">
       <h2 className="rubric">{t("properties.title")}</h2>
       {properties.error && <AppErrorMessage error={properties.error} />}
-      {shown.map((property) => (
-        <PropertyRow
-          key={property.definition.id}
-          cardId={cardId}
-          property={property}
-          editorOpen={property.definition.id === justCreated}
-        />
-      ))}
+      {shown
+        .filter((property) => property.definition.owner.on !== "card")
+        .map((property) => (
+          <PropertyRow
+            key={property.definition.id}
+            cardId={cardId}
+            property={property}
+            editorOpen={false}
+          />
+        ))}
+      {own.length > 0 && (
+        <SortablePropertyList
+          items={own}
+          idOf={(property) => property.definition.id}
+          nameOf={(property) => property.definition.label}
+          onReorder={order.reorder}
+          label={t("properties.ownList")}
+          className="flex flex-col gap-2"
+        >
+          {(property, handle) => (
+            <PropertyRow
+              cardId={cardId}
+              property={property}
+              editorOpen={property.definition.id === justCreated}
+              handle={handle}
+            />
+          )}
+        </SortablePropertyList>
+      )}
+      {order.error && <AppErrorMessage error={order.error} />}
       {properties.data && shown.length === 0 && (
         <p className="text-sm text-muted-foreground">{t("properties.cardNone")}</p>
       )}

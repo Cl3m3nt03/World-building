@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { isMovingProperty } from "@/features/properties";
 import type { CardType } from "@/lib/bindings";
 import { fold } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -163,7 +164,12 @@ export function CardTypesDialog({ open, onOpenChange }: CardTypesDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[min(48rem,calc(100vh-3rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
+      <DialogContent
+        className="flex h-[min(48rem,calc(100vh-3rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
+        onEscapeKeyDown={(event) => {
+          if (isMovingProperty(event.target)) event.preventDefault();
+        }}
+      >
         <div className="grid min-h-0 flex-1 grid-cols-[15.5rem_1fr]">
           <nav
             aria-label={t("cardTypes.listLabel")}

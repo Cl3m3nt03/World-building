@@ -172,6 +172,14 @@ Renommer une propriété de type la renomme partout. La supprimer demande une co
 
 Les lignes de propriétés sont plus serrées (libellé, puis valeur).
 
+**V2-3.3c (#501)** : les propriétés se réordonnent avec une poignée, à la souris ou au clavier (Espace pour saisir, flèches, Espace pour déposer, Échap pour annuler ; le lecteur d'écran annonce la position). Une liste d'une seule propriété n'a pas de poignée.
+
+- **Sur l'écran des types**, l'ordre des propriétés par défaut vaut pour toutes les cartes du type, tout de suite et sans bandeau « Appliquer » : aucune valeur ne change, seul l'affichage suit.
+- **Sur une carte**, seules ses propriétés propres ont une poignée, et elles se réordonnent entre elles. Elles restent après celles du type : une carte ne change jamais l'ordre de son type, et il n'y a pas d'ordre propre à une carte pour les propriétés du type.
+- **Pour un sous-type**, ses propriétés se réordonnent sur son écran ; celles du type parent viennent toujours d'abord et se réordonnent sur l'écran du parent.
+- Le wiki et son export suivent le même ordre. Une carte dupliquée garde l'ordre de ses propriétés propres.
+- Si l'enregistrement échoue, l'erreur s'affiche et l'ordre enregistré revient.
+
 **V2-3.3b (d'après vvd, ADR 0014)** : deux genres de plus dans la famille **Valeur**, sur les cartes comme sur l'écran des types.
 
 - **Sélection** : une liste de choix propre à la propriété (Statut : vivant, mort, disparu).
