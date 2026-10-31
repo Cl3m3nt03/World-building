@@ -214,7 +214,7 @@ export function PlayView({ chapter, draftId }: Props) {
           tabIndex={0}
           onKeyDown={onKeyDown}
           onClick={onClick}
-          className="reader-page scrollbar-thin h-full overflow-y-auto outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="reader-page h-full overflow-y-auto outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <section className="reader-chapter reader-playing">
             <header className="reader-opening">

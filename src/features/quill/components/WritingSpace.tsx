@@ -173,7 +173,7 @@ export function WritingSpace() {
       {mode === "audio" && chapter && !compared ? (
         <aside
           aria-label={t("quill.audio.panel")}
-          className="scrollbar-thin flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
+          className="flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
         >
           <h2 className="pt-4 pl-4 font-heading text-lg font-bold">{t("quill.audio.panel")}</h2>
           <p className="px-4 pt-1 text-xs text-muted-foreground">{t("quill.audio.hint")}</p>
@@ -182,7 +182,7 @@ export function WritingSpace() {
       ) : publishing ? (
         <aside
           aria-label={t("quill.reader.panel")}
-          className="scrollbar-thin flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
+          className="flex min-h-0 flex-col overflow-y-auto border-l border-border pl-4"
         >
           <Tabs defaultValue="style" className="gap-0">
             <TabsList aria-label={t("quill.reader.panel")} className="mt-3 ml-4">
@@ -281,7 +281,7 @@ function ChapterView({
       >
         {panelShown ? <PanelRightClose /> : <PanelRightOpen />}
       </Button>
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto pr-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto pr-2">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
           {chapter.headerAssetId && (
             <div className="group relative">
@@ -390,7 +390,7 @@ function ChapterTitle({ chapter }: { chapter: Chapter }) {
             event.currentTarget.blur();
           }
         }}
-        className="w-full rounded-md border border-transparent bg-transparent px-2 text-center font-heading text-3xl font-bold outline-none hover:border-border focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="w-full rounded-md border border-transparent bg-transparent px-2 text-center font-heading text-3xl font-bold outline-none hover:border-border focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
       />
       {rename.error && <AppErrorMessage error={rename.error} />}
     </div>

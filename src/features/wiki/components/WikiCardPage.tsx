@@ -45,7 +45,7 @@ export function WikiCardPage() {
   const Icon = typeIcon(type?.icon ?? "shapes");
 
   return (
-    <article aria-label={card.data.title} className="scrollbar-thin h-full overflow-y-auto">
+    <article aria-label={card.data.title} className="h-full overflow-y-auto">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 p-6">
         <div className="grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           <div className="md:sticky md:top-0 md:self-start">

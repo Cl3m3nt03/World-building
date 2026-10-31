@@ -182,7 +182,7 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
   const error = update.error ?? duplicate.error ?? create.error;
 
   return (
-    <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <header className="flex items-start gap-4 pt-7 pr-14 pb-6 pl-8">
         <Popover>
           <PopoverTrigger asChild>
@@ -340,7 +340,7 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
                   className={cn(
                     "h-7 rounded-full border border-dashed border-border bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-solid",
                     newSubtype === "" ? "w-40 focus:w-52" : "w-52",
-                    "transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                    "transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas focus:border-ring focus-visible:ring-1 focus-visible:ring-ring/30",
                   )}
                 />
                 {newSubtype.trim() !== "" && (

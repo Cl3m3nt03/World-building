@@ -18,7 +18,7 @@
 [data-scheme="light"] {
   /* Vélin: the cartographer's paper, ink-brown text, engraved gold. */
   --bz-bg: #f2e9d4;
-  --bz-backdrop-overlay: rgb(242 233 212 / 0.6);
+  --bz-backdrop-overlay: rgb(242 233 212 / 0.82);
   --bz-backdrop-gradient:
     radial-gradient(70% 60% at 12% 8%, rgb(214 180 110 / 0.42), transparent 70%),
     radial-gradient(60% 55% at 92% 96%, rgb(120 170 155 / 0.26), transparent 70%),
@@ -42,6 +42,8 @@
   --bz-border-strong: rgb(70 50 20 / 0.24);
   --bz-text: #2b2219;
   --bz-text-muted: #6e604c;
+  /* Muted text set straight on the backdrop, over any world image. */
+  --bz-on-backdrop: var(--bz-text);
   /* The open world's theme may set its own accent (features/world-theme). */
   --bz-accent: var(--bz-world-accent-light, #7d5e1e);
   --bz-accent-foreground: var(--bz-world-accent-foreground-light, #fffaf0);
@@ -117,6 +119,7 @@
   --bz-border-strong: rgb(238 228 207 / 0.18);
   --bz-text: #eee4cf;
   --bz-text-muted: #a89d86;
+  --bz-on-backdrop: #c0b59e;
   --bz-accent: var(--bz-world-accent-dark, #d4ad5a);
   --bz-accent-foreground: var(--bz-world-accent-foreground-dark, #1b1408);
   --bz-verdigris: #6fa596;

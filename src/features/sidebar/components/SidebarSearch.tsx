@@ -131,7 +131,7 @@ export function SidebarSearch({ children, actions }: Props) {
               else return;
               event.preventDefault();
             }}
-            className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-8 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 @[15rem]:pr-14 [&::-webkit-search-cancel-button]:hidden"
+            className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-8 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30 @[15rem]:pr-14 [&::-webkit-search-cancel-button]:hidden"
           />
           {/* The shortcut, when there is room for it and nothing is typed. */}
           {!searching && (
@@ -164,7 +164,7 @@ export function SidebarSearch({ children, actions }: Props) {
           id={listId}
           role="listbox"
           aria-label={t("sidebar.search.results")}
-          className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 pt-1"
+          className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 pt-1"
         >
           {results.error && <AppErrorMessage error={results.error} />}
           {names.length > 0 && (

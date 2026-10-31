@@ -51,7 +51,7 @@ export function WikiHome() {
       className="grid h-full grid-rows-[14rem_minmax(0,1fr)] gap-4 p-4 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:grid-rows-1"
     >
       <WikiHero pages={withImage} />
-      <div className="scrollbar-thin flex min-h-0 flex-col gap-5 overflow-y-auto pr-1">
+      <div className="flex min-h-0 flex-col gap-5 overflow-y-auto pr-1">
         <Banner
           assetId={current.bannerAssetId}
           onChange={(bannerAssetId) => update({ bannerAssetId })}

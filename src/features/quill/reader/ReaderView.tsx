@@ -258,7 +258,7 @@ export function ReaderView({ outline, settings, template, chapterId }: Props) {
             aria-label={label}
             // biome-ignore lint/a11y/noNoninteractiveTabindex: the page scrolls with the keys
             tabIndex={0}
-            className="reader-page scrollbar-thin h-full overflow-y-auto outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="reader-page h-full overflow-y-auto outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {book}
           </div>

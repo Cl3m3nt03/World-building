@@ -102,7 +102,7 @@ export function MoveToDialog({ node, roots, onPick, onClose }: Props) {
             id={listId}
             role="listbox"
             aria-label={t("sidebar.move.destinations")}
-            className="scrollbar-thin flex max-h-72 flex-col overflow-y-auto"
+            className="flex max-h-72 flex-col overflow-y-auto"
           >
             {shown.length === 0 && (
               <p className="px-2 py-4 text-center text-sm text-muted-foreground">

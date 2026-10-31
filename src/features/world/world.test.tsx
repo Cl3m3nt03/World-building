@@ -280,7 +280,10 @@ test("tones are chosen beside the genre, six at most", async () => {
     expect((screen.getByLabelText("Emplacement") as HTMLInputElement).value).not.toBe(""),
   );
   fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Cendres" } });
+  // Folded at first, as the choice is optional; the focus follows when unfolded.
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter des tonalités" }));
   const tones = screen.getByRole("group", { name: "Tonalités" });
+  expect(document.activeElement).toBe(within(tones).getAllByRole("button")[0]);
   for (const name of ["Grimdark", "Mythologie", "Épique", "Horreur", "Survie", "Mystère"]) {
     fireEvent.click(within(tones).getByRole("button", { name }));
   }

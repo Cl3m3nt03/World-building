@@ -1648,6 +1648,7 @@
   "tone.cozy": "Cozy",
   "tone.comedy": "Comedy",
   "tones.label": "Tones",
+  "tones.add": "Add tones",
   "tones.hint": "Up to {{count}}, beside the genre. They tell the world's mood.",
   "typePicker.search": "Search a type",
   "typePicker.current": "Current",

@@ -43,7 +43,7 @@ export function StartWith() {
   const createError =
     createGraph.error ?? createTree.error ?? createCanvas.error ?? createTimeline.error;
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3">
+    <div className="on-backdrop flex h-full flex-col items-center justify-center gap-3">
       {createError && <AppErrorMessage error={createError} />}
       <p className="text-sm text-muted-foreground">{t("workspace.startWith")}</p>
       <div className="flex gap-3">

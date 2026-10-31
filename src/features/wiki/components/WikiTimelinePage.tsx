@@ -88,7 +88,7 @@ function WikiTimeline({
   const pageOf = (item: TimelineItem) => (item.cardId && isPage(item.cardId) ? item.cardId : null);
 
   return (
-    <article aria-label={timeline.title} className="scrollbar-thin h-full overflow-y-auto">
+    <article aria-label={timeline.title} className="h-full overflow-y-auto">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 p-6">
         <h1 className="font-wiki-heading text-4xl font-bold text-wiki-accent">{timeline.title}</h1>
         <div className="flex h-[55vh] min-h-80 flex-col">

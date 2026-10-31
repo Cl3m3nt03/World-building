@@ -2,6 +2,7 @@ import { FolderOpen, ImagePlus, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -180,19 +181,17 @@ export function GeneralSection({ world }: { world: WorldInfo }) {
             setDescription(event.target.value);
             schedule({ description: event.target.value });
           }}
-          className="min-h-24 w-full resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="min-h-24 w-full resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
         />
       </div>
 
       <fieldset className="flex min-w-0 flex-col gap-1.5 border-0">
         <legend className="mb-1.5 text-sm font-medium">{t("worldSettings.folder")}</legend>
         <div className="flex items-center gap-2">
-          <code
-            title={world.path}
-            className="min-w-0 flex-1 truncate rounded-md bg-muted px-2 py-1.5 font-mono text-xs"
-          >
-            {world.path}
-          </code>
+          <MiddleTruncate
+            text={world.path}
+            className="flex-1 rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground"
+          />
           <Button
             variant="secondary"
             size="sm"

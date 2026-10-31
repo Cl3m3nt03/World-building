@@ -147,7 +147,7 @@ export function WorldRail() {
         <LayoutGrid className="size-5" />
       </RailItem>
       <span aria-hidden className="h-px w-8 shrink-0 bg-border" />
-      <ul className="scrollbar-thin flex min-h-0 flex-col items-center gap-2 overflow-y-auto px-1 py-0.5">
+      <ul className="flex min-h-0 flex-col items-center gap-2 overflow-y-auto px-1 py-0.5">
         {worlds.map((recent) => (
           <li key={recent.path}>
             <RailItem

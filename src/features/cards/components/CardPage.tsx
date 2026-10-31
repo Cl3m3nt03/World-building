@@ -221,7 +221,7 @@ function Aliases({ card }: { card: Card }) {
             className={cn(
               "h-6 rounded-full border border-dashed border-border bg-transparent px-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-solid",
               draft === "" ? "w-28 focus:w-44" : "w-44",
-              "focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas",
+              "focus:border-ring focus-visible:ring-1 focus-visible:ring-ring/30 transition-[width,border-color] duration-(--bz-duration-fast) ease-atlas",
             )}
           />
           {draft.trim() !== "" && (

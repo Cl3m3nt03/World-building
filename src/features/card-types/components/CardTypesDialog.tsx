@@ -165,7 +165,7 @@ export function CardTypesDialog({ open, onOpenChange }: CardTypesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex h-[min(48rem,calc(100vh-3rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
+        className="flex h-[min(48rem,calc(100vh-3rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(64rem,calc(100%-2rem))]"
         onEscapeKeyDown={(event) => {
           if (isMovingProperty(event.target)) event.preventDefault();
         }}
@@ -198,13 +198,13 @@ export function CardTypesDialog({ open, onOpenChange }: CardTypesDialogProps) {
                   placeholder={t("cardTypes.search")}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-2 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-2 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
                 />
               </div>
             </div>
             <ul
               onKeyDown={moveBetweenRows}
-              className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2"
+              className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2"
             >
               {visible.map(({ type, subs, count, open: isOpen }) => (
                 <li key={type.id}>

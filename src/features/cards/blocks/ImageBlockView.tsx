@@ -361,7 +361,7 @@ function Thumbnails({
         <ul
           ref={listRef}
           aria-label={t("blocks.image.thumbnails")}
-          className="scrollbar-thin flex gap-1.5 overflow-x-auto p-1"
+          className="flex gap-1.5 overflow-x-auto p-1"
         >
           {images.map((image) => (
             <Thumbnail

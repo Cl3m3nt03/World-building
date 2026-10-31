@@ -75,7 +75,7 @@ export function WikiMapPage() {
   };
 
   return (
-    <article aria-label={map.data.title} className="scrollbar-thin h-full overflow-y-auto">
+    <article aria-label={map.data.title} className="h-full overflow-y-auto">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 p-6">
         <h1 className="font-wiki-heading text-4xl font-bold text-wiki-accent">{map.data.title}</h1>
         <div className="h-[70vh] min-h-80 overflow-hidden rounded-lg border border-wiki-text/15">
