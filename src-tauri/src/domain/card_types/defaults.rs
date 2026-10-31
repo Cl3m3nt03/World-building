@@ -51,7 +51,7 @@ const CHARACTER: DefaultType = DefaultType {
     color: "blue",
     template: &[
         s(
-            t("Background", "Background"),
+            t("Passé", "Background"),
             t(
                 "D'où vient ce personnage, qu'a-t-il vécu ?",
                 "Where does this character come from, what have they lived through?",
