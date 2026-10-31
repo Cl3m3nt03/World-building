@@ -1,5 +1,5 @@
 import { CircleDashed, Plus, Settings2 } from "lucide-react";
-import { type ReactNode, type SyntheticEvent, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, type SyntheticEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,11 @@ const SECTIONS = [
  * family, couple, the world's own types, « Skip for now » and « Custom
  * relation… », which names a new type with its icon.
  */
+/** Stops a key on its way to React Flow; Ctrl+Z and Ctrl+Y go on to the page. */
+export function stopKey(event: KeyboardEvent) {
+  if (!(event.ctrlKey || event.metaKey)) event.stopPropagation();
+}
+
 export function RelationMenu({
   children,
   relationTypes,
@@ -74,7 +79,7 @@ export function RelationMenu({
   const stop = (event: SyntheticEvent) => event.stopPropagation();
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: only stops events from bubbling
-    <span className="contents" onClick={stop} onDoubleClick={stop} onKeyDown={stop}>
+    <span className="contents" onClick={stop} onDoubleClick={stop} onKeyDown={stopKey}>
       <DropdownMenu
         modal={false}
         {...(open === undefined ? {} : { open })}
