@@ -38,6 +38,7 @@ afterEach(() => {
   cleanup();
   clearMocks();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 function renderEditor() {
@@ -170,6 +171,101 @@ test('"Add a block" does not take the focus back to its button once a block is a
 
   expect(focused).not.toContain(button);
   expect(focused.at(-1)).toBe(added);
+});
+
+/**
+ * Menus fade out in the app: Radix unmounts them at the end of the animation,
+ * long after a new block took the focus. Without it (jsdom) they go at once.
+ * Returns what ends the animation of the open menu.
+ */
+function animateMenus() {
+  const real = window.getComputedStyle.bind(window);
+  const animated: typeof window.getComputedStyle = (element, pseudo) => {
+    const styles = real(element, pseudo);
+    if (!element.matches('[role="menu"]')) return styles;
+    const animationName = () =>
+      element.getAttribute("data-state") === "closed" ? "fade-out" : "fade-in";
+    return new Proxy(styles, {
+      get: (target, key) => (key === "animationName" ? animationName() : Reflect.get(target, key)),
+    });
+  };
+  vi.stubGlobal("getComputedStyle", animated);
+  vi.stubGlobal("CSS", { escape: (text: string) => text });
+  return (menu: Element) =>
+    act(async () => {
+      menu.dispatchEvent(
+        Object.assign(new Event("animationend", { bubbles: true }), { animationName: "fade-out" }),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+}
+
+const pause = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
+test('"Add a block below" gives the focus to the new block, not to the button', async () => {
+  const endAnimation = animateMenus();
+  initial = [textBlock("a", "A")];
+  renderEditor();
+  await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  await openMenu(screen.getByRole("button", { name: "Actions du bloc 1" }));
+  const menu = await screen.findByRole("menu");
+  await act(async () => {
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "Ajouter un bloc dessous" }), {
+      key: "Enter",
+    });
+  });
+  const item = await screen.findByRole("menuitem", { name: "Texte" });
+  await act(async () => {
+    fireEvent.click(item);
+  });
+  const added = await screen.findByRole("textbox", { name: "Bloc de texte 2", hidden: true });
+  await pause();
+  await endAnimation(menu);
+  await pause();
+
+  expect(added.contains(document.activeElement)).toBe(true);
+});
+
+test("a block inserted with « / » takes the focus once the menu is gone", async () => {
+  const endAnimation = animateMenus();
+  initial = [textBlock("a", "")];
+  renderEditor();
+  const text = await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+  act(() => text.focus());
+  await act(async () => {
+    fireEvent.keyDown(text, { key: "/" });
+  });
+  const menu = await screen.findByRole("menu");
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Texte" }));
+  });
+  const added = await screen.findByRole("textbox", { name: "Bloc de texte 2", hidden: true });
+  await pause();
+  // The menu keeps the focus until it is gone.
+  act(() => menu.focus());
+  await endAnimation(menu);
+  await pause();
+
+  expect(added.contains(document.activeElement)).toBe(true);
+});
+
+test("the block's menu closed with Escape gives the focus back to its button", async () => {
+  initial = [textBlock("a", "A")];
+  renderEditor();
+  await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  const button = screen.getByRole("button", { name: "Actions du bloc 1" });
+  await openMenu(button);
+  await screen.findByRole("menuitem", { name: "Copier le bloc" });
+  await act(async () => {
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+  });
+
+  await waitFor(() => expect(document.activeElement).toBe(button));
 });
 
 test('"Add a block" closed with Escape gives the focus back to its button', async () => {
