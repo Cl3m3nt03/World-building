@@ -60,6 +60,10 @@ export function PropertyEditor({
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
+  // The row can show before its property is known as just created.
+  useEffect(() => {
+    if (defaultOpen) setOpen(true);
+  }, [defaultOpen]);
   const [label, setLabel] = useState(property.label);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const rename = useRenameProperty();
