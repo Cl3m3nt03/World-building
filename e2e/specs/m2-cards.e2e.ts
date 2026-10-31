@@ -61,7 +61,7 @@ describe("M2: cards, properties, links and templates", () => {
     await openTab("Monde");
     await createCard("Personnage", "Frodon");
     // A new card starts with the sections of its type's template (V2-3.5).
-    for (const heading of ["Background", "Personnalité", "Apparence"]) {
+    for (const heading of ["Passé", "Personnalité", "Apparence"]) {
       await contentHeading(heading).waitForDisplayed();
     }
 
@@ -145,7 +145,7 @@ describe("M2: cards, properties, links and templates", () => {
       '//*[@role="menuitem"][normalize-space()="Appliquer le modèle « Personnage »"]',
     ).click();
 
-    for (const heading of ["Background", "Personnalité", "Apparence"]) {
+    for (const heading of ["Passé", "Personnalité", "Apparence"]) {
       await $(
         `//section[@aria-label="Contenu"]//h2[normalize-space()="${heading}"]`,
       ).waitForDisplayed();
