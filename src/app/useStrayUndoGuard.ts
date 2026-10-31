@@ -13,6 +13,8 @@ function isEditable(target: EventTarget | null): boolean {
  * would quietly undo the last edit of a field out of sight, which then saves.
  * Text editing has its own history, and the pages with an undo of their own
  * (Map, Tree, Timeline, Canvas) listen below the window, so this runs last.
+ * From a field, a step of that stack can still belong to another field: the
+ * step is refused, so a field only ever undoes its own text.
  */
 export function useStrayUndoGuard() {
   useEffect(() => {
@@ -21,7 +23,19 @@ export function useStrayUndoGuard() {
       if (!["z", "y"].includes(event.key.toLowerCase())) return;
       if (!isEditable(event.target)) event.preventDefault();
     };
+    const onBeforeInput = (event: InputEvent) => {
+      if (!event.inputType.startsWith("history")) return;
+      const focused = document.activeElement;
+      if (!(event.target instanceof Node && focused?.contains(event.target))) {
+        event.preventDefault();
+      }
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    // Before the text editors, which may stop it.
+    window.addEventListener("beforeinput", onBeforeInput, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("beforeinput", onBeforeInput, true);
+    };
   }, []);
 }
