@@ -154,6 +154,17 @@ pub fn doc_text(doc: &Value) -> String {
     out.trim_end().to_owned()
 }
 
+/// A derived plain text on one line, for an excerpt: its line breaks, which
+/// separate blocks, read as « · ». Done when reading, so that the worlds
+/// already indexed need no new index.
+pub fn one_line(text: &str) -> String {
+    text.split('\n')
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>()
+        .join(" · ")
+}
+
 /// Cards mentioned (`@`) in one TipTap document, in order of first mention.
 pub fn doc_mentions(doc: &Value) -> Vec<String> {
     let mut out = Vec::new();
@@ -270,6 +281,17 @@ mod tests {
             .collect();
         let too_many = serde_json::json!([{ "id": "g", "type": "image", "images": too_many }]);
         assert!(parse(&too_many.to_string()).is_err());
+    }
+
+    #[test]
+    fn one_line_separates_the_blocks() {
+        assert_eq!(
+            one_line("Portrait\nDepuis la Nuit"),
+            "Portrait · Depuis la Nuit"
+        );
+        assert_eq!(one_line("…Portrait\n\n Depuis\n"), "…Portrait · Depuis");
+        assert_eq!(one_line("Une seule ligne"), "Une seule ligne");
+        assert_eq!(one_line(""), "");
     }
 
     #[test]

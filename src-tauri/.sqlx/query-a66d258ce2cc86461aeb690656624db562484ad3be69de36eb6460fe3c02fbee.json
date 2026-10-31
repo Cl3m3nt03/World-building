@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT d.id AS \"id!\", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,\n                  d.pinned_order, d.created_at, c.type_id, c.image_asset_id, d.wiki_visible\n           FROM documents d LEFT JOIN cards c ON c.document_id = d.id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.sort_order, d.created_at",
+  "query": "SELECT d.id AS \"id!\", d.kind, d.title, d.folder_id, d.parent_id, d.sort_order,\n                  d.pinned_order, d.created_at, c.type_id,\n                  COALESCE(c.image_asset_id, m.background_asset_id) AS \"image_asset_id?: String\",\n                  d.wiki_visible\n           FROM documents d\n           LEFT JOIN cards c ON c.document_id = d.id\n           LEFT JOIN maps m ON m.document_id = d.id\n           WHERE d.trashed_at IS NULL\n           ORDER BY d.sort_order, d.created_at",
   "describe": {
     "columns": [
       {
@@ -103,15 +103,10 @@
         }
       },
       {
-        "name": "image_asset_id",
+        "name": "image_asset_id?: String",
         "ordinal": 9,
         "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "cards",
-            "name": "image_asset_id"
-          }
-        }
+        "origin": "Expression"
       },
       {
         "name": "wiki_visible",
@@ -142,5 +137,5 @@
       false
     ]
   },
-  "hash": "b51487b8c6157ae0f6de2757e9ecddd1c322b304ccc87a342bd2aec64692a4e8"
+  "hash": "a66d258ce2cc86461aeb690656624db562484ad3be69de36eb6460fe3c02fbee"
 }

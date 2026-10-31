@@ -829,15 +829,21 @@ test("filters by card type and sorts by name; manual order comes back", async ()
   );
 
   await openMenu(screen.getByRole("button", { name: "Filtres et tri" }));
+  // Card types and sort are sub-menus, reached with the keyboard.
+  await openSubMenu(/^Types de cartes/);
   // Quick choices in a row (no re-render in between) all count.
   await act(async () => {
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Personnage" }));
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Lieu" }));
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Lieu" }));
+  });
+  // The menu stays open while choices are made, and counts them.
+  expect(screen.getByRole("menuitem", { name: "Types de cartes 1" })).toBeTruthy();
+  await openSubMenu(/^Trier par/);
+  await act(async () => {
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Nom" }));
   });
-  // The menu stays open while choices are made.
-  expect(screen.getByRole("menu")).toBeTruthy();
+  expect(screen.getByRole("menuitem", { name: "Trier par Nom" })).toBeTruthy();
   await act(async () => {
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Escape" });
   });
@@ -863,6 +869,15 @@ async function openMenu(trigger: HTMLElement) {
   await act(async () => {
     trigger.focus();
     fireEvent.keyDown(trigger, { key: "Enter" });
+  });
+}
+
+/** Opens a sub-menu of an open Radix menu with the keyboard. */
+async function openSubMenu(name: RegExp) {
+  const trigger = screen.getByRole("menuitem", { name });
+  await act(async () => {
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: "ArrowRight" });
   });
 }
 

@@ -76,6 +76,12 @@ async function openViewMenu() {
   await $('[role=menu][data-state="open"]').waitForDisplayed();
 }
 
+/** Opens a sub-menu of the "Filters and sort" menu. */
+async function openViewSub(name: string) {
+  await $(`//*[@role="menuitem"][starts-with(normalize-space(), "${name}")]`).click();
+  await $('[data-slot="dropdown-menu-sub-content"]').waitForDisplayed();
+}
+
 const pins = () =>
   browser.execute(() =>
     [...document.querySelectorAll('[aria-labelledby="pinned-title"] a')].map((a) =>
@@ -183,7 +189,11 @@ describe("M3: organisation of the sidebar", () => {
   it("filters on Personnage, sorts by name, and comes back to the manual order", async () => {
     const manual = await rows();
     await openViewMenu();
+    await openViewSub("Types de cartes");
     await pick("menuitemcheckbox", "Personnage");
+    await browser.keys("Escape");
+    await openViewMenu();
+    await openViewSub("Trier par");
     await pick("menuitemradio", "Nom");
     await browser.keys("Escape");
     await browser.waitUntil(async () => (await rows()).join("|") === "Aragorn 1|Sam 1", {
@@ -199,6 +209,7 @@ describe("M3: organisation of the sidebar", () => {
   it("keeps the sidebar state with the world", async () => {
     // Personnages open (holds Nobles), a filter on Lieu.
     await openViewMenu();
+    await openViewSub("Types de cartes");
     await pick("menuitemcheckbox", "Lieu");
     await browser.keys("Escape");
     await browser.pause(800);

@@ -7,6 +7,7 @@ use specta::Type;
 use sqlx::SqlitePool;
 
 use crate::db::search::{self as queries, HitRow};
+use crate::domain::content;
 use crate::domain::documents::DocumentKind;
 use crate::error::AppResult;
 
@@ -154,7 +155,7 @@ pub async fn search(pool: &SqlitePool, query: &str) -> AppResult<Vec<SearchHit>>
         if hits.iter().any(|found| found.id == row.id) {
             continue;
         }
-        let excerpt = parts(&row.excerpt);
+        let excerpt = parts(&content::one_line(&row.excerpt));
         hits.push(hit(row, SearchMatch::Content { excerpt })?);
     }
     Ok(hits)

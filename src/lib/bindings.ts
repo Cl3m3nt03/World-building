@@ -1428,8 +1428,9 @@ export type TreeDocument = {
 	pinnedOrder: number | null,
 	/**  RFC 3339. */
 	createdAt: string,
-	/**  For a card: its type and image. */
+	/**  For a card: its type. */
 	typeId: string | null,
+	/**  A card's image, or the background of a map. */
 	imageAssetId: string | null,
 	/**  Marked « Visible dans le wiki » (cards and maps, M8). */
 	wikiVisible: boolean,
