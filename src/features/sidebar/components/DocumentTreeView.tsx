@@ -23,6 +23,7 @@ import {
   Globe,
   LayoutGrid,
   type LucideIcon,
+  Map as MapIcon,
   Network,
   Pencil,
   Pin,
