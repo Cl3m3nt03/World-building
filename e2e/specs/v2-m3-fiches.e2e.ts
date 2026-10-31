@@ -301,6 +301,7 @@ describe("V2-M3: the cards", () => {
   });
 
   it("turns the line where « / » is typed into a heading, a list, a quote", async () => {
+    await expect($("button=Ajouter un bloc")).not.toBeExisting();
     await $("button*=Commencez à écrire").click();
     await textBlock(1).waitForDisplayed();
     await browser.waitUntil(

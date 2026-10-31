@@ -8,7 +8,7 @@ import type { CardType, PropertyDefinition, PropertyKind, PropertyOwner } from "
 import { useCreateProperty, useSetPropertyKind } from "../hooks/useProperties";
 
 const ENTRY =
-  "flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm outline-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
+  "flex h-7 items-center gap-2 rounded-md px-2 text-left text-sm outline-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
 
 function Family({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -68,7 +68,8 @@ export function AddPropertyPopover({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="flex max-h-(--radix-popover-content-available-height) w-80 flex-col gap-1 overflow-y-auto p-2"
+        collisionPadding={{ top: 56, bottom: 8 }}
+        className="flex max-h-(--radix-popover-content-available-height) w-80 flex-col gap-1 p-2"
       >
         <label htmlFor={nameId} className="sr-only">
           {t("properties.nameLabel")}
@@ -87,58 +88,70 @@ export function AddPropertyPopover({
               void add("text");
             }
           }}
-          className="h-8 rounded-md border border-input bg-(--bz-field) px-2.5 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
+          className="h-8 shrink-0 rounded-md border border-input bg-(--bz-field) px-2.5 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
         />
-        <Family title={t("properties.families.value")}>
-          <button type="button" className={ENTRY} disabled={busy} onClick={() => void add("text")}>
-            <Type aria-hidden className="size-4 text-muted-foreground" />
-            {t("properties.kinds.text")}
-          </button>
-          <button
-            type="button"
-            className={ENTRY}
-            disabled={busy}
-            onClick={() => void add("number")}
-          >
-            <Hash aria-hidden className="size-4 text-muted-foreground" />
-            {t("properties.kinds.number")}
-          </button>
-          <button
-            type="button"
-            className={ENTRY}
-            disabled={busy}
-            onClick={() => void add("select")}
-          >
-            <ListChecks aria-hidden className="size-4 text-muted-foreground" />
-            {t("properties.kinds.select")}
-          </button>
-          <button type="button" className={ENTRY} disabled={busy} onClick={() => void add("date")}>
-            <CalendarDays aria-hidden className="size-4 text-muted-foreground" />
-            {t("properties.kinds.date")}
-          </button>
-        </Family>
-        <Family title={t("properties.families.link")}>
-          <button type="button" className={ENTRY} disabled={busy} onClick={() => void add(link)}>
-            <Link2 aria-hidden className="size-4 text-muted-foreground" />
-            {t("properties.anyCard")}
-          </button>
-          {mainTypes.map((type) => {
-            const Icon = typeIcon(type.icon);
-            return (
-              <button
-                key={type.id}
-                type="button"
-                className={ENTRY}
-                disabled={busy}
-                onClick={() => void add(link, type.id)}
-              >
-                <Icon aria-hidden className="size-4" style={{ color: typeColor(type.color) }} />
-                <span className="truncate">{type.name}</span>
-              </button>
-            );
-          })}
-        </Family>
-        <div className="flex items-center gap-2 border-t border-border px-2 pt-2 pb-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+          <Family title={t("properties.families.value")}>
+            <button
+              type="button"
+              className={ENTRY}
+              disabled={busy}
+              onClick={() => void add("text")}
+            >
+              <Type aria-hidden className="size-4 text-muted-foreground" />
+              {t("properties.kinds.text")}
+            </button>
+            <button
+              type="button"
+              className={ENTRY}
+              disabled={busy}
+              onClick={() => void add("number")}
+            >
+              <Hash aria-hidden className="size-4 text-muted-foreground" />
+              {t("properties.kinds.number")}
+            </button>
+            <button
+              type="button"
+              className={ENTRY}
+              disabled={busy}
+              onClick={() => void add("select")}
+            >
+              <ListChecks aria-hidden className="size-4 text-muted-foreground" />
+              {t("properties.kinds.select")}
+            </button>
+            <button
+              type="button"
+              className={ENTRY}
+              disabled={busy}
+              onClick={() => void add("date")}
+            >
+              <CalendarDays aria-hidden className="size-4 text-muted-foreground" />
+              {t("properties.kinds.date")}
+            </button>
+          </Family>
+          <Family title={t("properties.families.link")}>
+            <button type="button" className={ENTRY} disabled={busy} onClick={() => void add(link)}>
+              <Link2 aria-hidden className="size-4 text-muted-foreground" />
+              {t("properties.anyCard")}
+            </button>
+            {mainTypes.map((type) => {
+              const Icon = typeIcon(type.icon);
+              return (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={ENTRY}
+                  disabled={busy}
+                  onClick={() => void add(link, type.id)}
+                >
+                  <Icon aria-hidden className="size-4" style={{ color: typeColor(type.color) }} />
+                  <span className="truncate">{type.name}</span>
+                </button>
+              );
+            })}
+          </Family>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 border-t border-border px-2 pt-2 pb-1">
           <input
             id={severalId}
             type="checkbox"

@@ -328,6 +328,38 @@ test('"/" on an empty line opens the block menu; Escape gives the focus back to 
   await waitFor(() => expect(document.activeElement).toBe(text));
 });
 
+test('the foot of the "/" menu stays out of its scrolling list', async () => {
+  initial = [textBlock("a", "")];
+  renderEditor();
+  const text = await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  await act(async () => {
+    text.focus();
+    fireEvent.keyDown(text, { key: "/" });
+  });
+
+  const first = await screen.findByRole("menuitem", { name: "Texte" });
+  const foot = screen.getByText("Fermer le menu");
+  expect(first.parentElement?.className).toContain("overflow-y-auto");
+  expect(first.parentElement?.contains(foot)).toBe(false);
+  expect(foot.parentElement?.className).toContain("shrink-0");
+});
+
+test("a text block has no focus ring: a click would always draw it (F2)", async () => {
+  initial = [textBlock("a", "A")];
+  renderEditor();
+  const text = await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+
+  expect(text.className).not.toContain("focus-visible:ring");
+});
+
+test('an empty card has one way in: its prompt, without "Add a block"', async () => {
+  renderEditor();
+
+  await screen.findByRole("button", { name: /Commencez à écrire/ });
+  expect(screen.queryByRole("button", { name: "Ajouter un bloc" })).toBeNull();
+});
+
 test('"/" turns its empty line into a heading, from the text family', async () => {
   initial = [textBlock("t1", "")];
   renderEditor();

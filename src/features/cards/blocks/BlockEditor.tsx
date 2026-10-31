@@ -199,33 +199,41 @@ function BlockTypeMenu({
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="w-56"
+        // Clear of the top bar. Short of room the list scrolls, its foot stays.
+        collisionPadding={{ top: 56, bottom: 8 }}
+        className="flex w-56 flex-col overflow-hidden"
         {...(onCloseAutoFocus === undefined ? {} : { onCloseAutoFocus })}
       >
-        <DropdownMenuLabel>{t("blocks.insert")}</DropdownMenuLabel>
-        {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
-          <DropdownMenuItem key={type} onSelect={() => onPick(type)}>
-            <Icon />
-            {t(label)}
-          </DropdownMenuItem>
-        ))}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <DropdownMenuLabel>{t("blocks.insert")}</DropdownMenuLabel>
+          {BLOCK_CHOICES.map(({ type, icon: Icon, label }) => (
+            <DropdownMenuItem key={type} onSelect={() => onPick(type)}>
+              <Icon />
+              {t(label)}
+            </DropdownMenuItem>
+          ))}
+          {onFormat && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>{t("blocks.formatsTitle")}</DropdownMenuLabel>
+              {TEXT_FORMATS.map(({ kind, icon: Icon, label, shortcut }) => (
+                <DropdownMenuItem key={kind} onSelect={() => onFormat(kind)}>
+                  <Icon />
+                  {t(label)}
+                  {shortcut && <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+        </div>
         {onFormat && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>{t("blocks.formatsTitle")}</DropdownMenuLabel>
-            {TEXT_FORMATS.map(({ kind, icon: Icon, label, shortcut }) => (
-              <DropdownMenuItem key={kind} onSelect={() => onFormat(kind)}>
-                <Icon />
-                {t(label)}
-                {shortcut && <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>}
-              </DropdownMenuItem>
-            ))}
+          <div className="shrink-0">
             <DropdownMenuSeparator />
             <p className="flex justify-between px-2 py-1 text-xs text-muted-foreground">
               {t("blocks.closeMenu")}
               <kbd className="font-sans">{t("blocks.escapeKey")}</kbd>
             </p>
-          </>
+          </div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -345,6 +353,9 @@ function SortableBlock({
 }) {
   const { t } = useTranslation();
   const [slashOpen, setSlashOpen] = useState(false);
+  /** Where the « / » menu hangs: under the line, in the block's text area. */
+  const [slashTop, setSlashTop] = useState<number | null>(null);
+  const slashAnchor = useRef<HTMLSpanElement>(null);
   // Folded (V2-3.4): the block shows its first line only, until unfolded.
   const [folded, setFolded] = useState(false);
   const formatSlashLine = useRef<((kind: TextFormat) => void) | null>(null);
@@ -505,11 +516,13 @@ function SortableBlock({
             label={label}
             autoFocus={focus}
             onChange={(doc) => onChange({ ...block, doc })}
-            onSlash={(removeLine, refocus, format) => {
+            onSlash={(removeLine, refocus, format, lineBottom) => {
               removeSlashLine.current = removeLine;
               refocusSlashLine.current = refocus;
               formatSlashLine.current = format;
               picked.current = false;
+              const area = slashAnchor.current?.offsetParent?.getBoundingClientRect();
+              setSlashTop(area && lineBottom !== null ? lineBottom - area.top : null);
               setSlashOpen(true);
             }}
             prompt={block.prompt}
@@ -551,7 +564,12 @@ function SortableBlock({
               }
             : {})}
         >
-          <span aria-hidden className="absolute bottom-0 left-2 size-0" />
+          <span
+            ref={slashAnchor}
+            aria-hidden
+            className="absolute left-2 size-0"
+            style={slashTop === null ? { bottom: 0 } : { top: slashTop }}
+          />
         </BlockTypeMenu>
       </div>
     </div>
@@ -784,18 +802,16 @@ export function BlockEditor({
             onClick={() => insert(0, "text")}
             className="rounded-lg border border-dashed border-border px-3 py-4 text-left text-sm text-muted-foreground outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            {t("blocks.empty")}
+            {t("blocks.emptyPrompt")}
           </button>
           {template.length > 0 && (
             <button
               type="button"
               onClick={applyTemplate}
-              className="flex flex-col gap-0.5 rounded-lg border border-dashed border-primary/50 px-3 py-3 text-left text-sm outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+              title={template.map((section) => section.title).join(" · ")}
+              className="self-start rounded-sm px-3 text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <span>{t("templates.use", { type: templateName })}</span>
-              <span className="text-xs text-muted-foreground">
-                {template.map((section) => section.title).join(" · ")}
-              </span>
+              {t("templates.use", { type: templateName })}
             </button>
           )}
         </div>
@@ -874,26 +890,29 @@ export function BlockEditor({
         {notice}
       </p>
       {save.isError && <AppErrorMessage error={save.error} />}
-      <BlockTypeMenu
-        // The menu keeps the focus until it is gone, so a new text block
-        // cannot take it before: it does so here. Closed without a choice
-        // (Escape), the focus goes back to the button.
-        onCloseAutoFocus={(event) => {
-          const added = addedId.current;
-          addedId.current = null;
-          if (added === null) return;
-          event.preventDefault();
-          focusBlockText(added);
-        }}
-        onPick={(type) => {
-          addedId.current = insert(blocks.length, type);
-        }}
-      >
-        <Button variant="ghost" size="sm" className="self-start">
-          <Plus />
-          {t("blocks.add")}
-        </Button>
-      </BlockTypeMenu>
+      {/* An empty card starts from its prompt alone; « / » offers the other blocks. */}
+      {blocks.length > 0 && (
+        <BlockTypeMenu
+          // The menu keeps the focus until it is gone, so a new text block
+          // cannot take it before: it does so here. Closed without a choice
+          // (Escape), the focus goes back to the button.
+          onCloseAutoFocus={(event) => {
+            const added = addedId.current;
+            addedId.current = null;
+            if (added === null) return;
+            event.preventDefault();
+            focusBlockText(added);
+          }}
+          onPick={(type) => {
+            addedId.current = insert(blocks.length, type);
+          }}
+        >
+          <Button variant="ghost" size="sm" className="self-start">
+            <Plus />
+            {t("blocks.add")}
+          </Button>
+        </BlockTypeMenu>
+      )}
     </section>
   );
 }

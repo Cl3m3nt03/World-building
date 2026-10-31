@@ -113,7 +113,7 @@ test("an empty card offers its type's template", async () => {
   renderEditor();
 
   const use = await screen.findByRole("button", { name: /Utiliser le modèle « Personnage »/ });
-  expect(use.textContent).toContain("Background · Personnalité · Apparence");
+  expect(use.title).toBe("Background · Personnalité · Apparence");
   fireEvent.click(use);
 
   await waitFor(() => expect(saved).toHaveLength(1));

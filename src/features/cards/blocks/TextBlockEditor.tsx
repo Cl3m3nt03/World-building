@@ -37,6 +37,8 @@ type TextBlockEditorProps = {
     removeLine: () => void,
     refocus: () => void,
     format: (kind: TextFormat) => void,
+    /** Bottom of the line, in the window (`null`: not in the page). */
+    lineBottom: number | null,
   ) => void;
   autoFocus?: boolean;
   /** Help question of a guided template section (shown under its title while empty). */
@@ -101,8 +103,9 @@ export function TextBlockEditor({
         "aria-label": label,
         "aria-multiline": "true",
         role: "textbox",
-        class:
-          "prose-bz card-text min-h-8 rounded-md px-2 py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        // No focus ring: a contenteditable always matches :focus-visible, even
+        // after a click. The caret and the block's handle show where one writes.
+        class: "prose-bz card-text min-h-8 rounded-md px-2 py-1 outline-none",
       },
       handleKeyDown: (view, event) => {
         const { $from, empty } = view.state.selection;
@@ -122,6 +125,7 @@ export function TextBlockEditor({
             removeLine,
             () => view.focus(),
             (kind) => applyFormat(editorRef.current, kind),
+            (view.nodeDOM(start) as HTMLElement | null)?.getBoundingClientRect().bottom ?? null,
           );
           return true;
         }
