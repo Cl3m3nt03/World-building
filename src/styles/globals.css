@@ -349,10 +349,17 @@ h1[tabindex="-1"]:focus {
   padding: 0.1em 0.3em;
   font-size: 0.9em;
 }
+/* The line takes the height of its help, however many lines that is; the
+   caret stays on the first one (the help is pulled up over the empty line). */
+.prose-bz p.is-empty:not([data-placeholder=""]) {
+  display: flex;
+  flex-direction: column;
+}
+
 .prose-bz p.is-empty:not([data-placeholder=""])::before {
   content: attr(data-placeholder);
-  float: left;
-  height: 0;
+  order: 1;
+  margin-top: -1lh;
   pointer-events: none;
   color: var(--bz-text-muted);
 }
