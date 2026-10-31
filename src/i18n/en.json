@@ -424,7 +424,6 @@
   "backlinks.via.tree": "relation tree",
   "backlinks.via.timeline": "timeline",
   "blocks.title": "Content",
-  "blocks.empty": "Start writing… (or add a block with \"+\")",
   "blocks.emptyPrompt": "Start writing… (\"/\" to insert a block)",
   "blocks.add": "Add a block",
   "blocks.insert": "Insert a block",
