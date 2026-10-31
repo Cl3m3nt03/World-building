@@ -46,6 +46,7 @@ import {
   placeAt,
 } from "../embeds";
 import type { KeptState, SceneElement } from "../hooks/useCanvasEditor";
+import { useHistoryKeys } from "../hooks/useHistoryKeys";
 import { missingFiles, naturalSize, placedSize, readAsset } from "../images";
 import { isNoteLink, NEW_NOTE, NOTE_LINK, NOTE_SIZE, type Note, noteOf } from "../notes";
 import {
@@ -681,6 +682,8 @@ export default function CanvasView({ canvas, label, onChange, onOpenDocument, re
     observer.observe(element, { attributes: true, attributeFilter: ["class"] });
     return () => observer.disconnect();
   }, [ready]);
+
+  useHistoryKeys(container);
 
   // The images of the scene as it opens.
   useEffect(() => {
