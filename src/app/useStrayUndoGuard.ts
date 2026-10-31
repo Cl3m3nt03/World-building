@@ -31,7 +31,8 @@ export function useStrayUndoGuard() {
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    // Before the text editors, which may stop it.
+    // In the capture phase: a text editor applies its undo on its own element,
+    // before the event bubbles up to the window.
     window.addEventListener("beforeinput", onBeforeInput, true);
     return () => {
       window.removeEventListener("keydown", onKeyDown);

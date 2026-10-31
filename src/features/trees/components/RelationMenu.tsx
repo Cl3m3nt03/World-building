@@ -45,16 +45,16 @@ const SECTIONS = [
   { category: "custom", label: "trees.relations.custom" },
 ] as const;
 
-/**
- * The list of relations a « + » offers (docs/features/05-relation-tree.md):
- * family, couple, the world's own types, « Skip for now » and « Custom
- * relation… », which names a new type with its icon.
- */
 /** Stops a key on its way to React Flow; Ctrl+Z and Ctrl+Y go on to the page. */
 export function stopKey(event: KeyboardEvent) {
   if (!(event.ctrlKey || event.metaKey)) event.stopPropagation();
 }
 
+/**
+ * The list of relations a « + » offers (docs/features/05-relation-tree.md):
+ * family, couple, the world's own types, « Skip for now » and « Custom
+ * relation… », which names a new type with its icon.
+ */
 export function RelationMenu({
   children,
   relationTypes,
