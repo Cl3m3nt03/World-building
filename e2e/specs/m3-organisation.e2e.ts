@@ -189,7 +189,7 @@ describe("M3: organisation of the sidebar", () => {
   it("filters on Personnage, sorts by name, and comes back to the manual order", async () => {
     const manual = await rows();
     await openViewMenu();
-    await openViewSub("Types de cartes");
+    await openViewSub("Types de fiches");
     await pick("menuitemcheckbox", "Personnage");
     await browser.keys("Escape");
     await openViewMenu();
@@ -209,7 +209,7 @@ describe("M3: organisation of the sidebar", () => {
   it("keeps the sidebar state with the world", async () => {
     // Personnages open (holds Nobles), a filter on Lieu.
     await openViewMenu();
-    await openViewSub("Types de cartes");
+    await openViewSub("Types de fiches");
     await pick("menuitemcheckbox", "Lieu");
     await browser.keys("Escape");
     await browser.pause(800);
