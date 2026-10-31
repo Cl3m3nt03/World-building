@@ -158,7 +158,7 @@ afterEach(() => {
 /** Picks `entry` in the sidebar's « New document » menu. */
 async function newDocument(entry: string) {
   const trigger = await screen.findByRole("button", {
-    name: "Nouveau document (map, graph, arbre, canvas, frise…)",
+    name: "Nouveau document (carte, graphe, arbre, atelier, frise…)",
   });
   await act(async () => {
     trigger.focus();
@@ -197,9 +197,9 @@ test("documents open on the page of their kind", () => {
 test('"New map" chooses a background, creates the map with one layer and opens it', async () => {
   const router = await renderAt("/world/demo/world");
 
-  await newDocument("Nouvelle map");
+  await newDocument("Nouvelle carte");
   expect(
-    await screen.findByRole("dialog", { name: "Image de fond de la nouvelle map" }),
+    await screen.findByRole("dialog", { name: "Image de fond de la nouvelle carte" }),
   ).toBeTruthy();
   fireEvent.click(await screen.findByRole("option", { name: "Terre du Milieu.png" }));
   fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
@@ -207,25 +207,25 @@ test('"New map" chooses a background, creates the map with one layer and opens i
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/map/m1"));
   expect(calls).toContainEqual({
     command: "create_map",
-    payload: { title: "Map sans nom", backgroundAssetId: IMAGE.id, layerName: "Calque 1" },
+    payload: { title: "Carte sans nom", backgroundAssetId: IMAGE.id, layerName: "Calque 1" },
   });
-  expect(await screen.findByRole("application", { name: "Map Map sans nom" })).toBeTruthy();
+  expect(await screen.findByRole("application", { name: "Carte Carte sans nom" })).toBeTruthy();
 });
 
 test("a map that cannot be created says so, and shows the reason (#200)", async () => {
   createFails = true;
   const router = await renderAt("/world/demo/world");
 
-  await newDocument("Nouvelle map");
+  await newDocument("Nouvelle carte");
   fireEvent.click(await screen.findByRole("option", { name: "Terre du Milieu.png" }));
   fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
 
-  const dialog = await screen.findByRole("dialog", { name: "La map n'a pas pu être créée" });
+  const dialog = await screen.findByRole("dialog", { name: "La carte n'a pas pu être créée" });
   expect(dialog.textContent).toContain("Corrupt deflate stream");
   expect(router.state.location.pathname).toBe("/world/demo/world");
   fireEvent.click(within(dialog).getAllByRole("button", { name: "Fermer" }).at(-1) as HTMLElement);
   await waitFor(() =>
-    expect(screen.queryByRole("dialog", { name: "La map n'a pas pu être créée" })).toBeNull(),
+    expect(screen.queryByRole("dialog", { name: "La carte n'a pas pu être créée" })).toBeNull(),
   );
 });
 
@@ -233,7 +233,7 @@ test("a map shows its name, renamed as typed, and can be recentered", async () =
   stored = map("Arda");
   await renderAt("/world/demo/world/map/m1");
 
-  const title = await screen.findByLabelText("Nom de la map");
+  const title = await screen.findByLabelText("Nom de la carte");
   expect((title as HTMLInputElement).value).toBe("Arda");
   expect(screen.getByRole("button", { name: "Recentrer" })).toBeTruthy();
   expect(calls).toContainEqual({ command: "mark_document_opened", payload: { id: "m1" } });
@@ -252,7 +252,7 @@ test("a map whose background was deleted says so", async () => {
   stored = { ...map("Arda"), backgroundAssetId: null };
   await renderAt("/world/demo/world/map/m1");
   expect(
-    await screen.findByText("L'image de fond de cette map n'est plus dans la médiathèque."),
+    await screen.findByText("L'image de fond de cette carte n'est plus dans la médiathèque."),
   ).toBeTruthy();
 });
 
@@ -351,28 +351,28 @@ test("a card's pin gets its name when the cards arrive after the map (#191)", as
   slowCards = true;
   await renderAt("/world/demo/world/map/m1");
 
-  await screen.findByRole("button", { name: "Pin sans libellé" });
-  expect(await screen.findByRole("button", { name: "Pin de la carte Gondor" })).toBeTruthy();
+  await screen.findByRole("button", { name: "Épingle sans libellé" });
+  expect(await screen.findByRole("button", { name: "Épingle de la fiche Gondor" })).toBeTruthy();
 });
 
 test("pins: added at the centre, labelled, hidden with their layer, deleted with the keyboard", async () => {
   stored = map("Arda");
   await renderAt("/world/demo/world/map/m1");
 
-  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un pin" }));
-  const marker = await screen.findByRole("button", { name: "Pin Repère" });
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter une épingle" }));
+  const marker = await screen.findByRole("button", { name: "Épingle Repère" });
   // The new pin is selected: its properties show.
   const label = await screen.findByLabelText("Libellé");
   fireEvent.change(label, { target: { value: "Minas Tirith" } });
-  await waitFor(() => expect(marker.getAttribute("aria-label")).toBe("Pin Minas Tirith"));
+  await waitFor(() => expect(marker.getAttribute("aria-label")).toBe("Épingle Minas Tirith"));
 
   // Hidden with its layer.
   fireEvent.click(screen.getByRole("button", { name: "Masquer le calque Calque 1" }));
   await waitFor(() =>
-    expect(screen.queryByRole("button", { name: "Pin Minas Tirith" })).toBeNull(),
+    expect(screen.queryByRole("button", { name: "Épingle Minas Tirith" })).toBeNull(),
   );
   fireEvent.click(screen.getByRole("button", { name: "Afficher le calque Calque 1" }));
-  const shown = await screen.findByRole("button", { name: "Pin Minas Tirith" });
+  const shown = await screen.findByRole("button", { name: "Épingle Minas Tirith" });
 
   await waitFor(
     () =>
@@ -384,7 +384,7 @@ test("pins: added at the centre, labelled, hidden with their layer, deleted with
 
   fireEvent.keyDown(shown, { key: "Delete" });
   await waitFor(() =>
-    expect(screen.queryByRole("button", { name: "Pin Minas Tirith" })).toBeNull(),
+    expect(screen.queryByRole("button", { name: "Épingle Minas Tirith" })).toBeNull(),
   );
   await waitFor(() => expect(stored?.content.pins).toEqual([]), { timeout: 3000 });
 });
@@ -393,10 +393,10 @@ test("a card is put on the map from its search, and its pin opens it", async () 
   stored = map("Arda");
   const router = await renderAt("/world/demo/world/map/m1");
 
-  fireEvent.click(await screen.findByRole("button", { name: "Ajouter une carte" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter une fiche" }));
   fireEvent.click(await screen.findByRole("option", { name: /Gondor/ }));
-  const pin = await screen.findByRole("button", { name: "Pin de la carte Gondor" });
-  expect(await screen.findByRole("link", { name: "Ouvrir la carte" })).toBeTruthy();
+  const pin = await screen.findByRole("button", { name: "Épingle de la fiche Gondor" });
+  expect(await screen.findByRole("link", { name: "Ouvrir la fiche" })).toBeTruthy();
   await waitFor(
     () => expect(stored?.content.pins).toEqual([expect.objectContaining({ cardId: "gondor" })]),
     { timeout: 3000 },
@@ -440,7 +440,7 @@ test("a zone is selected, styled, linked to a card and its tool toggles tracing"
   });
   fireEvent.click(zone);
   fireEvent.click(await screen.findByRole("radio", { name: "Hachures" }));
-  fireEvent.click(screen.getByRole("button", { name: "Lier à une carte" }));
+  fireEvent.click(screen.getByRole("button", { name: "Lier à une fiche" }));
   fireEvent.click(await screen.findByRole("option", { name: /Gondor/ }));
   await waitFor(
     () => expect(stored?.content.zones[0]).toMatchObject({ pattern: "hatch", cardId: "gondor" }),
@@ -486,7 +486,7 @@ test("a text is selected and bent, its tool waits for a click and Escape gives u
   const tool = screen.getByRole("button", { name: "Ajouter un texte" });
   fireEvent.click(tool);
   expect(tool.getAttribute("aria-pressed")).toBe("true");
-  expect(screen.getByText(/Cliquez sur la map pour poser le texte/)).toBeTruthy();
+  expect(screen.getByText(/Cliquez sur la carte pour poser le texte/)).toBeTruthy();
   fireEvent.keyDown(window, { key: "Escape" });
   await waitFor(() => expect(tool.getAttribute("aria-pressed")).toBe("false"));
 });
@@ -512,7 +512,7 @@ test("a new background keeps the pins, zones and texts", async () => {
     },
   };
   await renderAt("/world/demo/world/map/m1");
-  await screen.findByRole("button", { name: "Pin Minas Tirith" });
+  await screen.findByRole("button", { name: "Épingle Minas Tirith" });
 
   fireEvent.click(screen.getByRole("button", { name: "Fond" }));
   fireEvent.click(await screen.findByRole("option", { name: "Arda remaniée.png" }));
@@ -525,7 +525,7 @@ test("a new background keeps the pins, zones and texts", async () => {
     }),
   );
   // Still there, at the same relative place, and nothing was saved over it.
-  expect(await screen.findByRole("button", { name: "Pin Minas Tirith" })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: "Épingle Minas Tirith" })).toBeTruthy();
   expect(stored?.content.pins).toEqual([expect.objectContaining({ id: "p1", x: 0.3, y: 0.4 })]);
 });
 
@@ -535,15 +535,15 @@ test("undo and redo, with the buttons and Ctrl+Z / Ctrl+Y, are saved too", async
   const undo = await screen.findByRole("button", { name: "Annuler (Ctrl+Z)" });
   expect((undo as HTMLButtonElement).disabled).toBe(true);
 
-  fireEvent.click(screen.getByRole("button", { name: "Ajouter un pin" }));
-  await screen.findByRole("button", { name: "Pin Repère" });
+  fireEvent.click(screen.getByRole("button", { name: "Ajouter une épingle" }));
+  await screen.findByRole("button", { name: "Épingle Repère" });
   fireEvent.click(undo);
-  await waitFor(() => expect(screen.queryByRole("button", { name: "Pin Repère" })).toBeNull());
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Épingle Repère" })).toBeNull());
 
   fireEvent.keyDown(document.body, { key: "y", ctrlKey: true });
-  expect(await screen.findByRole("button", { name: "Pin Repère" })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: "Épingle Repère" })).toBeTruthy();
   fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
-  await waitFor(() => expect(screen.queryByRole("button", { name: "Pin Repère" })).toBeNull());
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Épingle Repère" })).toBeNull());
   await waitFor(() => expect(calls.some((call) => call.command === "save_map")).toBe(true), {
     timeout: 3000,
   });
@@ -553,28 +553,28 @@ test("undo and redo, with the buttons and Ctrl+Z / Ctrl+Y, are saved too", async
 test("Ctrl+Z and Ctrl+Y work with the focus on a pin, which keeps its own keys", async () => {
   stored = map("Arda");
   await renderAt("/world/demo/world/map/m1");
-  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un pin" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un pin" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter une épingle" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter une épingle" }));
   await waitFor(() =>
-    expect(screen.getAllByRole("button", { name: "Pin Repère" })).toHaveLength(2),
+    expect(screen.getAllByRole("button", { name: "Épingle Repère" })).toHaveLength(2),
   );
-  const [pin] = screen.getAllByRole("button", { name: "Pin Repère" });
+  const [pin] = screen.getAllByRole("button", { name: "Épingle Repère" });
   if (!pin) throw new Error("no pin");
 
   fireEvent.keyDown(pin, { key: "z", ctrlKey: true });
   await waitFor(() =>
-    expect(screen.getAllByRole("button", { name: "Pin Repère" })).toHaveLength(1),
+    expect(screen.getAllByRole("button", { name: "Épingle Repère" })).toHaveLength(1),
   );
   fireEvent.keyDown(pin, { key: "y", ctrlKey: true });
   await waitFor(() =>
-    expect(screen.getAllByRole("button", { name: "Pin Repère" })).toHaveLength(2),
+    expect(screen.getAllByRole("button", { name: "Épingle Repère" })).toHaveLength(2),
   );
 });
 
 test("a pause while typing the name loses no letter when the save comes back", async () => {
   stored = map("Arda");
   await renderAt("/world/demo/world/map/m1");
-  const title = (await screen.findByLabelText("Nom de la map")) as HTMLInputElement;
+  const title = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
   fireEvent.focus(title);
   slowReload = true;
 
@@ -609,9 +609,9 @@ test("a long background change shows that the map is being prepared", async () =
   fireEvent.click(await screen.findByRole("option", { name: "Arda remaniée.png" }));
   fireEvent.click(screen.getByRole("button", { name: "Choisir" }));
 
-  expect(await screen.findByRole("dialog", { name: "Préparation de la map…" })).toBeTruthy();
+  expect(await screen.findByRole("dialog", { name: "Préparation de la carte…" })).toBeTruthy();
   await waitFor(
-    () => expect(screen.queryByRole("dialog", { name: "Préparation de la map…" })).toBeNull(),
+    () => expect(screen.queryByRole("dialog", { name: "Préparation de la carte…" })).toBeNull(),
     { timeout: 2000 },
   );
 });

@@ -69,7 +69,7 @@ const dialog = () => $('[role="dialog"]');
 describe("M11: the timeline", () => {
   it("sets the world's calendar: an era from year 0", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Personnage", "Robert Baratheon");
     await createCard("Personnage", "Eddard Stark");
 
@@ -99,19 +99,19 @@ describe("M11: the timeline", () => {
   });
 
   it("places two cards on a new timeline, and makes one a period", async () => {
-    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
+    await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouvelle frise"]').click();
     await $(`aria/Frise ${TIMELINE}`).waitForDisplayed({ timeoutMsg: "the timeline did not open" });
 
     await $("button=Ajouter").click();
-    await $('//*[@role="menuitem"][normalize-space()="Des cartes…"]').click();
-    await dialog().$("aria/Chercher une carte").waitForDisplayed();
+    await $('//*[@role="menuitem"][normalize-space()="Des fiches…"]').click();
+    await dialog().$("aria/Chercher une fiche").waitForDisplayed();
     await dialog().$('//label[contains(., "Robert Baratheon")]//input').click();
     await dialog().$('//label[contains(., "Eddard Stark")]//input').click();
     const year = await dialog().$("aria/Année");
     await year.clearValue();
     await year.setValue("283");
-    await dialog().$("button=Placer 2 cartes").click();
+    await dialog().$("button=Placer 2 fiches").click();
     await itemOf("Robert Baratheon", (item) => item.start === 283 * YEAR, "Robert was not placed");
     await itemOf("Eddard Stark", (item) => item.start === 283 * YEAR, "Eddard was not placed");
     // The first placed item opened in its card: closed, so it hides no bubble.
@@ -130,7 +130,7 @@ describe("M11: the timeline", () => {
   it("opens the timeline on a card's item from « Cité dans »", async () => {
     await bubble("Robert Baratheon").doubleClick();
     await browser.waitUntil(
-      async () => (await $("aria/Nom de la carte").getValue()) === "Robert Baratheon",
+      async () => (await $("aria/Nom de la fiche").getValue()) === "Robert Baratheon",
       { timeoutMsg: "the double click did not open Robert's card" },
     );
     const cited = await $("aria/Cité dans");
@@ -161,7 +161,7 @@ describe("M11: the timeline", () => {
     await $("h1=Mondes").waitForDisplayed();
     await $(`aria/Ouvrir ${WORLD}`).click();
     await currentWorldButton(WORLD).waitForDisplayed();
-    await openTab("World");
+    await openTab("Monde");
     await sidebarItem(TIMELINE).click();
     await $("aria/Robert Baratheon, 284 AC").waitForDisplayed({
       timeoutMsg: "the move was not kept",

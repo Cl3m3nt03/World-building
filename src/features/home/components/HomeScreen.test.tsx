@@ -155,9 +155,9 @@ test("welcomes to the open world and sums it up", async () => {
   expect(await screen.findByRole("heading", { name: "Bienvenue dans Eldefleur" })).toBeTruthy();
   expect(screen.getByText("Science-fiction")).toBeTruthy();
   expect(await screen.findByText("3 fichiers")).toBeTruthy();
-  expect(await screen.findByText("4 cartes")).toBeTruthy();
+  expect(await screen.findByText("4 fiches")).toBeTruthy();
   // Subtypes count for their type; types without cards are left out.
-  const byType = screen.getByRole("list", { name: "Cartes par type" });
+  const byType = screen.getByRole("list", { name: "Fiches par type" });
   expect(Array.from(byType.querySelectorAll("li")).map((li) => li.textContent)).toEqual([
     "Personnage2",
     "Lieu2",
@@ -175,9 +175,9 @@ test("welcomes to the open world and sums it up", async () => {
 test("with no card opened yet, invites to create the first one", async () => {
   await renderHome();
 
-  expect(await screen.findByText("Commencez par créer votre première carte :")).toBeTruthy();
-  expect(screen.getByText("Les cartes que vous ouvrez apparaîtront ici.")).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Nouvelle carte" })).toBeTruthy();
+  expect(await screen.findByText("Commencez par créer votre première fiche :")).toBeTruthy();
+  expect(screen.getByText("Les fiches que vous ouvrez apparaîtront ici.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Nouvelle fiche" })).toBeTruthy();
 });
 
 test("offers to resume the last card and lists the recent ones", async () => {
@@ -232,7 +232,7 @@ test("types opens the card types screen; theme opens the theme settings", async 
   expect(screen.getByText("Un monde de canaux.")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Types" }));
   expect(useUiStore.getState().cardTypesOpen).toBe(true);
-  expect(await screen.findByRole("dialog", { name: "Types de cartes" })).toBeTruthy();
+  expect(await screen.findByRole("dialog", { name: "Types de fiches" })).toBeTruthy();
 });
 
 test("shows the world's graph once cards are linked, with its search and filters", async () => {
@@ -245,11 +245,11 @@ test("shows the world's graph once cards are linked, with its search and filters
   };
   await renderHome();
   expect(
-    await screen.findByRole("img", { name: "Graph du monde : 2 cartes, 1 liens" }),
+    await screen.findByRole("img", { name: "Graphe du monde : 2 fiches, 1 liens" }),
   ).toBeTruthy();
-  const toolbar = screen.getByRole("toolbar", { name: "Outils du graph" });
-  expect(within(toolbar).getByRole("button", { name: "Rechercher dans le graph" })).toBeTruthy();
+  const toolbar = screen.getByRole("toolbar", { name: "Outils du graphe" });
+  expect(within(toolbar).getByRole("button", { name: "Rechercher dans le graphe" })).toBeTruthy();
   expect(within(toolbar).getByRole("button", { name: "Filtrer par type" })).toBeTruthy();
   // Home keeps nothing: no settings, no « Save as ».
-  expect(within(toolbar).queryByRole("button", { name: "Réglages du graph" })).toBeNull();
+  expect(within(toolbar).queryByRole("button", { name: "Réglages du graphe" })).toBeNull();
 });

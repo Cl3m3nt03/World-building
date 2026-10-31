@@ -29,7 +29,7 @@ describe("M7.5: trees and the graph", () => {
 
   it("creates a world where Aragorn has Arathorn and Gilraen as Parents (a relation)", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     for (const name of ["Arathorn", "Gilraen", "Aragorn"]) await createCard("Personnage", name);
     for (const card of await invoke<{ id: string; title: string }[]>("list_cards", {
       trashed: false,
@@ -57,7 +57,7 @@ describe("M7.5: trees and the graph", () => {
   });
 
   it("starts a new tree from the known relations, parents above their son", async () => {
-    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
+    await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouvel arbre"]').click();
     const offer = await $('section[aria-label="Partir de ce que le monde sait ?"]');
     await offer.waitForDisplayed({
@@ -97,12 +97,12 @@ describe("M7.5: trees and the graph", () => {
   });
 
   it("says in the graph why Aragorn and Arathorn are linked", async () => {
-    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
-    await $('//*[@role="menuitem"][normalize-space()="Nouveau graph"]').click();
+    await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
+    await $('//*[@role="menuitem"][normalize-space()="Nouveau graphe"]').click();
     const list = await $('[role="listbox"]');
     await list.waitForDisplayed();
     await list.$('//*[@role="option"][normalize-space()="Aragorn"]').click();
-    const linked = await $('section[aria-label="Cartes liées à Aragorn"]');
+    const linked = await $('section[aria-label="Fiches liées à Aragorn"]');
     await browser.waitUntil(
       async () =>
         (await linked.getText()).includes("Arathorn : parent de Aragorn — propriété « Parents »"),

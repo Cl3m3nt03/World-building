@@ -106,16 +106,16 @@ test("from the media library, the Home tab leads back to Home", async () => {
   const router = await renderAt("/world/demo/media");
   await screen.findByRole("heading", { name: "Médiathèque" });
 
-  fireEvent.click(screen.getByRole("tab", { name: "Home" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Accueil" }));
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/home"));
 });
 
 test("the World tab clicked while a card is open keeps the card", async () => {
   const router = await renderAt("/world/demo/world/card/aragorn");
-  await screen.findByLabelText("Nom de la carte");
+  await screen.findByLabelText("Nom de la fiche");
 
-  fireEvent.click(screen.getByRole("tab", { name: "World" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Monde" }));
 
   await new Promise((resolve) => setTimeout(resolve, 50));
   expect(router.state.location.pathname).toBe("/world/demo/world/card/aragorn");

@@ -374,7 +374,7 @@ test("an empty world says how to create a card", async () => {
 
   expect(
     await screen.findByText(
-      "Aucune carte pour l'instant. Clic droit ici ou « Nouvelle carte » pour en créer une.",
+      "Aucune fiche pour l'instant. Clic droit ici ou « Nouvelle fiche » pour en créer une.",
     ),
   ).toBeTruthy();
   expect(screen.queryByRole("tree")).toBeNull();
@@ -461,12 +461,12 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
     "Dupliquer",
     "Déplacer vers…",
     "Mettre à la corbeilleSuppr",
-    "Nouvelle carte",
+    "Nouvelle fiche",
     "Nouveau dossier",
-    "Nouvelle map",
-    "Nouveau graph",
+    "Nouvelle carte",
+    "Nouveau graphe",
     "Nouvel arbre",
-    "Nouveau canvas",
+    "Nouvel atelier",
     "Nouvelle frise",
   ]);
   await act(async () => {
@@ -479,10 +479,10 @@ test("a folder's right click offers its own actions; elsewhere, card creation an
   expect(names()).toContain("Personnage");
   expect(names().slice(-6)).toEqual([
     "Nouveau dossier",
-    "Nouvelle map",
-    "Nouveau graph",
+    "Nouvelle carte",
+    "Nouveau graphe",
     "Nouvel arbre",
-    "Nouveau canvas",
+    "Nouvel atelier",
     "Nouvelle frise",
   ]);
 });

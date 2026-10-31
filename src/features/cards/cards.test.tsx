@@ -233,30 +233,30 @@ async function openMenu(trigger: HTMLElement) {
 test("the Card tile creates a card of the chosen type and opens it, title selected", async () => {
   const router = await renderAt("/world/demo/world");
 
-  await openMenu(screen.getByRole("button", { name: "Carte" }));
+  await openMenu(screen.getByRole("button", { name: "Fiche" }));
   await act(async () => {
     fireEvent.click(await screen.findByRole("option", { name: "Ville" }));
   });
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/new"));
   expect(callsOf("create_card")[0]?.payload).toEqual({ typeId: "city", title: "Ville sans nom" });
-  const title = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  const title = (await screen.findByLabelText("Nom de la fiche")) as HTMLInputElement;
   await waitFor(() => expect(document.activeElement).toBe(title));
   expect(title.value).toBe("Ville sans nom");
 });
 
 test("a card created from another card's page opens with its whole title selected", async () => {
   const router = await renderAt("/world/demo/world/card/aragorn");
-  const previous = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  const previous = (await screen.findByLabelText("Nom de la fiche")) as HTMLInputElement;
   await waitFor(() => expect(previous.value).toBe("Aragorn"));
 
-  await openMenu(screen.getByRole("button", { name: "Nouvelle carte" }));
+  await openMenu(screen.getByRole("button", { name: "Nouvelle fiche" }));
   await act(async () => {
     fireEvent.click(await screen.findByRole("option", { name: "Lieu" }));
   });
 
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/new"));
-  const title = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  const title = (await screen.findByLabelText("Nom de la fiche")) as HTMLInputElement;
   await waitFor(() => expect(document.activeElement).toBe(title));
   // A field of its own: the previous card's field, updated to the new title
   // after the selection, would leave the caret at the end (typing appended).
@@ -268,7 +268,7 @@ test("a card created from another card's page opens with its whole title selecte
 test("the creation menu offers to make a new type", async () => {
   await renderAt("/world/demo/world");
 
-  await openMenu(screen.getByRole("button", { name: "Carte" }));
+  await openMenu(screen.getByRole("button", { name: "Fiche" }));
   await act(async () => {
     fireEvent.click(await screen.findByRole("button", { name: "Nouveau type" }));
   });
@@ -278,7 +278,7 @@ test("the creation menu offers to make a new type", async () => {
 
 test("the type picker filters as typed and creates with Enter", async () => {
   await renderAt("/world/demo/world");
-  await openMenu(screen.getByRole("button", { name: "Carte" }));
+  await openMenu(screen.getByRole("button", { name: "Fiche" }));
   const search = await screen.findByRole("combobox", { name: "Rechercher un type" });
   await waitFor(() => expect(document.activeElement).toBe(search));
   fireEvent.change(search, { target: { value: "vil" } });
@@ -298,7 +298,7 @@ test("the type picker filters as typed and creates with Enter", async () => {
 
 test("the card page renames the card as typed", async () => {
   await renderAt("/world/demo/world/card/aragorn");
-  const title = await screen.findByLabelText("Nom de la carte");
+  const title = await screen.findByLabelText("Nom de la fiche");
 
   fireEvent.change(title, { target: { value: "Aragorn II" } });
   fireEvent.blur(title);
@@ -345,7 +345,7 @@ test("the eye beside the type shows or hides the card in the wiki", async () => 
 test("moving a card to the trash goes back to the empty workspace", async () => {
   const router = await renderAt("/world/demo/world/card/aragorn");
 
-  await openMenu(await screen.findByRole("button", { name: "Actions de la carte" }));
+  await openMenu(await screen.findByRole("button", { name: "Actions de la fiche" }));
   await act(async () => {
     fireEvent.click(await screen.findByRole("menuitem", { name: "Mettre à la corbeille" }));
   });
@@ -385,7 +385,7 @@ test("a right click in the sidebar and the New card button open the creation men
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
   });
 
-  await openMenu(screen.getByRole("button", { name: "Nouvelle carte" }));
+  await openMenu(screen.getByRole("button", { name: "Nouvelle fiche" }));
   await act(async () => {
     fireEvent.click(await screen.findByRole("option", { name: "Lieu" }));
   });
@@ -423,7 +423,7 @@ test("the trash restores, deletes for good and empties after confirmation", asyn
 /** Creates a card of `type` from the World "Card" tile and waits for it to open. */
 async function createFromTile(type: string) {
   const router = await renderAt("/world/demo/world");
-  await openMenu(screen.getByRole("button", { name: "Carte" }));
+  await openMenu(screen.getByRole("button", { name: "Fiche" }));
   await act(async () => {
     fireEvent.click(await screen.findByRole("option", { name: type }));
   });
@@ -453,7 +453,7 @@ test("a new card starts with its type's template, saved before it opens", async 
   expect(await screen.findByRole("heading", { level: 2, name: "Objectifs" })).toBeTruthy();
   expect(screen.getByRole("heading", { level: 2, name: "Membres" })).toBeTruthy();
   // The title keeps the focus, selected to be typed over.
-  const title = (await screen.findByLabelText("Nom de la carte")) as HTMLInputElement;
+  const title = (await screen.findByLabelText("Nom de la fiche")) as HTMLInputElement;
   await waitFor(() => expect(document.activeElement).toBe(title));
 });
 
@@ -464,13 +464,13 @@ test("a subtype without a template of its own starts with its type's", async () 
 
 test("a type with the template on creation off gives an empty card", async () => {
   await createFromTile("Lore");
-  await screen.findByLabelText("Nom de la carte");
+  await screen.findByLabelText("Nom de la fiche");
   expect(callsOf("set_card_content")).toHaveLength(0);
 });
 
 test("a type without a template gives an empty card", async () => {
   await createFromTile("Personnage");
-  await screen.findByLabelText("Nom de la carte");
+  await screen.findByLabelText("Nom de la fiche");
   expect(callsOf("set_card_content")).toHaveLength(0);
 });
 

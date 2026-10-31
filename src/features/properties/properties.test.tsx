@@ -177,14 +177,14 @@ test("adding a type property asks whether to apply it to the existing cards", as
   );
 
   expect(
-    await screen.findByText("Appliquer les changements à toutes les cartes de ce type ?"),
+    await screen.findByText("Appliquer les changements à toutes les fiches de ce type ?"),
   ).toBeTruthy();
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "Oui" }));
   });
   await waitFor(() => expect(callsOf("apply_property_to_existing")).toHaveLength(1));
   expect(
-    screen.queryByText("Appliquer les changements à toutes les cartes de ce type ?"),
+    screen.queryByText("Appliquer les changements à toutes les fiches de ce type ?"),
   ).toBeNull();
 });
 
@@ -217,7 +217,7 @@ test("a type's link property says which types it accepts", async () => {
   renderWith(<TypeProperties typeId="character" types={[place]} />);
 
   const row = await screen.findByRole("button", { name: "Modifier la propriété Foyer" });
-  expect(row.textContent).toContain("Lien vers une carte");
+  expect(row.textContent).toContain("Lien vers une fiche");
   expect(row.textContent).toContain("Lieu");
 });
 
@@ -242,7 +242,7 @@ test("a link property says the relation it carries", async () => {
   expect(await screen.findByLabelText("Relation")).toBeTruthy();
   expect(
     await screen.findByText(
-      "Chaque carte choisie dans « Parents » est parent de cette carte : les arbres et le Graph le savent.",
+      "Chaque fiche choisie dans « Parents » est parent de cette fiche : les arbres et le Graphe le savent.",
     ),
   ).toBeTruthy();
 });
@@ -298,8 +298,8 @@ test("a named link to several cards is added from its family", async () => {
   fireEvent.change(await screen.findByLabelText("Nom de la propriété"), {
     target: { value: "Alliés" },
   });
-  fireEvent.click(screen.getByLabelText("Plusieurs cartes à la fois"));
-  fireEvent.click(screen.getByRole("button", { name: "N'importe quelle carte" }));
+  fireEvent.click(screen.getByLabelText("Plusieurs fiches à la fois"));
+  fireEvent.click(screen.getByRole("button", { name: "N'importe quelle fiche" }));
   await waitFor(() =>
     expect(callsOf("create_property")[0]?.payload).toEqual({
       owner: { on: "card", cardId: "aragorn" },
@@ -445,7 +445,7 @@ test("removing a choice that cards hold says how many, then asks", async () => {
 
   fireEvent.click(await screen.findByRole("button", { name: "Retirer le choix Mort" }));
   const alert = await screen.findByRole("alert");
-  expect(alert.textContent).toContain("Retirer « Mort » ? 2 cartes le perdront.");
+  expect(alert.textContent).toContain("Retirer « Mort » ? 2 fiches le perdront.");
   expect(callsOf("set_property_options")).toHaveLength(0);
 
   fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
@@ -472,7 +472,7 @@ test("a select can allow several choices", async () => {
   renderWith(<TypeProperties typeId="character" types={[]} />);
   fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
 
-  fireEvent.click(await screen.findByRole("switch", { name: "Plusieurs choix par carte" }));
+  fireEvent.click(await screen.findByRole("switch", { name: "Plusieurs choix par fiche" }));
   await waitFor(() =>
     expect(callsOf("set_property_options")[0]?.payload).toMatchObject({ multiple: true }),
   );
@@ -695,7 +695,7 @@ test("a card moves its own properties only, after those of its type", async () =
   ];
   renderWith(<CardProperties cardId="aragorn" />);
 
-  await screen.findByRole("list", { name: "Propriétés propres à cette carte" });
+  await screen.findByRole("list", { name: "Propriétés propres à cette fiche" });
   expect(
     screen
       .getAllByRole("button", { name: /^Déplacer la propriété/ })

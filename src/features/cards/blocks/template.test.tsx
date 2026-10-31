@@ -112,7 +112,7 @@ function renderEditor(ref?: React.Ref<BlockEditorHandle>) {
 test("an empty card offers its type's template", async () => {
   renderEditor();
 
-  const use = await screen.findByRole("button", { name: /Utiliser le template « Personnage »/ });
+  const use = await screen.findByRole("button", { name: /Utiliser le modèle « Personnage »/ });
   expect(use.textContent).toContain("Background · Personnalité · Apparence");
   fireEvent.click(use);
 
@@ -123,7 +123,7 @@ test("an empty card offers its type's template", async () => {
     "Apparence",
   ]);
   expect(
-    await screen.findByText("3 sections du template ajoutées à la fin de la carte."),
+    await screen.findByText("3 sections du modèle ajoutées à la fin de la fiche."),
   ).toBeTruthy();
 });
 
@@ -143,7 +143,7 @@ test("applying keeps the existing content, and twice adds nothing more", async (
 
   act(() => ref.current?.applyTemplate());
   expect(
-    await screen.findByText("Toutes les sections du template sont déjà dans la carte."),
+    await screen.findByText("Toutes les sections du modèle sont déjà dans la fiche."),
   ).toBeTruthy();
   expect(saved).toHaveLength(1);
 });

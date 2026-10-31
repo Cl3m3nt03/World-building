@@ -63,7 +63,7 @@ describe("V2-3.3c: reordering properties", () => {
   });
 
   it("orders a type's properties, and the new cards of the type follow", async () => {
-    await openTab("Home");
+    await openTab("Accueil");
     await $("button=Types").click();
     await $("aria/Nom du type").waitForDisplayed();
     const add = $("button=Ajouter une propriété");

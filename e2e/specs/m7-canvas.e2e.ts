@@ -11,7 +11,7 @@
 import { createCard, createWorld, currentWorldButton, openTab, sidebarItem } from "../helpers";
 
 const WORLD = "Rohan";
-const CANVAS = "Canvas sans nom";
+const CANVAS = "Atelier sans nom";
 
 type Element = {
   id: string;
@@ -55,7 +55,7 @@ async function scene(): Promise<Element[]> {
 
 const surface = () => $(".excalidraw canvas.interactive");
 const tool = (name: string) =>
-  $(`//*[@role="toolbar"][@aria-label="Outils du canvas"]//button[@aria-label="${name}"]`);
+  $(`//*[@role="toolbar"][@aria-label="Outils de l'atelier"]//button[@aria-label="${name}"]`);
 const thumbnails = () => $$(".bz-canvas-card");
 
 /** Where scene point (x, y) is in the window (Excalidraw's state, test builds only). */
@@ -126,12 +126,12 @@ describe("M7: the canvas", () => {
 
   it("creates a world with three cards, then a canvas", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Personnage", "Théoden");
     await createCard("Personnage", "Éomer");
     await createCard("Lieu", "Edoras");
-    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
-    await $('//*[@role="menuitem"][normalize-space()="Nouveau canvas"]').click();
+    await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
+    await $('//*[@role="menuitem"][normalize-space()="Nouvel atelier"]').click();
     await surface().waitForDisplayed({ timeout: 30000, timeoutMsg: "the canvas did not open" });
     await browser.waitUntil(async () => browser.execute(() => "__bzExcalidraw" in window), {
       timeoutMsg: "Excalidraw did not start",
@@ -269,7 +269,7 @@ describe("M7: the canvas", () => {
     await $("h1=Mondes").waitForDisplayed();
     await $(`aria/Ouvrir ${WORLD}`).click();
     await currentWorldButton(WORLD).waitForDisplayed();
-    await openTab("World");
+    await openTab("Monde");
     await sidebarItem(CANVAS).click();
     await surface().waitForDisplayed({ timeout: 30000 });
     await browser.waitUntil(async () => (await thumbnails().length) === 3, {

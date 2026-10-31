@@ -63,7 +63,7 @@ function Harness({ onChange }: { onChange: (block: Stats5eBlock) => void }) {
   return (
     <Stats5eBlockView
       block={block}
-      label="Fiche de stats 5e 1"
+      label="Bloc de stats 5e 1"
       onChange={(next) => {
         setBlock(next);
         onChange(next);
@@ -146,7 +146,7 @@ test("the block menu offers the 5e sheet and the map (available since M4)", asyn
     fireEvent.keyDown(add, { key: "Enter" });
   });
 
-  expect(await screen.findByRole("menuitem", { name: "Fiche de stats 5e" })).toBeTruthy();
-  const map = screen.getByRole("menuitem", { name: "Map" });
+  expect(await screen.findByRole("menuitem", { name: "Bloc de stats 5e" })).toBeTruthy();
+  const map = screen.getByRole("menuitem", { name: "Carte" });
   expect(map.getAttribute("aria-disabled")).toBeNull();
 });

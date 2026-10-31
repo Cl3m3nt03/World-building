@@ -133,7 +133,7 @@ describe("routing", () => {
   test("every creation tile of the empty workspace is a real button", async () => {
     await renderAt("/world/demo/world");
     // Cards (M2), maps (M4), graphs (M5), trees (M6) and canvases (M7) exist.
-    for (const name of ["Carte", "Map", "Graph", "Arbre de relations", "Canvas"]) {
+    for (const name of ["Fiche", "Carte", "Graphe", "Arbre", "Atelier"]) {
       expect(screen.getByRole("button", { name }).getAttribute("aria-disabled")).toBeNull();
     }
   });

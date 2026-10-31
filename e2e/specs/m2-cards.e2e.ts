@@ -29,7 +29,7 @@ async function addTypeProperty(label: string, kind: string) {
 }
 
 async function openTypes() {
-  await openTab("Home");
+  await openTab("Accueil");
   await $("button=Types").click();
   await $("aria/Nom du type").waitForDisplayed();
 }
@@ -58,7 +58,7 @@ describe("M2: cards, properties, links and templates", () => {
   });
 
   it("shows a type property on the cards of the type, created before and after it", async () => {
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Personnage", "Frodon");
     // A new card starts with the sections of its type's template (V2-3.5).
     for (const heading of ["Background", "Personnalité", "Apparence"]) {
@@ -72,7 +72,7 @@ describe("M2: cards, properties, links and templates", () => {
     await $("button=Oui").waitForExist({ reverse: true });
     await closeTypes();
 
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Personnage", "Sam");
     await createCard("Personnage", "Merry");
     for (const title of ["Frodon", "Sam", "Merry"]) {
@@ -83,24 +83,24 @@ describe("M2: cards, properties, links and templates", () => {
 
   it("gives a backlink to the target of a link property and of a mention", async () => {
     await openTypes();
-    await addTypeProperty("Lieu de naissance", "N'importe quelle carte");
+    await addTypeProperty("Lieu de naissance", "N'importe quelle fiche");
     await $("button=Oui").click();
     // Characters created from now on start empty.
     const onCreate = await $(
-      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le template à la création"]/@for]',
+      '//button[@role="switch"][@id=//label[normalize-space()="Appliquer le modèle à la création"]/@for]',
     );
     await expect(onCreate).toHaveAttribute("aria-checked", "true");
     await onCreate.click();
     await expect(onCreate).toHaveAttribute("aria-checked", "false");
     await closeTypes();
 
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Lieu", "Gondor");
     await createCard("Personnage", "Boromir");
     await createCard("Personnage", "Aragorn");
 
     // Link property: pick Gondor with the keyboard.
-    await $("aria/Choisir une carte pour Lieu de naissance").click();
+    await $("aria/Choisir une fiche pour Lieu de naissance").click();
     const search = await $('input[role="combobox"]');
     await search.waitForDisplayed();
     await browser.keys("Gond");
@@ -115,7 +115,7 @@ describe("M2: cards, properties, links and templates", () => {
     await browser.keys("@Boro");
     await $('//*[@role="option"][contains(normalize-space(), "Boromir")]').waitForDisplayed();
     await browser.keys("Enter");
-    await $("aria/Ouvrir la carte Boromir").waitForDisplayed();
+    await $("aria/Ouvrir la fiche Boromir").waitForDisplayed();
 
     await openCard("Gondor");
     await browser.waitUntil(
@@ -140,9 +140,9 @@ describe("M2: cards, properties, links and templates", () => {
 
   it("applies a guided template to a card with text without losing anything", async () => {
     await openCard("Aragorn");
-    await $("aria/Actions de la carte").click();
+    await $("aria/Actions de la fiche").click();
     await $(
-      '//*[@role="menuitem"][normalize-space()="Appliquer le template « Personnage »"]',
+      '//*[@role="menuitem"][normalize-space()="Appliquer le modèle « Personnage »"]',
     ).click();
 
     for (const heading of ["Background", "Personnalité", "Apparence"]) {
@@ -171,7 +171,7 @@ describe("M2: cards, properties, links and templates", () => {
     await browser.pause(800);
     await closeTypes();
 
-    await openTab("World");
+    await openTab("Monde");
     await createCard("Lieu", "Rohan");
     await contentHeading("Géographie").waitForDisplayed();
     const height = await browser.execute(

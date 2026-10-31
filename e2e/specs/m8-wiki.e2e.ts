@@ -80,7 +80,7 @@ async function rightClick(title: string) {
  */
 async function openWikiCard(title: string) {
   await $(`//aside//*[@role="treeitem"][starts-with(normalize-space(), "${title}")]`).click();
-  await browser.waitUntil(async () => (await $("aria/Nom de la carte").getValue()) === title, {
+  await browser.waitUntil(async () => (await $("aria/Nom de la fiche").getValue()) === title, {
     timeoutMsg: `the card ${title} did not open`,
   });
 }
@@ -99,7 +99,7 @@ describe("M8: the wiki", () => {
 
   it("shows a card in the wiki once marked visible, and not once hidden", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     for (const name of ["Alvar", "Apex"]) await createCard("Personnage", name);
     for (const card of await invoke<{ id: string; title: string }[]>("list_cards", {
       trashed: false,
@@ -113,9 +113,9 @@ describe("M8: the wiki", () => {
     await openPage("Alvar");
 
     // Hidden from the card's own menu, in World: the wiki has no page left.
-    await openTab("World");
+    await openTab("Monde");
     await openWikiCard("Alvar");
-    await $("aria/Actions de la carte").click();
+    await $("aria/Actions de la fiche").click();
     await menuItem("Visible dans le wiki").click();
     await wikiTab().click();
     await $("p=Le wiki n'a pas encore de page").waitForDisplayed({
@@ -164,7 +164,7 @@ describe("M8: the wiki", () => {
       { timeoutMsg: "the text written in the wiki was not saved" },
     );
 
-    await openTab("World");
+    await openTab("Monde");
     await openWikiCard("Alvar");
     await browser.waitUntil(
       async () => (await $("aria/Bloc de texte 1").getText()).includes("Écrit depuis le wiki."),

@@ -95,9 +95,7 @@ test("a subtype without its own template says it uses its type's", () => {
   renderEditor(cardType("city", [], "place"), place);
 
   expect(
-    screen.getByText(
-      "Sans template propre, les cartes de ce sous-type utilisent celui de « Lieu ».",
-    ),
+    screen.getByText("Sans modèle propre, les fiches de ce sous-type utilisent celui de « Lieu »."),
   ).toBeTruthy();
 });
 

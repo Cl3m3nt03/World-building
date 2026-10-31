@@ -174,7 +174,7 @@ test("color and orientation are radio choices", async () => {
 test("a switch turns the template on creation off and on again", async () => {
   renderDialog();
   await screen.findByLabelText("Nom du type");
-  const onCreate = screen.getByRole("switch", { name: "Appliquer le template à la création" });
+  const onCreate = screen.getByRole("switch", { name: "Appliquer le modèle à la création" });
   expect(onCreate.getAttribute("aria-checked")).toBe("true");
 
   fireEvent.click(onCreate);
@@ -257,7 +257,7 @@ test("a type with cards asks where they go before deleting", async () => {
   );
 
   fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
-  expect(await screen.findByText("Ce type a 3 cartes. Où les déplacer ?")).toBeTruthy();
+  expect(await screen.findByText("Ce type a 3 fiches. Où les déplacer ?")).toBeTruthy();
   const buttons = screen.getAllByRole("button", { name: "Supprimer" });
   // No destination chosen yet: nothing can be deleted.
   expect((buttons[buttons.length - 1] as HTMLButtonElement).disabled).toBe(true);
@@ -309,8 +309,8 @@ test("the sections of the sheet are labelled", async () => {
   for (const name of [
     "Sous-types",
     "Propriétés par défaut",
-    "Template guidé",
-    "Réglages de carte par défaut",
+    "Modèle guidé",
+    "Réglages de fiche par défaut",
   ]) {
     expect(screen.getByRole("region", { name })).toBeTruthy();
   }

@@ -215,8 +215,8 @@ test("a mention of a page opens it in the wiki; of a card without a page, plain 
   const router = await renderAt("/world/demo/wiki/card/aragorn");
   const page = await screen.findByRole("article", { name: "Aragorn" });
   expect(within(page).getByRole("heading", { level: 1, name: "Aragorn" })).toBeTruthy();
-  const gondor = await within(page).findByRole("link", { name: "Ouvrir la carte Gondor" });
-  expect(within(page).queryByRole("link", { name: "Ouvrir la carte Minas Tirith" })).toBeNull();
+  const gondor = await within(page).findByRole("link", { name: "Ouvrir la fiche Gondor" });
+  expect(within(page).queryByRole("link", { name: "Ouvrir la fiche Minas Tirith" })).toBeNull();
   expect(page.querySelector(".mention-plain")?.textContent).toBe("Minas Tirith");
 
   fireEvent.click(gondor);
@@ -241,6 +241,6 @@ test("« Cité dans » lists the pages only", async () => {
 
 test("a card without a page says so", async () => {
   await renderAt("/world/demo/wiki/card/minas");
-  expect(await screen.findByText("Cette carte n'est pas visible dans le wiki.")).toBeTruthy();
+  expect(await screen.findByText("Cette fiche n'est pas visible dans le wiki.")).toBeTruthy();
   expect(screen.getByRole("link", { name: "Accueil du wiki" })).toBeTruthy();
 });

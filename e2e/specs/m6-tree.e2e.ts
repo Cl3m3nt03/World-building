@@ -103,13 +103,13 @@ async function recenter() {
 async function name(label: string) {
   // Its popover fades in: on the CI runner it may stay at opacity 0 for
   // WebdriverIO's « displayed »; what matters is that it is there, focused.
-  await $('input[aria-label="Carte ou nom du nœud"]').waitForExist();
+  await $('input[aria-label="Fiche ou nom du nœud"]').waitForExist();
   // Keys typed before the field has the focus would be lost (it opens while
   // the view moves to the new node).
   await browser.waitUntil(
     async () =>
       browser.execute(
-        () => document.activeElement?.getAttribute("aria-label") === "Carte ou nom du nœud",
+        () => document.activeElement?.getAttribute("aria-label") === "Fiche ou nom du nœud",
       ),
     { timeoutMsg: "the node search never got the focus" },
   );
@@ -166,8 +166,8 @@ describe("M6: the relation tree", () => {
 
   it("builds three generations with the « + » only", async () => {
     await createWorld(WORLD);
-    await openTab("World");
-    await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
+    await openTab("Monde");
+    await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
     await $('//*[@role="menuitem"][normalize-space()="Nouvel arbre"]').click();
     // A click while the menu is still closing would only close it.
     await browser.waitUntil(async () => !(await $('[role="menu"]').isExisting()), {
@@ -288,7 +288,7 @@ describe("M6: the relation tree", () => {
     await $("h1=Mondes").waitForDisplayed();
     await $(`aria/Ouvrir ${WORLD}`).click();
     await currentWorldButton(WORLD).waitForDisplayed();
-    await openTab("World");
+    await openTab("Monde");
     await sidebarItem(TREE).click();
     await node("Eldarion").waitForDisplayed();
     expect(JSON.stringify(await saved())).toBe(before);

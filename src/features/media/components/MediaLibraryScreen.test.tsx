@@ -166,8 +166,8 @@ test("warns before deleting an asset that is still used", async () => {
   fireEvent.keyDown(actions, { key: "Delete" });
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("image principale du monde « Aldoria »");
-  expect(alert.textContent).toContain("image de la carte « Aelin »");
-  expect(alert.textContent).toContain("bloc image de la carte « Rowan » (à la corbeille)");
+  expect(alert.textContent).toContain("image de la fiche « Aelin »");
+  expect(alert.textContent).toContain("bloc image de la fiche « Rowan » (à la corbeille)");
   fireEvent.click(screen.getByRole("button", { name: "Supprimer quand même" }));
 
   await waitFor(() => expect(screen.queryByText("Carte du monde.png")).toBeNull());

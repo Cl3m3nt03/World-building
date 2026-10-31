@@ -62,7 +62,7 @@ test("a theme resolves to its background and accent", () => {
 
 const IMAGE: Asset = {
   id: `${"a".repeat(64)}.png`,
-  name: "Carte du monde.png",
+  name: "Fiche du monde.png",
   kind: "image",
   mime: "image/png",
   size: 1024,
@@ -213,7 +213,7 @@ test("a background is chosen in the media library, and the main image taken back
   fireEvent.click(
     await within(dialog).findByRole("button", { name: "Choisir dans la médiathèque" }),
   );
-  fireEvent.doubleClick(await screen.findByRole("option", { name: "Carte du monde.png" }));
+  fireEvent.doubleClick(await screen.findByRole("option", { name: "Fiche du monde.png" }));
 
   await waitFor(() =>
     expect(saved.at(-1)).toEqual({ kind: "custom", background: IMAGE.id, accent: "#c8912e" }),

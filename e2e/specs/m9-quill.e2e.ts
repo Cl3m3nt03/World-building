@@ -103,13 +103,13 @@ describe("M9: Quill", () => {
     await browser.keys("Minas Tirith");
     await browser.keys(["Shift", "Home"]);
     await waitForSelection("Minas Tirith");
-    await $("button=Créer une carte").click();
+    await $("button=Créer une fiche").click();
     await $('//button[normalize-space()="Lieu"]').click();
     await chapterText()
       .$(".mention*=Minas Tirith")
       .waitForDisplayed({ timeoutMsg: "the passage did not become a mention" });
 
-    await openTab("World");
+    await openTab("Monde");
     await sidebarItem("Minas Tirith").waitForDisplayed({
       timeoutMsg: "the new card is not in the sidebar",
     });

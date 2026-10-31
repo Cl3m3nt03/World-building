@@ -23,7 +23,7 @@ const WORLD = "Doriath";
 /** Accessible name of the drawing: « Graph <name> : N cartes, M liens ». */
 const drawing = () => $('//canvas[@role="img"]');
 
-/** Name of the list of the shown cards (« 3 cartes »). */
+/** Name of the list of the shown cards (« 3 fiches »). */
 const listTitle = () =>
   browser.execute(() => document.getElementById("graph-nodes-title")?.textContent ?? "");
 
@@ -46,7 +46,7 @@ const savedConfig = (title: string) =>
 
 /** Picks `entry` of the « Nouveau document » menu of the sidebar. */
 async function newDocument(entry: string) {
-  await $("aria/Nouveau document (map, graph, arbre, canvas, frise…)").click();
+  await $("aria/Nouveau document (carte, graphe, arbre, atelier, frise…)").click();
   await $(`//*[@role="menuitem"][normalize-space()="${entry}"]`).click();
 }
 
@@ -84,7 +84,7 @@ async function cardAtCentre(): Promise<string | null> {
 describe("M5: the graph", () => {
   it("draws a mention between two cards as an edge", async () => {
     await createWorld(WORLD);
-    await openTab("World");
+    await openTab("Monde");
     for (const [type, title] of [
       ["Personnage", "Arwen"],
       ["Personnage", "Gimli"],
@@ -104,25 +104,25 @@ describe("M5: the graph", () => {
     }
     await browser.pause(1200);
 
-    await newDocument("Nouveau graph");
+    await newDocument("Nouveau graphe");
     await drawing().waitForDisplayed();
     await browser.waitUntil(
       async () =>
         (await (await drawing()).getAttribute("aria-label")) ===
-        "Graph Graph sans nom : 4 cartes, 2 liens",
+        "Graphe Graphe sans nom : 4 fiches, 2 liens",
       { timeoutMsg: `drawing: ${await (await drawing()).getAttribute("aria-label")}` },
     );
     // Aragorn's neighbours in the list.
     await $('//*[@role="option"][normalize-space()="Aragorn"]').click();
-    const linked = await $('//section[@aria-label="Cartes liées à Aragorn"]');
+    const linked = await $('//section[@aria-label="Fiches liées à Aragorn"]');
     expect(await linked.getText()).toContain("Arwen");
     expect(await linked.getText()).toContain("Gondor");
   });
 
   it("finds Aragorn by his alias", async () => {
-    await $("aria/Rechercher dans le graph").click();
+    await $("aria/Rechercher dans le graphe").click();
     await browser.keys("grands");
-    await $("span=1 carte").waitForDisplayed();
+    await $("span=1 fiche").waitForDisplayed();
     await browser.keys("Escape");
   });
 
@@ -130,7 +130,7 @@ describe("M5: the graph", () => {
     await $("aria/Filtrer par type").click();
     await $('//*[@role="menuitemcheckbox"][normalize-space()="Personnage"]').click();
     await browser.keys("Escape");
-    await browser.waitUntil(async () => (await listTitle()) === "3 cartes", {
+    await browser.waitUntil(async () => (await listTitle()) === "3 fiches", {
       timeoutMsg: `list: ${await listTitle()}`,
     });
   });
@@ -141,7 +141,7 @@ describe("M5: the graph", () => {
     await $("aria/Désépingler Aragorn").waitForDisplayed();
     // Aragorn is at the centre: selected from the list, the view went to him.
     expect(await cardAtCentre()).toBe("Aragorn");
-    await $("aria/Réglages du graph").click();
+    await $("aria/Réglages du graphe").click();
     await setRange("Répulsion", 1500);
     await browser.keys("Escape");
     await browser.pause(2500);
@@ -151,22 +151,22 @@ describe("M5: the graph", () => {
   it("saves the configuration under a name; it reopens the same after reopening the world", async () => {
     await browser.pause(1500);
     await $("aria/Enregistrer sous…").click();
-    await $("aria/Nom du nouveau graph").setValue("Famille");
+    await $("aria/Nom du nouveau graphe").setValue("Famille");
     await $("button=Enregistrer").click();
     await $('//aside//*[@role="treeitem"][normalize-space()="Famille"]').waitForDisplayed();
     const before = await savedConfig("Famille");
     expect(before).not.toBeNull();
-    expect(before).toBe(await savedConfig("Graph sans nom"));
+    expect(before).toBe(await savedConfig("Graphe sans nom"));
 
     await $("button=Mondes").click();
     await $("h1=Mondes").waitForDisplayed();
     await $(`aria/Ouvrir ${WORLD}`).click();
     await currentWorldButton(WORLD).waitForDisplayed();
-    await openTab("World");
+    await openTab("Monde");
     await $('//aside//*[@role="treeitem"][normalize-space()="Famille"]').click();
     await drawing().waitForDisplayed();
     expect(await savedConfig("Famille")).toBe(before);
-    await browser.waitUntil(async () => (await listTitle()) === "3 cartes", {
+    await browser.waitUntil(async () => (await listTitle()) === "3 fiches", {
       timeoutMsg: `filters after reopening: ${await listTitle()}`,
     });
     expect(await $("aria/Filtrer par type (actif)").isExisting()).toBe(true);

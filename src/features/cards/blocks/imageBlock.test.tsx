@@ -120,7 +120,7 @@ test("the image shows with its caption, which saves as typed", async () => {
     ),
   );
 
-  const image = await screen.findByRole("img", { name: "Carte" });
+  const image = await screen.findByRole("img", { name: "Fiche" });
   expect(image.getAttribute("src")).toBe(`http://bzasset.localhost/${IMAGE.id}`);
   fireEvent.change(screen.getByLabelText("Légende"), { target: { value: "Carte de Terrasen" } });
   expect(onChange).toHaveBeenCalledWith(block([IMAGE, "Carte de Terrasen"]));

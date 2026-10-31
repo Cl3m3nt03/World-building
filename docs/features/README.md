@@ -24,7 +24,19 @@ Les modèles de données proposés dans ces fichiers sont **indicatifs**. Le sch
 
 ### Vocabulaire
 
-Pour éviter toute confusion entre les deux sens du mot « carte » :
+Le vocabulaire visible suit la langue choisie (décision de Clément, audit F42). Les docs gardent leurs termes historiques ; ce tableau donne la correspondance.
+
+| Doc | Code | Interface FR | Interface EN |
+|---|---|---|---|
+| Carte (fiche du monde) | `card` | Fiche | Card |
+| Map | `map` | Carte | Map |
+| Graph | `graph` | Graphe | Graph |
+| Relation Tree | `tree` | Arbre | Tree |
+| Canvas | `canvas` | Atelier | Canvas |
+| Frise | `timeline` | Frise | Timeline |
+| Home / World (onglets) | `home` / `world` | Accueil / Monde | Home / World |
+
+Dans les docs, pour éviter toute confusion entre les deux sens du mot « carte » :
 
 | Terme (doc FR) | Terme (code) | Sens |
 |---|---|---|

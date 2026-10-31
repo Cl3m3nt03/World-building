@@ -228,10 +228,10 @@ test("the search finds pages by name, alias or text, and only pages", async () =
   ).toBe("/world/demo/wiki/card/Aragorn");
 });
 
-test("the bar: pages by type then maps, back, and « Ouvrir dans World » on a page", async () => {
+test("the bar: pages by type then maps, back, and « Ouvrir dans l'onglet Monde » on a page", async () => {
   const router = await renderWiki();
   const bar = await screen.findByRole("navigation", { name: "Navigation du wiki" });
-  expect(within(bar).queryByRole("link", { name: "Ouvrir dans World" })).toBeNull();
+  expect(within(bar).queryByRole("link", { name: "Ouvrir dans l'onglet Monde" })).toBeNull();
   await act(async () => {
     fireEvent.pointerDown(within(bar).getByRole("button", { name: "Pages" }), { button: 0 });
   });
@@ -240,11 +240,11 @@ test("the bar: pages by type then maps, back, and « Ouvrir dans World » on a p
     within(menu)
       .getAllByRole("group")
       .map((group) => group.firstChild?.textContent),
-  ).toEqual(["Personnage", "Sans type", "Maps"]);
+  ).toEqual(["Personnage", "Sans type", "Cartes"]);
   fireEvent.click(within(menu).getByRole("menuitem", { name: "Arwen" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/wiki/card/Arwen"));
 
-  const world = await within(bar).findByRole("link", { name: "Ouvrir dans World" });
+  const world = await within(bar).findByRole("link", { name: "Ouvrir dans l'onglet Monde" });
   expect(world.getAttribute("href")).toBe("/world/demo/world/card/Arwen");
   fireEvent.click(within(bar).getByRole("button", { name: "Retour" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/wiki"));
@@ -286,7 +286,7 @@ test("without a page, the home page says how to make one", async () => {
   pages = [];
   await renderWiki();
   expect(await screen.findByText("Le wiki n'a pas encore de page")).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Aller dans World" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Aller dans l'onglet Monde" })).toBeTruthy();
 });
 
 test("the banner is chosen and removed", async () => {
