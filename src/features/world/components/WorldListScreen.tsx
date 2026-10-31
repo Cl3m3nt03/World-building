@@ -186,7 +186,7 @@ export function WorldListScreen() {
           <section className="glass-panel mx-auto mt-8 flex max-w-lg flex-col items-center gap-4 rounded-xl px-8 py-10 text-center">
             <Compass aria-hidden className="size-12 text-primary" strokeWidth={1.25} />
             <h2 className="text-2xl font-bold">{t("worlds.welcomeTitle")}</h2>
-            <p className="on-backdrop text-muted-foreground">{t("worlds.empty")}</p>
+            <p className="text-muted-foreground">{t("worlds.empty")}</p>
             <div className="flex flex-wrap justify-center gap-2">{actions}</div>
           </section>
         ) : (

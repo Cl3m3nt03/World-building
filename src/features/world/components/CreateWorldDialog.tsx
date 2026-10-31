@@ -198,6 +198,7 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
                     <Input
                       id={locationId}
                       value={parentDir ?? ""}
+                      title={parentDir ?? undefined}
                       readOnly
                       className="text-transparent selection:text-transparent"
                       aria-invalid={folderTaken}
@@ -205,6 +206,7 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
                     />
                     <MiddleTruncate
                       text={parentDir ?? ""}
+                      hidden
                       className="pointer-events-none absolute inset-x-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
                     />
                   </div>

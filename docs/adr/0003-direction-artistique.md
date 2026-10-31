@@ -42,7 +42,7 @@ Les valeurs ci-dessous sont le point de départ de l'issue 0.5. Elles vivent dan
 | Token | Sombre (référence) | Clair |
 |---|---|---|
 | `--bg` | `#0b0e17` | `#f5efe3` |
-| `--backdrop-overlay` | `rgb(8 10 20 / 0.55)` | `rgb(245 239 227 / 0.6)` |
+| `--backdrop-overlay` | `rgb(8 10 20 / 0.55)` | `rgb(242 233 212 / 0.82)` |
 | `--surface` | `rgb(14 17 28 / 0.72)` | `rgb(255 251 243 / 0.78)` |
 | `--surface-strong` | `rgb(10 12 20 / 0.92)` | `rgb(255 252 246 / 0.95)` |
 | `--border` | `rgb(255 255 255 / 0.08)` | `rgb(60 40 10 / 0.12)` |
