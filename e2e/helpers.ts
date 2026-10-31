@@ -38,6 +38,24 @@ export const sidebarItem = (title: string) =>
 export async function createCard(type: string, title: string) {
   await $("button=Nouvelle carte").click();
   await $(`//*[@role="option"][normalize-space()="${type}"]`).click();
+  await nameNewCard(type, title);
+}
+
+/** Types in the search field of the open type panel, once it has the focus. */
+export async function typeInPicker(text: string) {
+  await $('input[aria-label="Rechercher un type"]').waitForDisplayed();
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        () => document.activeElement?.getAttribute("aria-label") === "Rechercher un type",
+      ),
+    { timeoutMsg: "the type panel's search did not take the focus" },
+  );
+  await browser.keys(text);
+}
+
+/** A card of `type` was just created: gives it its name. */
+export async function nameNewCard(type: string, title: string) {
   // The new card opens with its title selected: typing at once replaces it
   // (keys typed while the menu was still closing used to be lost, #122).
   const titleField = await $("aria/Nom de la carte");
