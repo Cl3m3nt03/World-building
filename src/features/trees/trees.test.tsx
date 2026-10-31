@@ -606,6 +606,20 @@ test("« Gérer les relations… » changes a relation of the world, and deletin
   await waitFor(() => expect(savedContent()?.edges[0]?.relationTypeId).toBeNull());
 });
 
+test("Ctrl+Z works with the focus on a relation menu's button, which keeps its other keys", async () => {
+  stored = emptyTree("Lignée", "Variante 1");
+  await renderAt("/world/demo/world/tree/t1");
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un nœud" }));
+  fireEvent.keyDown(await screen.findByRole("combobox", { name: "Carte ou nom du nœud" }), {
+    key: "Escape",
+  });
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(2));
+  const button = await screen.findByRole("button", { name: "Ajouter une relation" });
+
+  fireEvent.keyDown(button, { key: "z", ctrlKey: true });
+  await waitFor(() => expect(screen.getAllByText("Nouveau personnage")).toHaveLength(1));
+});
+
 test("Ctrl+Z undoes and Ctrl+Y redoes the variant's changes; the buttons too", async () => {
   stored = emptyTree("Lignée", "Variante 1");
   await renderAt("/world/demo/world/tree/t1");

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { LineStyle } from "@/lib/bindings";
 import { relationIcon, relationName } from "../relations";
-import { RelationMenu } from "./RelationMenu";
+import { RelationMenu, stopKey } from "./RelationMenu";
 import { useTreeActions } from "./treeActions";
 
 export type RelationEdgeData = {
@@ -207,7 +207,7 @@ export const RelationEdge = memo(function RelationEdge({
             aria-label={t("trees.edges.toolbar", { link: data.tooltip })}
             className="nodrag nopan glass flex items-center gap-1 rounded-lg border border-border p-1 shadow-sm"
             onClick={stop}
-            onKeyDown={stop}
+            onKeyDown={stopKey}
             onDoubleClick={stop}
           >
             <RelationMenu
