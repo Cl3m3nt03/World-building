@@ -341,8 +341,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       marker.on("dblclick", () => handlers.current.onMarkerOpen?.(id));
       if (markerLabel) marker.getElement()?.setAttribute("aria-label", markerLabel(id));
       marker.getElement()?.addEventListener("keydown", (event) => {
-        // The map's own arrow keys must not move the view meanwhile.
-        event.stopPropagation();
+        // The map's own arrow keys must not move the view meanwhile;
+        // Ctrl+Z and Ctrl+Y go on to the page.
+        if (!(event.ctrlKey || event.metaKey)) event.stopPropagation();
         handlers.current.onMarkerKey?.(id, event);
       });
       known.set(id, marker);

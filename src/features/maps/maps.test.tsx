@@ -550,6 +550,27 @@ test("undo and redo, with the buttons and Ctrl+Z / Ctrl+Y, are saved too", async
   expect(stored?.content.pins).toEqual([]);
 });
 
+test("Ctrl+Z and Ctrl+Y work with the focus on a pin, which keeps its own keys", async () => {
+  stored = map("Arda");
+  await renderAt("/world/demo/world/map/m1");
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un pin" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Ajouter un pin" }));
+  await waitFor(() =>
+    expect(screen.getAllByRole("button", { name: "Pin Repère" })).toHaveLength(2),
+  );
+  const [pin] = screen.getAllByRole("button", { name: "Pin Repère" });
+  if (!pin) throw new Error("no pin");
+
+  fireEvent.keyDown(pin, { key: "z", ctrlKey: true });
+  await waitFor(() =>
+    expect(screen.getAllByRole("button", { name: "Pin Repère" })).toHaveLength(1),
+  );
+  fireEvent.keyDown(pin, { key: "y", ctrlKey: true });
+  await waitFor(() =>
+    expect(screen.getAllByRole("button", { name: "Pin Repère" })).toHaveLength(2),
+  );
+});
+
 test("a pause while typing the name loses no letter when the save comes back", async () => {
   stored = map("Arda");
   await renderAt("/world/demo/world/map/m1");
