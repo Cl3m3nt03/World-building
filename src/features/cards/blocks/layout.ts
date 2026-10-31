@@ -15,8 +15,33 @@ export const MIN_WIDTH = 0.2;
 /** Widths snap to this step. */
 export const WIDTH_STEP = 0.1;
 
+/** Share of a block's width, on each side, where a dropped block goes beside it. */
+const SIDE_ZONE = 0.25;
+/**
+ * Pixels a drag must go sideways before it can land beside a block. The handle
+ * is at the far left of its block, so a pointer going straight down is already
+ * in the left quarter of the blocks it passes: that drag is a reorder.
+ */
+export const SIDE_INTENT = 48;
+
 /** A line of blocks: one block alone, or two or three side by side. */
 export type Row = { id: string | null; blocks: Block[] };
+
+/**
+ * Which side of the block `target` a drag would land on, or `null` for above
+ * or below it. `x` is the pointer's position, `moved` how far it went sideways
+ * from where the drag started.
+ */
+export function dropSide(
+  x: number,
+  moved: number,
+  target: { left: number; width: number },
+): "left" | "right" | null {
+  if (Math.abs(moved) < SIDE_INTENT) return null;
+  if (x < target.left + target.width * SIDE_ZONE) return "left";
+  if (x > target.left + target.width * (1 - SIDE_ZONE)) return "right";
+  return null;
+}
 
 function round(width: number): number {
   return Math.round(width * 100) / 100;
