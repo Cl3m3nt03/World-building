@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.7.0](https://github.com/Cl3m3nt03/World-building/compare/v1.6.0...v1.7.0) (2026-10-31)
+
+
+### Fonctionnalités
+
+* **blocks:** section bars, folding, copy and a grouped slash menu ([#484](https://github.com/Cl3m3nt03/World-building/issues/484)) ([8a7de79](https://github.com/Cl3m3nt03/World-building/commit/8a7de795814d598c9fb5f50ec44265d8078918e5)), closes [#475](https://github.com/Cl3m3nt03/World-building/issues/475)
+* **card-types:** the types screen in the V2 atlas look ([#486](https://github.com/Cl3m3nt03/World-building/issues/486)) ([0260260](https://github.com/Cl3m3nt03/World-building/commit/02602604d8cabf1cf9b93a82d28f3e7b5b61b381))
+* **cards:** a type picker with search and keyboard ([#480](https://github.com/Cl3m3nt03/World-building/issues/480)) ([f038259](https://github.com/Cl3m3nt03/World-building/commit/f0382596555f0401bc771bb53a95f1bdaba004f7)), closes [#472](https://github.com/Cl3m3nt03/World-building/issues/472)
+* **cards:** apply the type's template when a card is created ([#487](https://github.com/Cl3m3nt03/World-building/issues/487)) ([6d88420](https://github.com/Cl3m3nt03/World-building/commit/6d88420a37052f1f7417284724001d3f030e3082))
+* **cards:** the card header after vvd ([#481](https://github.com/Cl3m3nt03/World-building/issues/481)) ([09a26fd](https://github.com/Cl3m3nt03/World-building/commit/09a26fd8014b4c2e245581b6bbfbaac11b1eda0c))
+* **home:** the world in three figures, its graph in the middle ([#468](https://github.com/Cl3m3nt03/World-building/issues/468)) ([66b204a](https://github.com/Cl3m3nt03/World-building/commit/66b204ab1f7f8e0b4ec31f7ec8d7d73bdd41cbcb)), closes [#462](https://github.com/Cl3m3nt03/World-building/issues/462)
+* **properties:** add a property in two gestures ([#483](https://github.com/Cl3m3nt03/World-building/issues/483)) ([b4e0731](https://github.com/Cl3m3nt03/World-building/commit/b4e0731df7a267f7e8093262e68c12a6cc924ee1)), closes [#474](https://github.com/Cl3m3nt03/World-building/issues/474)
+* **properties:** reorder type and card properties ([#502](https://github.com/Cl3m3nt03/World-building/issues/502)) ([d16ac7a](https://github.com/Cl3m3nt03/World-building/commit/d16ac7a2dbc7f90ee66a673fdc8b8ad099d85010))
+* **properties:** select and date properties ([#496](https://github.com/Cl3m3nt03/World-building/issues/496)) ([4a757c1](https://github.com/Cl3m3nt03/World-building/commit/4a757c1164cba0674d36009566ad776ad235fc24))
+* **shell:** a world rail to switch world in one click ([#467](https://github.com/Cl3m3nt03/World-building/issues/467)) ([f89b38f](https://github.com/Cl3m3nt03/World-building/commit/f89b38f93060a4957ccf4ae994d7b9e123c53f2d))
+* **worlds:** pin a world first, duplicate a world ([#469](https://github.com/Cl3m3nt03/World-building/issues/469)) ([716157a](https://github.com/Cl3m3nt03/World-building/commit/716157a4dfc6b4cac570119655d3f741a98c49d9)), closes [#463](https://github.com/Cl3m3nt03/World-building/issues/463)
+* **worlds:** tones beside a world's genre ([#470](https://github.com/Cl3m3nt03/World-building/issues/470)) ([3ec3b96](https://github.com/Cl3m3nt03/World-building/commit/3ec3b96ce0809a41f71c28020aa97c5783687ce9)), closes [#464](https://github.com/Cl3m3nt03/World-building/issues/464)
+
+
+### Corrections
+
+* **app:** keep Ctrl+Z from undoing text out of sight ([#508](https://github.com/Cl3m3nt03/World-building/issues/508)) ([2d6332e](https://github.com/Cl3m3nt03/World-building/commit/2d6332e4689050bf2713a8ff7e1a06970ca6bf59))
+* **blocks:** give a long help question its own height ([#500](https://github.com/Cl3m3nt03/World-building/issues/500)) ([ce9740f](https://github.com/Cl3m3nt03/World-building/commit/ce9740f095a7eccb0b0bc8759c90d00931bd8730)), closes [#499](https://github.com/Cl3m3nt03/World-building/issues/499)
+* **blocks:** give the focus to a block added from a menu ([#491](https://github.com/Cl3m3nt03/World-building/issues/491)) ([8a4b3f0](https://github.com/Cl3m3nt03/World-building/commit/8a4b3f021ed599a1831d2ae0e22ef0fdda1edd18)), closes [#488](https://github.com/Cl3m3nt03/World-building/issues/488)
+* **blocks:** reorder a block dragged straight down ([#507](https://github.com/Cl3m3nt03/World-building/issues/507)) ([d5b9059](https://github.com/Cl3m3nt03/World-building/commit/d5b90599eb4f50979ef9e517925966cdac961054))
+* **properties:** open the editor after adding a link to a given type ([#498](https://github.com/Cl3m3nt03/World-building/issues/498)) ([ca8a29c](https://github.com/Cl3m3nt03/World-building/commit/ca8a29cdd4433856f8091e74d9363cbd967ae523)), closes [#497](https://github.com/Cl3m3nt03/World-building/issues/497)
+* **shell:** keep the sidebar width when the window changes ([#510](https://github.com/Cl3m3nt03/World-building/issues/510)) ([b6247ee](https://github.com/Cl3m3nt03/World-building/commit/b6247ee80480e3f5105c0b325383ef26fe2c6159))
+* **shell:** let the sidebar handle follow the whole drag ([#509](https://github.com/Cl3m3nt03/World-building/issues/509)) ([c94feb8](https://github.com/Cl3m3nt03/World-building/commit/c94feb88008eb49f2b9c3131dbb6ef5061569071))
+* **ui:** render dropdown submenus in a portal ([#492](https://github.com/Cl3m3nt03/World-building/issues/492)) ([b74293e](https://github.com/Cl3m3nt03/World-building/commit/b74293e7b04ef1122e4a4b6ef3fda53da9b5d70e)), closes [#489](https://github.com/Cl3m3nt03/World-building/issues/489)
+
 ## [1.6.0](https://github.com/Cl3m3nt03/World-building/compare/v1.5.0...v1.6.0) (2026-10-25)
 
 
