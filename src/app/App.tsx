@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ErrorBoundary } from "@/app/ErrorScreen";
 import { createAppRouter } from "@/app/router";
 import { useThemeSync } from "@/app/theme";
+import { useStrayUndoGuard } from "@/app/useStrayUndoGuard";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePreferencesSync } from "@/features/settings";
 import { createQueryClient } from "@/lib/query";
@@ -13,6 +14,7 @@ function Providers() {
   const [router] = useState(() => createAppRouter(queryClient));
   useThemeSync();
   usePreferencesSync();
+  useStrayUndoGuard();
 
   return (
     <QueryClientProvider client={queryClient}>
