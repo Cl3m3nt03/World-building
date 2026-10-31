@@ -30,16 +30,18 @@ const CASTLE = asset("c", "Château.png");
 
 let assets: Asset[];
 let saved: string[];
+let stored: string;
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mockConvertFileSrc("windows");
   assets = [IMAGE, FOREST, CASTLE];
+  stored = "[]";
   saved = [];
   mockIPC((command, payload) => {
     const args = payload as Record<string, unknown>;
     if (command === "list_assets") return assets;
-    if (command === "get_card_content") return "[]";
+    if (command === "get_card_content") return stored;
     if (command === "set_card_content") {
       saved.push(args.content as string);
       return null;
@@ -147,6 +149,9 @@ test("an image deleted from the media library is said to be gone", async () => {
 });
 
 test('"Add a block" › Image inserts an image block and opens the picker', async () => {
+  stored = JSON.stringify([
+    { id: "a", type: "text", doc: { type: "doc", content: [{ type: "paragraph" }] } },
+  ]);
   render(wrap(<BlockEditor cardId="aragorn" />));
   const add = await screen.findByRole("button", { name: "Ajouter un bloc" });
 
@@ -161,6 +166,7 @@ test('"Add a block" › Image inserts an image block and opens the picker', asyn
   expect(await screen.findByRole("dialog", { name: "Choisir une image" })).toBeTruthy();
   await waitFor(() => expect(saved.length).toBeGreaterThan(0));
   expect(parseContent(saved.at(-1) as string)).toEqual([
+    expect.objectContaining({ type: "text" }),
     expect.objectContaining({ type: "image", images: [] }),
   ]);
 });

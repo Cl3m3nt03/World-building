@@ -112,7 +112,9 @@ function TextValue({ cardId, property, inputId }: FieldProps) {
         id={inputId}
         aria-label={definition.label}
         value={text}
+        placeholder={t("properties.emptyValue")}
         inputMode={definition.kind === "number" ? "decimal" : undefined}
+        className="h-7 px-1.5 border-transparent bg-transparent shadow-none hover:border-border hover:bg-(--bz-field) focus-visible:bg-(--bz-field)"
         aria-invalid={invalid}
         onChange={(event) => {
           const value = event.target.value;
@@ -202,6 +204,7 @@ function LinkValue({ cardId, property }: FieldProps) {
               <Button
                 variant="ghost"
                 size="sm"
+                className="text-muted-foreground"
                 aria-label={t("properties.pickFor", { name: definition.label })}
               >
                 <Plus />
@@ -237,7 +240,7 @@ function PropertyRow({
   const select = definition.kind === "select";
 
   return (
-    <div className="grid grid-cols-[8.5rem_1fr] items-center gap-2">
+    <div className="group/property grid min-h-7 grid-cols-[8.5rem_1fr] items-center gap-x-2">
       {definition.owner.on === "card" ? (
         <div className="flex min-w-0 items-center gap-0.5">
           {handle}
@@ -287,8 +290,8 @@ export function CardProperties({ cardId }: { cardId: string }) {
   const own = shown.filter((property) => property.definition.owner.on === "card");
 
   return (
-    <section aria-label={t("properties.title")} className="flex flex-col gap-2">
-      <h2 className="rubric">{t("properties.title")}</h2>
+    <section aria-label={t("properties.title")} className="flex flex-col">
+      <h2 className="rubric pb-1.5">{t("properties.title")}</h2>
       {properties.error && <AppErrorMessage error={properties.error} />}
       {shown
         .filter((property) => property.definition.owner.on !== "card")
@@ -307,7 +310,7 @@ export function CardProperties({ cardId }: { cardId: string }) {
           nameOf={(property) => property.definition.label}
           onReorder={order.reorder}
           label={t("properties.ownList")}
-          className="flex flex-col gap-2"
+          className="flex flex-col"
         >
           {(property, handle) => (
             <PropertyRow

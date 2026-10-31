@@ -18,6 +18,7 @@ import { DateField, type DateValue } from "@/features/timelines/components/DateF
 import { useCalendar } from "@/features/timelines/useCalendar";
 import type { CardProperty } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
+import { cn } from "@/lib/utils";
 
 type FieldProps = { cardId: string; property: CardProperty; inputId: string };
 
@@ -68,6 +69,13 @@ export function ChoiceValue({ cardId, property }: FieldProps) {
                 variant="ghost"
                 size="sm"
                 aria-label={t("properties.chooseFor", { name: definition.label })}
+                // A chosen value reads alone at rest: the row's hover or focus
+                // brings its menu back.
+                className={cn(
+                  "text-muted-foreground aria-expanded:opacity-100",
+                  chosen.length > 0 &&
+                    "opacity-0 group-focus-within/property:opacity-100 group-hover/property:opacity-100 focus-visible:opacity-100",
+                )}
               >
                 {definition.multiple || chosen.length === 0
                   ? t("properties.chooseOption")
@@ -162,9 +170,9 @@ export function DateValueField({ cardId, property, inputId }: FieldProps) {
         <PopoverTrigger asChild>
           <Button
             id={inputId}
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="justify-start font-normal"
+            className="h-7 justify-start border-transparent px-1.5 font-normal hover:border-border hover:bg-(--bz-field) aria-expanded:border-border aria-expanded:bg-(--bz-field)"
             aria-label={t("properties.dateOf", {
               name: definition.label,
               value: written ?? t("properties.noDate"),

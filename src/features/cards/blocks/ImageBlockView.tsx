@@ -151,7 +151,7 @@ export function ImageBlockView({ block, label, onChange, pickOnMount }: ImageBlo
             assetId={shown.assetId}
             alt={shown.caption}
             onError={() => setFailed((current) => [...current, shown.assetId])}
-            className="max-h-[28rem] max-w-full rounded-lg object-contain"
+            className="max-h-[min(60vh,420px)] max-w-full rounded-lg object-cover"
           />
           {count > 1 && (
             <>

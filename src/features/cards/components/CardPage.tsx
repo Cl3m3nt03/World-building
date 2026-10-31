@@ -94,7 +94,7 @@ function TitleField({ card }: { card: Card }) {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col items-start gap-1">
       <label htmlFor={id} className="sr-only">
         {t("cards.title")}
       </label>
@@ -120,7 +120,7 @@ function TitleField({ card }: { card: Card }) {
         onKeyDown={(event) => {
           if (event.key === "Enter") void save(title);
         }}
-        className="h-auto border-transparent bg-transparent px-1 py-1 font-heading text-3xl font-bold shadow-none hover:border-border focus-visible:border-ring md:text-3xl dark:bg-transparent"
+        className="h-auto w-auto max-w-full min-w-24 border-transparent bg-transparent px-1 py-1 font-heading text-3xl font-bold shadow-none [field-sizing:content] hover:border-border focus-visible:border-ring md:text-3xl dark:bg-transparent"
       />
       {title.trim() === "" && (
         <p className="px-1 text-xs text-destructive">{t("cards.titleRequired")}</p>
@@ -276,18 +276,21 @@ export function CardPage() {
   return (
     <article
       aria-label={card.data.title}
-      className="glass mx-auto flex h-full max-w-4xl flex-col gap-6 overflow-y-auto rounded-lg p-6"
+      className="glass @container/card mx-auto flex h-full max-w-4xl flex-col gap-6 overflow-y-auto rounded-lg p-6"
     >
       <header className="flex gap-6">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex flex-wrap items-start gap-2">
-            <div className="min-w-0 flex-1 basis-64">
+          {/* Type, eye and menu go under the title below 700 px of article content,
+              on every card: wrapping on the length of the title made the page jump
+              from one card to the next. */}
+          <div className="flex flex-col gap-2 @min-[700px]/card:flex-row @min-[700px]/card:items-start">
+            <div className="min-w-0 flex-1">
               {/* One field per card: a field kept from the previous card would
                   show its title for a moment, and the update to the new one
                   would drop the selection of a new card's title. */}
               <TitleField key={card.data.id} card={card.data} />
             </div>
-            <div className="flex items-center gap-1 pt-1.5">
+            <div className="flex items-center gap-1 @min-[700px]/card:pt-1.5">
               <CardTypeChip card={card.data} types={all} />
               <Tooltip>
                 <TooltipTrigger asChild>

@@ -133,6 +133,13 @@ test("skills are listed alphabetically in the app language", () => {
 });
 
 test("the block menu offers the 5e sheet and the map (available since M4)", async () => {
+  mockIPC((command) =>
+    command === "get_card_content"
+      ? JSON.stringify([
+          { id: "a", type: "text", doc: { type: "doc", content: [{ type: "paragraph" }] } },
+        ])
+      : null,
+  );
   render(
     <QueryClientProvider client={createQueryClient()}>
       <TooltipProvider>
