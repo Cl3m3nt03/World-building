@@ -8,6 +8,7 @@ Le travail passe par une équipe d'agents, chacun avec une compétence et une mi
 |---|---|---|
 | `architecte` | Transforme un besoin en spec, issue et critères vérifiables | Non (docs seulement) |
 | `dev` | Livre une issue : code, tests, docs, PR | Oui |
+| `animateur` | Rend chaque transition fluide, légère et désirable | Oui |
 | `testeur` | Casse la feature dans l'app réelle, chiffres à l'appui | Non |
 | `critique-design` | Juge le visuel et l'expérience au niveau d'une app de 2026 | Non |
 | `relecteur` | Relit le diff : bugs, données, conformité aux règles | Non |
