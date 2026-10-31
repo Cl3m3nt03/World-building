@@ -232,6 +232,77 @@ async fn renaming_reordering_and_deleting() {
 }
 
 #[tokio::test]
+async fn a_card_orders_its_own_properties_and_never_those_of_its_type() {
+    let fx = Fixture::new().await;
+    let place = fx.new_type("Lieu", None).await;
+    let city = fx.new_type("Ville", Some(&place)).await;
+    let add = |owner: PropertyOwner, label: &'static str| {
+        let pool = fx.pool().clone();
+        async move {
+            create(&pool, owner, label, PropertyKind::Text)
+                .await
+                .unwrap()
+        }
+    };
+    let area = add(on_type(&place), "Superficie").await;
+    let climate = add(on_type(&place), "Climat").await;
+    let mayor = add(on_type(&city), "Maire").await;
+    let walls = add(on_type(&city), "Remparts").await;
+    tick().await;
+    let bree = fx.card(&city, "Bree").await;
+    let on_bree = || PropertyOwner::Card {
+        card_id: bree.clone(),
+    };
+    let inn = add(on_bree(), "Auberge").await;
+    let gate = add(on_bree(), "Porte").await;
+
+    reorder(fx.pool(), &[gate.id.clone(), inn.id.clone()])
+        .await
+        .unwrap();
+    assert_eq!(
+        labels(&of_card(fx.pool(), &bree).await.unwrap()),
+        [
+            "Superficie",
+            "Climat",
+            "Maire",
+            "Remparts",
+            "Porte",
+            "Auberge"
+        ],
+        "the card's own order changed, not its type's"
+    );
+
+    // A subtype orders its own properties; the parent's still come first.
+    reorder(fx.pool(), &[walls.id.clone(), mayor.id.clone()])
+        .await
+        .unwrap();
+    let shown = [
+        "Superficie",
+        "Climat",
+        "Remparts",
+        "Maire",
+        "Porte",
+        "Auberge",
+    ];
+    assert_eq!(labels(&of_card(fx.pool(), &bree).await.unwrap()), shown);
+
+    // What a card shows cannot be sent as one list: nothing moves.
+    for mixed in [
+        vec![gate.id.clone(), inn.id.clone(), mayor.id.clone()],
+        vec![climate.id.clone(), area.id.clone(), gate.id.clone()],
+        vec![
+            mayor.id.clone(),
+            walls.id.clone(),
+            gate.id.clone(),
+            inn.id.clone(),
+        ],
+    ] {
+        assert!(reorder(fx.pool(), &mixed).await.is_err());
+    }
+    assert_eq!(labels(&of_card(fx.pool(), &bree).await.unwrap()), shown);
+}
+
+#[tokio::test]
 async fn backlinks_list_each_citing_card_once_with_its_properties() {
     let fx = Fixture::new().await;
     let character = fx.new_type("Personnage", None).await;

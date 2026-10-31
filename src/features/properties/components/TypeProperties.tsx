@@ -4,9 +4,14 @@ import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
 import { typeColor, typeIcon } from "@/features/card-types";
 import type { CardType, PropertyDefinition } from "@/lib/bindings";
-import { useApplyPropertyToExisting, useTypeProperties } from "../hooks/useProperties";
+import {
+  useApplyPropertyToExisting,
+  useReorderTypeProperties,
+  useTypeProperties,
+} from "../hooks/useProperties";
 import { AddPropertyPopover } from "./AddPropertyPopover";
 import { kindIcon, PropertyEditor } from "./PropertyEditor";
+import { SortablePropertyList } from "./SortablePropertyList";
 
 /** What a property holds, in a few words: its kind, and for a link the types it accepts. */
 function KindSummary({ property, types }: { property: PropertyDefinition; types: CardType[] }) {
@@ -37,12 +42,14 @@ function KindSummary({ property, types }: { property: PropertyDefinition; types:
  * "Default properties" of a card type (types screen). A property added here
  * (« + Add a property », the same small window as on a card) shows on the
  * new cards of the type; the banner offers to apply it to the existing ones
- * too.
+ * too. Their order, set here with the handles, is the one of every card of
+ * the type: nothing to apply.
  */
 export function TypeProperties({ typeId, types }: { typeId: string; types: CardType[] }) {
   const { t } = useTranslation();
   const properties = useTypeProperties(typeId);
   const apply = useApplyPropertyToExisting();
+  const order = useReorderTypeProperties(typeId);
   // Properties added while this type is open and not yet applied to its cards.
   const [pending, setPending] = useState<string[]>([]);
   // A select just added: its window opens to list its choices.
@@ -73,31 +80,42 @@ export function TypeProperties({ typeId, types }: { typeId: string; types: CardT
         <p className="text-sm text-muted-foreground">{t("properties.none")}</p>
       )}
       {properties.data && properties.data.length > 0 && (
-        <ul className="flex flex-col">
-          {properties.data.map((property) => {
+        <SortablePropertyList
+          items={properties.data}
+          idOf={(property) => property.id}
+          nameOf={(property) => property.label}
+          onReorder={order.reorder}
+          className="flex flex-col"
+          rowClassName="flex items-center gap-0.5 border-b border-border last:border-b-0"
+        >
+          {(property, handle) => {
             const Icon = kindIcon(property.kind);
             return (
-              <li key={property.id} className="border-b border-border last:border-b-0">
-                <PropertyEditor
-                  property={property}
-                  types={types}
-                  defaultOpen={property.id === justAdded}
-                >
-                  <button
-                    type="button"
-                    aria-label={t("properties.edit", { name: property.label })}
-                    className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm outline-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+              <>
+                {handle}
+                <div className="min-w-0 flex-1">
+                  <PropertyEditor
+                    property={property}
+                    types={types}
+                    defaultOpen={property.id === justAdded}
                   >
-                    <Icon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0 flex-1 truncate">{property.label}</span>
-                    <KindSummary property={property} types={types} />
-                  </button>
-                </PropertyEditor>
-              </li>
+                    <button
+                      type="button"
+                      aria-label={t("properties.edit", { name: property.label })}
+                      className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm outline-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <Icon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate">{property.label}</span>
+                      <KindSummary property={property} types={types} />
+                    </button>
+                  </PropertyEditor>
+                </div>
+              </>
             );
-          })}
-        </ul>
+          }}
+        </SortablePropertyList>
       )}
+      {order.error && <AppErrorMessage error={order.error} />}
       {apply.error && <AppErrorMessage error={apply.error} />}
       <AddPropertyPopover
         owner={{ on: "type", typeId }}
