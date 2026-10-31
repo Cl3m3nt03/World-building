@@ -117,7 +117,7 @@ export function CompareView({
           {t("quill.compare.same")}
         </p>
       )}
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <table className="w-full table-fixed border-separate border-spacing-x-4 border-spacing-y-2 text-sm leading-relaxed">
           <caption className="sr-only">{t("quill.compare.title", { name: chapter.title })}</caption>
           <thead className="sr-only">

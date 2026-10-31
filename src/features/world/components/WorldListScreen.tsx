@@ -173,7 +173,7 @@ export function WorldListScreen() {
       <main className="atlas-settle mx-auto flex w-full max-w-5xl flex-col gap-6 px-8 pt-14 pb-10">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <p className="rubric">{t("worlds.kicker")}</p>
+            <p className="rubric on-backdrop">{t("worlds.kicker")}</p>
             <h1 className="text-5xl font-bold">{t("worlds.title")}</h1>
           </div>
           {!firstLaunch && <div className="flex items-center gap-2">{actions}</div>}
@@ -186,7 +186,7 @@ export function WorldListScreen() {
           <section className="glass-panel mx-auto mt-8 flex max-w-lg flex-col items-center gap-4 rounded-xl px-8 py-10 text-center">
             <Compass aria-hidden className="size-12 text-primary" strokeWidth={1.25} />
             <h2 className="text-2xl font-bold">{t("worlds.welcomeTitle")}</h2>
-            <p className="text-muted-foreground">{t("worlds.empty")}</p>
+            <p className="on-backdrop text-muted-foreground">{t("worlds.empty")}</p>
             <div className="flex flex-wrap justify-center gap-2">{actions}</div>
           </section>
         ) : (
@@ -195,7 +195,7 @@ export function WorldListScreen() {
             {(shown.length > 0 || searchable) && (
               <section aria-labelledby={recentHeadingId} className="flex shrink-0 flex-col gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 id={recentHeadingId} className="rubric">
+                  <h2 id={recentHeadingId} className="rubric on-backdrop">
                     {featured ? t("worlds.others") : t("worlds.recent")}
                   </h2>
                   {searchable && (
@@ -230,7 +230,9 @@ export function WorldListScreen() {
                   )}
                 </div>
                 {shown.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t("worlds.noMatch", { query })}</p>
+                  <p className="on-backdrop text-sm text-muted-foreground">
+                    {t("worlds.noMatch", { query })}
+                  </p>
                 ) : (
                   <ul
                     onKeyDown={moveInGrid}
@@ -254,7 +256,7 @@ export function WorldListScreen() {
               <DialogTitle>{t("worlds.removeTitle", { name: removing?.name ?? "" })}</DialogTitle>
               <DialogDescription>{t("worlds.removeDescription")}</DialogDescription>
             </DialogHeader>
-            <p className="font-mono text-xs break-all text-muted-foreground">{removing?.path}</p>
+            <p className="text-xs break-all text-muted-foreground">{removing?.path}</p>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setRemoving(null)}>
                 {t("createWorld.cancel")}

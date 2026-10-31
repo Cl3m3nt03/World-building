@@ -92,14 +92,14 @@ export function TypePicker({
           }}
           onKeyDown={onKeyDown}
           placeholder={t("typePicker.search")}
-          className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-2 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-8 w-full rounded-md border border-input bg-(--bz-field) pr-2 pl-8 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
         />
       </div>
       <div
         id={listId}
         role="listbox"
         aria-labelledby={titleId}
-        className="scrollbar-thin flex max-h-72 flex-col overflow-y-auto p-1.5"
+        className="flex max-h-72 flex-col overflow-y-auto p-1.5"
       >
         {shown.map((type, i) => {
           const Icon = typeIcon(type.icon);

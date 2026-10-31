@@ -13,9 +13,11 @@ import { type CSSProperties, type FormEvent, useEffect, useId, useState } from "
 import { useTranslation } from "react-i18next";
 import { Atlas } from "@/app/shell/Atlas";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -126,13 +128,13 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogContent className="sm:max-w-3xl">
-        <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+        <form onSubmit={submit} noValidate className="flex min-h-0 flex-col gap-5">
           <DialogHeader>
             <DialogTitle className="text-2xl">{t("createWorld.title")}</DialogTitle>
             <DialogDescription>{t("createWorld.description")}</DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6 md:grid-cols-[1fr_16rem]">
+          <DialogBody className="grid gap-6 md:grid-cols-[1fr_16rem]">
             <div className="flex min-w-0 flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor={nameId} className="text-sm font-medium">
@@ -184,21 +186,28 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
                 <p className="text-xs text-muted-foreground">{t("createWorld.genreHint")}</p>
               </div>
 
-              <TonePicker value={tones} onChange={setTones} />
+              <TonePicker value={tones} onChange={setTones} collapsed />
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor={locationId} className="text-sm font-medium">
                   {t("createWorld.location")}
                 </label>
                 <div className="flex gap-2">
-                  <Input
-                    id={locationId}
-                    value={parentDir ?? ""}
-                    readOnly
-                    className="font-mono text-xs"
-                    aria-invalid={folderTaken}
-                    aria-describedby={folderTaken ? locationErrorId : undefined}
-                  />
+                  <div className="relative min-w-0 flex-1">
+                    {/* The field keeps the value; the path shows cut in its middle. */}
+                    <Input
+                      id={locationId}
+                      value={parentDir ?? ""}
+                      readOnly
+                      className="text-transparent selection:text-transparent"
+                      aria-invalid={folderTaken}
+                      aria-describedby={folderTaken ? locationErrorId : undefined}
+                    />
+                    <MiddleTruncate
+                      text={parentDir ?? ""}
+                      className="pointer-events-none absolute inset-x-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
+                    />
+                  </div>
                   <Button type="button" variant="outline" onClick={chooseLocation}>
                     <FolderOpen />
                     {t("createWorld.chooseLocation")}
@@ -240,7 +249,7 @@ export function CreateWorldDialog({ open, onOpenChange }: CreateWorldDialogProps
                 </span>
               </figcaption>
             </figure>
-          </div>
+          </DialogBody>
 
           {createWorld.isError && !folderTaken && <AppErrorMessage error={createWorld.error} />}
 

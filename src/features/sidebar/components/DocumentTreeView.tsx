@@ -762,7 +762,7 @@ export function DocumentTreeView({
             role="tree"
             aria-label={t("sidebar.tree")}
             data-tree-viewport=""
-            className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-2"
+            className="min-h-0 flex-1 overflow-y-auto p-2"
             onContextMenuCapture={(event) => {
               const row = (event.target as HTMLElement).closest<HTMLElement>("[data-key]");
               setMenuKey(row?.dataset.key ?? null);

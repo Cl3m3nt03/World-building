@@ -111,7 +111,7 @@ export function PinnedSection({ tree, currentId }: Props) {
         <SortableContext items={pins.map((pin) => pin.id)} strategy={rectSortingStrategy}>
           <ul
             aria-labelledby="pinned-title"
-            className="scrollbar-thin grid max-h-60 grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-1.5 overflow-y-auto"
+            className="grid max-h-60 grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-1.5 overflow-y-auto"
           >
             {pins.map((pin) => (
               <PinTile

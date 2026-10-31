@@ -242,28 +242,31 @@ h1[tabindex="-1"]:focus {
   background-size: 18px 18px;
 }
 
-/* Native scrolling (e.g. a virtualized list) with a thin bar like the Radix
-   ScrollArea's, instead of the Windows bar and its arrows. WebView2 keeps the
-   arrows with `scrollbar-width: thin`, so the bar is drawn here instead. */
-@utility scrollbar-thin {
-  &::-webkit-scrollbar {
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  /* Every native scrolling area gets a thin bar like the Radix ScrollArea's,
+     instead of the Windows bar and its arrows. WebView2 keeps the arrows with
+     `scrollbar-width: thin`, so the bar is drawn here instead. */
+  *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
-  &::-webkit-scrollbar-track {
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
     background: transparent;
   }
-  &::-webkit-scrollbar-thumb {
+  *::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 9999px;
     background: var(--bz-border-strong);
     background-clip: content-box;
   }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--bz-text-muted);
+    background-clip: content-box;
   }
 
   html {
@@ -292,6 +295,12 @@ h1[tabindex="-1"]:focus {
     line-height: 1.2;
     letter-spacing: -0.005em;
   }
+}
+
+/* Text set straight on the backdrop, outside any glass: its muted ink stays
+   readable whatever the world's image (ADR 0003, AA). */
+@utility on-backdrop {
+  --muted-foreground: var(--bz-on-backdrop);
 }
 
 /*

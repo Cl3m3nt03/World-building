@@ -263,7 +263,7 @@ function AddPage({ pages, onAdd }: { pages: WikiPage[]; onAdd: (id: string) => v
             {t("wiki.grid.addNone")}
           </p>
         ) : (
-          <ul className="scrollbar-thin flex max-h-64 flex-col overflow-y-auto">
+          <ul className="flex max-h-64 flex-col overflow-y-auto">
             {shown.map((page) => (
               <li key={page.id}>
                 <button

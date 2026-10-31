@@ -41,7 +41,7 @@ export function CardPanel({
           </Link>
         </Button>
       </div>
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
         <CardImage card={card.data} type={type} className="w-32" />
         <CardProperties key={`${card.data.id}-${card.data.typeId}`} cardId={card.data.id} />
         <CardContent card={card.data} open={onOpen} />

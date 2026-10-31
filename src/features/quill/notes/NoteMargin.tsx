@@ -125,7 +125,7 @@ function NoteEditor({
         placeholder={t("quill.notes.placeholder")}
         onChange={(event) => setBody(event.target.value)}
         onBlur={save}
-        className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
       />
       {(update.error ?? remove.error) && <AppErrorMessage error={update.error ?? remove.error} />}
       <div className="flex justify-between">

@@ -138,7 +138,7 @@ export function HomeBoard() {
           {t("quill.panel.homeEmpty")}
         </p>
       ) : (
-        <div className="scrollbar-thin relative min-h-0 flex-1 overflow-auto">
+        <div className="relative min-h-0 flex-1 overflow-auto">
           <ul
             aria-label={t("quill.panel.blocks")}
             className="relative"
@@ -240,7 +240,7 @@ function Block({
           <X />
         </Button>
       </div>
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-auto p-2">
+      <div className="min-h-0 flex-1 overflow-auto p-2">
         <BlockBody block={block} onChange={onChange} />
       </div>
       <span

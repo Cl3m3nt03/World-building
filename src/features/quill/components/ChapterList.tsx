@@ -154,7 +154,7 @@ export function ChapterList({ outline, currentId, openDraftId, onOpenNote }: Pro
         >
           <ul
             aria-labelledby="chapters-title"
-            className="scrollbar-thin flex min-h-0 flex-col gap-0.5 overflow-y-auto"
+            className="flex min-h-0 flex-col gap-0.5 overflow-y-auto"
           >
             {chapters.map((chapter) => (
               <ChapterRow

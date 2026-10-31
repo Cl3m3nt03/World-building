@@ -87,7 +87,7 @@ export function AddPropertyPopover({
               void add("text");
             }
           }}
-          className="h-8 rounded-md border border-input bg-(--bz-field) px-2.5 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-8 rounded-md border border-input bg-(--bz-field) px-2.5 text-sm shadow-(--bz-field-inset) outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30"
         />
         <Family title={t("properties.families.value")}>
           <button type="button" className={ENTRY} disabled={busy} onClick={() => void add("text")}>
