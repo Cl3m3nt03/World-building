@@ -43,7 +43,7 @@ export function ChoiceValue({ cardId, property }: FieldProps) {
     });
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="@container/value flex min-w-0 flex-col gap-1">
       <ul aria-label={definition.label} className="flex flex-wrap items-center gap-1.5">
         {chosen.map((option) => (
           <li
@@ -62,24 +62,33 @@ export function ChoiceValue({ cardId, property }: FieldProps) {
             </Button>
           </li>
         ))}
-        <li>
+        {/* A chosen value reads alone at rest: the menu takes no room until
+            the row is hovered or focused, or its menu is open, so it never
+            leaves an empty second line under a chip (#535). */}
+        <li
+          className={cn(
+            chosen.length > 0 &&
+              "max-w-0 overflow-hidden group-focus-within/property:max-w-none group-focus-within/property:overflow-visible group-hover/property:max-w-none group-hover/property:overflow-visible has-aria-expanded:max-w-none has-aria-expanded:overflow-visible",
+          )}
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 aria-label={t("properties.chooseFor", { name: definition.label })}
-                // A chosen value reads alone at rest: the row's hover or focus
-                // brings its menu back.
                 className={cn(
                   "text-muted-foreground aria-expanded:opacity-100",
                   chosen.length > 0 &&
                     "opacity-0 group-focus-within/property:opacity-100 group-hover/property:opacity-100 focus-visible:opacity-100",
                 )}
               >
-                {definition.multiple || chosen.length === 0
-                  ? t("properties.chooseOption")
-                  : t("properties.changeOption")}
+                {/* In a narrow value column the chevron alone stays beside the chip. */}
+                <span className={cn(chosen.length > 0 && "@max-[14rem]/value:sr-only")}>
+                  {definition.multiple || chosen.length === 0
+                    ? t("properties.chooseOption")
+                    : t("properties.changeOption")}
+                </span>
                 <ChevronDown />
               </Button>
             </DropdownMenuTrigger>

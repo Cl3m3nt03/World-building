@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CardProperties } from "@/features/cards/components/CardProperties";
@@ -497,6 +497,23 @@ test("a card picks one choice, shown as a chip that can be removed", async () =>
   await waitFor(() =>
     expect(callsOf("set_property_value")[1]?.payload).toMatchObject({ value: null }),
   );
+});
+
+// #535: jsdom has no layout, so the contract is read from the classes. At
+// rest the hidden « Changer » takes no room (no second, empty line under a
+// chip), and in a narrow value column it shrinks to its chevron.
+test("a chosen value's hidden menu reserves no room in the row", async () => {
+  cardProps = [{ definition: selectProperty(), value: { kind: "select", value: ["alive"] } }];
+  renderWith(<CardProperties cardId="aragorn" />);
+
+  const trigger = await screen.findByRole("button", { name: "Choisir pour Statut" });
+  const item = trigger.closest("li");
+  expect(item?.className).toContain("max-w-0");
+  expect(item?.className).toContain("group-hover/property:max-w-none");
+  expect(item?.className).toContain("group-focus-within/property:max-w-none");
+  expect(item?.className).toContain("has-aria-expanded:max-w-none");
+  expect(trigger.closest("ul")?.parentElement?.className).toContain("@container/value");
+  expect(within(trigger).getByText("Changer").className).toContain("@max-[14rem]/value:sr-only");
 });
 
 test("a card ticks several choices when the property allows it", async () => {
