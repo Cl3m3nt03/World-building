@@ -287,6 +287,36 @@ test("shows the root closed, with levels and positions", async () => {
   expect(item("Arya").tabIndex).toBe(-1);
 });
 
+test("a document loads once the pointer rests on its row, not while it passes (#545)", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  const loads = () => calls.filter((call) => call.command === "get_card").length;
+  const pause = (ms: number) => act(() => new Promise((resolve) => setTimeout(resolve, ms)));
+  const tree = screen.getByRole("tree", { name: "Documents du monde" });
+
+  // Passing over the row and leaving the tree loads nothing.
+  fireEvent.pointerOver(item("Arya"));
+  await pause(20);
+  fireEvent.pointerOver(item("Places"));
+  fireEvent.pointerLeave(tree);
+  await pause(150);
+  expect(loads()).toBe(0);
+
+  // Resting on it does.
+  fireEvent.pointerOver(item("Arya"));
+  await pause(20);
+  expect(loads()).toBe(0);
+  await waitFor(() => expect(loads()).toBe(1));
+});
+
+test("pressing a row or focusing it loads its document at once (#545)", async () => {
+  await renderAt("/world/demo/world");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  fireEvent.focus(item("Arya"));
+  await act(async () => {});
+  expect(calls.some((call) => call.command === "get_card")).toBe(true);
+});
+
 test("the keyboard moves, opens and closes, and opens a document", async () => {
   const router = await renderAt("/world/demo/world");
   await waitFor(() => expect(item("Places")).toBeTruthy());

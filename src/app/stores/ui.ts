@@ -29,6 +29,9 @@ type UiState = {
   /** The world rail (V2-2+.1), shown or folded; saved in the app settings. */
   worldRail: boolean;
   setWorldRail: (shown: boolean) => void;
+  /** The folded rail still sliding out (motion plan, batch D); never saved. */
+  worldRailLeaving: boolean;
+  setWorldRailLeaving: (leaving: boolean) => void;
   /** The « New world » dialog, opened from the world list or the rail. */
   createWorldOpen: boolean;
   setCreateWorldOpen: (open: boolean) => void;
@@ -70,6 +73,8 @@ export const useUiStore = create<UiState>()((set) => ({
   setRadioMode: (radioMode) => set({ radioMode }),
   worldRail: false,
   setWorldRail: (worldRail) => set({ worldRail }),
+  worldRailLeaving: false,
+  setWorldRailLeaving: (worldRailLeaving) => set({ worldRailLeaving }),
   createWorldOpen: false,
   setCreateWorldOpen: (createWorldOpen) => set({ createWorldOpen }),
   worldSettings: null,

@@ -23,6 +23,24 @@ import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import { useCreateTimeline } from "@/features/timelines";
 import { useCreateTree } from "@/features/trees";
 import { usePageTransition } from "./navigation";
+import { slideLayout } from "./useSlideCollapse";
+
+/**
+ * Keeps the leaving sidebar where it is while its panel is already closed:
+ * its own width, its panel no longer cutting it (the group still does).
+ */
+function pinSidebar(aside: HTMLElement, from: DOMRect) {
+  const inner = aside.closest("[data-panel]")?.firstElementChild;
+  const box = inner instanceof HTMLElement ? inner : null;
+  const width = aside.style.width;
+  const overflow = box?.style.overflow ?? "";
+  aside.style.width = `${from.width}px`;
+  if (box) box.style.overflow = "visible";
+  return () => {
+    aside.style.width = width;
+    if (box) box.style.overflow = overflow;
+  };
+}
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
 
@@ -152,6 +170,9 @@ export function WorldWorkspace() {
   const opening = useRef<{ worldId: string | undefined; size: number } | null>(null);
   const state = sidebar.state;
   const collapsed = state?.collapsed ?? false;
+  // The sidebar slides in or out (motion plan, batch D): it stays mounted
+  // until its slide is over.
+  const [sliding, setSliding] = useState<"in" | "out" | null>(null);
   useEffect(() => {
     if (!moveFocus.current) return;
     moveFocus.current = false;
@@ -165,6 +186,34 @@ export function WorldWorkspace() {
   const openingSize =
     previous && previous.worldId === worldId ? previous.size : collapsed ? 0 : width;
   opening.current = { worldId, size: openingSize };
+
+  // Collapsing or expanding by a button: the new width is set at once, so the
+  // page is laid out once, and the panels slide to it.
+  const slideSidebar = (open: boolean) => {
+    moveFocus.current = true;
+    const change = () => {
+      setSliding(open ? "in" : "out");
+      if (open) panel.current?.expand();
+      else panel.current?.collapse();
+    };
+    const main = page.current;
+    if (!main) {
+      change();
+      setSliding(null);
+      return;
+    }
+    const aside = () => group.current?.querySelector<HTMLElement>("aside") ?? null;
+    const current = aside();
+    slideLayout({
+      root: main,
+      change,
+      leaving: !open && current ? { element: current, pin: pinSidebar } : undefined,
+      entering: open ? aside : undefined,
+      distance: -(current?.getBoundingClientRect().width || width),
+      unclip: "[data-panel] > *",
+      done: () => setSliding(null),
+    });
+  };
 
   return (
     <ResizablePanelGroup
@@ -192,13 +241,8 @@ export function WorldWorkspace() {
           }
         }}
       >
-        {!collapsed && (
-          <WorldSidebar
-            onCollapse={() => {
-              moveFocus.current = true;
-              panel.current?.collapse();
-            }}
-          />
+        {(!collapsed || sliding !== null) && (
+          <WorldSidebar onCollapse={() => slideSidebar(false)} />
         )}
       </ResizablePanel>
       <ResizableHandle
@@ -214,11 +258,8 @@ export function WorldWorkspace() {
               size="icon-sm"
               aria-label={t("sidebar.expand")}
               title={t("sidebar.expand")}
-              onClick={() => {
-                moveFocus.current = true;
-                panel.current?.expand();
-              }}
-              className="glass absolute top-2 left-2 z-10"
+              onClick={() => slideSidebar(true)}
+              className="glass absolute top-2 left-2 z-10 animate-in fade-in-0 duration-(--bz-duration-base) ease-(--bz-ease-out)"
             >
               <PanelLeftOpen />
             </Button>

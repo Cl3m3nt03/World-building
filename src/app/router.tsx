@@ -112,7 +112,7 @@ function Root() {
       <Backdrop />
       <div className="relative flex h-screen w-screen">
         <WorldRail />
-        <div className="relative min-w-0 flex-1">
+        <div data-slide-root className="relative min-w-0 flex-1">
           <Outlet />
         </div>
       </div>
