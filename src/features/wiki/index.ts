@@ -9,5 +9,7 @@ export {
   useWikiPages,
   useWikiSettings,
   wikiKeys,
+  wikiPagesQuery,
+  wikiSettingsQuery,
 } from "./hooks/useWiki";
 export { FONT_NAMES, WIKI_FONTS, type WikiFontKey } from "./theme";

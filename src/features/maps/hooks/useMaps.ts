@@ -9,11 +9,14 @@ export const mapKeys = {
   detail: (id: string) => [...mapKeys.all(), "detail", id] as const,
 };
 
+/** A map, by id (shared with the route's loader). */
+export const mapQuery = (id: string) => ({
+  queryKey: mapKeys.detail(id),
+  queryFn: () => unwrap(commands.getMap(id)),
+});
+
 export function useMap(id: string) {
-  return useQuery({
-    queryKey: mapKeys.detail(id),
-    queryFn: () => unwrap(commands.getMap(id)),
-  });
+  return useQuery(mapQuery(id));
 }
 
 /** Creates a map on an image of the media library (one layer, named by the front). */

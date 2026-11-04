@@ -4,8 +4,8 @@ export { useWorldInText, WorldInTextOverlay } from "./blocks/mentions/useWorldIn
 export type { Block } from "./blocks/model";
 export { parseContent } from "./blocks/model";
 export * as statsRules from "./blocks/stats/rules";
-export { useStartFromTemplate } from "./blocks/useCardContent";
-export { Backlinks } from "./components/Backlinks";
+export { cardContentQuery, useStartFromTemplate } from "./blocks/useCardContent";
+export { Backlinks, backlinksQuery } from "./components/Backlinks";
 export { CardContent } from "./components/CardContent";
 export { CardImage } from "./components/CardImage";
 export { CardPage } from "./components/CardPage";
@@ -19,6 +19,8 @@ export {
 export { TrashDialog } from "./components/TrashDialog";
 export { cardKeys, documentKeys } from "./hooks/keys";
 export {
+  cardListQuery,
+  cardQuery,
   useCard,
   useCardCounts,
   useCardList,

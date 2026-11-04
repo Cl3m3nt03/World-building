@@ -22,7 +22,7 @@ import { CreateMapDialog } from "@/features/maps";
 import { useSidebarState, WorldSidebar } from "@/features/sidebar";
 import { useCreateTimeline } from "@/features/timelines";
 import { useCreateTree } from "@/features/trees";
-import { usePageFade } from "./navigation";
+import { usePageTransition } from "./navigation";
 
 const TILE_CLASS = "glass size-12 rounded-lg [&_svg:not([class*='size-'])]:size-5";
 
@@ -132,12 +132,14 @@ export function StartWith() {
  */
 export function WorldWorkspace() {
   const { t } = useTranslation();
-  // Another document: the workspace fades in.
+  // Another document: its content enters, the glass panel stays.
   const { worldId, cardId, mapId, graphId, treeId, canvasId, timelineId } = useParams({
     strict: false,
   });
   const page = useRef<HTMLElement>(null);
-  usePageFade(page, cardId ?? mapId ?? graphId ?? treeId ?? canvasId ?? timelineId ?? null);
+  usePageTransition(page, cardId ?? mapId ?? graphId ?? treeId ?? canvasId ?? timelineId ?? null, {
+    target: "panel",
+  });
   const sidebar = useSidebarState();
   const panel = useRef<PanelImperativeHandle>(null);
   const expandButton = useRef<HTMLButtonElement>(null);

@@ -12,19 +12,25 @@ export const treeKeys = {
   relationTypes: () => [...treeKeys.all(), "relation-types"] as const,
 };
 
+/** A tree, by id (shared with the route's loader). */
+export const treeQuery = (id: string) => ({
+  queryKey: treeKeys.detail(id),
+  queryFn: () => unwrap(commands.getTree(id)),
+});
+
 export function useTree(id: string) {
-  return useQuery({
-    queryKey: treeKeys.detail(id),
-    queryFn: () => unwrap(commands.getTree(id)),
-  });
+  return useQuery(treeQuery(id));
 }
+
+/** The world's relation types (shared with the tree route's loader). */
+export const relationTypesQuery = () => ({
+  queryKey: treeKeys.relationTypes(),
+  queryFn: () => unwrap(commands.listRelationTypes()),
+});
 
 /** The world's relation types, provided ones first. */
 export function useRelationTypes() {
-  return useQuery({
-    queryKey: treeKeys.relationTypes(),
-    queryFn: () => unwrap(commands.listRelationTypes()),
-  });
+  return useQuery(relationTypesQuery());
 }
 
 /**

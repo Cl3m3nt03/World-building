@@ -11,12 +11,21 @@ export const graphKeys = {
   detail: (id: string) => [...graphKeys.all(), "detail", id] as const,
 };
 
+/** A graph, by id (shared with the route's loader). */
+export const graphQuery = (id: string) => ({
+  queryKey: graphKeys.detail(id),
+  queryFn: () => unwrap(commands.getGraph(id)),
+});
+
 export function useGraph(id: string) {
-  return useQuery({
-    queryKey: graphKeys.detail(id),
-    queryFn: () => unwrap(commands.getGraph(id)),
-  });
+  return useQuery(graphQuery(id));
 }
+
+/** Every card and link a graph draws (shared with the graph route's loader). */
+export const graphDataQuery = () => ({
+  queryKey: [...documentKeys.all(), "graph-data"],
+  queryFn: () => unwrap(commands.graphData()),
+});
 
 /**
  * The cards and their links. Under the documents' key: a card created,
@@ -24,8 +33,7 @@ export function useGraph(id: string) {
  */
 export function useGraphData() {
   return useQuery({
-    queryKey: [...documentKeys.all(), "graph-data"],
-    queryFn: () => unwrap(commands.graphData()),
+    ...graphDataQuery(),
     staleTime: 0,
   });
 }

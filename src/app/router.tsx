@@ -1,4 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
+import type { EnsureQueryDataOptions, QueryClient } from "@tanstack/react-query";
 import {
   createHashHistory,
   createRootRouteWithContext,
@@ -15,13 +15,21 @@ import { StartWith, WorldWorkspace } from "@/app/shell/Workspace";
 import { WorldLayout } from "@/app/shell/WorldLayout";
 import { WorldRail } from "@/app/shell/WorldRail";
 import { useUiStore } from "@/app/stores/ui";
-import { CanvasPage } from "@/features/canvases";
-import { CardPage } from "@/features/cards";
+import { CanvasPage, canvasQuery } from "@/features/canvases";
+import { cardTypesQuery } from "@/features/card-types";
+import {
+  backlinksQuery,
+  CardPage,
+  cardContentQuery,
+  cardListQuery,
+  cardQuery,
+} from "@/features/cards";
 import { DesignSystemPage } from "@/features/design-system";
-import { GraphPage } from "@/features/graphs";
+import { GraphPage, graphDataQuery, graphQuery } from "@/features/graphs";
 import { HomeScreen } from "@/features/home";
-import { MapPage } from "@/features/maps";
+import { MapPage, mapQuery } from "@/features/maps";
 import { MediaLibraryScreen } from "@/features/media";
+import { cardPropertiesQuery } from "@/features/properties";
 import {
   EditStoryPage,
   type Mode,
@@ -29,12 +37,21 @@ import {
   readMode,
   StoriesScreen,
   StoryIndexPage,
+  storiesQuery,
   WritingSpace,
 } from "@/features/quill";
 import { sidebarStateQuery } from "@/features/sidebar";
-import { TimelinePage } from "@/features/timelines";
-import { TreePage } from "@/features/trees";
-import { WikiCardPage, WikiHome, WikiLayout, WikiMapPage, WikiTimelinePage } from "@/features/wiki";
+import { TimelinePage, timelineQuery } from "@/features/timelines";
+import { relationTypesQuery, TreePage, treeQuery } from "@/features/trees";
+import {
+  WikiCardPage,
+  WikiHome,
+  WikiLayout,
+  WikiMapPage,
+  WikiTimelinePage,
+  wikiPagesQuery,
+  wikiSettingsQuery,
+} from "@/features/wiki";
 import { CreateWorldDialog, currentWorldQuery, WorldListScreen } from "@/features/world";
 
 /*
@@ -66,6 +83,21 @@ import { CreateWorldDialog, currentWorldQuery, WorldListScreen } from "@/feature
  */
 
 type RouterContext = { queryClient: QueryClient };
+
+/**
+ * A page is shown once the data it waits for is there (motion plan, batch B):
+ * the router keeps the previous page on screen until these resolve, so a
+ * document never shows an empty glass panel, then its title, then the rest.
+ * Cached data resolves at once. A failure is left to the page, which shows it.
+ * The same loaders preload a document hovered in the sidebar.
+ */
+async function ready(
+  queryClient: QueryClient,
+  // biome-ignore lint/suspicious/noExplicitAny: each query has its own data type.
+  ...queries: EnsureQueryDataOptions<any, Error, any, readonly unknown[]>[]
+) {
+  await Promise.all(queries.map((query) => queryClient.ensureQueryData(query).catch(() => null)));
+}
 
 /**
  * The app's frame: the backdrop, the world rail (V2-2+.1) beside the page,
@@ -152,30 +184,52 @@ const worldTabIndexRoute = createRoute({
 const cardRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "card/$cardId",
+  loader: ({ context, params }) =>
+    ready(
+      context.queryClient,
+      cardQuery(params.cardId),
+      cardContentQuery(params.cardId),
+      cardPropertiesQuery(params.cardId),
+      backlinksQuery(params.cardId),
+      cardTypesQuery(),
+      cardListQuery(false),
+    ),
   component: CardPage,
 });
 
 const mapRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "map/$mapId",
+  loader: ({ context, params }) => ready(context.queryClient, mapQuery(params.mapId)),
   component: MapPage,
 });
 
 const graphRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "graph/$graphId",
+  loader: ({ context, params }) =>
+    ready(context.queryClient, graphQuery(params.graphId), graphDataQuery(), cardTypesQuery()),
   component: GraphPage,
 });
 
 const treeRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "tree/$treeId",
+  loader: ({ context, params }) =>
+    ready(
+      context.queryClient,
+      treeQuery(params.treeId),
+      cardListQuery(false),
+      cardTypesQuery(),
+      relationTypesQuery(),
+    ),
   component: TreePage,
 });
 
 const canvasRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "canvas/$canvasId",
+  loader: ({ context, params }) => ready(context.queryClient, canvasQuery(params.canvasId)),
   component: CanvasPage,
 });
 
@@ -183,6 +237,8 @@ const canvasRoute = createRoute({
 const timelineRoute = createRoute({
   getParentRoute: () => worldTabRoute,
   path: "timeline/$timelineId",
+  loader: ({ context, params }) =>
+    ready(context.queryClient, timelineQuery(params.timelineId), cardListQuery(false)),
   component: TimelinePage,
   validateSearch: (search: Record<string, unknown>): { card?: string } =>
     typeof search.card === "string" && search.card !== "" ? { card: search.card } : {},
@@ -191,6 +247,7 @@ const timelineRoute = createRoute({
 const wikiRoute = createRoute({
   getParentRoute: () => worldRoute,
   path: "wiki",
+  loader: ({ context }) => ready(context.queryClient, wikiSettingsQuery(), wikiPagesQuery()),
   component: WikiLayout,
 });
 
@@ -231,6 +288,7 @@ const quillRoute = createRoute({
 const quillIndexRoute = createRoute({
   getParentRoute: () => quillRoute,
   path: "/",
+  loader: ({ context }) => ready(context.queryClient, storiesQuery()),
   component: StoriesScreen,
 });
 

@@ -37,7 +37,7 @@ vi.mock("@/features/graphs", () => ({ useCreateGraph: vi.fn() }));
 vi.mock("@/features/maps", () => ({ CreateMapDialog: vi.fn() }));
 vi.mock("@/features/timelines", () => ({ useCreateTimeline: vi.fn() }));
 vi.mock("@/features/trees", () => ({ useCreateTree: vi.fn() }));
-vi.mock("./navigation", () => ({ usePageFade: vi.fn() }));
+vi.mock("./navigation", () => ({ usePageTransition: vi.fn() }));
 
 afterEach(cleanup);
 

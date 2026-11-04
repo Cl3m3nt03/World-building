@@ -1,11 +1,11 @@
-import { Outlet, useLocation, useNavigate, useParams } from "@tanstack/react-router";
+import { Outlet, useLocation, useMatches, useNavigate, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 import { useUiStore } from "@/app/stores/ui";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CardTypesDialog } from "@/features/card-types";
 import { useCurrentWorld } from "@/features/world";
 import { WorldSettingsDialog } from "@/features/world-settings";
-import { usePageFade } from "./navigation";
+import { usePageTransition } from "./navigation";
 import { type ShellTab, TopBar } from "./TopBar";
 
 export const SHELL_TABS = ["home", "world", "wiki", "quill"] as const satisfies readonly ShellTab[];
@@ -20,6 +20,17 @@ const TAB_ROUTES = {
   wiki: "/world/$worldId/wiki",
   quill: "/world/$worldId/quill",
 } as const satisfies Record<ShellTab, string>;
+
+/**
+ * The side a tab's page comes from (Clément's decision, motion plan §8): from
+ * the right when going to a later tab in the order Home, World, Wiki, Quill,
+ * from the left when going back, from nowhere for a page outside the tabs.
+ */
+export function tabDirection(from: string | null, to: string | null): number {
+  const before = SHELL_TABS.indexOf(from as ShellTab);
+  const after = SHELL_TABS.indexOf(to as ShellTab);
+  return before < 0 || after < 0 ? 0 : Math.sign(after - before);
+}
 
 /** "/world/<id>/<tab>/…" → the tab segment, if any. */
 export function tabFromPath(pathname: string): ShellTab | undefined {
@@ -40,9 +51,14 @@ export function WorldLayout() {
   const setCardTypesOpen = useUiStore((state) => state.setCardTypesOpen);
   const { data: world } = useCurrentWorld();
   const requestSearch = useUiStore((state) => state.requestSearch);
-  // Another tab: the page fades in.
+  // Another tab: the page enters from its side. The tab follows the URL at
+  // once; the page, from the matches the router has finished loading, so
+  // the old page stays, untouched, until the new one is there.
   const page = useRef<HTMLDivElement>(null);
-  usePageFade(page, pathTab ?? "page");
+  const shownTab = useMatches({
+    select: (matches) => tabFromPath(matches.at(-1)?.pathname ?? "") ?? "page",
+  });
+  usePageTransition(page, shownTab, { target: "page", direction: tabDirection });
 
   // The global search: the World tab and its search field.
   const openSearch = useCallback(() => {
