@@ -4,7 +4,7 @@ import { ContextMenu as ContextMenuPrimitive } from "radix-ui";
 import type * as React from "react";
 
 function ContextMenu({ ...props }: React.ComponentProps<typeof ContextMenuPrimitive.Root>) {
-  return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
+  return <ContextMenuPrimitive.Root data-slot="context-menu" modal={false} {...props} />;
 }
 
 function ContextMenuTrigger({
@@ -49,7 +49,7 @@ function ContextMenuContent({
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
         className={cn(
-          "z-50 max-h-(--radix-context-menu-content-available-height) min-w-36 origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg glass-float p-1 text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 duration-(--bz-duration-base) ease-atlas data-closed:duration-(--bz-duration-fast)",
+          "z-50 max-h-(--radix-context-menu-content-available-height) min-w-36 origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg glass-float p-1 text-popover-foreground data-[side=bottom]:slide-in-from-top-shift-sm data-[side=left]:slide-in-from-right-shift-sm data-[side=right]:slide-in-from-left-shift-sm data-[side=top]:slide-in-from-bottom-shift-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[var(--bz-scale-enter)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[var(--bz-scale-enter)] duration-(--bz-duration-fast) ease-atlas data-closed:duration-(--bz-duration-micro) data-closed:ease-atlas-in",
           className,
         )}
         {...props}
@@ -113,7 +113,7 @@ function ContextMenuSubContent({
     <ContextMenuPrimitive.SubContent
       data-slot="context-menu-sub-content"
       className={cn(
-        "z-50 min-w-32 origin-(--radix-context-menu-content-transform-origin) overflow-hidden rounded-lg border glass-float p-1 text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 duration-(--bz-duration-base) ease-atlas data-closed:duration-(--bz-duration-fast)",
+        "z-50 min-w-32 origin-(--radix-context-menu-content-transform-origin) overflow-hidden rounded-lg border glass-float p-1 text-popover-foreground data-[side=bottom]:slide-in-from-top-shift-sm data-[side=left]:slide-in-from-right-shift-sm data-[side=right]:slide-in-from-left-shift-sm data-[side=top]:slide-in-from-bottom-shift-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[var(--bz-scale-enter)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[var(--bz-scale-enter)] duration-(--bz-duration-fast) ease-atlas data-closed:duration-(--bz-duration-micro) data-closed:ease-atlas-in",
         className,
       )}
       {...props}

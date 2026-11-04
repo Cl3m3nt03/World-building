@@ -29,7 +29,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 duration-(--bz-duration-base) ease-atlas data-closed:duration-(--bz-duration-fast)",
+        "fixed inset-0 isolate z-50 bg-black/10 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 duration-(--bz-duration-base) ease-atlas data-closed:duration-(--bz-duration-fast) data-closed:ease-atlas-in",
         className,
       )}
       {...props}
@@ -52,7 +52,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col overflow-y-auto -translate-y-1/2 gap-4 rounded-xl glass-float p-4 text-sm text-popover-foreground outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 duration-(--bz-duration-base) ease-atlas data-closed:duration-(--bz-duration-fast)",
+          "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col overflow-y-auto -translate-y-1/2 gap-4 rounded-xl glass-float p-4 text-sm text-popover-foreground outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[var(--bz-scale-enter)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[var(--bz-scale-enter)] duration-(--bz-duration-base) ease-atlas data-closed:duration-(--bz-duration-fast) data-closed:ease-atlas-in",
           className,
         )}
         {...props}
