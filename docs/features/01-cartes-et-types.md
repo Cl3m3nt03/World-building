@@ -184,7 +184,7 @@ Les lignes de propriétés sont serrées, à 28 px de pas : un libellé, puis un
 
 - **Sélection** : une liste de choix propre à la propriété (Statut : vivant, mort, disparu).
   - Sa petite fenêtre liste les choix : on les renomme sur place, on les monte ou descend, « Ajouter un choix » (Entrée) en ajoute un. Elle s'ouvre seule quand on vient de créer la propriété.
-  - Sur la carte, les choix retenus sont des pastilles, à retirer d'un clic. Le menu « Choisir » les propose, au clavier (flèches, Entrée).
+  - Sur la carte, les choix retenus sont des pastilles, à retirer d'un clic. Le menu « Choisir » les propose, au clavier (flèches, Entrée). Une valeur choisie se lit seule : « Changer » n'apparaît qu'au survol ou au focus de la ligne, sans réserver de place au repos ; dans une colonne étroite, il se réduit à son chevron, sur la même ligne que la pastille.
   - « Plusieurs choix par fiche » permet d'en cocher plusieurs : le menu reste alors ouvert. Désactivée, l'option ne retire rien : une carte garde ce qu'elle a, peut en retirer, et un nouveau choix remplace le tout.
   - Une carte retient l'identifiant du choix : le renommer ne change aucune valeur. Retirer un choix qu'au moins une carte utilise dit combien de cartes le perdront et demande confirmation.
   - Dans l'écran des types, la ligne de la propriété dit son nombre de choix.
