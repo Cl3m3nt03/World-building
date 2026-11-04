@@ -183,7 +183,7 @@ test("a timeline's page: read only, its chronicle, hidden items left out, pages 
   const article = await screen.findByRole("article", { name: "Les Âges" });
   expect(within(article).getByRole("heading", { level: 1, name: "Les Âges" })).toBeTruthy();
   const view = within(article).getByRole("application", { name: "Frise Les Âges" });
-  expect(within(view).getByRole("button", { name: /^Gondor, / })).toBeTruthy();
+  expect(await within(view).findByRole("button", { name: /^Gondor, / })).toBeTruthy();
   expect(within(view).queryByRole("button", { name: /^Le secret/ })).toBeNull();
 
   const chronicle = within(article).getByRole("region", { name: "Chronologie" });
