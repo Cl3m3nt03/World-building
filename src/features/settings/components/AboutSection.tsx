@@ -25,7 +25,7 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
       {appInfo.isPending && <p className="text-sm text-muted-foreground">{t("about.loading")}</p>}
       {appInfo.isError && <AppErrorMessage error={appInfo.error} />}
       {appInfo.isSuccess && (
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2 text-sm">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 text-sm">
           {ROWS.map(({ key, label }) => (
             <div key={key} className="contents">
               <dt className="text-muted-foreground">{t(label)}</dt>
