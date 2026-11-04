@@ -100,7 +100,57 @@ Entrée **Thème** du bloc Gérer, et section Thème des réglages du monde. Le 
 - Tout choix s'applique **aussitôt** et est enregistré (une couleur libre, pendant qu'on la fait glisser, s'affiche aussitôt et s'enregistre quand elle se stabilise). Le thème est retrouvé après relance.
 - L'accent reste lisible dans les deux modes : chaque mode en reçoit une variante, assombrie en mode clair ou éclaircie en mode sombre juste assez pour un contraste de 3:1 avec le fond, et le texte posé sur l'accent est clair ou foncé selon ce qui se lit le mieux.
 - Une image utilisée comme fond du thème apparaît dans les usages de la médiathèque (« fond du thème du monde ») ; si elle est supprimée, le thème reprend l'image principale.
-- Le mode clair ou sombre reste un réglage de l'app, pas du thème.
+- Le mode clair ou sombre reste un réglage de l'app, pas du thème (voir « Thèmes riches » : un monde pourra imposer le sien).
+
+#### Thèmes riches (proposé, ADR 0015)
+
+Statut : **proposé**, en attente des choix de Clément (maquettes « Grimoire », « Station », « Crypte » du 2026-11-05, hors dépôt). Rien de ce qui suit n'est livré. Ce qui existe reste valable : image de fond, accent, huit thèmes, thème personnalisé.
+
+Un thème devient une **ambiance** complète, toujours dans la grammaire « Atlas ancien » (ADR 0012) : même coque, mêmes trois niveaux de surface, même texte courant en Alegreya Sans, même atlas gravé. Seuls changent six réglages, chacun pris dans une **liste fermée** :
+
+| Réglage | Valeurs | Défaut |
+|---|---|---|
+| Fond | une image (thème fourni, image principale ou image de la médiathèque) | l'image principale |
+| Accent | une couleur, rendue lisible dans chaque mode (règle actuelle) | l'or gravé |
+| **Matière des panneaux** | **Vélin** (le verre actuel), **Parchemin** (papier chaud presque opaque, grain marqué, flou faible), **Verre froid** (verre bleuté, flou fort, arête lumineuse), **Pierre** (opaque, mate, grain grossier, sans flou, ombre dure) | Vélin |
+| **Ornement** | **Aucun**, **Filets** (double filet d'accent à l'intérieur des panneaux), **Repères** (équerres d'accent aux angles), **Liseré** (trait d'accent sur l'arête haute) | Aucun |
+| **Police des titres** | Alegreya, Cinzel, EB Garamond, Playfair Display, plus une police technique à choisir (voir les questions de l'ADR 0015) | Alegreya |
+| **Mode** | Suivre l'app, Toujours clair, Toujours sombre | Suivre l'app |
+
+- **Matière** : chaque matière fixe les surfaces, bordures, ombres, rayons, flou et grain, **en clair et en sombre**. Le texte, le texte atténué et l'accent sont recalculés pour elle. Avec « Effets de transparence » coupés, toutes les matières deviennent opaques et sans flou ; leur grain et leurs couleurs restent.
+- **Ornement** : purement décoratif, masqué aux lecteurs d'écran, jamais sous un texte, dessiné en CSS ou SVG (pas d'image). Il n'apparaît que sur les panneaux et les flottants, jamais dans les champs ni les listes.
+- **Police des titres** : titres de page, noms des documents, titres de bloc et nom du monde. Le texte courant, les champs et les menus gardent Alegreya Sans. Toutes les polices sont **embarquées** avec l'app (`@fontsource`, licence SIL OFL) ; aucune n'est chargée du réseau.
+- **Mode** : un monde peut imposer clair ou sombre. Le réglage de l'app reste la règle hors d'un monde (liste des mondes, réglages de l'app) et pour les mondes qui le suivent. En quittant le monde, l'app reprend son propre mode.
+- **Thèmes fournis** : les huit thèmes actuels gardent leur illustration et leur accent, en Vélin, sans ornement, en Alegreya. Trois ambiances s'ajoutent, chacune avec une illustration dessinée pour BuilderZ : **Grimoire** (Parchemin, Filets, Cinzel, or), **Station** (Verre froid, Repères, police technique, cyan) et **Crypte** (Pierre, Liseré, Playfair Display, sang). Un thème fourni inconnu (venu d'une version plus récente) s'affiche comme « Par défaut », comme aujourd'hui.
+- **Modifier** expose les six réglages. Il part du thème affiché, et le résultat devient le thème personnalisé du monde.
+
+**Contraste** : AA partout, dans les deux modes, pour toute combinaison.
+- Sur une surface, chaque matière garantit par construction, et un test le vérifie pour chaque matière et chaque mode : texte et texte atténué ≥ 4,5:1, accent ≥ 3:1 (≥ 4,5:1 quand il colore du texte), texte posé sur l'accent ≥ 4,5:1. Dans les maquettes, le texte et le texte atténué vont de 6,3:1 à 15,7:1.
+- Sur le fond nu et sous une matière translucide (Vélin, Verre froid), le voile est **calculé pour chaque image** (#528, ADR 0012). Les thèmes riches ne sortent pas avant #528.
+- Les ornements et l'atlas ne portent aucune information : ils ne sont pas soumis au 3:1.
+
+#### Thème proposé à la création (proposé, ADR 0013 et 0015)
+
+Dans « Nouveau monde », après le genre et les tonalités, une ligne **Ambiance** montre le thème proposé : sa vignette, son nom et « Changer », qui ouvre la galerie. La proposition suit une table fixe, documentée et testée ; la première règle qui s'applique l'emporte :
+
+1. tonalités horreur, grimdark ou dark fantasy : Crypte ;
+2. cozy : Cerisiers ; solarpunk : Forêt ancienne ; post-apocalyptique ou survie : Dunes ; steampunk ou gaslamp : Braises ;
+3. sinon, le genre : Fantasy donne Grimoire ; Science-fiction et Cyberpunk, Station ; Romance, Cerisiers ; Contemporain et Autre, Par défaut.
+
+La proposition suit en direct le genre et les tonalités, tant qu'on n'a pas choisi soi-même un thème. « Par défaut » reste toujours possible. Le thème retenu est enregistré à la création, comme s'il avait été choisi ensuite dans les réglages. Changer plus tard de genre ou de tonalités ne change jamais le thème.
+
+#### Galerie et aperçu (proposé)
+
+**Explorer** devient une galerie à deux zones : les thèmes à gauche (vignette, nom, pastille d'accent, matière), l'**aperçu** à droite.
+- L'aperçu montre l'app dans le thème survolé ou sélectionné : la Home du monde réduite (en-tête, chiffres, Gérer) et une fiche, avec les vrais composants et les vraies données du monde, **en clair et en sombre côte à côte**. Il ne lit rien de plus que la Home et n'écrit rien.
+- Rien ne s'applique avant **Appliquer**. « Annuler » ou Échap garde le thème actuel, marqué « Actuel ».
+- Au clavier, les flèches passent d'un thème à l'autre et mettent l'aperçu à jour ; Entrée applique.
+- L'aperçu se met à jour en moins de 150 ms après le changement de thème (mesuré dans l'app réelle).
+- **Modifier** garde son application immédiate (le thème personnalisé est déjà celui du monde), avec le même aperçu.
+
+**Transition** : appliquer un thème fait un fondu uniforme de 200 ms de toute la fenêtre (View Transition, plan de mouvement, lot E). Avec `prefers-reduced-motion`, le changement est immédiat. La saisie reste possible pendant le fondu.
+
+**Wiki (audit F35)** : le wiki reçoit un thème **Atlas**, par défaut pour les nouveaux mondes. Il suit le mode de l'app (ou celui imposé par le monde) ainsi que l'accent, la police des titres et la matière du thème du monde. Les cinq thèmes actuels du wiki restent, et un monde qui en a choisi un le garde. L'export du site fige le mode choisi au moment de l'export.
 
 ### Onglet World
 
