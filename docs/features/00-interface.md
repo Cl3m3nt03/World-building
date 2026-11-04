@@ -104,7 +104,7 @@ Entrée **Thème** du bloc Gérer, et section Thème des réglages du monde. Le 
 
 #### Thèmes riches (proposé, ADR 0015)
 
-Statut : **proposé**, en attente des choix de Clément (maquettes « Grimoire », « Station », « Crypte » du 2026-11-05, hors dépôt). Rien de ce qui suit n'est livré. Ce qui existe reste valable : image de fond, accent, huit thèmes, thème personnalisé.
+Statut : **proposé**, en attente des choix de Clément (maquettes « Grimoire », « Station », « Crypte » du 2026-11-05, hors dépôt). Rien de ce qui suit n'est livré (issues #547 à #554, milestone « V2 Thèmes du monde », après #528). Ce qui existe reste valable : image de fond, accent, huit thèmes, thème personnalisé.
 
 Un thème devient une **ambiance** complète, toujours dans la grammaire « Atlas ancien » (ADR 0012) : même coque, mêmes trois niveaux de surface, même texte courant en Alegreya Sans, même atlas gravé. Seuls changent six réglages, chacun pris dans une **liste fermée** :
 
