@@ -125,7 +125,16 @@
   --shadow-float: var(--bz-shadow-float);
 
   --ease-atlas: var(--bz-ease-out);
+  --ease-atlas-in: var(--bz-ease-in);
+  --ease-atlas-move: var(--bz-ease-in-out);
   --ease-atlas-spring: var(--bz-ease-spring);
+
+  /* A bare `transition` speaks the same vocabulary (and stops under reduced motion). */
+  --default-transition-duration: var(--bz-duration-fast);
+  --default-transition-timing-function: var(--bz-ease-out);
+
+  /* The entry shift of a floating surface: `slide-in-from-top-shift-sm`. */
+  --translate-shift-sm: var(--bz-shift-sm);
 
   /* The wiki's own theme (M8): set on the wiki's root, never on the app. */
   --color-wiki-background: var(--wiki-background);

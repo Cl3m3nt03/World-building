@@ -1,7 +1,7 @@
 import { type RefObject, useEffect } from "react";
 
 /** A motion token's duration, in milliseconds (0 under reduced motion). */
-function tokenDuration(name: string): number {
+export function motionMs(name: string): number {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   if (value.endsWith("ms")) return Number.parseFloat(value);
   if (value.endsWith("s")) return Number.parseFloat(value) * 1000;
@@ -18,7 +18,7 @@ export function usePageFade(ref: RefObject<HTMLElement | null>, key: string | nu
   useEffect(() => {
     if (key === undefined) return;
     const element = ref.current;
-    const duration = tokenDuration("--bz-duration-base");
+    const duration = motionMs("--bz-duration-base");
     if (!element || duration === 0 || typeof element.animate !== "function") return;
     if (element.dataset.pageKey === undefined) {
       element.dataset.pageKey = key ?? "";

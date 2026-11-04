@@ -84,12 +84,19 @@
   --bz-blur-backdrop: 24px;
 
   /* Motion: it always answers a gesture (ADR 0012). */
+  --bz-duration-micro: 80ms;
   --bz-duration-fast: 120ms;
+  --bz-duration-page: 160ms;
   --bz-duration-base: 200ms;
   --bz-duration-slow: 360ms;
+  --bz-stagger: 24ms;
   --bz-ease-out: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --bz-ease-in: cubic-bezier(0.4, 0, 1, 1);
   --bz-ease-in-out: cubic-bezier(0.6, 0, 0.3, 1);
   --bz-ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --bz-shift-sm: 4px;
+  --bz-shift-md: 8px;
+  --bz-scale-enter: 0.97;
 }
 
 [data-theme="dark"],
@@ -161,8 +168,14 @@
 /* Reduced motion: changes happen at once. */
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --bz-duration-micro: 0ms;
     --bz-duration-fast: 0ms;
+    --bz-duration-page: 0ms;
     --bz-duration-base: 0ms;
     --bz-duration-slow: 0ms;
+    --bz-stagger: 0ms;
+    --bz-shift-sm: 0px;
+    --bz-shift-md: 0px;
+    --bz-scale-enter: 1;
   }
 }
