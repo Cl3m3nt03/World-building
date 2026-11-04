@@ -5,14 +5,17 @@ import { cardKeys, documentKeys } from "../hooks/keys";
 import { type Block, parseContent } from "./model";
 import { effectiveTemplate, templateBlocks } from "./template";
 
+/** A card's blocks (shared with the card route's loader). */
+export const cardContentQuery = (cardId: string) => ({
+  queryKey: [...cardKeys.detail(cardId), "content"],
+  queryFn: async () => parseContent(await unwrap(commands.getCardContent(cardId))),
+  // The editor owns the blocks once loaded: no refetch under its feet.
+  staleTime: Number.POSITIVE_INFINITY,
+  refetchOnWindowFocus: false,
+});
+
 export function useCardContent(cardId: string) {
-  return useQuery({
-    queryKey: [...cardKeys.detail(cardId), "content"],
-    queryFn: async () => parseContent(await unwrap(commands.getCardContent(cardId))),
-    // The editor owns the blocks once loaded: no refetch under its feet.
-    staleTime: Number.POSITIVE_INFINITY,
-    refetchOnWindowFocus: false,
-  });
+  return useQuery(cardContentQuery(cardId));
 }
 
 export function useSaveCardContent(cardId: string) {

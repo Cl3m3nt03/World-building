@@ -17,7 +17,13 @@ import { WorldRail } from "@/app/shell/WorldRail";
 import { useUiStore } from "@/app/stores/ui";
 import { CanvasPage, canvasQuery } from "@/features/canvases";
 import { cardTypesQuery } from "@/features/card-types";
-import { backlinksQuery, CardPage, cardListQuery, cardQuery } from "@/features/cards";
+import {
+  backlinksQuery,
+  CardPage,
+  cardContentQuery,
+  cardListQuery,
+  cardQuery,
+} from "@/features/cards";
 import { DesignSystemPage } from "@/features/design-system";
 import { GraphPage, graphDataQuery, graphQuery } from "@/features/graphs";
 import { HomeScreen } from "@/features/home";
@@ -182,6 +188,7 @@ const cardRoute = createRoute({
     ready(
       context.queryClient,
       cardQuery(params.cardId),
+      cardContentQuery(params.cardId),
       cardPropertiesQuery(params.cardId),
       backlinksQuery(params.cardId),
       cardTypesQuery(),

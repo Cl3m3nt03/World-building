@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate, useParams } from "@tanstack/react-router";
+import { Outlet, useLocation, useMatches, useNavigate, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 import { useUiStore } from "@/app/stores/ui";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -51,9 +51,14 @@ export function WorldLayout() {
   const setCardTypesOpen = useUiStore((state) => state.setCardTypesOpen);
   const { data: world } = useCurrentWorld();
   const requestSearch = useUiStore((state) => state.requestSearch);
-  // Another tab: the page enters from its side.
+  // Another tab: the page enters from its side. The tab follows the URL at
+  // once; the page, from the matches the router has finished loading, so
+  // the old page stays, untouched, until the new one is there.
   const page = useRef<HTMLDivElement>(null);
-  usePageTransition(page, pathTab ?? "page", { target: "page", direction: tabDirection });
+  const shownTab = useMatches({
+    select: (matches) => tabFromPath(matches.at(-1)?.pathname ?? "") ?? "page",
+  });
+  usePageTransition(page, shownTab, { target: "page", direction: tabDirection });
 
   // The global search: the World tab and its search field.
   const openSearch = useCallback(() => {
