@@ -130,7 +130,9 @@ describe("M1: worlds, preferences and relocation", () => {
   it("keeps the language and theme after a relaunch", async () => {
     await backToWorldList();
     await $("aria/Réglages").click();
+    // The app settings open on Appearance; the language has its own section.
     await $("#theme-dark").click();
+    await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="Langue"]').click();
     await $("#language-en").click();
     await closeDialog();
     await $("h1=Worlds").waitForDisplayed();
@@ -143,6 +145,7 @@ describe("M1: worlds, preferences and relocation", () => {
     // Back to the defaults for the other specs.
     await $("aria/Settings").click();
     await $("#theme-system").click();
+    await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="Language"]').click();
     await $("#language-fr").click();
     await closeDialog();
     await $("h1=Mondes").waitForDisplayed();

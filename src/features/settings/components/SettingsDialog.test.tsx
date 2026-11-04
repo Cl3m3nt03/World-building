@@ -67,6 +67,11 @@ afterEach(async () => {
   await i18n.changeLanguage("fr");
 });
 
+/** Radix tabs are chosen on mouse down (and with the arrow keys). */
+function openSection(name: string) {
+  fireEvent.mouseDown(screen.getByRole("tab", { name }));
+}
+
 function renderDialog() {
   render(
     <QueryClientProvider client={createQueryClient()}>
@@ -85,8 +90,29 @@ test("changes the theme and the transparency effects", async () => {
   expect(useUiStore.getState().transparency).toBe("off");
 });
 
+test("puts the sections in a rail and opens on Appearance", () => {
+  renderDialog();
+
+  const rail = screen.getByRole("tablist", { name: "Sections des réglages" });
+  expect(rail.getAttribute("aria-orientation")).toBe("vertical");
+  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+    "Apparence",
+    "Langue",
+    "Mondes",
+    "Bibliothèque",
+    "À propos",
+  ]);
+  expect(screen.getByRole("heading", { level: 2, name: "Apparence" })).toBeTruthy();
+
+  openSection("Mondes");
+  expect(screen.getByRole("heading", { level: 2, name: "Mondes" })).toBeTruthy();
+  expect(screen.queryByRole("heading", { level: 2, name: "Apparence" })).toBeNull();
+  expect(screen.queryByRole("radio", { name: "Sombre" })).toBeNull();
+});
+
 test("changes the language", async () => {
   renderDialog();
+  openSection("Langue");
 
   await act(async () => {
     fireEvent.click(screen.getByRole("radio", { name: "English" }));
@@ -97,9 +123,13 @@ test("changes the language", async () => {
 
 test("shows the chosen worlds folder and resets it to the default", async () => {
   renderDialog();
+  openSection("Mondes");
 
   const folder = screen.getByRole("textbox", { name: "Dossier des nouveaux mondes" });
   await waitFor(() => expect((folder as HTMLInputElement).value).toBe("D:/Mondes"));
+  // The path shows cut in its middle over the field, which keeps it whole for the tooltip.
+  expect(folder.getAttribute("title")).toBe("D:/Mondes");
+  expect(folder.className).toContain("focus-visible:border-ring");
 
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "Par défaut" }));
@@ -113,13 +143,16 @@ test("shows the chosen worlds folder and resets it to the default", async () => 
   });
 });
 
-test("includes the About section", async () => {
+test("includes the About section, paths cut in their middle", async () => {
   renderDialog();
+  openSection("À propos");
   expect(await screen.findByText("0.1.0")).toBeTruthy();
+  expect(screen.getByTitle("C:/c").textContent).toBe("C:/c");
 });
 
 test("the library shows its images and removes one after a confirmation", async () => {
   renderDialog();
+  openSection("Bibliothèque");
 
   const image = await screen.findByRole("img", { name: "Blason.png" });
   expect(image.getAttribute("src")).toBe(`http://bzlibrary.localhost/${BLASON.id}`);

@@ -1,6 +1,7 @@
 import { Palette } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
 import type { TranslationKey } from "@/i18n";
 import type { AppInfo } from "@/lib/bindings";
@@ -24,11 +25,13 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
       {appInfo.isPending && <p className="text-sm text-muted-foreground">{t("about.loading")}</p>}
       {appInfo.isError && <AppErrorMessage error={appInfo.error} />}
       {appInfo.isSuccess && (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2 text-sm">
           {ROWS.map(({ key, label }) => (
             <div key={key} className="contents">
               <dt className="text-muted-foreground">{t(label)}</dt>
-              <dd className="font-mono text-xs break-all">{appInfo.data[key]}</dd>
+              <dd className="min-w-0">
+                <MiddleTruncate text={appInfo.data[key]} className="text-xs" />
+              </dd>
             </div>
           ))}
         </dl>

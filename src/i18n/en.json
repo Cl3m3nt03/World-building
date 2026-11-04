@@ -79,6 +79,8 @@
   "settings.worldsDirChoose": "Choose…",
   "settings.worldsDirReset": "Default",
   "settings.worldsDirPickerTitle": "Choose the new worlds folder",
+  "settings.sections.worlds": "Worlds",
+  "settings.sections.library": "Library",
   "settings.about": "About",
   "createWorld.genre": "Genre",
   "createWorld.genreHint": "It shapes the card types offered. You can change it later.",
