@@ -16,7 +16,10 @@ function surface(left: number, width: number) {
 }
 
 describe("slideLayout", () => {
-  const animate = vi.fn(() => ({ finished: new Promise(() => {}), cancel: vi.fn() }));
+  const animate = vi.fn((..._args: unknown[]) => ({
+    finished: new Promise(() => {}),
+    cancel: vi.fn(),
+  }));
   let observed: (() => void) | null = null;
   beforeEach(() => {
     animate.mockClear();

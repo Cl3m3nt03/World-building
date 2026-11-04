@@ -12,7 +12,7 @@ import { motionMs } from "./navigation";
 const SLIDE_ANIMATION = "bz-slide";
 
 /** What the eye follows: the glass surfaces. */
-const SURFACES = ".glass, .glass-veil";
+const SURFACES = ".glass, .glass-veil, .glass-panel";
 
 /** Keyframes of a slide whose surface changes width (its children are scaled back). */
 const STEPS = 16;
@@ -123,10 +123,6 @@ export function slideLayout(slide: Slide) {
   running?.stop();
   slide.change();
 
-  // The new layout is there before the next paint: a resize observer is
-  // called then (and at least once, when it starts observing).
-  let started = false;
-  const observer = new ResizeObserver(() => start());
   const animations: Animation[] = [];
   const undo: (() => void)[] = [];
   // What keeps the leaving column out of the layout and faded out: left as
@@ -134,6 +130,19 @@ export function slideLayout(slide: Slide) {
   // shows again for a frame.
   let leavingAnimation: Animation | null = null;
   const unpin: (() => void)[] = [];
+  // Out of the layout at once, so the new layout is complete.
+  if (leaving && leavingFrom && slide.leaving) {
+    leaving.inert = true;
+    unpin.push(slide.leaving.pin(leaving, leavingFrom), () => {
+      leaving.inert = false;
+    });
+  }
+
+  // The slide starts once the new layout is there, before it is painted:
+  // right after React applies it (a microtask), or else when a resize
+  // observer is called (before the next paint, and at least once).
+  let started = false;
+  const observer = new ResizeObserver(() => start(true));
   let finished = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const finish = (stopped: boolean) => {
@@ -153,8 +162,20 @@ export function slideLayout(slide: Slide) {
   const current = { stop: () => finish(true) };
   running = current;
 
-  function start() {
+  function start(observed: boolean) {
     if (started || finished) return;
+    const moves = targets.map((target) => {
+      const from = first.get(target);
+      if (!from || !target.isConnected) return null;
+      const to = target.getBoundingClientRect();
+      const dx = from.left - to.left;
+      const scale = to.width > 0 ? from.width / to.width : 1;
+      if (Math.abs(dx) < 0.5 && Math.abs(scale - 1) < 0.002) return null;
+      return { target, dx, scale };
+    });
+    const coming = slide.entering?.() ?? null;
+    // Not applied yet: wait for the observer.
+    if (!observed && moves.every((move) => move === null) && (!slide.entering || !coming)) return;
     started = true;
     observer.disconnect();
     const ease = easing();
@@ -175,13 +196,9 @@ export function slideLayout(slide: Slide) {
         });
       }
     }
-    for (const target of targets) {
-      const from = first.get(target);
-      if (!from || !target.isConnected) continue;
-      const to = target.getBoundingClientRect();
-      const dx = from.left - to.left;
-      const scale = to.width > 0 ? from.width / to.width : 1;
-      if (Math.abs(dx) < 0.5 && Math.abs(scale - 1) < 0.002) continue;
+    for (const move of moves) {
+      if (!move) continue;
+      const { target, dx, scale } = move;
       if (Math.abs(scale - 1) < 0.002) {
         const animation = play(
           target,
@@ -218,11 +235,7 @@ export function slideLayout(slide: Slide) {
         if (animation) animations.push(animation);
       }
     }
-    if (leaving && leavingFrom && leaving.isConnected && slide.leaving) {
-      leaving.inert = true;
-      unpin.push(slide.leaving.pin(leaving, leavingFrom), () => {
-        leaving.inert = false;
-      });
+    if (leaving?.isConnected && unpin.length > 0) {
       leavingAnimation = play(
         leaving,
         [
@@ -232,7 +245,6 @@ export function slideLayout(slide: Slide) {
         { ...options, fill: "forwards" },
       );
     }
-    const coming = slide.entering?.();
     if (coming) {
       // Its own entry (a delayed settle) would hide it again after the slide.
       for (const animation of coming.getAnimations?.() ?? []) {
@@ -263,6 +275,7 @@ export function slideLayout(slide: Slide) {
   }
 
   observer.observe(slide.root);
+  queueMicrotask(() => start(false));
   // In case nothing ends (an element removed meanwhile): never stuck mid-way.
   timer = setTimeout(() => finish(false), duration + 300);
 }
