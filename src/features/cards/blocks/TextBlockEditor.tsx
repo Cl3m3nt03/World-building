@@ -37,8 +37,11 @@ type TextBlockEditorProps = {
     removeLine: () => void,
     refocus: () => void,
     format: (kind: TextFormat) => void,
-    /** Bottom of the line, in the window (`null`: not in the page). */
-    lineBottom: number | null,
+    /**
+     * The line, in the window, cut to the part the window shows (`null`: not
+     * in the page). The menu hangs on it, above or below.
+     */
+    line: { top: number; bottom: number } | null,
   ) => void;
   autoFocus?: boolean;
   /** Help question of a guided template section (shown under its title while empty). */
@@ -125,7 +128,7 @@ export function TextBlockEditor({
             removeLine,
             () => view.focus(),
             (kind) => applyFormat(editorRef.current, kind),
-            (view.nodeDOM(start) as HTMLElement | null)?.getBoundingClientRect().bottom ?? null,
+            visibleLine(view.nodeDOM(start) as HTMLElement | null),
           );
           return true;
         }
@@ -144,4 +147,12 @@ export function TextBlockEditor({
       <WorldInTextOverlay editor={editor} overlay={worldInText.overlay} />
     </>
   );
+}
+
+/** The part of a line the window shows, so a menu never hangs past its foot. */
+function visibleLine(node: HTMLElement | null): { top: number; bottom: number } | null {
+  if (!node) return null;
+  const { top, bottom } = node.getBoundingClientRect();
+  const clamp = (y: number) => Math.min(Math.max(y, 0), window.innerHeight);
+  return { top: clamp(top), bottom: clamp(bottom) };
 }
