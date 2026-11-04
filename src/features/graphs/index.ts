@@ -1,3 +1,3 @@
 export { GraphPage } from "./components/GraphPage";
 export { HomeGraphPreview } from "./components/HomeGraphPreview";
-export { graphKeys, useCreateGraph, useGraph } from "./hooks/useGraphs";
+export { graphDataQuery, graphKeys, graphQuery, useCreateGraph, useGraph } from "./hooks/useGraphs";

@@ -11,12 +11,15 @@ import { timelineCardRoute } from "@/lib/documentRoute";
 import { unwrap } from "@/lib/ipc";
 import { documentKeys } from "../hooks/keys";
 
+/** What cites a card (shared with the card route's loader). */
+export const backlinksQuery = (cardId: string) => ({
+  // Under the documents: any change to cards or links refreshes it.
+  queryKey: [...documentKeys.all(), "backlinks", cardId],
+  queryFn: () => unwrap(commands.cardBacklinks(cardId)),
+});
+
 export function useBacklinks(cardId: string) {
-  return useQuery({
-    // Under the documents: any change to cards or links refreshes it.
-    queryKey: [...documentKeys.all(), "backlinks", cardId],
-    queryFn: () => unwrap(commands.cardBacklinks(cardId)),
-  });
+  return useQuery(backlinksQuery(cardId));
 }
 
 /** The icon of a source that is not a card (a card shows its type's). */

@@ -25,12 +25,15 @@ export function useTypeProperties(typeId: string) {
   });
 }
 
+/** A card's properties (shared with the card route's loader). */
+export const cardPropertiesQuery = (cardId: string) => ({
+  queryKey: propertyKeys.ofCard(cardId),
+  queryFn: () => unwrap(commands.cardProperties(cardId)),
+});
+
 /** Properties a card shows, with its values. */
 export function useCardProperties(cardId: string) {
-  return useQuery({
-    queryKey: propertyKeys.ofCard(cardId),
-    queryFn: () => unwrap(commands.cardProperties(cardId)),
-  });
+  return useQuery(cardPropertiesQuery(cardId));
 }
 
 /** Any change to a definition can change what every card shows. */

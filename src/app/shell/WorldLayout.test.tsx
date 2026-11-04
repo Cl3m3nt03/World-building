@@ -5,6 +5,7 @@ import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
+import { tabDirection } from "@/app/shell/WorldLayout";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppSettings, Card, WorldInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
@@ -119,4 +120,14 @@ test("the World tab clicked while a card is open keeps the card", async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 50));
   expect(router.state.location.pathname).toBe("/world/demo/world/card/aragorn");
+});
+
+test("a tab's page comes from the right going to a later tab, from the left going back", () => {
+  expect(tabDirection("home", "world")).toBe(1);
+  expect(tabDirection("home", "quill")).toBe(1);
+  expect(tabDirection("quill", "wiki")).toBe(-1);
+  expect(tabDirection("world", "home")).toBe(-1);
+  // The media library is not a tab: no side.
+  expect(tabDirection("page", "home")).toBe(0);
+  expect(tabDirection(null, "home")).toBe(0);
 });

@@ -3,12 +3,15 @@ import { type CardTypePatch, commands, type NewCardType } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cardTypeKeys } from "./keys";
 
+/** The world's card types (shared with route loaders). */
+export const cardTypesQuery = () => ({
+  queryKey: cardTypeKeys.list(),
+  queryFn: () => unwrap(commands.listCardTypes()),
+});
+
 /** Card types of the open world: each type followed by its subtypes. */
 export function useCardTypes() {
-  return useQuery({
-    queryKey: cardTypeKeys.list(),
-    queryFn: () => unwrap(commands.listCardTypes()),
-  });
+  return useQuery(cardTypesQuery());
 }
 
 function useInvalidate() {

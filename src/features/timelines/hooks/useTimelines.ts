@@ -11,11 +11,14 @@ export const timelineKeys = {
   detail: (id: string) => [...timelineKeys.all(), "detail", id] as const,
 };
 
+/** A timeline, by id (shared with the route's loader). */
+export const timelineQuery = (id: string) => ({
+  queryKey: timelineKeys.detail(id),
+  queryFn: () => unwrap(commands.getTimeline(id)),
+});
+
 export function useTimeline(id: string) {
-  return useQuery({
-    queryKey: timelineKeys.detail(id),
-    queryFn: () => unwrap(commands.getTimeline(id)),
-  });
+  return useQuery(timelineQuery(id));
 }
 
 /** Creates a timeline (one track) and opens it. */

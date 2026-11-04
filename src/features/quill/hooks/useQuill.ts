@@ -22,11 +22,14 @@ export const quillKeys = {
   notes: (storyId: string) => [...quillKeys.all(), "notes", storyId] as const,
 };
 
+/** The world's stories (shared with the Quill route's loader). */
+export const storiesQuery = () => ({
+  queryKey: quillKeys.stories(),
+  queryFn: () => unwrap(commands.listStories()),
+});
+
 export function useStories() {
-  return useQuery({
-    queryKey: quillKeys.stories(),
-    queryFn: () => unwrap(commands.listStories()),
-  });
+  return useQuery(storiesQuery());
 }
 
 export function useStoryOutline(id: string) {

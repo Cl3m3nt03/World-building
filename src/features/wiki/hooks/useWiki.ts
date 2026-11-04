@@ -13,11 +13,14 @@ export const wikiKeys = {
   pages: () => [...documentKeys.all(), "wiki-pages"] as const,
 };
 
+/** The wiki's settings (shared with the wiki route's loader). */
+export const wikiSettingsQuery = () => ({
+  queryKey: wikiKeys.settings(),
+  queryFn: () => unwrap(commands.wikiSettings()),
+});
+
 export function useWikiSettings() {
-  return useQuery({
-    queryKey: wikiKeys.settings(),
-    queryFn: () => unwrap(commands.wikiSettings()),
-  });
+  return useQuery(wikiSettingsQuery());
 }
 
 /** Saves the wiki's settings; the cache shows them at once. */
@@ -30,11 +33,14 @@ export function useSaveWikiSettings() {
   });
 }
 
+/** The wiki's pages (shared with the wiki route's loader). */
+export const wikiPagesQuery = () => ({
+  queryKey: wikiKeys.pages(),
+  queryFn: () => unwrap(commands.wikiPages()),
+});
+
 export function useWikiPages() {
-  return useQuery({
-    queryKey: wikiKeys.pages(),
-    queryFn: () => unwrap(commands.wikiPages()),
-  });
+  return useQuery(wikiPagesQuery());
 }
 
 /** Marks a card or a map « Visible dans le wiki », or not. */

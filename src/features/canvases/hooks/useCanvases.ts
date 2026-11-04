@@ -11,13 +11,16 @@ export const canvasKeys = {
   detail: (id: string) => [...canvasKeys.all(), "detail", id] as const,
 };
 
+/** A canvas, by id (shared with the route's loader). */
+export const canvasQuery = (id: string) => ({
+  queryKey: canvasKeys.detail(id),
+  queryFn: () => unwrap(commands.getCanvas(id)),
+  // The editor starts from it once: no refetch under its feet.
+  staleTime: Number.POSITIVE_INFINITY,
+});
+
 export function useCanvas(id: string) {
-  return useQuery({
-    queryKey: canvasKeys.detail(id),
-    queryFn: () => unwrap(commands.getCanvas(id)),
-    // The editor starts from it once: no refetch under its feet.
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  return useQuery(canvasQuery(id));
 }
 
 /** Creates an empty canvas and opens it. */

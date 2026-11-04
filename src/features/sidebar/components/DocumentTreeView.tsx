@@ -10,7 +10,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { defaultRangeExtractor, type Range, useVirtualizer } from "@tanstack/react-virtual";
 import {
   ArrowUpRight,
@@ -299,6 +299,21 @@ export function DocumentTreeView({
       }),
     [],
   );
+
+  // A document is loaded as soon as the pointer is on its row (or the row
+  // takes the focus), so its page is ready by the click (motion plan, batch B).
+  const router = useRouter();
+  const preloaded = useRef<string | null>(null);
+  const preload = (target: EventTarget) => {
+    const key = (target as HTMLElement).closest<HTMLElement>("[data-key]")?.dataset.key;
+    if (!key || key === preloaded.current) return;
+    preloaded.current = key;
+    const node = rows.find((row) => row.node.key === key)?.node;
+    if (node?.kind !== "document") return;
+    router
+      .preloadRoute(documentRoute(worldId, node.document.kind, node.document.id))
+      .catch(() => {});
+  };
 
   const activate = (row: TreeRow) => {
     setActiveKey(row.node.key);
@@ -764,6 +779,9 @@ export function DocumentTreeView({
             aria-label={t("sidebar.tree")}
             data-tree-viewport=""
             className="min-h-0 flex-1 overflow-y-auto p-2"
+            onPointerOverCapture={(event) => preload(event.target)}
+            onPointerDownCapture={(event) => preload(event.target)}
+            onFocusCapture={(event) => preload(event.target)}
             onContextMenuCapture={(event) => {
               const row = (event.target as HTMLElement).closest<HTMLElement>("[data-key]");
               setMenuKey(row?.dataset.key ?? null);

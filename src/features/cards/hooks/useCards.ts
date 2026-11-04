@@ -5,11 +5,14 @@ import { type Card, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { cardKeys, documentKeys } from "./keys";
 
+/** A card, by id (shared with the route's loader). */
+export const cardQuery = (id: string) => ({
+  queryKey: cardKeys.detail(id),
+  queryFn: () => unwrap(commands.getCard(id)),
+});
+
 export function useCard(id: string) {
-  return useQuery({
-    queryKey: cardKeys.detail(id),
-    queryFn: () => unwrap(commands.getCard(id)),
-  });
+  return useQuery(cardQuery(id));
 }
 
 /** After a change: the card's cache is the new card, and document lists refresh. */
@@ -82,12 +85,15 @@ export function useTrashCard(id: string) {
   });
 }
 
+/** The world's cards, or its trashed ones (shared with route loaders). */
+export const cardListQuery = (trashed: boolean) => ({
+  queryKey: [...documentKeys.all(), "cards", trashed],
+  queryFn: () => unwrap(commands.listCards(trashed)),
+});
+
 /** Cards of the world (or of its trash), by title. */
 export function useCardList(trashed: boolean) {
-  return useQuery({
-    queryKey: [...documentKeys.all(), "cards", trashed],
-    queryFn: () => unwrap(commands.listCards(trashed)),
-  });
+  return useQuery(cardListQuery(trashed));
 }
 
 /** Maps, graphs and trees of the world's trash (the trash lists them next to the cards). */
