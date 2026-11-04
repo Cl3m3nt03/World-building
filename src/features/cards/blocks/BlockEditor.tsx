@@ -354,7 +354,8 @@ function SortableBlock({
   const { t } = useTranslation();
   const [slashOpen, setSlashOpen] = useState(false);
   /** Where the « / » menu hangs: under the line, in the block's text area. */
-  const [slashTop, setSlashTop] = useState<number | null>(null);
+  /** Where the « / » line sits in the block (`null`: at its foot). */
+  const [slashLine, setSlashLine] = useState<{ top: number; height: number } | null>(null);
   const slashAnchor = useRef<HTMLSpanElement>(null);
   // Folded (V2-3.4): the block shows its first line only, until unfolded.
   const [folded, setFolded] = useState(false);
@@ -516,13 +517,15 @@ function SortableBlock({
             label={label}
             autoFocus={focus}
             onChange={(doc) => onChange({ ...block, doc })}
-            onSlash={(removeLine, refocus, format, lineBottom) => {
+            onSlash={(removeLine, refocus, format, line) => {
               removeSlashLine.current = removeLine;
               refocusSlashLine.current = refocus;
               formatSlashLine.current = format;
               picked.current = false;
-              const area = slashAnchor.current?.offsetParent?.getBoundingClientRect();
-              setSlashTop(area && lineBottom !== null ? lineBottom - area.top : null);
+              const area = slashAnchor.current?.parentElement?.getBoundingClientRect();
+              setSlashLine(
+                area && line ? { top: line.top - area.top, height: line.bottom - line.top } : null,
+              );
               setSlashOpen(true);
             }}
             prompt={block.prompt}
@@ -564,11 +567,13 @@ function SortableBlock({
               }
             : {})}
         >
+          {/* The menu hangs on the whole line: opened above it, it leaves the
+              line it was typed on in sight (#536). */}
           <span
             ref={slashAnchor}
             aria-hidden
-            className="absolute left-2 size-0"
-            style={slashTop === null ? { bottom: 0 } : { top: slashTop }}
+            className="absolute left-2 w-0"
+            style={slashLine === null ? { bottom: 0, height: 0 } : slashLine}
           />
         </BlockTypeMenu>
       </div>

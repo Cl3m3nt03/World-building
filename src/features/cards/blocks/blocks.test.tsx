@@ -360,6 +360,45 @@ test('an empty card has one way in: its prompt, without "Add a block"', async ()
   expect(screen.queryByRole("button", { name: "Ajouter un bloc" })).toBeNull();
 });
 
+// #536: the menu hangs on the whole line, so opened above it leaves the line
+// readable; a line cut by the window's foot only counts for what shows.
+test.each([
+  { line: [713, 739], anchor: { top: "113px", height: "26px" } },
+  { line: [743, 769], anchor: { top: "143px", height: "6px" } },
+])("the « / » menu hangs on its line $line", async ({ line, anchor: expected }) => {
+  initial = [textBlock("t1", "")];
+  renderEditor();
+  const text = await screen.findByRole("textbox", { name: "Bloc de texte 1" });
+  const area = text.closest(".relative");
+  const rect = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockImplementation(function (this: HTMLElement) {
+      const [top, bottom] = this === area ? [600, 1000] : (line as [number, number]);
+      return {
+        top,
+        bottom,
+        left: 0,
+        right: 0,
+        width: 0,
+        height: bottom - top,
+        x: 0,
+        y: top,
+      } as DOMRect;
+    });
+  vi.stubGlobal("innerHeight", 749);
+  act(() => text.focus());
+  await act(async () => {
+    fireEvent.keyDown(text, { key: "/" });
+  });
+  await screen.findByRole("menu");
+  const trigger = document.querySelector<HTMLElement>('span[aria-haspopup="menu"]');
+  rect.mockRestore();
+  vi.unstubAllGlobals();
+
+  expect(trigger?.style.top).toBe(expected.top);
+  expect(trigger?.style.height).toBe(expected.height);
+});
+
 test('"/" turns its empty line into a heading, from the text family', async () => {
   initial = [textBlock("t1", "")];
   renderEditor();
