@@ -1,17 +1,23 @@
-import { FolderOpen, RotateCcw } from "lucide-react";
-import { type ReactNode, useId } from "react";
+import {
+  FolderOpen,
+  Globe,
+  Info,
+  Languages,
+  Library,
+  type LucideIcon,
+  Palette,
+  RotateCcw,
+} from "lucide-react";
+import { Tabs } from "radix-ui";
+import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
 import type { ThemePreference } from "@/app/theme";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
@@ -33,23 +39,36 @@ const LANGUAGE_LABELS: Record<Language, TranslationKey> = {
   en: "settings.language.en",
 };
 
+type SectionId = "appearance" | "language" | "worlds" | "library" | "about";
+
+const SECTIONS: { value: SectionId; icon: LucideIcon; label: TranslationKey }[] = [
+  { value: "appearance", icon: Palette, label: "settings.appearance" },
+  { value: "language", icon: Languages, label: "settings.language" },
+  { value: "worlds", icon: Globe, label: "settings.sections.worlds" },
+  { value: "library", icon: Library, label: "settings.sections.library" },
+  { value: "about", icon: Info, label: "settings.about" },
+];
+
 function isThemePreference(value: string): value is ThemePreference {
   return THEMES.some((theme) => theme.value === value);
 }
 
-function Section({ title, children }: { title: TranslationKey; children: ReactNode }) {
+function isSection(value: string): value is SectionId {
+  return SECTIONS.some((section) => section.value === value);
+}
+
+/** The content of a section, under its title (the world settings layout). */
+function Panel({ value, children }: { value: SectionId; children: ReactNode }) {
   const { t } = useTranslation();
-  const id = useId();
+  const label = SECTIONS.find((section) => section.value === value)?.label;
   return (
-    <section
-      aria-labelledby={id}
-      className="flex flex-col gap-3 border-t pt-4 first:border-t-0 first:pt-0"
+    <Tabs.Content
+      value={value}
+      className="flex min-h-0 flex-col gap-4 overflow-y-auto p-5 text-sm outline-none"
     >
-      <h3 id={id} className="text-sm font-bold">
-        {t(title)}
-      </h3>
+      {label && <h2 className="font-heading text-lg font-bold">{t(label)}</h2>}
       {children}
-    </section>
+    </Tabs.Content>
   );
 }
 
@@ -62,7 +81,7 @@ function AppearanceSection() {
   const transparencyId = useId();
 
   return (
-    <Section title="settings.appearance">
+    <>
       <RadioGroup
         aria-label={t("settings.appearance")}
         value={theme}
@@ -89,32 +108,30 @@ function AppearanceSection() {
           onCheckedChange={(checked) => setTransparency(checked ? "on" : "off")}
         />
       </div>
-    </Section>
+    </>
   );
 }
 
 function LanguageSection() {
   const { t, i18n } = useTranslation();
   return (
-    <Section title="settings.language">
-      <RadioGroup
-        aria-label={t("settings.language")}
-        value={i18n.resolvedLanguage ?? i18n.language}
-        onValueChange={(value) => {
-          if (isLanguage(value)) void i18n.changeLanguage(value);
-        }}
-        className="flex gap-4"
-      >
-        {LANGUAGES.map((language) => (
-          <div key={language} className="flex items-center gap-2">
-            <RadioGroupItem value={language} id={`language-${language}`} />
-            <Label htmlFor={`language-${language}`} lang={language}>
-              {t(LANGUAGE_LABELS[language])}
-            </Label>
-          </div>
-        ))}
-      </RadioGroup>
-    </Section>
+    <RadioGroup
+      aria-label={t("settings.language")}
+      value={i18n.resolvedLanguage ?? i18n.language}
+      onValueChange={(value) => {
+        if (isLanguage(value)) void i18n.changeLanguage(value);
+      }}
+      className="flex gap-4"
+    >
+      {LANGUAGES.map((language) => (
+        <div key={language} className="flex items-center gap-2">
+          <RadioGroupItem value={language} id={`language-${language}`} />
+          <Label htmlFor={`language-${language}`} lang={language}>
+            {t(LANGUAGE_LABELS[language])}
+          </Label>
+        </div>
+      ))}
+    </RadioGroup>
   );
 }
 
@@ -123,6 +140,7 @@ function WorldsFolderSection() {
   const settings = useSettings();
   const setFolder = useSetDefaultWorldsDir();
   const folder = settings.data?.defaultWorldsDir ?? null;
+  const shown = folder ?? t("settings.worldsDirDefault");
   const inputId = useId();
 
   const choose = async () => {
@@ -136,24 +154,31 @@ function WorldsFolderSection() {
   };
 
   return (
-    <Section title="settings.worldsDir">
-      <p className="text-xs text-muted-foreground">{t("settings.worldsDirHint")}</p>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={inputId}>{t("settings.worldsDir")}</Label>
       <div className="flex gap-2">
-        <input
-          id={inputId}
-          aria-label={t("settings.worldsDir")}
-          readOnly
-          value={folder ?? t("settings.worldsDirDefault")}
-          className="h-8 min-w-0 flex-1 rounded-md border bg-transparent px-2 font-mono text-xs"
-        />
-        <Button type="button" variant="secondary" size="sm" onClick={choose}>
+        {/* The field keeps the value; the path shows cut in its middle, as in « Nouveau monde ». */}
+        <div className="relative min-w-0 flex-1">
+          <Input
+            id={inputId}
+            readOnly
+            value={shown}
+            title={shown}
+            className="text-transparent selection:text-transparent"
+          />
+          <MiddleTruncate
+            text={shown}
+            hidden
+            className="pointer-events-none absolute inset-x-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
+          />
+        </div>
+        <Button type="button" variant="secondary" onClick={choose}>
           <FolderOpen />
           {t("settings.worldsDirChoose")}
         </Button>
         <Button
           type="button"
           variant="ghost"
-          size="sm"
           disabled={folder === null}
           onClick={() => setFolder.mutate(null)}
         >
@@ -161,8 +186,58 @@ function WorldsFolderSection() {
           {t("settings.worldsDirReset")}
         </Button>
       </div>
+      <p className="text-xs text-muted-foreground">{t("settings.worldsDirHint")}</p>
       {setFolder.isError && <AppErrorMessage error={setFolder.error} />}
-    </Section>
+    </div>
+  );
+}
+
+/** The rail and the open section. Mounted with the dialog, so it opens on Appearance. */
+function SettingsSections({ open }: { open: boolean }) {
+  const { t } = useTranslation();
+  const [section, setSection] = useState<SectionId>("appearance");
+  return (
+    // Radix primitives, as in the world settings: the shadcn tabs are styled horizontal.
+    <Tabs.Root
+      orientation="vertical"
+      value={section}
+      onValueChange={(value) => {
+        if (isSection(value)) setSection(value);
+      }}
+      className="grid min-h-0 flex-1 grid-cols-[12rem_minmax(0,1fr)] gap-0"
+    >
+      <Tabs.List
+        aria-label={t("worldSettings.sectionsLabel")}
+        className="flex flex-col gap-0.5 border-r border-border p-2"
+      >
+        {SECTIONS.map(({ value, icon: Icon, label }) => (
+          <Tabs.Trigger
+            key={value}
+            value={value}
+            className="flex h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium text-muted-foreground outline-none transition hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=active]:bg-accent data-[state=active]:text-foreground [&_svg]:size-4 [&_svg]:shrink-0"
+          >
+            <Icon aria-hidden />
+            {t(label)}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+
+      <Panel value="appearance">
+        <AppearanceSection />
+      </Panel>
+      <Panel value="language">
+        <LanguageSection />
+      </Panel>
+      <Panel value="worlds">
+        <WorldsFolderSection />
+      </Panel>
+      <Panel value="library">
+        <LibrarySection enabled={open} />
+      </Panel>
+      <Panel value="about">
+        <AboutSection enabled={open} />
+      </Panel>
+    </Tabs.Root>
   );
 }
 
@@ -171,27 +246,20 @@ type SettingsDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-/** App settings, stored in the app config folder (not in a world). */
+/**
+ * App settings, stored in the app config folder (not in a world). Same layout
+ * as the world settings: a rail of sections, the open section beside it.
+ */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="glass flex h-[85vh] max-h-[40rem] flex-col gap-0 p-0 sm:max-w-3xl">
+        <div className="flex flex-col gap-0.5 border-b border-border px-5 py-3 pr-12">
           <DialogTitle>{t("settings.title")}</DialogTitle>
-          <DialogDescription>{t("settings.description")}</DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <AppearanceSection />
-          <LanguageSection />
-          <WorldsFolderSection />
-          <Section title="library.title">
-            <LibrarySection enabled={open} />
-          </Section>
-          <Section title="settings.about">
-            <AboutSection enabled={open} />
-          </Section>
+          <DialogDescription className="text-xs">{t("settings.description")}</DialogDescription>
         </div>
+        <SettingsSections open={open} />
       </DialogContent>
     </Dialog>
   );

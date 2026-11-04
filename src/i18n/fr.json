@@ -79,6 +79,8 @@
   "settings.worldsDirChoose": "Choisir…",
   "settings.worldsDirReset": "Par défaut",
   "settings.worldsDirPickerTitle": "Choisir le dossier des nouveaux mondes",
+  "settings.sections.worlds": "Mondes",
+  "settings.sections.library": "Bibliothèque",
   "settings.about": "À propos",
   "createWorld.genre": "Genre",
   "createWorld.genreHint": "Il oriente les types de fiches proposés. Vous pourrez le changer plus tard.",
