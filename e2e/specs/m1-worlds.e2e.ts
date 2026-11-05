@@ -141,6 +141,18 @@ describe("M1: worlds, preferences and relocation", () => {
 
     await $("h1=Worlds").waitForDisplayed({ timeout: 30_000 });
     expect(await browser.execute(() => document.documentElement.dataset.theme)).toBe("dark");
+    // The veil is measured on the last world's thumbnail (#528): over its
+    // deep blue the theme's own veil keeps bare text AA. An image that could
+    // not be measured would get the darker veil of a white one.
+    await browser.waitUntil(
+      async () =>
+        (await browser.execute(
+          () =>
+            document.querySelector<HTMLElement>("div[aria-hidden] > img + div")?.style
+              .backgroundColor ?? null,
+        )) === "rgba(14, 12, 8, 0.55)",
+      { timeoutMsg: "the backdrop veil was not computed from the thumbnail" },
+    );
 
     // Back to the defaults for the other specs.
     await $("aria/Settings").click();

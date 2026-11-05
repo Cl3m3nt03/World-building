@@ -32,39 +32,59 @@ export function contrast(a: number, b: number): number {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
+/** What lies over the image: the veil, then the atlas engraved on it. */
+export type VeilLayers = {
+  /** Colour of the veil. */
+  veil: Rgb;
+  /** The theme's own opacity of the veil, never gone below. */
+  floor: number;
+  /** Colours of the text set straight on the backdrop. */
+  texts: Rgb[];
+  /** The atlas's strongest ink and its opacity over an image. */
+  ink?: { color: Rgb; alpha: number } | undefined;
+};
+
+const mix = (alpha: number, top: Rgb, bottom: Rgb): Rgb => [
+  alpha * top[0] + (1 - alpha) * bottom[0],
+  alpha * top[1] + (1 - alpha) * bottom[1],
+  alpha * top[2] + (1 - alpha) * bottom[2],
+];
+
 /** Lowest contrast between the texts and the samples once veiled at `alpha`. */
-function worstContrast(samples: ArrayLike<number>, veil: Rgb, texts: number[], alpha: number) {
+function worstContrast(samples: ArrayLike<number>, layers: VeilLayers, alpha: number) {
+  const texts = layers.texts.map(luminance);
   let worst = Number.POSITIVE_INFINITY;
   for (let i = 0; i + 2 < samples.length; i += 3) {
-    const mixed: Rgb = [
-      alpha * veil[0] + (1 - alpha) * samples[i],
-      alpha * veil[1] + (1 - alpha) * samples[i + 1],
-      alpha * veil[2] + (1 - alpha) * samples[i + 2],
-    ];
-    const background = luminance(mixed);
-    for (const text of texts) worst = Math.min(worst, contrast(text, background));
+    const pixel: Rgb = [samples[i] ?? 0, samples[i + 1] ?? 0, samples[i + 2] ?? 0];
+    const veiled = mix(alpha, layers.veil, pixel);
+    // Text may cross an engraved line: the line counts as background too.
+    const backgrounds = layers.ink
+      ? [veiled, mix(layers.ink.alpha, layers.ink.color, veiled)]
+      : [veiled];
+    for (const background of backgrounds) {
+      const level = luminance(background);
+      for (const text of texts) worst = Math.min(worst, contrast(text, level));
+    }
   }
   return worst;
 }
 
 /**
  * Opacity of the veil over `samples` (RGB triplets) so that every text colour
- * reaches `target`, at least `floor`. Without samples (an image that cannot be
- * measured), the worst image is assumed: the colour opposite the veil.
+ * reaches `target`, at least the layers' floor. Without samples (an image
+ * that cannot be measured), the worst image is assumed: the colour opposite
+ * the veil.
  */
 export function veilAlpha(
   samples: ArrayLike<number> | null,
-  veil: Rgb,
-  texts: Rgb[],
-  floor: number,
+  layers: VeilLayers,
   target = VEIL_TARGET_CONTRAST,
 ): number {
-  const opposite = luminance(veil) < 0.5 ? 255 : 0;
+  const opposite = luminance(layers.veil) < 0.5 ? 255 : 0;
   const pixels = samples && samples.length >= 3 ? samples : [opposite, opposite, opposite];
-  const textLuminances = texts.map(luminance);
-  const passes = (alpha: number) => worstContrast(pixels, veil, textLuminances, alpha) >= target;
-  if (passes(floor)) return floor;
-  let low = floor;
+  const passes = (alpha: number) => worstContrast(pixels, layers, alpha) >= target;
+  if (passes(layers.floor)) return layers.floor;
+  let low = layers.floor;
   let high = 1;
   for (let step = 0; step < 14; step += 1) {
     const middle = (low + high) / 2;
@@ -96,9 +116,9 @@ function measure(url: string): Promise<Uint8ClampedArray | null> {
         const rgba = context.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE).data;
         const rgb = new Uint8ClampedArray((rgba.length / 4) * 3);
         for (let i = 0, j = 0; i < rgba.length; i += 4, j += 3) {
-          rgb[j] = rgba[i];
-          rgb[j + 1] = rgba[i + 1];
-          rgb[j + 2] = rgba[i + 2];
+          rgb[j] = rgba[i] ?? 0;
+          rgb[j + 1] = rgba[i + 1] ?? 0;
+          rgb[j + 2] = rgba[i + 2] ?? 0;
         }
         resolve(rgb);
       } catch {
@@ -116,32 +136,46 @@ function measure(url: string): Promise<Uint8ClampedArray | null> {
   return promise;
 }
 
-/** A computed CSS colour as RGB (any syntax the browser accepts). */
-function parseColor(value: string): Rgb | null {
+/** A computed CSS colour as RGB and opacity (the syntaxes of tokens.css). */
+function parseColor(value: string): { rgb: Rgb; alpha: number } | null {
   const text = value.trim();
-  const triplet = /^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/.exec(text);
-  if (triplet) return [Number(triplet[1]), Number(triplet[2]), Number(triplet[3])];
   const hex = /^#([0-9a-f]{6})$/i.exec(text);
   if (hex) {
-    const n = Number.parseInt(hex[1], 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    const n = Number.parseInt(hex[1] ?? "0", 16);
+    return { rgb: [(n >> 16) & 255, (n >> 8) & 255, n & 255], alpha: 1 };
   }
-  const rgb = /^rgba?\(\s*(\d+(?:\.\d+)?)[\s,]+(\d+(?:\.\d+)?)[\s,]+(\d+(?:\.\d+)?)/i.exec(text);
-  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
-  return null;
+  const numbers = text.match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+  const [r, g, b, alpha = 1] = numbers;
+  if (r === undefined || g === undefined || b === undefined) return null;
+  return { rgb: [r, g, b], alpha };
 }
 
-/** The theme's veil colour, its floor and the colours of bare backdrop text. */
-function readTokens(): { veil: Rgb; floor: number; texts: Rgb[] } | null {
+/** The current theme's layers over a backdrop image, from tokens.css. */
+function readLayers(): VeilLayers | null {
   const style = getComputedStyle(document.documentElement);
-  const veil = parseColor(style.getPropertyValue("--bz-backdrop-veil"));
-  const floor = Number.parseFloat(style.getPropertyValue("--bz-backdrop-veil-floor"));
-  const texts = ["--bz-on-backdrop", "--bz-text"]
-    .map((name) => parseColor(style.getPropertyValue(name)))
-    .filter((color): color is Rgb => color !== null);
+  const token = (name: string) => style.getPropertyValue(name);
+  const veil = parseColor(token("--bz-backdrop-veil"))?.rgb;
+  const floor = Number.parseFloat(token("--bz-backdrop-veil-floor"));
+  const texts = ["--bz-on-backdrop", "--bz-text"].flatMap((name) => {
+    const color = parseColor(token(name));
+    return color ? [color.rgb] : [];
+  });
   if (!veil || Number.isNaN(floor) || texts.length === 0) return null;
-  return { veil, floor, texts };
+  const ink = parseColor(token("--bz-atlas-ink-strong"));
+  const overImage = Number.parseFloat(token("--bz-atlas-over-image"));
+  return {
+    veil,
+    floor,
+    texts,
+    ink:
+      ink && !Number.isNaN(overImage)
+        ? { color: ink.rgb, alpha: ink.alpha * overImage }
+        : undefined,
+  };
 }
+
+const veilColor = (layers: VeilLayers, samples: Uint8ClampedArray | null) =>
+  `rgb(${layers.veil.join(" ")} / ${veilAlpha(samples, layers)})`;
 
 /**
  * The veil over the backdrop image `url` in the current theme, as a CSS
@@ -153,25 +187,19 @@ export function useBackdropVeil(url: string | undefined): string | undefined {
   const key = `${theme}|${url}`;
   useEffect(() => {
     if (!url) return;
+    const layers = readLayers();
+    if (!layers) return;
     let live = true;
-    const tokens = readTokens();
-    if (!tokens) return;
-    const color = (samples: Uint8ClampedArray | null) => {
-      const alpha = veilAlpha(samples, tokens.veil, tokens.texts, tokens.floor);
-      return `rgb(${tokens.veil.join(" ")} / ${alpha})`;
-    };
     measure(url).then((samples) => {
-      if (live) setVeil({ key, color: color(samples) });
+      if (live) setVeil({ key, color: veilColor(layers, samples) });
     });
     return () => {
       live = false;
     };
   }, [url, key]);
   if (!url) return undefined;
-  // Until the image is measured, the veil of the worst image: never too light.
   if (veil?.key === key) return veil.color;
-  const tokens = typeof document === "undefined" ? null : readTokens();
-  return tokens
-    ? `rgb(${tokens.veil.join(" ")} / ${veilAlpha(null, tokens.veil, tokens.texts, tokens.floor)})`
-    : undefined;
+  // Until the image is measured, the veil of the worst image: never too light.
+  const layers = readLayers();
+  return layers ? veilColor(layers, null) : undefined;
 }
