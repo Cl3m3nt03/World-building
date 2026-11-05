@@ -94,6 +94,8 @@ const ROW_HEIGHT = 32;
 const INDENT = 16;
 /** Hovering a closed folder or parent this long while dragging opens it. */
 const OPEN_ON_HOVER_MS = 700;
+/** How long the pointer rests on a row before its document is loaded (#545). */
+const HOVER_INTENT_MS = 80;
 
 /** Where a drag would land: the row under the pointer, and the move it makes. */
 type Drop = { key: string; position: DropPosition; move: Move | "refused" | null };
@@ -300,12 +302,30 @@ export function DocumentTreeView({
     [],
   );
 
-  // A document is loaded as soon as the pointer is on its row (or the row
-  // takes the focus), so its page is ready by the click (motion plan, batch B).
+  // A document is loaded once the pointer rests on its row, or at once when
+  // the row is pressed or takes the focus, so its page is ready by the click
+  // (motion plan, batch B). A pointer only passing over rows loads nothing (#545).
   const router = useRouter();
   const preloaded = useRef<string | null>(null);
+  const intent = useRef<{ key: string; timer: ReturnType<typeof setTimeout> } | null>(null);
+  useEffect(() => () => clearTimeout(intent.current?.timer), []);
+  const keyOf = (target: EventTarget) =>
+    (target as HTMLElement).closest<HTMLElement>("[data-key]")?.dataset.key;
+  const hover = (target: EventTarget) => {
+    const key = keyOf(target);
+    if (key === intent.current?.key) return;
+    clearTimeout(intent.current?.timer);
+    intent.current = key
+      ? { key, timer: setTimeout(() => preload(target), HOVER_INTENT_MS) }
+      : null;
+  };
+  const stopHover = () => {
+    clearTimeout(intent.current?.timer);
+    intent.current = null;
+  };
   const preload = (target: EventTarget) => {
-    const key = (target as HTMLElement).closest<HTMLElement>("[data-key]")?.dataset.key;
+    stopHover();
+    const key = keyOf(target);
     if (!key || key === preloaded.current) return;
     preloaded.current = key;
     const node = rows.find((row) => row.node.key === key)?.node;
@@ -779,7 +799,8 @@ export function DocumentTreeView({
             aria-label={t("sidebar.tree")}
             data-tree-viewport=""
             className="min-h-0 flex-1 overflow-y-auto p-2"
-            onPointerOverCapture={(event) => preload(event.target)}
+            onPointerOverCapture={(event) => hover(event.target)}
+            onPointerLeave={stopHover}
             onPointerDownCapture={(event) => preload(event.target)}
             onFocusCapture={(event) => preload(event.target)}
             onContextMenuCapture={(event) => {

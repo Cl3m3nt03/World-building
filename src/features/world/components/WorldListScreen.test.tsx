@@ -188,6 +188,28 @@ test("the world rail switches world in one click, and folds", async () => {
   expect(screen.getByRole("button", { name: "Afficher le rail des mondes" })).toBeDefined();
 });
 
+test("folding or showing the rail hands the focus to the button that undoes it", async () => {
+  recentWorlds = [world("Eldefleur", 1)];
+  useUiStore.setState({ worldRail: true });
+  await renderList();
+  const rail = await screen.findByRole("navigation", { name: "Mondes" });
+  const fold = within(rail).getByRole("button", { name: "Replier le rail des mondes" });
+  await act(async () => {
+    fold.focus();
+    fireEvent.click(fold);
+  });
+  const show = screen.getByRole("button", { name: "Afficher le rail des mondes" });
+  await waitFor(() => expect(document.activeElement).toBe(show));
+  await act(async () => {
+    fireEvent.click(show);
+  });
+  await waitFor(() =>
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Replier le rail des mondes" }),
+    ),
+  );
+});
+
 test("a world's menu pins it first and duplicates it", async () => {
   recentWorlds = [{ ...world("Eldefleur", 1), pinned: true }, world("Ombreval", 2)];
   await renderList();

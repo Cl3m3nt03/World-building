@@ -9,12 +9,64 @@ import { thumbnailUrl, useCloseWorld, useCurrentWorld, useOpenWorld } from "@/fe
 import type { RecentWorld } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { Atlas } from "./Atlas";
+import { slideLayout } from "./useSlideCollapse";
+
+/** Keeps the leaving rail where it is, out of the layout: the page takes its room at once. */
+function pinRail(rail: HTMLElement) {
+  const { position, top, bottom, left } = rail.style;
+  Object.assign(rail.style, { position: "absolute", top: "0", bottom: "0", left: "0" });
+  return () => Object.assign(rail.style, { position, top, bottom, left });
+}
+
+/**
+ * Shows or folds the rail (motion plan, batch D): the page takes its new
+ * width at once and its panels slide to it, the rail sliding in or out.
+ */
+/**
+ * The focus, lost with the button that was pressed (or left in the rail that
+ * leaves), goes to the button that undoes the gesture.
+ */
+function keepFocus() {
+  requestAnimationFrame(() => {
+    const active = document.activeElement;
+    if (active && active !== document.body && !active.closest("[inert]")) return;
+    const toggle = [
+      ...document.querySelectorAll<HTMLElement>('button[aria-controls="world-rail"]'),
+    ].find((button) => !button.closest("[inert]"));
+    toggle?.focus({ preventScroll: true });
+  });
+}
+
+function toggleRail(shown: boolean) {
+  const { setWorldRail, setWorldRailLeaving } = useUiStore.getState();
+  keepFocus();
+  const root = document.querySelector<HTMLElement>("[data-slide-root]");
+  const rail = () => document.getElementById("world-rail");
+  const change = () => {
+    setWorldRailLeaving(shown);
+    setWorldRail(!shown);
+  };
+  if (!root) {
+    change();
+    setWorldRailLeaving(false);
+    return;
+  }
+  const current = rail();
+  slideLayout({
+    root,
+    change,
+    leaving: shown && current ? { element: current, pin: pinRail } : undefined,
+    entering: shown ? undefined : rail,
+    distance: -(current?.getBoundingClientRect().right || 64),
+    unclip: "[data-panel] > *, [data-group]",
+    done: () => setWorldRailLeaving(false),
+  });
+}
 
 /** The rail's button that shows or folds it (in the rail, or in the top bar when folded). */
 export function RailToggle({ className }: { className?: string }) {
   const { t } = useTranslation();
   const shown = useUiStore((state) => state.worldRail);
-  const setShown = useUiStore((state) => state.setWorldRail);
   const label = shown ? t("rail.fold") : t("rail.show");
   return (
     <Tooltip>
@@ -26,7 +78,7 @@ export function RailToggle({ className }: { className?: string }) {
           aria-expanded={shown}
           aria-controls="world-rail"
           className={cn("rounded-full", className)}
-          onClick={() => setShown(!shown)}
+          onClick={() => toggleRail(shown)}
         >
           {shown ? <PanelLeftClose /> : <PanelLeftOpen />}
         </Button>
@@ -121,12 +173,13 @@ function moveInRail(event: KeyboardEvent<HTMLElement>) {
 export function WorldRail() {
   const { t } = useTranslation();
   const shown = useUiStore((state) => state.worldRail);
+  const leaving = useUiStore((state) => state.worldRailLeaving);
   const openCreateWorld = useUiStore((state) => state.setCreateWorldOpen);
   const settings = useSettings();
   const { data: world } = useCurrentWorld();
   const openWorld = useOpenWorld();
   const closeWorld = useCloseWorld();
-  if (!shown) return null;
+  if (!shown && !leaving) return null;
   const worlds = settings.data?.recentWorlds ?? [];
 
   return (
