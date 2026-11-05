@@ -53,6 +53,7 @@ import {
   wikiSettingsQuery,
 } from "@/features/wiki";
 import { CreateWorldDialog, currentWorldQuery, WorldListScreen } from "@/features/world";
+import { useWorldMaterial } from "@/features/world-theme";
 
 /*
  * Routes (code-based, fully typed):
@@ -102,9 +103,10 @@ async function ready(
 /**
  * The app's frame: the backdrop, the world rail (V2-2+.1) beside the page,
  * the « New world » dialog shared by the list and the rail, and the route
- * announcer.
+ * announcer. The open world's material and ornament apply to all of it.
  */
 function Root() {
+  useWorldMaterial();
   const createOpen = useUiStore((state) => state.createWorldOpen);
   const setCreateOpen = useUiStore((state) => state.setCreateWorldOpen);
   return (

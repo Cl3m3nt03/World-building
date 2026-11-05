@@ -1,6 +1,7 @@
 /**
  * End of M2 scenarios (docs/roadmap/M2-cartes-et-types.md, 2.19):
  * - a world theme is kept after closing and reopening the world;
+ * - a custom theme's material and ornament dress the panels (#548);
  * - a typed card name becomes a mention, and no longer once the automatic
  *   links are switched off (kept after reopening the world);
  * - another world shows nothing of this one (#109);
@@ -63,6 +64,40 @@ describe("M2: world settings, theme and writing preferences", () => {
     await browser.waitUntil(async () => (await backdropSource())?.includes("forest") ?? false, {
       timeoutMsg: "the theme was not kept",
     });
+  });
+
+  it("dresses the panels in the theme's material and ornament (#548)", async () => {
+    // No picker yet (#552): the theme is saved through the command, then the
+    // world is reopened.
+    await browser.execute(() =>
+      (
+        window as unknown as {
+          __TAURI_INTERNALS__: { invoke: (command: string, args: unknown) => Promise<unknown> };
+        }
+      ).__TAURI_INTERNALS__.invoke("set_world_theme", {
+        theme: {
+          kind: "custom",
+          background: null,
+          accent: "#5fcdc0",
+          material: "stone",
+          ornament: "edge",
+        },
+      }),
+    );
+    await reopenWorld();
+    await browser.waitUntil(
+      async () =>
+        browser.execute(() => {
+          const root = document.documentElement;
+          const radius = getComputedStyle(root).getPropertyValue("--bz-radius-lg").trim();
+          return (
+            root.dataset.material === "stone" &&
+            root.dataset.ornament === "edge" &&
+            radius === "2px"
+          );
+        }),
+      { timeoutMsg: "the stone material and the edge ornament were not applied" },
+    );
   });
 
   it("turns a typed card name into a mention, and no longer once switched off", async () => {
