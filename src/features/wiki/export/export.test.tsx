@@ -334,7 +334,7 @@ async function run(look?: WikiLook) {
     t,
     language: "fr",
     typeColors: { "--bz-type-blue": "#7aa7f5" },
-    look,
+    ...(look ? { look } : {}),
     onProgress: ({ step }) => steps.push(step),
   });
   return { dir, steps };
