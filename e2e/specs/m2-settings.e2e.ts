@@ -58,7 +58,7 @@ describe("M2: world settings, theme and writing preferences", () => {
   it("keeps the theme chosen for the world after reopening it", async () => {
     await openSettings("Thème");
     await $('[role="dialog"] [role="radio"][aria-label="Forêt ancienne"]').click();
-    await $('[role="dialog"] button=Appliquer').click();
+    await $('//*[@role="dialog"]//button[normalize-space()="Appliquer"]').click();
     await browser.waitUntil(async () => (await backdropSource())?.includes("forest") ?? false, {
       timeoutMsg: "the forest illustration never became the backdrop",
     });
@@ -103,7 +103,7 @@ describe("M2: world settings, theme and writing preferences", () => {
     );
     expect(await $('[role="dialog"]').isExisting()).toBe(true);
     await $('[role="dialog"] [role="radio"][aria-label="Station"]').click();
-    await $('[role="dialog"] button=Appliquer').click();
+    await $('//*[@role="dialog"]//button[normalize-space()="Appliquer"]').click();
     await browser.waitUntil(
       async () =>
         ((await backdropSource())?.includes("station") ?? false) &&
