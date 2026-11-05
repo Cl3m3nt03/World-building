@@ -6,6 +6,7 @@
  * (`font-heading`, h1 to h3) follow it; running text keeps Alegreya Sans.
  * All are SIL OFL, shipped with the app (Latin and Latin Extended faces only,
  * no network: CSP `font-src 'self'`); their licences are in licenses/fonts/.
+ * The theme gallery's preview (`data-theme-preview`) sets its own.
  * The wiki uses Cinzel, Playfair Display and EB Garamond from here too.
  */
 @import "@fontsource-variable/cinzel/wght.css";
@@ -13,30 +14,35 @@
 @import "@fontsource-variable/eb-garamond/wght.css";
 @import "@fontsource-variable/oxanium/wght.css";
 
-:root {
+:root,
+[data-theme-preview] {
   --bz-font-heading: "Alegreya Variable", "Alegreya", ui-serif, Georgia, serif;
   /* Tracking of h1 to h3: a serif breathes more than the interface's sans. */
   --bz-heading-tracking: -0.005em;
 }
 
 /* Cinzel (Grimoire): inscriptional capitals, opened up a little. */
-:root[data-heading-font="cinzel"] {
+:root[data-heading-font="cinzel"],
+[data-theme-preview][data-heading-font="cinzel"] {
   --bz-font-heading: "Cinzel Variable", "Alegreya Variable", ui-serif, Georgia, serif;
   --bz-heading-tracking: 0.04em;
 }
 
-:root[data-heading-font="ebGaramond"] {
+:root[data-heading-font="ebGaramond"],
+[data-theme-preview][data-heading-font="ebGaramond"] {
   --bz-font-heading: "EB Garamond Variable", "Alegreya Variable", ui-serif, Georgia, serif;
 }
 
 /* Playfair Display (Crypte): high contrast, set slightly looser. */
-:root[data-heading-font="playfair"] {
+:root[data-heading-font="playfair"],
+[data-theme-preview][data-heading-font="playfair"] {
   --bz-font-heading: "Playfair Display Variable", "Alegreya Variable", ui-serif, Georgia, serif;
   --bz-heading-tracking: 0.01em;
 }
 
 /* Oxanium (Station): a squared technical face, spaced like a display. */
-:root[data-heading-font="oxanium"] {
+:root[data-heading-font="oxanium"],
+[data-theme-preview][data-heading-font="oxanium"] {
   --bz-font-heading: "Oxanium Variable", "Alegreya Sans", ui-sans-serif, sans-serif;
   --bz-heading-tracking: 0.03em;
 }
