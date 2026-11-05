@@ -40,7 +40,7 @@ epub-builder = { version = "0.8.3", default-features = false, features = ["zip-l
 base64 = "0.22"
 typst = "0.15.1"
 typst-pdf = "0.15.1"
-typst-kit = { version = "0.15.1", default-features = false, features = ["embedded-fonts", "scan-fonts"] }
+typst-kit = { version = "0.15.1", default-features = false, features = ["scan-fonts"] }
 typst-layout = "0.15.1"
 docx-rs = "0.4.22"
 

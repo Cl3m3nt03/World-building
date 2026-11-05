@@ -6049,7 +6049,6 @@ dependencies = [
  "rustc-hash",
  "serde",
  "serde_json",
- "typst-assets",
  "typst-library",
  "typst-syntax",
  "typst-timing",
