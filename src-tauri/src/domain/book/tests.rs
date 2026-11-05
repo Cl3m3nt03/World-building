@@ -366,6 +366,132 @@ async fn the_pdf_opens_on_its_cover() {
     }
 }
 
+/// The text of a frame as (font family, text, a glyph is missing).
+fn text_runs(frame: &typst::layout::Frame, out: &mut Vec<(String, String, bool)>) {
+    for (_, item) in frame.items() {
+        match item {
+            typst::layout::FrameItem::Group(group) => text_runs(&group.frame, out),
+            typst::layout::FrameItem::Text(text) => out.push((
+                text.font.info().family.clone(),
+                text.text.to_string(),
+                text.glyphs.iter().any(|glyph| glyph.id == 0),
+            )),
+            _ => {}
+        }
+    }
+}
+
+/// The fonts a PDF embeds, without their subset tag (`ABCDEF+`).
+fn pdf_fonts(bytes: &[u8]) -> std::collections::BTreeSet<String> {
+    let key = b"/BaseFont";
+    let mut names = std::collections::BTreeSet::new();
+    for start in 0..bytes.len().saturating_sub(key.len()) {
+        if &bytes[start..start + key.len()] != key {
+            continue;
+        }
+        let name: String = bytes[start + key.len()..]
+            .iter()
+            .skip_while(|b| b.is_ascii_whitespace() || **b == b'/')
+            .take_while(|b| b.is_ascii_graphic() && !b"/<>[]()".contains(b))
+            .map(|&b| b as char)
+            .collect();
+        let name = match name.split_once('+') {
+            Some((_, name)) => name.to_string(),
+            None => name,
+        };
+        names.insert(name);
+    }
+    names
+}
+
+#[tokio::test]
+async fn the_pdf_sets_french_text_in_the_fonts_the_app_ships() {
+    let (_dir, world, id) = story_with_two_chapters().await;
+    let outline = quill::outline(&world.pool, &id).await.unwrap();
+    let words = "Œuvre française : l'élève reçut à Noël un cœur, « ça » déjà.";
+    let doc = serde_json::json!({ "type": "doc", "content": [
+        { "type": "heading", "attrs": { "level": 1 }, "content": [text("Où naît l'Œil")] },
+        { "type": "paragraph", "content": [
+            text(words),
+            { "type": "text", "text": " Ç’était bien", "marks": [{ "type": "bold" }] },
+            { "type": "text", "text": " à l’ombre", "marks": [{ "type": "italic" }] },
+            { "type": "text", "text": " garçon()", "marks": [{ "type": "code" }] }
+        ] }
+    ] });
+    quill::save_draft(
+        &world.pool,
+        &outline.chapters[0].current_draft_id,
+        &doc.to_string(),
+    )
+    .await
+    .unwrap();
+    let chosen = vec![ExportChapter {
+        chapter_id: outline.chapters[0].id.clone(),
+        draft_id: outline.chapters[0].current_draft_id.clone(),
+    }];
+    let mut book = load(&world.pool, &world.assets_dir(), &id, &chosen, "fr", None)
+        .await
+        .unwrap();
+    for (key, family) in [
+        ("garamond", "EB Garamond"),
+        ("inter", "Inter"),
+        ("cinzel", "Cinzel"),
+        ("playfair", "Playfair Display"),
+        ("lora", "Lora"),
+        ("source-serif", "Source Serif 4"),
+    ] {
+        book.settings.font = key.into();
+        let document = pdf::compile(&book).unwrap();
+        let bytes = pdf::write(&book).unwrap();
+        // BZ_PDF_PAGES=<folder>: the book in each font, to look at it.
+        if let Ok(folder) = std::env::var("BZ_PDF_PAGES") {
+            let options = typst_render::RenderOptions::default();
+            for (index, page) in document.pages().iter().enumerate() {
+                let png = typst_render::render(page, &options).encode_png().unwrap();
+                std::fs::write(
+                    Path::new(&folder).join(format!("{key}-{}.png", index + 1)),
+                    png,
+                )
+                .unwrap();
+            }
+            std::fs::write(Path::new(&folder).join(format!("{key}.pdf")), &bytes).unwrap();
+        }
+        let mut runs = Vec::new();
+        for page in document.pages() {
+            text_runs(&page.frame, &mut runs);
+        }
+        // Every glyph is drawn (no box), in the reading font or, for code, Space Mono.
+        for (font, text, missing) in &runs {
+            assert!(!missing, "{key}: a glyph of {text:?} is missing in {font}");
+            let code = text.contains("garçon");
+            let expected = if code { "Space Mono" } else { family };
+            assert_eq!(font, expected, "{key}: {text:?}");
+        }
+        let all: String = runs.iter().map(|(_, text, _)| text.as_str()).collect();
+        for letter in ['Œ', 'œ', 'ç', 'Ç', 'é', 'è', 'à', 'ë', '«', '’'] {
+            assert!(all.contains(letter), "{key}: {letter} not in {all}");
+        }
+        // The PDF embeds these fonts and only them.
+        let fonts = pdf_fonts(&bytes);
+        let squashed = family.replace(' ', "");
+        assert!(
+            fonts
+                .iter()
+                .all(|name| name.starts_with(&squashed) || name.starts_with("SpaceMono")),
+            "{key}: {fonts:?}"
+        );
+        assert!(
+            fonts.iter().any(|name| name.starts_with("SpaceMono")),
+            "{key}: {fonts:?}"
+        );
+        assert!(
+            fonts.iter().any(|name| name.starts_with(&squashed)),
+            "{key}: {fonts:?}"
+        );
+        eprintln!("{key}: {fonts:?}");
+    }
+}
+
 #[tokio::test]
 async fn the_docx_has_its_cover_chapters_and_styles() {
     let (dir, world, id) = story_with_two_chapters().await;

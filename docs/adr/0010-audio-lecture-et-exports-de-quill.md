@@ -34,7 +34,7 @@ La stack (ADR 0001) a déjà retenu Three.js pour la couverture 3D, la Web Audio
 3. **Le Rust fabrique les exports à partir d'un modèle de livre commun.**
    - Le Rust lit les chapitres choisis, avec un brouillon par chapitre (le courant par défaut). Il en tire un **modèle de livre** (`domain/book.rs`) : titres, paragraphes, gras, italique, barré, citations, séparateurs, images de la médiathèque. Les mentions deviennent leur texte, et les notes et les sons ne sont pas exportés.
    - Trois rédacteurs lisent ce modèle :
-     - le PDF passe par Typst (`typst`, `typst-pdf` et les polices embarquées de `typst-kit`) ;
+     - le PDF passe par Typst (`typst`, `typst-pdf`, `typst-kit` pour le magasin de polices) ;
      - le DOCX passe par `docx-rs` ;
      - l'ePub passe par `epub-builder`.
    - La couverture (couleur, finition, illustration et titre) est dessinée par le front, envoyée en PNG et placée en première page.
@@ -48,4 +48,5 @@ La stack (ADR 0001) a déjà retenu Three.js pour la couverture 3D, la Web Audio
 - Les sons ont le même cycle de vie que les notes, et les outils pour les marques existent déjà (`rename_note_marks`, suppression d'une marque).
 - Les dépendances `typst`, `typst-pdf`, `typst-kit`, `docx-rs` et `epub-builder` sont ajoutées. Typst alourdit la compilation du Rust et l'installeur (polices incluses), mais il est le seul à donner un PDF typographié sans moteur externe.
 - Les polices du PDF sont celles embarquées par Typst (Libertinus Serif, New Computer Modern, DejaVu Sans Mono). Les polices de lecture qui n'y sont pas se rabattent sur la plus proche, et la prévisualisation le dit.
+- **Note (2026-11, #564)** : BuilderZ est propriétaire, et NewCM10-Regular, embarquée par la feature `embedded-fonts` de `typst-kit`, est sous GPL-3.0+ (ses exceptions ne valent que pour un programme compatible GPL). La feature est retirée : l'exe embarque à la place, en `include_bytes!`, les six polices de lecture et Space Mono (toutes SIL OFL, licences dans `licenses/fonts/`). La police de lecture choisie est donc toujours celle du PDF, quel que soit le PC ; les polices du PC ne servent plus qu'aux caractères absents. `typst-assets` reste tiré sans sa feature `fonts` (polices PDF standard Foxit, BSD-3).
 - Une seule source de vérité pour le contenu exporté : les trois formats donnent le même texte, testé une fois sur le modèle de livre.

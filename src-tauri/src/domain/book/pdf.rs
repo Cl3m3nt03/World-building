@@ -19,13 +19,42 @@ use super::{Block, Book, Run};
 use crate::domain::quill::reader::{PageTheme, TextSize};
 use crate::error::{AppError, AppResult};
 
-/// The fonts Typst can use: its own (Libertinus Serif, New Computer Modern,
-/// DejaVu Sans Mono), then the PC's. Found once.
+/// The fonts the app ships for the PDF, all SIL OFL (licences in
+/// `licenses/fonts/`): the reading fonts and Space Mono for code. Typst's own
+/// fonts are not embedded (one of them is GPL).
+const BUNDLED_FONTS: [&[u8]; 15] = [
+    include_bytes!("../../../fonts/EBGaramond.ttf"),
+    include_bytes!("../../../fonts/EBGaramond-Italic.ttf"),
+    include_bytes!("../../../fonts/Inter.ttf"),
+    include_bytes!("../../../fonts/Inter-Italic.ttf"),
+    include_bytes!("../../../fonts/Cinzel.ttf"),
+    include_bytes!("../../../fonts/PlayfairDisplay.ttf"),
+    include_bytes!("../../../fonts/PlayfairDisplay-Italic.ttf"),
+    include_bytes!("../../../fonts/Lora.ttf"),
+    include_bytes!("../../../fonts/Lora-Italic.ttf"),
+    include_bytes!("../../../fonts/SourceSerif4.ttf"),
+    include_bytes!("../../../fonts/SourceSerif4-Italic.ttf"),
+    include_bytes!("../../../fonts/SpaceMono-Regular.ttf"),
+    include_bytes!("../../../fonts/SpaceMono-Bold.ttf"),
+    include_bytes!("../../../fonts/SpaceMono-Italic.ttf"),
+    include_bytes!("../../../fonts/SpaceMono-BoldItalic.ttf"),
+];
+
+/// The font of code, in every book.
+const CODE_FONT: &str = "Space Mono";
+
+/// The fonts Typst can use: the app's own first, then the PC's, only for
+/// the characters ours lack (another script, a symbol). Found once.
 fn fonts() -> &'static FontStore {
     static FONTS: OnceLock<FontStore> = OnceLock::new();
     FONTS.get_or_init(|| {
         let mut store = FontStore::new();
-        store.extend(typst_kit::fonts::embedded());
+        store.extend(BUNDLED_FONTS.iter().flat_map(|data| {
+            Font::iter(Bytes::new(*data)).map(|font| {
+                let info = font.info().clone();
+                (font, info)
+            })
+        }));
         store.extend(typst_kit::fonts::system());
         store
     })
@@ -106,20 +135,16 @@ pub fn string(text: &str) -> String {
     out
 }
 
-/// The fonts to try for a reading font: its own if the PC has it, then a
-/// near one, then one Typst always has.
-fn font_list(key: &str) -> &'static str {
+/// The family of a reading font, shipped with the app (Typst falls back
+/// on its other fonts, then the PC's, for a character it lacks).
+pub fn font_family(key: &str) -> &'static str {
     match key {
-        "inter" => {
-            r#"("Inter", "Segoe UI", "Arial", "New Computer Modern Sans", "Libertinus Serif")"#
-        }
-        "cinzel" => r#"("Cinzel", "Trajan Pro", "Libertinus Serif")"#,
-        "playfair" => r#"("Playfair Display", "Georgia", "Libertinus Serif")"#,
-        "lora" => r#"("Lora", "Georgia", "Libertinus Serif")"#,
-        "source-serif" => {
-            r#"("Source Serif 4", "Source Serif Pro", "Georgia", "Libertinus Serif")"#
-        }
-        _ => r#"("EB Garamond", "Garamond", "Libertinus Serif")"#,
+        "inter" => "Inter",
+        "cinzel" => "Cinzel",
+        "playfair" => "Playfair Display",
+        "lora" => "Lora",
+        "source-serif" => "Source Serif 4",
+        _ => "EB Garamond",
     }
 }
 
@@ -221,7 +246,8 @@ pub fn source(book: &Book) -> String {
     let mut out = format!(
         "#set document(title: {title})\n\
          #set page(paper: \"a5\", margin: (x: 1.8cm, y: 2cm), fill: rgb({page}))\n\
-         #set text(font: {fonts}, size: {size}, lang: {lang}, fill: rgb({text}))\n\
+         #set text(font: {font}, size: {size}, lang: {lang}, fill: rgb({text}))\n\
+         #show raw: set text(font: {code})\n\
          #set par(justify: true, first-line-indent: 1.2em, leading: 0.7em)\n\
          #show heading.where(level: 1): it => block(width: 100%, above: 2em, below: 2em)[\n\
            #align(center, text(size: 1.7em, weight: \"bold\", it.body))\n\
@@ -231,7 +257,8 @@ pub fn source(book: &Book) -> String {
          #show heading.where(level: 4): set text(size: 1.05em)\n",
         title = string(&book.title),
         page = string(page),
-        fonts = font_list(&settings.font),
+        font = string(font_family(&settings.font)),
+        code = string(CODE_FONT),
         lang = string(&lang),
         text = string(text),
     );
