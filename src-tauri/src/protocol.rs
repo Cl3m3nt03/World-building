@@ -192,6 +192,9 @@ async fn respond_thumbnail(config_dir: &Path, id: &str) -> Response<Vec<u8>> {
             .header(header::X_CONTENT_TYPE_OPTIONS, "nosniff")
             // Regenerated in place when the main image changes: no caching.
             .header(header::CACHE_CONTROL, "no-cache")
+            // The backdrop measures the thumbnail's brightness on a canvas
+            // to set its veil (ADR 0003): the app's origin differs.
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .body(bytes)
             .unwrap_or_else(|_| status(StatusCode::INTERNAL_SERVER_ERROR)),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => status(StatusCode::NOT_FOUND),
@@ -261,6 +264,7 @@ mod tests {
         let ok = respond_thumbnail(dir.path(), id).await;
         assert_eq!(ok.status(), StatusCode::OK);
         assert_eq!(ok.headers()[header::CONTENT_TYPE], "image/png");
+        assert_eq!(ok.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN], "*");
         assert_eq!(
             respond_thumbnail(dir.path(), "../settings.json")
                 .await

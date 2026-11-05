@@ -18,7 +18,12 @@
 [data-scheme="light"] {
   /* Vélin: the cartographer's paper, ink-brown text, engraved gold. */
   --bz-bg: #f2e9d4;
-  --bz-backdrop-overlay: rgb(242 233 212 / 0.82);
+  /* The veil over the backdrop: its colour and its least opacity. Over a
+     world's image, the opacity is computed per image so that bare text stays
+     ≥ 4.5:1 (app/shell/backdropVeil.ts); the floor alone veils the gradient. */
+  --bz-backdrop-veil: 242 233 212;
+  --bz-backdrop-veil-floor: 0.82;
+  --bz-backdrop-overlay: rgb(var(--bz-backdrop-veil) / var(--bz-backdrop-veil-floor));
   --bz-backdrop-gradient:
     radial-gradient(70% 60% at 12% 8%, rgb(214 180 110 / 0.42), transparent 70%),
     radial-gradient(60% 55% at 92% 96%, rgb(120 170 155 / 0.26), transparent 70%),
@@ -106,7 +111,9 @@
   /* Encre: warm ink-black, parchment text, the same gold, brighter. */
   --bz-device: #3b3f4b;
   --bz-bg: #13110d;
-  --bz-backdrop-overlay: rgb(14 12 8 / 0.55);
+  --bz-backdrop-veil: 14 12 8;
+  --bz-backdrop-veil-floor: 0.55;
+  --bz-backdrop-overlay: rgb(var(--bz-backdrop-veil) / var(--bz-backdrop-veil-floor));
   --bz-backdrop-gradient:
     radial-gradient(70% 60% at 12% 8%, rgb(110 82 30 / 0.36), transparent 70%),
     radial-gradient(60% 55% at 92% 96%, rgb(40 84 72 / 0.36), transparent 70%),

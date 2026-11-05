@@ -4,6 +4,7 @@ import { thumbnailUrl, useCurrentWorld } from "@/features/world";
 import { resolveTheme, useWorldAccent } from "@/features/world-theme";
 import { useAssetUrl } from "@/lib/assets";
 import { Atlas } from "./Atlas";
+import { useBackdropVeil } from "./backdropVeil";
 
 /**
  * Image behind the whole interface (ADR 0003) and accent of the app. With a
@@ -33,6 +34,8 @@ export function Backdrop() {
   // An image that cannot be shown (file removed outside the app) gives the gradient.
   const [failed, setFailed] = useState<string | null>(null);
   const shown = imageUrl && imageUrl !== failed ? imageUrl : undefined;
+  // Over an image, a veil computed for it keeps bare text AA (ADR 0003).
+  const veil = useBackdropVeil(shown);
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
       {shown ? (
@@ -47,7 +50,10 @@ export function Backdrop() {
       ) : (
         <div className="absolute inset-0" style={{ background: "var(--bz-backdrop-gradient)" }} />
       )}
-      <div className="absolute inset-0" style={{ background: "var(--bz-backdrop-overlay)" }} />
+      <div
+        className="absolute inset-0 transition-[background-color] duration-(--bz-duration-base) ease-atlas"
+        style={{ backgroundColor: veil ?? "var(--bz-backdrop-overlay)" }}
+      />
       <div
         className="absolute inset-0"
         style={shown ? { opacity: "var(--bz-atlas-over-image)" } : undefined}
