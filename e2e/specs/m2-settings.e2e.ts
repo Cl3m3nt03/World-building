@@ -1,6 +1,7 @@
 /**
  * End of M2 scenarios (docs/roadmap/M2-cartes-et-types.md, 2.19):
  * - a world theme is kept after closing and reopening the world;
+ * - a shipped ambiance (Station) brings its material, ornament and font (#551);
  * - a custom theme's material and ornament dress the panels (#548), and its
  *   heading font sets the titles, loaded with the app (#549), and its mode
  *   wins over the app's while the world is shown (#550);
@@ -66,6 +67,25 @@ describe("M2: world settings, theme and writing preferences", () => {
     await browser.waitUntil(async () => (await backdropSource())?.includes("forest") ?? false, {
       timeoutMsg: "the theme was not kept",
     });
+  });
+
+  it("dresses the world in a shipped ambiance, Station (#551)", async () => {
+    await openSettings("Thème");
+    await $('[role="dialog"] [role="radio"][aria-label="Station"]').click();
+    await browser.waitUntil(
+      async () =>
+        ((await backdropSource())?.includes("station") ?? false) &&
+        (await browser.execute(() => {
+          const root = document.documentElement;
+          return (
+            root.dataset.material === "coldGlass" &&
+            root.dataset.ornament === "marks" &&
+            root.dataset.headingFont === "oxanium"
+          );
+        })),
+      { timeoutMsg: "the Station illustration, cold glass, marks or Oxanium were not applied" },
+    );
+    await closeSettings();
   });
 
   it("dresses the panels in the theme's material, ornament, heading font and mode (#548-#550)", async () => {
