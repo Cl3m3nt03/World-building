@@ -7,12 +7,15 @@
  * The wiki (M8) takes the light or dark set from its own background
  * (`data-wiki-scheme`), and Quill's writing mode its chosen one
  * (`data-quill-scheme`), whatever the app's theme; the design system page
- * shows both side by side (`data-scheme`).
+ * shows both side by side (`data-scheme`), and the theme gallery's preview
+ * (`data-theme-preview`, features/world-theme) starts from the defaults here
+ * whatever the open world's theme, before its own material and font.
  * Contrast (WCAG, text on the glass blended on the backdrop): every text
  * colour ≥ 4.5:1 on its surfaces in both themes (measured in the PR of #425).
  */
 
 :root,
+[data-theme-preview],
 [data-wiki-scheme="light"],
 [data-quill-scheme="light"],
 [data-scheme="light"] {
@@ -157,7 +160,8 @@
 }
 
 /* Transparency off (app setting) or requested by the OS: opaque surfaces, no blur. */
-[data-transparency="off"] {
+[data-transparency="off"],
+[data-transparency="off"] [data-theme-preview] {
   --bz-grain: none;
   --bz-surface: var(--bz-surface-strong);
   --bz-blur-panel: 0px;
@@ -165,7 +169,8 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  :root {
+  :root,
+  [data-theme-preview] {
     --bz-surface: var(--bz-surface-strong);
     --bz-blur-panel: 0px;
     --bz-blur-backdrop: 0px;
@@ -174,7 +179,8 @@
 
 /* Reduced motion: changes happen at once. */
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root,
+  [data-theme-preview] {
     --bz-duration-micro: 0ms;
     --bz-duration-fast: 0ms;
     --bz-duration-page: 0ms;

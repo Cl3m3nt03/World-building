@@ -30,7 +30,7 @@ function cssColors(material: Material, mode: Mode): Record<string, string> {
     const tokens = css("tokens.css");
     const light = block(
       tokens,
-      ':root,\n[data-wiki-scheme="light"],\n[data-quill-scheme="light"],\n[data-scheme="light"]',
+      ':root,\n[data-theme-preview],\n[data-wiki-scheme="light"],\n[data-quill-scheme="light"],\n[data-scheme="light"]',
     );
     if (mode === "light") return light;
     return {
@@ -41,10 +41,16 @@ function cssColors(material: Material, mode: Mode): Record<string, string> {
       ),
     };
   }
-  const selector = `:root[data-material="${material}"]`;
+  // The window and the gallery's preview (a subtree) share one rule.
+  const window = `:root[data-material="${material}"]`;
+  const preview = `[data-theme-preview][data-material="${material}"]`;
   return block(
     css("materials.css"),
-    mode === "light" ? selector : `${selector}[data-theme="dark"]`,
+    mode === "light"
+      ? `${window},
+${preview}`
+      : `${window}[data-theme="dark"],
+${preview}[data-scheme="dark"]`,
   );
 }
 

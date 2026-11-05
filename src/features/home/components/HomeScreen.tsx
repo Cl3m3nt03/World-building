@@ -12,24 +12,10 @@ import { AssetImage, useAssets } from "@/features/media";
 import { genreLabel, ToneList, useCurrentWorld } from "@/features/world";
 import { cn } from "@/lib/utils";
 import { RecentDocuments } from "./RecentDocuments";
+import { Stat } from "./Stat";
 
 const ENTRY_CLASS =
   "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm outline-none transition-colors duration-(--bz-duration-fast) ease-atlas hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50";
-
-/** One figure of the world: the number, its name, a fine line ending in a gold dot (after vvd). */
-function Stat({ value, label }: { value: number | undefined; label: string }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="font-heading text-2xl leading-none font-bold lining-nums tabular-nums">
-        {value === undefined ? "–" : value.toLocaleString()}
-      </span>
-      <span aria-hidden className="relative h-px w-20 bg-border-strong">
-        <span className="absolute -top-0.5 right-0 size-1.5 rounded-full bg-primary" />
-      </span>
-      <span className="on-backdrop text-xs text-muted-foreground">{label}</span>
-    </div>
-  );
-}
 
 function Section({
   title,

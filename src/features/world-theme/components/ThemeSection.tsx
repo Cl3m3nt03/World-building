@@ -1,4 +1,4 @@
-import { Check, Compass, ImagePlus, Pencil, Undo2 } from "lucide-react";
+import { Compass, ImagePlus, Pencil, Undo2 } from "lucide-react";
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,101 +7,240 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { usePreviewWorldTheme, useSetWorldTheme } from "@/features/world";
-import type { WorldInfo, WorldTheme } from "@/lib/bindings";
-import { isHexColor } from "../accent";
+import type { Material, WorldInfo, WorldTheme } from "@/lib/bindings";
+import { isHexColor, type Mode } from "../accent";
 import { themeHeadingFont } from "../headingFonts";
-import { ACCENT_SWATCHES, accentOf, DEFAULT_ACCENT, PRESETS, resolveTheme } from "../presets";
+import {
+  ACCENT_SWATCHES,
+  accentOf,
+  DEFAULT_ACCENT,
+  findPreset,
+  PRESETS,
+  resolveTheme,
+} from "../presets";
 import { themeLook } from "../useWorldMaterial";
+import { themeScheme } from "../useWorldScheme";
+import { ThemePreview } from "./ThemePreview";
 
 /** Delay before a color dragged in the free color picker is saved. */
 const COLOR_SAVE_DELAY_MS = 300;
 
 const CARD_CLASS =
-  "group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl border border-border text-left outline-none transition hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=checked]:border-primary data-[state=checked]:ring-2 data-[state=checked]:ring-primary";
+  "group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-lg border border-border text-left outline-none transition-[border-color,box-shadow] duration-(--bz-duration-fast) ease-atlas hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=checked]:border-primary data-[state=checked]:ring-2 data-[state=checked]:ring-primary";
 
-/** Name and accent dot over the bottom of a theme card. */
-function CardLabel({ name, accent }: { name: string; accent: string }) {
+/** Name, material, accent dot and « Actuel » over a theme card. */
+function CardLabel({
+  name,
+  material,
+  accent,
+  current,
+}: {
+  name: string;
+  material: Material;
+  accent: string;
+  current: boolean;
+}) {
+  const { t } = useTranslation();
   return (
     <>
       <span
         aria-hidden
-        className="absolute top-2 right-2 size-4 rounded-full border-2 border-white/80 shadow"
+        className="absolute top-1.5 right-1.5 size-3.5 rounded-full border-2 border-white/80 shadow"
         style={{ background: accent }}
       />
-      <span className="relative bg-gradient-to-t from-black/75 to-transparent px-3 pt-8 pb-2.5 font-heading text-base font-bold text-white">
-        {name}
+      {current && (
+        <span
+          aria-hidden
+          className="absolute top-1.5 left-1.5 rounded-full bg-black/70 px-1.5 py-px text-[0.6875rem] font-medium text-white"
+        >
+          {t("worldTheme.current")}
+        </span>
+      )}
+      <span className="relative flex flex-col bg-gradient-to-t from-black/85 via-black/60 to-transparent px-2 pt-6 pb-1.5 text-white">
+        <span className="line-clamp-2 font-heading text-sm leading-tight font-bold">{name}</span>
+        <span className="truncate text-[0.6875rem] leading-tight text-white/85">
+          {t(`worldTheme.material.${material}`)}
+        </span>
       </span>
-      <Check
-        aria-hidden
-        className="absolute top-2 left-2 hidden size-5 rounded-full bg-primary p-0.5 text-primary-foreground group-data-[state=checked]:block"
-      />
     </>
   );
 }
 
-/** "Explore": the default theme and the themes shipped with the app. */
+/** The gallery's value of `theme`: `""` for a custom theme, which is not in it. */
+function galleryValue(theme: WorldTheme): string {
+  if (theme.kind === "preset" && PRESETS.some((preset) => preset.id === theme.id)) return theme.id;
+  return theme.kind === "custom" ? "" : "default";
+}
+
+function galleryTheme(value: string): WorldTheme {
+  return value === "default" ? { kind: "default" } : { kind: "preset", id: value };
+}
+
+/**
+ * "Explore": the default theme and the shipped ones on the left, and on the
+ * right the world's Home and a card in the theme hovered or selected, light
+ * and dark side by side (ADR 0015, « Galerie et aperçu »). Nothing applies
+ * before « Appliquer » (or Enter); « Annuler » and Escape go back to the
+ * current theme, a first Escape without closing the window.
+ */
 function ExploreTab({
   world,
-  onChange,
+  onApply,
 }: {
   world: WorldInfo;
-  onChange: (theme: WorldTheme) => void;
+  onApply: (theme: WorldTheme) => void;
 }) {
   const { t } = useTranslation();
-  const { theme } = world;
-  const value =
-    theme.kind === "preset" && PRESETS.some((preset) => preset.id === theme.id)
-      ? theme.id
-      : theme.kind === "custom"
-        ? ""
-        : "default";
+  const current = galleryValue(world.theme);
+  const [selected, setSelected] = useState(current);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+  const pending = selected !== current;
+
+  // The theme applied elsewhere (« Modifier », Apply) becomes the selection.
+  const [seen, setSeen] = useState(current);
+  if (seen !== current) {
+    setSeen(current);
+    setSelected(current);
+  }
+
+  const shown = hovered ?? selected;
+  const previewed = shown === "" ? world.theme : galleryTheme(shown);
+  const nameOf = (value: string) =>
+    value === "default"
+      ? t("worldTheme.default")
+      : value === ""
+        ? t("worldTheme.custom")
+        : t(findPreset(value)?.name ?? "worldTheme.default");
+  const imposed = themeScheme(previewed);
+  const schemes: Mode[] = imposed ? [imposed] : ["light", "dark"];
+
+  const apply = () => {
+    if (pending && selected !== "") onApply(galleryTheme(selected));
+  };
+  const cancel = () => {
+    setSelected(current);
+    setHovered(null);
+  };
+
+  // A first Escape cancels the preview and keeps the window open. Radix
+  // listens on the document while capturing: the window sees it before.
+  const cancelRef = useRef(cancel);
+  cancelRef.current = cancel;
+  useEffect(() => {
+    if (!pending) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !root.current?.contains(event.target as Node)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelRef.current();
+    };
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
+  }, [pending]);
+
+  const items = [
+    {
+      value: "default",
+      name: t("worldTheme.default"),
+      material: "vellum" as Material,
+      accent: DEFAULT_ACCENT,
+      image: null,
+    },
+    ...PRESETS.map((preset) => ({
+      value: preset.id,
+      name: t(preset.name),
+      material: preset.look?.material ?? ("vellum" as Material),
+      accent: accentOf(preset.accent, "dark"),
+      image: preset.image,
+    })),
+  ];
+  const previewTitle = t("worldTheme.previewOf", { name: nameOf(shown) });
 
   return (
-    <RadioGroupPrimitive.Root
-      aria-label={t("worldTheme.gallery")}
-      value={value}
-      onValueChange={(next) =>
-        onChange(next === "default" ? { kind: "default" } : { kind: "preset", id: next })
-      }
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
-    >
-      <RadioGroupPrimitive.Item
-        value="default"
-        aria-label={t("worldTheme.default")}
-        className={CARD_CLASS}
+    <div ref={root} className="grid grid-cols-[14rem_minmax(0,1fr)] gap-4">
+      <RadioGroupPrimitive.Root
+        aria-label={t("worldTheme.gallery")}
+        value={selected}
+        onValueChange={setSelected}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") apply();
+        }}
+        onPointerLeave={() => setHovered(null)}
+        className="grid grid-cols-2 content-start gap-2"
       >
-        {world.mainImage ? (
-          <AssetImage
-            assetId={world.mainImage}
-            alt=""
-            className="absolute inset-0 size-full object-cover"
-          />
-        ) : (
-          <span
-            aria-hidden
-            className="absolute inset-0"
-            style={{ background: "var(--bz-backdrop-gradient)" }}
-          />
-        )}
-        <CardLabel name={t("worldTheme.default")} accent={DEFAULT_ACCENT} />
-      </RadioGroupPrimitive.Item>
-      {PRESETS.map((preset) => (
-        <RadioGroupPrimitive.Item
-          key={preset.id}
-          value={preset.id}
-          aria-label={t(preset.name)}
-          className={CARD_CLASS}
-        >
-          <img
-            src={preset.image}
-            alt=""
-            draggable={false}
-            className="absolute inset-0 size-full object-cover"
-          />
-          <CardLabel name={t(preset.name)} accent={accentOf(preset.accent, "dark")} />
-        </RadioGroupPrimitive.Item>
-      ))}
-    </RadioGroupPrimitive.Root>
+        {items.map((item) => (
+          <RadioGroupPrimitive.Item
+            key={item.value}
+            value={item.value}
+            aria-label={
+              item.value === current ? `${item.name}, ${t("worldTheme.current")}` : item.name
+            }
+            onPointerEnter={() => setHovered(item.value)}
+            className={CARD_CLASS}
+          >
+            {item.image ? (
+              <img
+                src={item.image}
+                alt=""
+                draggable={false}
+                className="absolute inset-0 size-full object-cover"
+              />
+            ) : world.mainImage ? (
+              <AssetImage
+                assetId={world.mainImage}
+                alt=""
+                className="absolute inset-0 size-full object-cover"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: "var(--bz-backdrop-gradient)" }}
+              />
+            )}
+            <CardLabel
+              name={item.name}
+              material={item.material}
+              accent={item.accent}
+              current={item.value === current}
+            />
+          </RadioGroupPrimitive.Item>
+        ))}
+      </RadioGroupPrimitive.Root>
+
+      <section aria-label={previewTitle} className="flex min-w-0 flex-col gap-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="truncate text-sm font-medium">{previewTitle}</h3>
+          {shown === current && (
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {t("worldTheme.current")}
+            </span>
+          )}
+        </div>
+        <div className={schemes.length > 1 ? "grid grid-cols-2 gap-3" : "grid"}>
+          {schemes.map((scheme) => (
+            <figure key={scheme} className="flex min-w-0 flex-col gap-1.5">
+              <ThemePreview world={world} theme={previewed} scheme={scheme} />
+              <figcaption className="text-xs text-muted-foreground">
+                {t(scheme === "light" ? "settings.theme.light" : "settings.theme.dark")}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" disabled={!pending} onClick={cancel}>
+            {t("worldTheme.cancel")}
+          </Button>
+          <Button size="sm" disabled={!pending || selected === ""} onClick={apply}>
+            {t("worldTheme.apply")}
+          </Button>
+        </div>
+        <p aria-live="polite" className="sr-only">
+          {pending ? t("worldTheme.previewing", { name: nameOf(selected) }) : ""}
+        </p>
+      </section>
+    </div>
   );
 }
 
@@ -265,7 +404,8 @@ function EditTab({
 
 /**
  * "Theme" section of the world settings (after vvd): "Explore" the themes
- * shipped with the app, or "Edit" the world's own. A choice applies at once.
+ * shipped with the app in a gallery with a preview, applied with « Appliquer »,
+ * or "Edit" the world's own, whose changes apply at once.
  */
 export function ThemeSection({ world }: { world: WorldInfo }) {
   const { t } = useTranslation();
@@ -287,7 +427,7 @@ export function ThemeSection({ world }: { world: WorldInfo }) {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="explore">
-          <ExploreTab world={world} onChange={(theme) => setTheme.mutate(theme)} />
+          <ExploreTab world={world} onApply={(theme) => setTheme.mutate(theme)} />
         </TabsContent>
         <TabsContent value="edit">
           <EditTab world={world} onChange={(theme) => setTheme.mutate(theme)} onPreview={preview} />

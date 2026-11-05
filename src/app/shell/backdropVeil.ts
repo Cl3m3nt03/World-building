@@ -155,9 +155,9 @@ export function parseColor(value: string): { rgb: Rgb; alpha: number } | null {
   return { rgb: [r, g, b], alpha };
 }
 
-/** The current theme's layers over a backdrop image, from tokens.css. */
-function readLayers(): VeilLayers | null {
-  const style = getComputedStyle(document.documentElement);
+/** The layers over a backdrop image of the theme `element` shows, from tokens.css. */
+function readLayers(element: Element = document.documentElement): VeilLayers | null {
+  const style = getComputedStyle(element);
   const token = (name: string) => style.getPropertyValue(name);
   const veil = parseColor(token("--bz-backdrop-veil"))?.rgb;
   const floor = Number.parseFloat(token("--bz-backdrop-veil-floor"));
@@ -185,14 +185,21 @@ const veilColor = (layers: VeilLayers, samples: Uint8ClampedArray | null) =>
 /**
  * The veil over the backdrop image `url` in the current theme, as a CSS
  * colour; `undefined` without an image (the token's veil applies).
+ * `scope` computes it for a subtree that shows another theme instead (the
+ * theme gallery's preview): its element, once mounted, and a key that
+ * changes with the theme it shows.
  */
-export function useBackdropVeil(url: string | undefined): string | undefined {
+export function useBackdropVeil(
+  url: string | undefined,
+  scope?: { element: Element | null; key: string },
+): string | undefined {
   const theme = useResolvedTheme();
   const [veil, setVeil] = useState<{ key: string; color: string } | null>(null);
-  const key = `${theme}|${url}`;
+  const key = `${scope ? scope.key : theme}|${url}`;
+  const element = scope ? scope.element : document.documentElement;
   useEffect(() => {
-    if (!url) return;
-    const layers = readLayers();
+    if (!url || !element) return;
+    const layers = readLayers(element);
     if (!layers) return;
     let live = true;
     measure(url).then((samples) => {
@@ -201,10 +208,10 @@ export function useBackdropVeil(url: string | undefined): string | undefined {
     return () => {
       live = false;
     };
-  }, [url, key]);
-  if (!url) return undefined;
+  }, [url, key, element]);
+  if (!url || !element) return undefined;
   if (veil?.key === key) return veil.color;
   // Until the image is measured, the veil of the worst image: never too light.
-  const layers = readLayers();
+  const layers = readLayers(element);
   return layers ? veilColor(layers, null) : undefined;
 }
