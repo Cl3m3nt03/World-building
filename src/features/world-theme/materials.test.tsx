@@ -9,7 +9,7 @@ import type { Material, WorldInfo, WorldTheme } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 import { accentFor, contrast, foregroundOn, type Mode, VELLUM_GROUNDS } from "./accent";
 import { grounds, MATERIAL_COLORS, MATERIALS, materialAccent } from "./materials";
-import { ACCENT_SWATCHES } from "./presets";
+import { ACCENT_SWATCHES, accentOf, PRESETS } from "./presets";
 import { themeLook, useWorldMaterial } from "./useWorldMaterial";
 
 const MODES: readonly Mode[] = ["light", "dark"];
@@ -79,6 +79,23 @@ describe.each(MATERIALS)("the %s material", (material) => {
   });
 });
 
+test("each ambiance shows its accents as given, readable on its material", () => {
+  const ambiances = PRESETS.filter((preset) => preset.look);
+  expect(ambiances.map((preset) => preset.id)).toEqual(["grimoire", "station", "crypt"]);
+  for (const preset of ambiances) {
+    const material = preset.look?.material ?? "vellum";
+    for (const mode of MODES) {
+      const given = accentOf(preset.accent, mode);
+      const { accent, foreground } = materialAccent(preset.accent, material, mode);
+      // Picked readable from the mock-ups, so never adjusted.
+      expect(accent, `${preset.id} ${mode}`).toBe(given);
+      for (const ground of grounds(MATERIAL_COLORS[material][mode]))
+        expect(contrast(accent, ground)).toBeGreaterThanOrEqual(3);
+      expect(contrast(foreground, accent)).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+});
+
 test("the Vélin grounds of the accent are those of tokens.css", () => {
   for (const mode of MODES)
     expect(VELLUM_GROUNDS[mode]).toEqual(grounds(MATERIAL_COLORS.vellum[mode]));
@@ -87,6 +104,23 @@ test("the Vélin grounds of the accent are those of tokens.css", () => {
 test("a theme's look: the custom one's fields, else Vélin without ornament", () => {
   expect(themeLook({ kind: "default" })).toEqual({ material: "vellum", ornament: "none" });
   expect(themeLook({ kind: "preset", id: "dawn" })).toEqual({
+    material: "vellum",
+    ornament: "none",
+  });
+  // The three ambiances bring their own; an ambiance from a newer app shows as the default.
+  expect(themeLook({ kind: "preset", id: "grimoire" })).toEqual({
+    material: "parchment",
+    ornament: "rules",
+  });
+  expect(themeLook({ kind: "preset", id: "station" })).toEqual({
+    material: "coldGlass",
+    ornament: "marks",
+  });
+  expect(themeLook({ kind: "preset", id: "crypt" })).toEqual({
+    material: "stone",
+    ornament: "edge",
+  });
+  expect(themeLook({ kind: "preset", id: "aurora" })).toEqual({
     material: "vellum",
     ornament: "none",
   });

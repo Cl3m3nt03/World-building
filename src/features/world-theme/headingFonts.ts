@@ -1,4 +1,5 @@
 import type { HeadingFont, WorldTheme } from "@/lib/bindings";
+import { findPreset } from "./presets";
 
 /**
  * The heading fonts a world's theme can pick (ADR 0015), by the key
@@ -27,11 +28,12 @@ function isHeadingFont(value: unknown): value is HeadingFont {
 }
 
 /**
- * The heading font of `theme`: the custom one's, else Alegreya. A shipped
- * theme is in Alegreya (the three ambiances come with #551); a font this app
- * does not know (saved by a newer one) shows as Alegreya.
+ * The heading font of `theme`: the custom one's, or a shipped ambiance's
+ * (Cinzel, Oxanium, Playfair Display), else Alegreya. A font this app does
+ * not know (saved by a newer one) shows as Alegreya.
  */
 export function themeHeadingFont(theme: WorldTheme): HeadingFont {
+  if (theme.kind === "preset") return findPreset(theme.id)?.look?.headingFont ?? "alegreya";
   if (theme.kind !== "custom") return "alegreya";
   return isHeadingFont(theme.headingFont) ? theme.headingFont : "alegreya";
 }
