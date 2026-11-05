@@ -136,15 +136,20 @@ function measure(url: string): Promise<Uint8ClampedArray | null> {
   return promise;
 }
 
-/** A computed CSS colour as RGB and opacity (the syntaxes of tokens.css). */
-function parseColor(value: string): { rgb: Rgb; alpha: number } | null {
+/**
+ * A computed CSS colour as RGB and opacity: hex (the minified build turns
+ * `rgb(… / a)` into `#rrggbbaa`), `rgb()` or a bare `r g b` triplet.
+ */
+export function parseColor(value: string): { rgb: Rgb; alpha: number } | null {
   const text = value.trim();
-  const hex = /^#([0-9a-f]{6})$/i.exec(text);
+  const hex = /^#([0-9a-f]{3,8})$/i.exec(text)?.[1];
   if (hex) {
-    const n = Number.parseInt(hex[1] ?? "0", 16);
-    return { rgb: [(n >> 16) & 255, (n >> 8) & 255, n & 255], alpha: 1 };
+    const digits = hex.length <= 4 ? [...hex].map((d) => d + d) : (hex.match(/../g) ?? []);
+    const [r, g, b, a] = digits.map((pair) => Number.parseInt(pair, 16));
+    if (r === undefined || g === undefined || b === undefined || hex.length % 4 === 1) return null;
+    return { rgb: [r, g, b], alpha: a === undefined ? 1 : a / 255 };
   }
-  const numbers = text.match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+  const numbers = text.match(/\d*\.?\d+/g)?.map(Number) ?? [];
   const [r, g, b, alpha = 1] = numbers;
   if (r === undefined || g === undefined || b === undefined) return null;
   return { rgb: [r, g, b], alpha };

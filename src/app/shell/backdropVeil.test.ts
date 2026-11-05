@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { contrast, luminance, type Rgb, type VeilLayers, veilAlpha } from "./backdropVeil";
+import {
+  contrast,
+  luminance,
+  parseColor,
+  type Rgb,
+  type VeilLayers,
+  veilAlpha,
+} from "./backdropVeil";
 
 const INK: Rgb = [14, 12, 8];
 const ON_BACKDROP: Rgb = [0xc0, 0xb5, 0x9e];
@@ -47,5 +54,17 @@ describe("veilAlpha", () => {
     expect(veilAlpha([0, 0, 0], light)).toBe(0.82);
     const alpha = veilAlpha([0, 0, 0], { veil: PAPER, floor: 0.5, texts: [[0x6e, 0x60, 0x4c]] });
     expect(alpha).toBeGreaterThan(0.5);
+  });
+});
+
+describe("parseColor", () => {
+  it("reads the syntaxes of the computed tokens", () => {
+    expect(parseColor("#c0b59e")).toEqual({ rgb: [192, 181, 158], alpha: 1 });
+    expect(parseColor(" #d4ad5a38")?.alpha).toBeCloseTo(0.22, 2);
+    expect(parseColor("#fff")).toEqual({ rgb: [255, 255, 255], alpha: 1 });
+    expect(parseColor("14 12 8")).toEqual({ rgb: [14, 12, 8], alpha: 1 });
+    expect(parseColor("rgb(212 173 90 / .22)")).toEqual({ rgb: [212, 173, 90], alpha: 0.22 });
+    expect(parseColor("#12345")).toBeNull();
+    expect(parseColor("")).toBeNull();
   });
 });
