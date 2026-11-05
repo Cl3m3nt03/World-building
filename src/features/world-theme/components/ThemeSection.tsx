@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { usePreviewWorldTheme, useSetWorldTheme } from "@/features/world";
-import type { WorldInfo, WorldTheme } from "@/lib/bindings";
+import type { Material, WorldInfo, WorldTheme } from "@/lib/bindings";
 import { isHexColor, type Mode } from "../accent";
 import { themeHeadingFont } from "../headingFonts";
 import {
@@ -28,8 +28,18 @@ const COLOR_SAVE_DELAY_MS = 300;
 const CARD_CLASS =
   "group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-lg border border-border text-left outline-none transition-[border-color,box-shadow] duration-(--bz-duration-fast) ease-atlas hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=checked]:border-primary data-[state=checked]:ring-2 data-[state=checked]:ring-primary";
 
-/** Name, accent dot and « Actuel » over a theme card. */
-function CardLabel({ name, accent, current }: { name: string; accent: string; current: boolean }) {
+/** Name, material, accent dot and « Actuel » over a theme card. */
+function CardLabel({
+  name,
+  material,
+  accent,
+  current,
+}: {
+  name: string;
+  material: Material;
+  accent: string;
+  current: boolean;
+}) {
   const { t } = useTranslation();
   return (
     <>
@@ -46,8 +56,11 @@ function CardLabel({ name, accent, current }: { name: string; accent: string; cu
           {t("worldTheme.current")}
         </span>
       )}
-      <span className="relative truncate bg-gradient-to-t from-black/80 to-transparent px-2 pt-6 pb-1.5 font-heading text-sm font-bold text-white">
-        {name}
+      <span className="relative flex flex-col bg-gradient-to-t from-black/85 via-black/60 to-transparent px-2 pt-6 pb-1.5 text-white">
+        <span className="truncate font-heading text-sm leading-tight font-bold">{name}</span>
+        <span className="truncate text-[0.6875rem] leading-tight text-white/85">
+          {t(`worldTheme.material.${material}`)}
+        </span>
       </span>
     </>
   );
@@ -127,10 +140,17 @@ function ExploreTab({
   }, [pending]);
 
   const items = [
-    { value: "default", name: t("worldTheme.default"), accent: DEFAULT_ACCENT, image: null },
+    {
+      value: "default",
+      name: t("worldTheme.default"),
+      material: "vellum" as Material,
+      accent: DEFAULT_ACCENT,
+      image: null,
+    },
     ...PRESETS.map((preset) => ({
       value: preset.id,
       name: t(preset.name),
+      material: preset.look?.material ?? ("vellum" as Material),
       accent: accentOf(preset.accent, "dark"),
       image: preset.image,
     })),
@@ -179,7 +199,12 @@ function ExploreTab({
                 style={{ background: "var(--bz-backdrop-gradient)" }}
               />
             )}
-            <CardLabel name={item.name} accent={item.accent} current={item.value === current} />
+            <CardLabel
+              name={item.name}
+              material={item.material}
+              accent={item.accent}
+              current={item.value === current}
+            />
           </RadioGroupPrimitive.Item>
         ))}
       </RadioGroupPrimitive.Root>
