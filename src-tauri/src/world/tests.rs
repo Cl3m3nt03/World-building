@@ -675,6 +675,73 @@ async fn a_world_of_1_7_keeps_its_theme_byte_for_byte() {
 }
 
 #[tokio::test]
+async fn what_a_newer_app_wrote_survives_opening_and_saving() {
+    let (_dir, root) = temp_root();
+    let world = create(&root, "W", &V1).await.unwrap();
+    world.close().await;
+    let json = std::fs::read_to_string(root.join(WORLD_FILE)).unwrap();
+    let theme = r##"{ "kind": "custom", "background": null, "accent": "#4fd6f0", "material": "marble", "grain": 0.4 }"##;
+    let json = json.replacen(
+        '{',
+        &format!(
+            r#"{{ "theme": {theme}, "soundscape": {{ "track": "rain" }}, "wikiTheme": "atlas","#
+        ),
+        1,
+    );
+    std::fs::write(root.join(WORLD_FILE), json).unwrap();
+    let kept = |root: &Path| {
+        let file: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(root.join(WORLD_FILE)).unwrap()).unwrap();
+        (
+            file["soundscape"].clone(),
+            file["wikiTheme"].clone(),
+            file["theme"]["material"].clone(),
+            file["theme"]["grain"].clone(),
+            file["theme"]["accent"].clone(),
+        )
+    };
+
+    // Opening rewrites world.json (last opened date), then a patch and a
+    // theme change of the same kind.
+    let mut world = open(&root, &V1).await.unwrap();
+    assert_eq!(
+        kept(&root),
+        (
+            serde_json::json!({ "track": "rain" }),
+            serde_json::json!("atlas"),
+            serde_json::json!("marble"),
+            serde_json::json!(0.4),
+            serde_json::json!("#4fd6f0"),
+        )
+    );
+    world
+        .update(WorldPatch {
+            description: Some("Brumes".into()),
+            ..WorldPatch::default()
+        })
+        .unwrap();
+    world.set_theme(custom_theme(None)).unwrap();
+    world.close().await;
+
+    let reopened = open(&root, &V1).await.unwrap();
+    assert_eq!(
+        reopened.info().theme,
+        custom_theme(None).validated().unwrap()
+    );
+    reopened.close().await;
+    assert_eq!(
+        kept(&root),
+        (
+            serde_json::json!({ "track": "rain" }),
+            serde_json::json!("atlas"),
+            serde_json::json!("marble"),
+            serde_json::json!(0.4),
+            serde_json::json!("#5fcdc0"),
+        )
+    );
+}
+
+#[tokio::test]
 async fn an_unknown_material_keeps_the_rest_of_the_theme() {
     let (_dir, root) = temp_root();
     let world = create(&root, "W", &V1).await.unwrap();
@@ -711,7 +778,7 @@ async fn a_world_is_created_with_its_theme() {
         .unwrap();
     assert_eq!(world.info().theme, rich_theme());
     world.close().await;
-    assert_eq!(read_world_file(&root).unwrap().theme, rich_theme());
+    assert_eq!(read_world_file(&root).unwrap().theme.theme, rich_theme());
 
     let (_dir, root) = temp_root();
     let world = create_with(
@@ -726,7 +793,10 @@ async fn a_world_is_created_with_its_theme() {
     .await
     .unwrap();
     world.close().await;
-    assert_eq!(read_world_file(&root).unwrap().theme, WorldTheme::Default);
+    assert_eq!(
+        read_world_file(&root).unwrap().theme.theme,
+        WorldTheme::Default
+    );
     assert_eq!(written_theme(&root), None);
 }
 

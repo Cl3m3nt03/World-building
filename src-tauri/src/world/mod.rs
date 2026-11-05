@@ -33,7 +33,7 @@ pub mod tones;
 
 pub use calendar::WorldCalendar;
 pub use preferences::WorldPreferences;
-pub use theme::WorldTheme;
+pub use theme::{StoredTheme, WorldTheme};
 
 pub const WORLD_FILE: &str = "world.json";
 pub const DB_FILE: &str = "world.db";
@@ -83,14 +83,10 @@ pub struct WorldFile {
     /// Asset id (`<sha256>.<ext>`) of the main image, in `assets/`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub main_image: Option<String>,
-    /// Absent: the default theme. Read tolerantly (see `theme`).
-    #[serde(
-        default,
-        deserialize_with = "theme::deserialize_lenient",
-        serialize_with = "theme::serialize_compact",
-        skip_serializing_if = "WorldTheme::is_default"
-    )]
-    pub theme: WorldTheme,
+    /// Absent: the default theme. Read tolerantly, and what this app does
+    /// not know in it is kept (see `theme`).
+    #[serde(default, skip_serializing_if = "StoredTheme::is_default")]
+    pub theme: StoredTheme,
     /// Absent: all on. Read tolerantly (see `preferences`).
     #[serde(
         default,
@@ -120,6 +116,10 @@ pub struct WorldFile {
     pub updated_at: OffsetDateTime,
     #[serde(with = "time::serde::rfc3339")]
     pub last_opened_at: OffsetDateTime,
+    /// Keys this app does not know (written by a newer app, or by hand):
+    /// written back as they were, so saving the world never loses them.
+    #[serde(flatten)]
+    pub unknown: serde_json::Map<String, serde_json::Value>,
 }
 
 /// A world as seen by the front.
@@ -165,7 +165,7 @@ impl OpenWorld {
             tones: self.file.tones.clone(),
             description: self.file.description.clone(),
             main_image: self.file.main_image.clone(),
-            theme: self.file.theme.clone(),
+            theme: self.file.theme.theme.clone(),
             preferences: self.file.preferences,
             calendar: self.file.calendar.clone(),
             storage_limit: self.file.storage_limit.map(|limit| limit as f64),
@@ -227,7 +227,7 @@ impl OpenWorld {
             }
         }
         let mut file = self.file.clone();
-        file.theme = theme;
+        file.theme.set(theme);
         self.save(file)
     }
 
@@ -266,7 +266,7 @@ impl OpenWorld {
             file.main_image = None;
         }
         let background = file.theme.background() == Some(id);
-        if background && let WorldTheme::Custom { background, .. } = &mut file.theme {
+        if background && let WorldTheme::Custom { background, .. } = &mut file.theme.theme {
             *background = None;
         }
         if main_image || background {
@@ -631,7 +631,7 @@ async fn create_in(
         tones: tones::normalize(tones),
         description: String::new(),
         main_image: None,
-        theme,
+        theme: theme.into(),
         preferences: WorldPreferences::default(),
         calendar: WorldCalendar::default(),
         storage_limit: None,
@@ -639,6 +639,7 @@ async fn create_in(
         created_at: created,
         updated_at: created,
         last_opened_at: created,
+        unknown: serde_json::Map::new(),
     };
     if let Err(error) = write_world_file(root, &file) {
         pool.close().await;

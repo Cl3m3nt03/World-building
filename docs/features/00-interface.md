@@ -102,9 +102,9 @@ Entrée **Thème** du bloc Gérer, et section Thème des réglages du monde. Le 
 - Une image utilisée comme fond du thème apparaît dans les usages de la médiathèque (« fond du thème du monde ») ; si elle est supprimée, le thème reprend l'image principale.
 - Le mode clair ou sombre reste un réglage de l'app, pas du thème (voir « Thèmes riches » : un monde pourra imposer le sien).
 
-#### Thèmes riches (proposé, ADR 0015)
+#### Thèmes riches (accepté, ADR 0015)
 
-Statut : **proposé**, en attente des choix de Clément (maquettes « Grimoire », « Station », « Crypte » du 2026-11-05, hors dépôt). Rien de ce qui suit n'est livré (issues #547 à #554, milestone « V2 Thèmes du monde », après #528). Ce qui existe reste valable : image de fond, accent, huit thèmes, thème personnalisé.
+Statut : **accepté** avec les choix de Clément du 2026-11-05 (ADR 0015 ; maquettes « Grimoire », « Station », « Crypte », hors dépôt). Seul le format dans `world.json` est livré (#547) ; le reste vient avec #548 à #554 (milestone « V2 Thèmes du monde », après #528). Ce qui existe reste valable : image de fond, accent, huit thèmes, thème personnalisé.
 
 Un thème devient une **ambiance** complète, toujours dans la grammaire « Atlas ancien » (ADR 0012) : même coque, mêmes trois niveaux de surface, même texte courant en Alegreya Sans, même atlas gravé. Seuls changent six réglages, chacun pris dans une **liste fermée** :
 
@@ -114,7 +114,7 @@ Un thème devient une **ambiance** complète, toujours dans la grammaire « Atla
 | Accent | une couleur, rendue lisible dans chaque mode (règle actuelle) | l'or gravé |
 | **Matière des panneaux** | **Vélin** (le verre actuel), **Parchemin** (papier chaud presque opaque, grain marqué, flou faible), **Verre froid** (verre bleuté, flou fort, arête lumineuse), **Pierre** (opaque, mate, grain grossier, sans flou, ombre dure) | Vélin |
 | **Ornement** | **Aucun**, **Filets** (double filet d'accent à l'intérieur des panneaux), **Repères** (équerres d'accent aux angles), **Liseré** (trait d'accent sur l'arête haute) | Aucun |
-| **Police des titres** | Alegreya, Cinzel, EB Garamond, Playfair Display, plus une police technique à choisir (voir les questions de l'ADR 0015) | Alegreya |
+| **Police des titres** | Alegreya, Cinzel, EB Garamond, Playfair Display, plus Oxanium (police technique de Station) | Alegreya |
 | **Mode** | Suivre l'app, Toujours clair, Toujours sombre | Suivre l'app |
 
 - **Matière** : chaque matière fixe les surfaces, bordures, ombres, rayons, flou et grain, **en clair et en sombre**. Le texte, le texte atténué et l'accent sont recalculés pour elle. Avec « Effets de transparence » coupés, toutes les matières deviennent opaques et sans flou ; leur grain et leurs couleurs restent.
@@ -123,7 +123,7 @@ Un thème devient une **ambiance** complète, toujours dans la grammaire « Atla
 - **Mode** : un monde peut imposer clair ou sombre. Le réglage de l'app reste la règle hors d'un monde (liste des mondes, réglages de l'app) et pour les mondes qui le suivent. En quittant le monde, l'app reprend son propre mode.
 - **Thèmes fournis** : les huit thèmes actuels gardent leur illustration et leur accent, en Vélin, sans ornement, en Alegreya. Trois ambiances s'ajoutent, chacune avec une illustration dessinée pour BuilderZ : **Grimoire** (Parchemin, Filets, Cinzel, or), **Station** (Verre froid, Repères, police technique, cyan) et **Crypte** (Pierre, Liseré, Playfair Display, sang). Un thème fourni inconnu (venu d'une version plus récente) s'affiche comme « Par défaut », comme aujourd'hui.
 - **Modifier** expose les six réglages. Il part du thème affiché, et le résultat devient le thème personnalisé du monde.
-- **Format (livré, #547)** : le thème personnalisé de `world.json` porte `material` (`vellum`, `parchment`, `coldGlass`, `stone`), `ornament` (`none`, `rules`, `marks`, `edge`), `headingFont` (`alegreya`, `cinzel`, `ebGaramond`, `playfair`, `oxanium`) et `scheme` (`app`, `light`, `dark`), tous facultatifs ; une valeur par défaut n'est pas écrite, donc un thème de la 1.7 est réécrit à l'identique. Une valeur inconnue d'un de ces champs donne sa valeur par défaut (avertissement dans le journal) et garde le reste du thème. `create_world` reçoit un thème facultatif (absent : par défaut). Changer l'accent ou le fond dans « Modifier » garde les quatre champs. Le rendu de ces champs vient avec #548 à #553.
+- **Format (livré, #547)** : le thème personnalisé de `world.json` porte `material` (`vellum`, `parchment`, `coldGlass`, `stone`), `ornament` (`none`, `rules`, `marks`, `edge`), `headingFont` (`alegreya`, `cinzel`, `ebGaramond`, `playfair`, `oxanium`) et `scheme` (`app`, `light`, `dark`), tous facultatifs ; une valeur par défaut n'est pas écrite, donc un thème de la 1.7 est réécrit à l'identique. Une valeur inconnue d'un de ces champs est lue comme sa valeur par défaut (avertissement dans le journal), garde le reste du thème, et est réécrite telle quelle tant que ce réglage n'est pas changé. BuilderZ garde aussi les clés qu'il ne connaît pas, en haut de `world.json` et dans `theme`, ainsi qu'un thème illisible, tant qu'on ne choisit pas un autre thème. `create_world` reçoit un thème facultatif (absent : par défaut). Changer l'accent ou le fond dans « Modifier » garde les quatre champs. Le rendu de ces champs vient avec #548 à #553.
 
 **Contraste** : AA partout, dans les deux modes, pour toute combinaison.
 - Sur une surface, chaque matière garantit par construction, et un test le vérifie pour chaque matière et chaque mode : texte et texte atténué ≥ 4,5:1, accent ≥ 3:1 (≥ 4,5:1 quand il colore du texte), texte posé sur l'accent ≥ 4,5:1. Dans les maquettes, le texte et le texte atténué vont de 6,3:1 à 15,7:1.

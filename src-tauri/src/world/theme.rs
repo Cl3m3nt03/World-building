@@ -177,95 +177,226 @@ impl WorldTheme {
     }
 }
 
-/// Writes the `theme` of `world.json` without the choices left at their
-/// default value (ADR 0015), so a theme of 1.7 is written back unchanged.
-/// The front receives them all (`WorldInfo`).
-pub fn serialize_compact<S: Serializer>(
-    theme: &WorldTheme,
-    serializer: S,
-) -> Result<S::Ok, S::Error> {
-    /// `WorldTheme` as written in `world.json`, in the same field order.
-    #[derive(Serialize)]
-    #[serde(
-        rename_all = "camelCase",
-        rename_all_fields = "camelCase",
-        tag = "kind"
-    )]
-    enum Compact<'a> {
-        Default,
-        Preset {
-            id: &'a str,
-        },
-        Custom {
-            background: Option<&'a str>,
-            accent: &'a str,
-            #[serde(skip_serializing_if = "Material::is_default")]
-            material: Material,
-            #[serde(skip_serializing_if = "Ornament::is_default")]
-            ornament: Ornament,
-            #[serde(skip_serializing_if = "HeadingFont::is_default")]
-            heading_font: HeadingFont,
-            #[serde(skip_serializing_if = "Scheme::is_default")]
-            scheme: Scheme,
-        },
+/// Keys of the `theme` of `world.json` this app reads, by kind.
+fn known_keys(kind: &str) -> &'static [&'static str] {
+    match kind {
+        "preset" => &["kind", "id"],
+        "custom" => &[
+            "kind",
+            "background",
+            "accent",
+            "material",
+            "ornament",
+            "headingFont",
+            "scheme",
+        ],
+        _ => &["kind"],
     }
-    match theme {
-        WorldTheme::Default => Compact::Default,
-        WorldTheme::Preset { id } => Compact::Preset { id },
-        WorldTheme::Custom {
-            background,
-            accent,
-            material,
-            ornament,
-            heading_font,
-            scheme,
-        } => Compact::Custom {
-            background: background.as_deref(),
-            accent,
-            material: *material,
-            ornament: *ornament,
-            heading_font: *heading_font,
-            scheme: *scheme,
-        },
-    }
-    .serialize(serializer)
 }
 
-/// Removes a choice field whose value this app does not know (from a newer
-/// app, or edited by hand), with a warning: it then reads as its default.
-fn drop_unknown_choice<T: DeserializeOwned>(theme: &mut serde_json::Value, field: &str) {
-    let Some(object) = theme.as_object_mut() else {
-        return;
+/// The four choices of a custom theme, as written in `world.json`.
+const CHOICES: [&str; 4] = ["material", "ornament", "headingFont", "scheme"];
+
+fn is_known_choice(field: &str, value: &serde_json::Value) -> bool {
+    fn parses<T: DeserializeOwned>(value: &serde_json::Value) -> bool {
+        serde_json::from_value::<T>(value.clone()).is_ok()
+    }
+    match field {
+        "material" => parses::<Material>(value),
+        "ornament" => parses::<Ornament>(value),
+        "headingFont" => parses::<HeadingFont>(value),
+        _ => parses::<Scheme>(value),
+    }
+}
+
+/// Whether `theme` sets the choice `field` to something else than its default.
+fn choice_is_set(theme: &WorldTheme, field: &str) -> bool {
+    let WorldTheme::Custom {
+        material,
+        ornament,
+        heading_font,
+        scheme,
+        ..
+    } = theme
+    else {
+        return false;
     };
-    let unknown = object
-        .get(field)
-        .is_some_and(|value| serde_json::from_value::<T>(value.clone()).is_err());
-    if unknown && let Some(value) = object.remove(field) {
-        tracing::warn!(field, %value, "unknown world theme value, using the default one");
+    match field {
+        "material" => !material.is_default(),
+        "ornament" => !ornament.is_default(),
+        "headingFont" => !heading_font.is_default(),
+        _ => !scheme.is_default(),
     }
 }
 
-/// Reads the `theme` of `world.json` tolerantly. An unknown material,
-/// ornament, heading font or scheme gives its default value and keeps the
-/// rest of the theme (ADR 0015). A theme this app cannot read otherwise
-/// (unknown kind, bad accent) gives the default theme instead of refusing to
-/// open the world.
-pub fn deserialize_lenient<'de, D>(deserializer: D) -> Result<WorldTheme, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let mut value = serde_json::Value::deserialize(deserializer)?;
-    drop_unknown_choice::<Material>(&mut value, "material");
-    drop_unknown_choice::<Ornament>(&mut value, "ornament");
-    drop_unknown_choice::<HeadingFont>(&mut value, "headingFont");
-    drop_unknown_choice::<Scheme>(&mut value, "scheme");
-    Ok(serde_json::from_value::<WorldTheme>(value.clone())
-        .map_err(|error| error.to_string())
-        .and_then(|theme| theme.validated().map_err(|error| error.to_string()))
-        .unwrap_or_else(|error| {
-            tracing::warn!(%error, %value, "unreadable world theme, using the default one");
-            WorldTheme::Default
-        }))
+/// The `theme` of `world.json`: what this app understands, and what it keeps
+/// without understanding it (written by a newer app, or by hand), so that
+/// saving the world never loses it.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct StoredTheme {
+    /// The theme as this app reads it.
+    pub theme: WorldTheme,
+    /// Keys this app does not know, and choices with a value it does not
+    /// know (read as their default). Kept while the kind stays the same.
+    unknown: serde_json::Map<String, serde_json::Value>,
+    /// A theme this app cannot read at all (unknown kind, bad accent): shown
+    /// as the default theme, kept until another theme is set.
+    unreadable: Option<serde_json::Value>,
+}
+
+impl From<WorldTheme> for StoredTheme {
+    fn from(theme: WorldTheme) -> Self {
+        Self {
+            theme,
+            ..Self::default()
+        }
+    }
+}
+
+impl StoredTheme {
+    pub fn is_default(&self) -> bool {
+        self.theme.is_default() && self.unknown.is_empty() && self.unreadable.is_none()
+    }
+
+    pub fn background(&self) -> Option<&str> {
+        self.theme.background()
+    }
+
+    /// Sets `theme`. The unknown keys are kept while the kind stays the same,
+    /// and an unknown choice value while `theme` leaves that choice at its
+    /// default (this app could not have shown it otherwise).
+    pub fn set(&mut self, theme: WorldTheme) {
+        let same_kind = std::mem::discriminant(&theme) == std::mem::discriminant(&self.theme);
+        if same_kind && self.unreadable.is_none() {
+            self.unknown.retain(|field, _| {
+                !CHOICES.contains(&field.as_str()) || !choice_is_set(&theme, field)
+            });
+        } else {
+            self.unknown.clear();
+        }
+        self.unreadable = None;
+        self.theme = theme;
+    }
+
+    /// Reads a `theme` value tolerantly (ADR 0015). An unknown material,
+    /// ornament, heading font or scheme reads as its default, with a warning,
+    /// and the rest of the theme is kept. A theme this app cannot read
+    /// otherwise reads as the default theme instead of refusing to open the
+    /// world. Neither is dropped: both are written back as they were.
+    fn read(value: serde_json::Value) -> Self {
+        let serde_json::Value::Object(mut object) = value.clone() else {
+            return Self::unreadable(value, "not an object".into());
+        };
+        let kind = object
+            .get("kind")
+            .and_then(|kind| kind.as_str())
+            .unwrap_or_default();
+        let known = known_keys(kind);
+        let mut unknown = serde_json::Map::new();
+        let fields: Vec<String> = object.keys().cloned().collect();
+        for field in fields {
+            let choice = CHOICES.contains(&field.as_str());
+            let keep = known.contains(&field.as_str())
+                && (!choice || is_known_choice(&field, &object[&field]));
+            if !keep && let Some(value) = object.remove(&field) {
+                if choice {
+                    tracing::warn!(field, %value, "unknown world theme value, using the default one");
+                }
+                unknown.insert(field, value);
+            }
+        }
+        match serde_json::from_value::<WorldTheme>(serde_json::Value::Object(object))
+            .map_err(|error| error.to_string())
+            .and_then(|theme| theme.validated().map_err(|error| error.to_string()))
+        {
+            Ok(theme) => Self {
+                theme,
+                unknown,
+                unreadable: None,
+            },
+            Err(error) => Self::unreadable(value, error),
+        }
+    }
+
+    fn unreadable(value: serde_json::Value, error: String) -> Self {
+        tracing::warn!(%error, %value, "unreadable world theme, using the default one");
+        Self {
+            unreadable: Some(value),
+            ..Self::default()
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for StoredTheme {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(Self::read(serde_json::Value::deserialize(deserializer)?))
+    }
+}
+
+/// Writes the theme without the choices left at their default value, so a
+/// theme of 1.7 is written back unchanged, then the keys kept unread. The
+/// front receives every choice (`WorldInfo`).
+impl Serialize for StoredTheme {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        type Unknown<'a> = &'a serde_json::Map<String, serde_json::Value>;
+        /// `WorldTheme` as written in `world.json`, in the same field order.
+        #[derive(Serialize)]
+        #[serde(
+            rename_all = "camelCase",
+            rename_all_fields = "camelCase",
+            tag = "kind"
+        )]
+        enum Compact<'a> {
+            Default {
+                #[serde(flatten)]
+                unknown: Unknown<'a>,
+            },
+            Preset {
+                id: &'a str,
+                #[serde(flatten)]
+                unknown: Unknown<'a>,
+            },
+            Custom {
+                background: Option<&'a str>,
+                accent: &'a str,
+                #[serde(skip_serializing_if = "Material::is_default")]
+                material: Material,
+                #[serde(skip_serializing_if = "Ornament::is_default")]
+                ornament: Ornament,
+                #[serde(skip_serializing_if = "HeadingFont::is_default")]
+                heading_font: HeadingFont,
+                #[serde(skip_serializing_if = "Scheme::is_default")]
+                scheme: Scheme,
+                #[serde(flatten)]
+                unknown: Unknown<'a>,
+            },
+        }
+        if let Some(value) = &self.unreadable {
+            return value.serialize(serializer);
+        }
+        let unknown = &self.unknown;
+        match &self.theme {
+            WorldTheme::Default => Compact::Default { unknown },
+            WorldTheme::Preset { id } => Compact::Preset { id, unknown },
+            WorldTheme::Custom {
+                background,
+                accent,
+                material,
+                ornament,
+                heading_font,
+                scheme,
+            } => Compact::Custom {
+                background: background.as_deref(),
+                accent,
+                material: *material,
+                ornament: *ornament,
+                heading_font: *heading_font,
+                scheme: *scheme,
+                unknown,
+            },
+        }
+        .serialize(serializer)
+    }
 }
 
 #[cfg(test)]
@@ -316,14 +447,23 @@ mod tests {
         }
     }
 
-    #[derive(Deserialize)]
+    /// The `theme` of `world.json`, as `WorldFile` reads and writes it.
+    #[derive(Deserialize, Serialize)]
     struct Holder {
-        #[serde(default, deserialize_with = "deserialize_lenient")]
-        theme: WorldTheme,
+        #[serde(default, skip_serializing_if = "StoredTheme::is_default")]
+        theme: StoredTheme,
+    }
+
+    fn stored(json: &str) -> StoredTheme {
+        serde_json::from_str::<Holder>(json).unwrap().theme
     }
 
     fn read(json: &str) -> WorldTheme {
-        serde_json::from_str::<Holder>(json).unwrap().theme
+        stored(json).theme
+    }
+
+    fn write(theme: StoredTheme) -> String {
+        serde_json::to_string(&Holder { theme }).unwrap()
     }
 
     #[test]
@@ -351,18 +491,9 @@ mod tests {
         }
     }
 
-    #[derive(Serialize)]
-    struct Written {
-        #[serde(
-            skip_serializing_if = "WorldTheme::is_default",
-            serialize_with = "serialize_compact"
-        )]
-        theme: WorldTheme,
-    }
-
     /// Reads `json` as `world.json` would, then writes it back.
     fn round_trip(json: &str) -> String {
-        serde_json::to_string(&Written { theme: read(json) }).unwrap()
+        write(stored(json))
     }
 
     /// Reads `json` and returns the theme with the warnings it logged.
@@ -523,5 +654,77 @@ mod tests {
             let json = format!(r#"{{"theme":{{"kind":"preset","id":"{id}"}}}}"#);
             assert_eq!(round_trip(&json), json);
         }
+    }
+
+    fn value(json: &str) -> serde_json::Value {
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn what_this_app_does_not_know_is_written_back() {
+        for json in [
+            // Unknown choice values (read as their default).
+            r##"{"theme":{"kind":"custom","background":null,"accent":"#4fd6f0","material":"marble","scheme":"sepia"}}"##,
+            // Unknown keys, in each kind.
+            r##"{"theme":{"kind":"custom","background":null,"accent":"#4fd6f0","grain":0.4,"ornament":"edge"}}"##,
+            r#"{"theme":{"kind":"preset","id":"grimoire","variant":2}}"#,
+            r#"{"theme":{"kind":"default","since":"1.9"}}"#,
+            // Unreadable themes (read as the default theme).
+            r#"{"theme":{"kind":"animated","speed":2}}"#,
+            r##"{"theme":{"kind":"custom","background":null,"accent":"blue"}}"##,
+            r#"{"theme":"dawn"}"#,
+        ] {
+            assert_eq!(value(&round_trip(json)), value(json), "{json}");
+        }
+        assert_eq!(
+            read(
+                r##"{"theme":{"kind":"custom","background":null,"accent":"#4fd6f0","grain":0.4,"ornament":"edge"}}"##
+            ),
+            WorldTheme::Custom {
+                background: None,
+                accent: "#4fd6f0".into(),
+                material: Material::Vellum,
+                ornament: Ornament::Edge,
+                heading_font: HeadingFont::Alegreya,
+                scheme: Scheme::App,
+            }
+        );
+    }
+
+    #[test]
+    fn setting_a_theme_keeps_what_it_does_not_replace() {
+        let json = r##"{"theme":{"kind":"custom","background":null,"accent":"#4fd6f0","material":"marble","scheme":"sepia","grain":0.4}}"##;
+
+        // Same kind, the accent changed: everything unknown stays.
+        let mut theme = stored(json);
+        theme.set(custom("#b39af5"));
+        assert_eq!(
+            value(&write(theme.clone())),
+            value(
+                r##"{"theme":{"kind":"custom","background":null,"accent":"#b39af5","material":"marble","scheme":"sepia","grain":0.4}}"##
+            )
+        );
+
+        // A material chosen here replaces the unknown one; the rest stays.
+        let mut chosen = custom("#b39af5");
+        if let WorldTheme::Custom { material, .. } = &mut chosen {
+            *material = Material::Stone;
+        }
+        theme.set(chosen);
+        assert_eq!(
+            value(&write(theme.clone())),
+            value(
+                r##"{"theme":{"kind":"custom","background":null,"accent":"#b39af5","material":"stone","scheme":"sepia","grain":0.4}}"##
+            )
+        );
+
+        // Another kind: what belonged to the custom theme goes.
+        theme.set(WorldTheme::Preset { id: "dawn".into() });
+        assert_eq!(write(theme), r#"{"theme":{"kind":"preset","id":"dawn"}}"#);
+
+        // An unreadable theme is replaced by the one set.
+        let mut theme = stored(r#"{"theme":{"kind":"animated","speed":2}}"#);
+        theme.set(WorldTheme::Default);
+        assert_eq!(write(theme), "{}");
     }
 }
