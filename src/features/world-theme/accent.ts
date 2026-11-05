@@ -6,22 +6,30 @@
 
 export type Mode = "light" | "dark";
 
-/** Page backgrounds of the two modes (`--bz-bg` in tokens.css). */
-const BACKGROUNDS: Record<Mode, string> = { light: "#f5efe3", dark: "#0b0e17" };
+/**
+ * What the accent is read on in each mode with the Vélin material: the page
+ * background (`--bz-bg`) and the two surfaces laid on it (tokens.css; a test
+ * checks them against materials.ts). Other materials pass their own.
+ */
+export const VELLUM_GROUNDS: Record<Mode, readonly string[]> = {
+  light: ["#f2e9d4", "#f8f2e4", "#fbf6ec"],
+  dark: ["#13110d", "#18150f", "#16130e"],
+};
 
 /**
- * Smallest contrast between the accent and the page background: 3:1, the
- * WCAG level for interface components (buttons, focus rings), met by the
- * default accents.
+ * Smallest contrast between the accent and what it sits on: 3:1, the WCAG
+ * level for interface components (buttons, focus rings), met by the default
+ * accents. Text drawn on the accent gets 4.5:1.
  */
 export const MIN_CONTRAST = 3;
+export const MIN_TEXT_CONTRAST = 4.5;
 
 /** `#rrggbb` (any case). */
 export function isHexColor(value: string): boolean {
   return /^#[0-9a-f]{6}$/i.test(value);
 }
 
-type Rgb = [number, number, number];
+export type Rgb = [number, number, number];
 
 function toRgb(hex: string): Rgb {
   const value = Number.parseInt(hex.slice(1), 16);
@@ -46,23 +54,30 @@ export function contrast(a: string, b: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-function mix(hex: string, target: Rgb, amount: number): string {
+/** `hex` moved toward `target` by `amount` (0 to 1). */
+export function mix(hex: string, target: Rgb, amount: number): string {
   const rgb = toRgb(hex);
   return toHex(rgb.map((c, i) => c + ((target[i] ?? c) - c) * amount) as Rgb);
 }
 
 /**
- * `hex` as it is shown in `mode`: unchanged if readable on that mode's
- * background, else darkened (light mode) or lightened (dark mode) just
- * enough to reach `MIN_CONTRAST`.
+ * `hex` as it is shown in `mode`: unchanged if readable on every ground of
+ * that mode (≥ 3:1, and its text ≥ 4.5:1), else darkened (light mode) or
+ * lightened (dark mode) just enough.
  */
-export function accentFor(hex: string, mode: Mode): string {
+export function accentFor(
+  hex: string,
+  mode: Mode,
+  grounds: readonly string[] = VELLUM_GROUNDS[mode],
+): string {
   const color = hex.toLowerCase();
-  const background = BACKGROUNDS[mode];
   const target: Rgb = mode === "light" ? [0, 0, 0] : [255, 255, 255];
   for (let step = 0; step <= 20; step++) {
     const candidate = mix(color, target, step / 20);
-    if (contrast(candidate, background) >= MIN_CONTRAST) return candidate;
+    const onGrounds = grounds.every((ground) => contrast(candidate, ground) >= MIN_CONTRAST);
+    if (onGrounds && contrast(foregroundOn(candidate), candidate) >= MIN_TEXT_CONTRAST) {
+      return candidate;
+    }
   }
   return mode === "light" ? "#000000" : "#ffffff";
 }
