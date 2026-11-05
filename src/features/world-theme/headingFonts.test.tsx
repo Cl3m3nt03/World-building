@@ -13,6 +13,10 @@ const CUSTOM: WorldTheme = { kind: "custom", background: null, accent: "#5fcdc0"
 test("a theme's heading font: the custom one's, else Alegreya", () => {
   expect(themeHeadingFont({ kind: "default" })).toBe("alegreya");
   expect(themeHeadingFont({ kind: "preset", id: "dawn" })).toBe("alegreya");
+  expect(themeHeadingFont({ kind: "preset", id: "grimoire" })).toBe("cinzel");
+  expect(themeHeadingFont({ kind: "preset", id: "station" })).toBe("oxanium");
+  expect(themeHeadingFont({ kind: "preset", id: "crypt" })).toBe("playfair");
+  expect(themeHeadingFont({ kind: "preset", id: "aurora" })).toBe("alegreya");
   expect(themeHeadingFont(CUSTOM)).toBe("alegreya");
   expect(themeHeadingFont({ ...CUSTOM, headingFont: "oxanium" })).toBe("oxanium");
   // A font from a newer app, or a key of Object's prototype, shows as Alegreya.

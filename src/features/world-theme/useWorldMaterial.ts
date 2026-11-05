@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useCurrentWorld } from "@/features/world";
 import type { Material, Ornament, WorldTheme } from "@/lib/bindings";
 import { MATERIALS, materialAccent, ORNAMENTS } from "./materials";
-import { resolveTheme } from "./presets";
+import { findPreset, resolveTheme } from "./presets";
 
 /** CSS variables read by materials.css for the accent of a material. */
 const VARIABLES = {
@@ -13,11 +13,17 @@ const VARIABLES = {
 } as const;
 
 /**
- * The material and ornament of `theme`. A shipped theme is in Vélin without
- * ornament (the three ambiances come with #551); a value this app does not
- * know (saved by a newer one) shows as the default.
+ * The material and ornament of `theme`. A shipped theme has its ambiance's
+ * (Grimoire, Station, Crypte), else Vélin without ornament; a value this app
+ * does not know (saved by a newer one) shows as the default.
  */
 export function themeLook(theme: WorldTheme): { material: Material; ornament: Ornament } {
+  if (theme.kind === "preset") {
+    const look = findPreset(theme.id)?.look;
+    return look
+      ? { material: look.material, ornament: look.ornament }
+      : { material: "vellum", ornament: "none" };
+  }
   if (theme.kind !== "custom") return { material: "vellum", ornament: "none" };
   const material = MATERIALS.includes(theme.material as Material) ? theme.material : undefined;
   const ornament = ORNAMENTS.includes(theme.ornament as Ornament) ? theme.ornament : undefined;

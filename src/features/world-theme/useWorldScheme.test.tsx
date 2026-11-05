@@ -25,6 +25,9 @@ const FOLLOWS: World = { id: "app-world", name: "Aldoria", theme: CUSTOM };
 test("a theme's mode: « Toujours clair » or « Toujours sombre » of a custom theme, else none", () => {
   expect(themeScheme({ kind: "default" })).toBeNull();
   expect(themeScheme({ kind: "preset", id: "dawn" })).toBeNull();
+  // The ambiances follow the app too (ADR 0015 §3).
+  for (const id of ["grimoire", "station", "crypt"])
+    expect(themeScheme({ kind: "preset", id })).toBeNull();
   expect(themeScheme(CUSTOM)).toBeNull();
   expect(themeScheme({ ...CUSTOM, scheme: "app" })).toBeNull();
   expect(themeScheme({ ...CUSTOM, scheme: "dark" })).toBe("dark");

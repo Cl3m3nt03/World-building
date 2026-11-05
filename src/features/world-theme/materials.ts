@@ -1,5 +1,6 @@
 import type { Material, Ornament } from "@/lib/bindings";
 import { accentFor, foregroundOn, type Mode, mix } from "./accent";
+import { accentOf, type ThemeAccent } from "./presets";
 
 /**
  * The colours of each material that its text and accent are read on
@@ -117,11 +118,11 @@ export function grounds(colors: MaterialColors): [string, string, string] {
  * readable on its grounds (see `accentFor`), and the text drawn on it.
  */
 export function materialAccent(
-  accent: string | null,
+  accent: ThemeAccent | null,
   material: Material,
   mode: Mode,
 ): { accent: string; foreground: string } {
   const colors = MATERIAL_COLORS[material][mode];
-  const shown = accentFor(accent ?? colors.accent, mode, grounds(colors));
+  const shown = accentFor(accent ? accentOf(accent, mode) : colors.accent, mode, grounds(colors));
   return { accent: shown, foreground: foregroundOn(shown) };
 }

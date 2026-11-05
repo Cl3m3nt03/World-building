@@ -10,7 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppSettings, Asset, WorldInfo, WorldTheme } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 import { accentFor, contrast, foregroundOn, isHexColor, MIN_CONTRAST } from "./accent";
-import { findPreset, PRESETS, resolveTheme } from "./presets";
+import { accentOf, findPreset, PRESETS, resolveTheme } from "./presets";
 
 test("an accent is kept when readable, else adjusted just enough for each mode", () => {
   // The default ochre is readable in both modes as it is.
@@ -26,8 +26,10 @@ test("an accent is kept when readable, else adjusted just enough for each mode",
   expect(contrast(deep, "#0b0e17")).toBeGreaterThanOrEqual(MIN_CONTRAST);
   // Every shipped accent ends up readable in both modes.
   for (const preset of PRESETS) {
-    expect(contrast(accentFor(preset.accent, "light"), "#f5efe3")).toBeGreaterThanOrEqual(3);
-    expect(contrast(accentFor(preset.accent, "dark"), "#0b0e17")).toBeGreaterThanOrEqual(3);
+    const light = accentFor(accentOf(preset.accent, "light"), "light");
+    const dark = accentFor(accentOf(preset.accent, "dark"), "dark");
+    expect(contrast(light, "#f5efe3")).toBeGreaterThanOrEqual(3);
+    expect(contrast(dark, "#0b0e17")).toBeGreaterThanOrEqual(3);
   }
 });
 
@@ -177,8 +179,8 @@ test("choosing a shipped theme changes the background and the accent at once", a
 
   const forest = findPreset("forest");
   await waitFor(() => expect(backdrop()?.getAttribute("src")).toBe(forest?.image));
-  expect(accentVariable("dark")).toBe(accentFor(forest?.accent ?? "", "dark"));
-  expect(accentVariable("light")).toBe(accentFor(forest?.accent ?? "", "light"));
+  expect(accentVariable("dark")).toBe(accentFor("#8bc97a", "dark"));
+  expect(accentVariable("light")).toBe(accentFor("#8bc97a", "light"));
   expect(saved).toEqual([{ kind: "preset", id: "forest" }]);
 
   // Back to the default theme: the default accents come back.
@@ -204,6 +206,26 @@ test("the edit tab makes the world's own theme from the current accent", async (
     expect(saved.at(-1)).toEqual({ kind: "custom", background: null, accent: "#b39af5" }),
   );
   expect(within(dialog).getByText("Ce monde utilise son propre thème.")).toBeTruthy();
+});
+
+test("the edit tab starts from an ambiance's look and its dark accent", async () => {
+  world = { ...WORLD, theme: { kind: "preset", id: "crypt" } };
+  const dialog = await renderThemeSection();
+
+  fireEvent.mouseDown(within(dialog).getByRole("tab", { name: "Modifier" }));
+  const swatches = await within(dialog).findByRole("radiogroup", { name: "Couleurs proposées" });
+  fireEvent.click(within(swatches).getByRole("radio", { name: "Violet" }));
+
+  await waitFor(() =>
+    expect(saved.at(-1)).toEqual({
+      kind: "custom",
+      background: null,
+      accent: "#b39af5",
+      material: "stone",
+      ornament: "edge",
+      headingFont: "playfair",
+    }),
+  );
 });
 
 test("a background is chosen in the media library, and the main image taken back", async () => {

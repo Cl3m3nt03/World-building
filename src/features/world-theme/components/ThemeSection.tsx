@@ -9,7 +9,9 @@ import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { usePreviewWorldTheme, useSetWorldTheme } from "@/features/world";
 import type { WorldInfo, WorldTheme } from "@/lib/bindings";
 import { isHexColor } from "../accent";
-import { ACCENT_SWATCHES, DEFAULT_ACCENT, PRESETS, resolveTheme } from "../presets";
+import { themeHeadingFont } from "../headingFonts";
+import { ACCENT_SWATCHES, accentOf, DEFAULT_ACCENT, PRESETS, resolveTheme } from "../presets";
+import { themeLook } from "../useWorldMaterial";
 
 /** Delay before a color dragged in the free color picker is saved. */
 const COLOR_SAVE_DELAY_MS = 300;
@@ -96,11 +98,24 @@ function ExploreTab({
             draggable={false}
             className="absolute inset-0 size-full object-cover"
           />
-          <CardLabel name={t(preset.name)} accent={preset.accent} />
+          <CardLabel name={t(preset.name)} accent={accentOf(preset.accent, "dark")} />
         </RadioGroupPrimitive.Item>
       ))}
     </RadioGroupPrimitive.Root>
   );
+}
+
+/** The look a shipped ambiance hands to « Modifier »; nothing for the others. */
+function presetLook(
+  theme: WorldTheme,
+): Pick<Extract<WorldTheme, { kind: "custom" }>, "material" | "ornament" | "headingFont"> {
+  const { material, ornament } = themeLook(theme);
+  const headingFont = themeHeadingFont(theme);
+  return {
+    ...(material !== "vellum" && { material }),
+    ...(ornament !== "none" && { ornament }),
+    ...(headingFont !== "alegreya" && { headingFont }),
+  };
 }
 
 /** "Edit": the world's own theme, background from the media library and accent color. */
@@ -119,14 +134,17 @@ function EditTab({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pending = useRef<WorldTheme | null>(null);
 
-  // Starts from what is shown: the current accent, the main image.
+  // Starts from what is shown: the current accent (its dark reference for an
+  // ambiance), its material, ornament and heading font, the main image.
+  const shownAccent = resolveTheme(world.theme, world.mainImage).accent;
   const current =
     world.theme.kind === "custom"
       ? world.theme
       : {
           kind: "custom" as const,
           background: null,
-          accent: resolveTheme(world.theme, world.mainImage).accent ?? DEFAULT_ACCENT,
+          accent: shownAccent ? accentOf(shownAccent, "dark") : DEFAULT_ACCENT,
+          ...presetLook(world.theme),
         };
   const isCustom = world.theme.kind === "custom";
   const background = current.background ?? world.mainImage;
