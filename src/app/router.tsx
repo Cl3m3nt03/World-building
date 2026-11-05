@@ -53,7 +53,12 @@ import {
   wikiSettingsQuery,
 } from "@/features/wiki";
 import { CreateWorldDialog, currentWorldQuery, WorldListScreen } from "@/features/world";
-import { useWorldHeadingFont, useWorldMaterial } from "@/features/world-theme";
+import {
+  loadHeadingFont,
+  themeHeadingFont,
+  useWorldHeadingFont,
+  useWorldMaterial,
+} from "@/features/world-theme";
 
 /*
  * Routes (code-based, fully typed):
@@ -151,6 +156,8 @@ const worldRoute = createRoute({
     if (world?.id !== params.worldId) {
       throw redirect({ to: "/" });
     }
+    // Its first frame is in its heading font, never swapped after (ADR 0015).
+    await loadHeadingFont(themeHeadingFont(world.theme));
   },
   component: WorldLayout,
 });

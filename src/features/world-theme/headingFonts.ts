@@ -51,3 +51,24 @@ export function warmHeadingFonts(): void {
   for (const font of Object.keys(HEADING_FONTS) as HeadingFont[])
     fonts.load(fontQuery(font)).catch(() => undefined);
 }
+
+/** How long a world waits for its heading font before showing anyway. */
+const LOAD_TIMEOUT_MS = 300;
+
+/**
+ * Resolves once `font` is loaded (at once if it is, or Alegreya), and after
+ * LOAD_TIMEOUT_MS at most: the world's route waits on it, so that its first
+ * frame is already in its font. Never rejects.
+ */
+export async function loadHeadingFont(font: HeadingFont): Promise<void> {
+  const fonts = typeof document === "undefined" ? undefined : document.fonts;
+  if (font === "alegreya" || !fonts || fonts.check(fontQuery(font))) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    fonts.load(fontQuery(font)).catch(() => undefined),
+    new Promise((resolve) => {
+      timer = setTimeout(resolve, LOAD_TIMEOUT_MS);
+    }),
+  ]);
+  clearTimeout(timer);
+}
