@@ -57,7 +57,7 @@ function CardLabel({
         </span>
       )}
       <span className="relative flex flex-col bg-gradient-to-t from-black/85 via-black/60 to-transparent px-2 pt-6 pb-1.5 text-white">
-        <span className="truncate font-heading text-sm leading-tight font-bold">{name}</span>
+        <span className="line-clamp-2 font-heading text-sm leading-tight font-bold">{name}</span>
         <span className="truncate text-[0.6875rem] leading-tight text-white/85">
           {t(`worldTheme.material.${material}`)}
         </span>
@@ -158,7 +158,7 @@ function ExploreTab({
   const previewTitle = t("worldTheme.previewOf", { name: nameOf(shown) });
 
   return (
-    <div ref={root} className="grid grid-cols-[13rem_minmax(0,1fr)] gap-4">
+    <div ref={root} className="grid grid-cols-[14rem_minmax(0,1fr)] gap-4">
       <RadioGroupPrimitive.Root
         aria-label={t("worldTheme.gallery")}
         value={selected}
