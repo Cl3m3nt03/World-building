@@ -94,12 +94,14 @@ describe("M2: world settings, theme and writing preferences", () => {
     expect(await backdropSource()).toContain("forest");
     // A first Escape cancels the preview and keeps the window open.
     await browser.keys("Escape");
-    await $('[role="dialog"] [role="radio"][aria-label="Forêt ancienne, Actuel"]').waitUntil(
-      async function () {
-        return (await this.getAttribute("aria-checked")) === "true";
-      },
+    await browser.waitUntil(
+      async () =>
+        (await $(
+          '[role="dialog"] [role="radio"][aria-label="Forêt ancienne, Actuel"]',
+        ).getAttribute("aria-checked")) === "true",
       { timeoutMsg: "Escape did not go back to the current theme" },
     );
+    expect(await $('[role="dialog"]').isExisting()).toBe(true);
     await $('[role="dialog"] [role="radio"][aria-label="Station"]').click();
     await $('[role="dialog"] button=Appliquer').click();
     await browser.waitUntil(

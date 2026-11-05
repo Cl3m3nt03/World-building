@@ -3,9 +3,12 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBackdropVeil } from "@/app/shell/backdropVeil";
 import { Button } from "@/components/ui/button";
-import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { useRecentDocuments, useWorldStats } from "@/features/cards";
-import { Stat } from "@/features/home";
+// Direct imports: the feature indexes pull the editors (and Leaflet) in.
+import { typeColor } from "@/features/card-types/colors";
+import { useCardTypes } from "@/features/card-types/hooks/useCardTypes";
+import { typeIcon } from "@/features/card-types/icons";
+import { useRecentDocuments, useWorldStats } from "@/features/cards/hooks/useCards";
+import { Stat } from "@/features/home/components/Stat";
 import { genreLabel } from "@/features/world";
 import { useAssetUrl } from "@/lib/assets";
 import type { WorldInfo, WorldTheme } from "@/lib/bindings";
