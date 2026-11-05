@@ -15,6 +15,7 @@
 @import "@fontsource/space-mono/700.css";
 @import "./tokens.css";
 @import "./materials.css";
+@import "./fonts.css";
 
 /* The resolved theme is set on <html data-theme="light|dark"> (see src/app/theme.ts). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -94,7 +95,8 @@
 
 @theme inline {
   --font-sans: "Alegreya Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Alegreya Variable", "Alegreya", ui-serif, Georgia, serif;
+  /* The open world's heading font (fonts.css). */
+  --font-heading: var(--bz-font-heading);
   --font-caps: "Alegreya Sans SC", "Alegreya Sans", ui-sans-serif, sans-serif;
 
   --color-background: var(--background);
@@ -303,7 +305,7 @@ h1[tabindex="-1"]:focus {
     @apply font-heading;
     /* A serif breathes more than the sans of the interface. */
     line-height: 1.2;
-    letter-spacing: -0.005em;
+    letter-spacing: var(--bz-heading-tracking);
   }
 }
 

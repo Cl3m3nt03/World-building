@@ -1550,6 +1550,7 @@
   "wiki.timeline.leadsTo": "Mène à : {{names}}",
   "about.designSystem": "Système de design",
   "about.designSystemHint": "Toutes les pièces de l'interface, dans les deux thèmes.",
+  "about.fonts": "Polices des titres : {{fonts}}. Elles sont libres (SIL Open Font License 1.1) et livrées avec l'application.",
   "designSystem.title": "Système de design",
   "designSystem.back": "Retour",
   "designSystem.description": "Les pièces de l'interface « Atlas ancien » (ADR 0012), en vélin et en encre côte à côte. Les menus et infobulles s'ouvrent dans le thème de l'app.",
