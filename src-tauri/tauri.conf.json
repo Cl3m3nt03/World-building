@@ -29,6 +29,15 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "publisher": "BuilderZ",
+    "copyright": "Copyright © 2026 Clément (Cl3m3nt03)",
+    "homepage": "https://github.com/Cl3m3nt03/World-building",
+    "category": "Productivity",
+    "shortDescription": "Local worldbuilding desktop app",
+    "longDescription": "BuilderZ is a local, single-user worldbuilding app: typed cards, an interactive map, a graph, relation trees, a canvas, a wiki and a writing space. Worlds stay on your computer.",
+    "windows": {
+      "webviewInstallMode": { "type": "embedBootstrapper", "silent": true }
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

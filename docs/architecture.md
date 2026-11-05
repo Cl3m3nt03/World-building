@@ -322,4 +322,4 @@ Points d'attention :
   - fermer puis rouvrir la PR de release à la main, ce qui déclenche la CI ;
   - ou créer un jeton personnel à portée fine (dépôt `World-building`, droits *Contents* et *Pull requests* en écriture) et l'enregistrer comme secret `RELEASE_PLEASE_TOKEN` : le workflow l'utilise automatiquement et la CI tourne sur chaque mise à jour de la PR.
 - Le réglage du dépôt « Allow GitHub Actions to create and approve pull requests » doit rester activé.
-- L'installeur n'est **pas signé** : SmartScreen demande une confirmation au premier lancement (accepté dans l'ADR 0001).
+- L'installeur n'est **pas signé** tant que la variable `WINDOWS_SIGNING` n'est pas définie : SmartScreen demande une confirmation au premier lancement, et Defender peut le prendre pour une menace (faux positif). La signature (SignPath Foundation, certificat ou commande de signature), les métadonnées Windows et la déclaration d'un faux positif sont décrites dans `docs/outils/signature.md`.

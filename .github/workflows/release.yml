@@ -79,14 +79,97 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Optional code signing (docs/outils/signature.md). Off while the
+      # repository variable WINDOWS_SIGNING is unset: releases stay unsigned.
+      #   certificate: imports the .pfx from secrets and lets Tauri sign the
+      #                app, the installer and the uninstaller with signtool.
+      #   command:     Tauri runs vars.WINDOWS_SIGN_COMMAND (%1 = file) on each
+      #                binary, for cloud HSM certificates.
+      #   signpath:    the installer is built, then signed by SignPath and
+      #                uploaded to the release.
+      - name: Prepare Windows signing
+        if: vars.WINDOWS_SIGNING == 'certificate' || vars.WINDOWS_SIGNING == 'command'
+        shell: pwsh
+        env:
+          MODE: ${{ vars.WINDOWS_SIGNING }}
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          WINDOWS_SIGN_COMMAND: ${{ vars.WINDOWS_SIGN_COMMAND }}
+          TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL || 'http://time.certum.pl' }}
+        run: |
+          $windows = @{}
+          if ($env:MODE -eq 'certificate') {
+            if (-not $env:WINDOWS_CERTIFICATE) { throw 'WINDOWS_SIGNING=certificate needs the WINDOWS_CERTIFICATE secret.' }
+            $pfx = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+            $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+            Remove-Item $pfx
+            $windows.certificateThumbprint = $cert.Thumbprint
+            $windows.digestAlgorithm = 'sha256'
+            $windows.timestampUrl = $env:TIMESTAMP_URL
+          } else {
+            if (-not $env:WINDOWS_SIGN_COMMAND) { throw 'WINDOWS_SIGNING=command needs the WINDOWS_SIGN_COMMAND variable.' }
+            $windows.signCommand = $env:WINDOWS_SIGN_COMMAND
+          }
+          $config = Join-Path $env:RUNNER_TEMP 'signing.conf.json'
+          @{ bundle = @{ windows = $windows } } | ConvertTo-Json -Depth 5 | Set-Content -Path $config -Encoding utf8NoBOM
+          "TAURI_SIGNING_ARGS=--config $config" >> $env:GITHUB_ENV
+
       # Builds the NSIS installer (bundle target in tauri.conf.json) and
       # uploads it to the release of this tag, creating the release if needed.
       - uses: tauri-apps/tauri-action@v0
+        if: vars.WINDOWS_SIGNING != 'signpath'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ needs.release-please.outputs.tag_name || github.ref_name }}
           releaseName: BuilderZ ${{ needs.release-please.outputs.tag_name || github.ref_name }}
-          releaseBody: See CHANGELOG.md. The installer is not signed, so Windows SmartScreen asks for confirmation on first launch.
+          releaseBody: ${{ vars.WINDOWS_SIGNING && 'See CHANGELOG.md.' || 'See CHANGELOG.md. The installer is not signed, so Windows SmartScreen asks for confirmation on first launch.' }}
           releaseDraft: false
           prerelease: false
+          args: ${{ env.TAURI_SIGNING_ARGS }}
+
+      # SignPath: build only, sign the installer, then publish it.
+      - name: Build installer (SignPath)
+        if: vars.WINDOWS_SIGNING == 'signpath'
+        run: pnpm tauri build
+
+      - id: unsigned
+        name: Upload unsigned installer
+        if: vars.WINDOWS_SIGNING == 'signpath'
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-unsigned
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+
+      - name: Sign installer with SignPath
+        if: vars.WINDOWS_SIGNING == 'signpath'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'builderz' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'initial' }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Publish signed installer
+        if: vars.WINDOWS_SIGNING == 'signpath'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name || github.ref_name }}
+        run: |
+          $files = Get-ChildItem signed -Recurse -Filter *-setup.exe
+          if (-not $files) { throw 'SignPath returned no installer.' }
+          $sig = Get-AuthenticodeSignature $files[0].FullName
+          if ($sig.Status -ne 'Valid') { throw "Installer signature is $($sig.Status)." }
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:TAG --title "BuilderZ $env:TAG" --notes 'See CHANGELOG.md.'
+          }
+          gh release upload $env:TAG $files.FullName --clobber
