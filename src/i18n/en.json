@@ -1550,6 +1550,7 @@
   "wiki.timeline.leadsTo": "Leads to: {{names}}",
   "about.designSystem": "Design system",
   "about.designSystemHint": "Every piece of the interface, in both themes.",
+  "about.fonts": "Heading fonts: {{fonts}}. They are free (SIL Open Font License 1.1) and shipped with the app.",
   "designSystem.title": "Design system",
   "designSystem.back": "Back",
   "designSystem.description": "The pieces of the « Atlas ancien » interface (ADR 0012), in vellum and ink side by side. Menus and tooltips open in the app's theme.",

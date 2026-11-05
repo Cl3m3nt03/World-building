@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
+// The font list alone: the feature's index would pull the world feature in.
+import { HEADING_FONT_NAMES } from "@/features/world-theme/headingFonts";
 import type { TranslationKey } from "@/i18n";
 import type { AppInfo } from "@/lib/bindings";
 import { useAppInfo } from "../hooks/useAppInfo";
@@ -36,6 +38,9 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
           ))}
         </dl>
       )}
+      <p className="text-xs text-muted-foreground">
+        {t("about.fonts", { fonts: Object.values(HEADING_FONT_NAMES).join(", ") })}
+      </p>
       <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" asChild>
           {/* A plain hash link: the hash history follows it, with or without a router around. */}

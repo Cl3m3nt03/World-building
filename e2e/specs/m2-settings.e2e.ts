@@ -1,7 +1,8 @@
 /**
  * End of M2 scenarios (docs/roadmap/M2-cartes-et-types.md, 2.19):
  * - a world theme is kept after closing and reopening the world;
- * - a custom theme's material and ornament dress the panels (#548);
+ * - a custom theme's material and ornament dress the panels (#548), and its
+ *   heading font sets the titles, loaded with the app (#549);
  * - a typed card name becomes a mention, and no longer once the automatic
  *   links are switched off (kept after reopening the world);
  * - another world shows nothing of this one (#109);
@@ -66,7 +67,7 @@ describe("M2: world settings, theme and writing preferences", () => {
     });
   });
 
-  it("dresses the panels in the theme's material and ornament (#548)", async () => {
+  it("dresses the panels in the theme's material, ornament and heading font (#548, #549)", async () => {
     // No picker yet (#552): the theme is saved through the command, then the
     // world is reopened.
     await browser.execute(() =>
@@ -81,6 +82,7 @@ describe("M2: world settings, theme and writing preferences", () => {
           accent: "#5fcdc0",
           material: "stone",
           ornament: "edge",
+          headingFont: "cinzel",
         },
       }),
     );
@@ -90,13 +92,18 @@ describe("M2: world settings, theme and writing preferences", () => {
         browser.execute(() => {
           const root = document.documentElement;
           const radius = getComputedStyle(root).getPropertyValue("--bz-radius-lg").trim();
+          const title = document.querySelector(".font-heading");
           return (
             root.dataset.material === "stone" &&
             root.dataset.ornament === "edge" &&
-            radius === "2px"
+            radius === "2px" &&
+            root.dataset.headingFont === "cinzel" &&
+            title !== null &&
+            getComputedStyle(title).fontFamily.startsWith('"Cinzel Variable"') &&
+            document.fonts.check('700 1em "Cinzel Variable"')
           );
         }),
-      { timeoutMsg: "the stone material and the edge ornament were not applied" },
+      { timeoutMsg: "the stone material, the edge ornament or Cinzel were not applied" },
     );
   });
 

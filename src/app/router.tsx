@@ -53,7 +53,12 @@ import {
   wikiSettingsQuery,
 } from "@/features/wiki";
 import { CreateWorldDialog, currentWorldQuery, WorldListScreen } from "@/features/world";
-import { useWorldMaterial } from "@/features/world-theme";
+import {
+  loadHeadingFont,
+  themeHeadingFont,
+  useWorldHeadingFont,
+  useWorldMaterial,
+} from "@/features/world-theme";
 
 /*
  * Routes (code-based, fully typed):
@@ -103,10 +108,12 @@ async function ready(
 /**
  * The app's frame: the backdrop, the world rail (V2-2+.1) beside the page,
  * the « New world » dialog shared by the list and the rail, and the route
- * announcer. The open world's material and ornament apply to all of it.
+ * announcer. The open world's material, ornament and heading font apply to
+ * all of it.
  */
 function Root() {
   useWorldMaterial();
+  useWorldHeadingFont();
   const createOpen = useUiStore((state) => state.createWorldOpen);
   const setCreateOpen = useUiStore((state) => state.setCreateWorldOpen);
   return (
@@ -149,6 +156,8 @@ const worldRoute = createRoute({
     if (world?.id !== params.worldId) {
       throw redirect({ to: "/" });
     }
+    // Its first frame is in its heading font, never swapped after (ADR 0015).
+    await loadHeadingFont(themeHeadingFont(world.theme));
   },
   component: WorldLayout,
 });
