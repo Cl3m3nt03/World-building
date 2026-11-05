@@ -22,8 +22,24 @@ function pinRail(rail: HTMLElement) {
  * Shows or folds the rail (motion plan, batch D): the page takes its new
  * width at once and its panels slide to it, the rail sliding in or out.
  */
+/**
+ * The focus, lost with the button that was pressed (or left in the rail that
+ * leaves), goes to the button that undoes the gesture.
+ */
+function keepFocus() {
+  requestAnimationFrame(() => {
+    const active = document.activeElement;
+    if (active && active !== document.body && !active.closest("[inert]")) return;
+    const toggle = [
+      ...document.querySelectorAll<HTMLElement>('button[aria-controls="world-rail"]'),
+    ].find((button) => !button.closest("[inert]"));
+    toggle?.focus({ preventScroll: true });
+  });
+}
+
 function toggleRail(shown: boolean) {
   const { setWorldRail, setWorldRailLeaving } = useUiStore.getState();
+  keepFocus();
   const root = document.querySelector<HTMLElement>("[data-slide-root]");
   const rail = () => document.getElementById("world-rail");
   const change = () => {

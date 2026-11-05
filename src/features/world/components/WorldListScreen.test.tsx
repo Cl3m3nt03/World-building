@@ -184,8 +184,19 @@ test("the world rail switches world in one click, and folds", async () => {
   });
   expect(screen.queryByRole("navigation", { name: "Mondes" })).toBeNull();
   expect(useUiStore.getState().worldRail).toBe(false);
-  // Folded, its button stays at hand.
-  expect(screen.getByRole("button", { name: "Afficher le rail des mondes" })).toBeDefined();
+  // Folded, its button stays at hand, and takes the focus.
+  const show = screen.getByRole("button", { name: "Afficher le rail des mondes" });
+  await waitFor(() => expect(document.activeElement).toBe(show));
+  // Shown again, the focus goes to the button that folds it.
+  await act(async () => {
+    show.focus();
+    fireEvent.click(show);
+  });
+  await waitFor(() =>
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Replier le rail des mondes" }),
+    ),
+  );
 });
 
 test("a world's menu pins it first and duplicates it", async () => {
