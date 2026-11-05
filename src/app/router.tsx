@@ -58,6 +58,7 @@ import {
   themeHeadingFont,
   useWorldHeadingFont,
   useWorldMaterial,
+  useWorldScheme,
 } from "@/features/world-theme";
 
 /*
@@ -109,11 +110,12 @@ async function ready(
  * The app's frame: the backdrop, the world rail (V2-2+.1) beside the page,
  * the « New world » dialog shared by the list and the rail, and the route
  * announcer. The open world's material, ornament and heading font apply to
- * all of it.
+ * all of it, and its mode while one of its pages is shown.
  */
 function Root() {
   useWorldMaterial();
   useWorldHeadingFont();
+  useWorldScheme();
   const createOpen = useUiStore((state) => state.createWorldOpen);
   const setCreateOpen = useUiStore((state) => state.setCreateWorldOpen);
   return (

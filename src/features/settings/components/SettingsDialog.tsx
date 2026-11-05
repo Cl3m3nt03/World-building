@@ -12,7 +12,7 @@ import { Tabs } from "radix-ui";
 import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/app/stores/ui";
-import type { ThemePreference } from "@/app/theme";
+import { type ThemePreference, useAppTheme, useImposedThemeValue } from "@/app/theme";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
@@ -79,9 +79,13 @@ function AppearanceSection() {
   const transparency = useUiStore((state) => state.transparency);
   const setTransparency = useUiStore((state) => state.setTransparency);
   const transparencyId = useId();
+  const imposed = useImposedThemeValue();
 
   return (
     <>
+      {imposed && (
+        <p className="text-xs text-muted-foreground">{t(`settings.themeImposed.${imposed}`)}</p>
+      )}
       <RadioGroup
         aria-label={t("settings.appearance")}
         value={theme}
@@ -249,9 +253,11 @@ type SettingsDialogProps = {
 /**
  * App settings, stored in the app config folder (not in a world). Same layout
  * as the world settings: a rail of sections, the open section beside it.
+ * Open, the app shows its own mode, even over a world that imposes one.
  */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { t } = useTranslation();
+  useAppTheme(open);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass flex h-[85vh] max-h-[40rem] flex-col gap-0 p-0 sm:max-w-3xl">

@@ -73,6 +73,8 @@
   "settings.title": "Réglages",
   "settings.description": "Préférences de BuilderZ sur ce PC. Elles ne sont pas enregistrées dans vos mondes.",
   "settings.transparencyHint": "Désactivez-les pour des panneaux opaques, plus contrastés et plus légers pour la machine.",
+  "settings.themeImposed.dark": "Le monde ouvert s'affiche toujours en sombre. Ce réglage vaut hors de ce monde : liste des mondes, réglages de l'app et mondes qui suivent l'app.",
+  "settings.themeImposed.light": "Le monde ouvert s'affiche toujours en clair. Ce réglage vaut hors de ce monde : liste des mondes, réglages de l'app et mondes qui suivent l'app.",
   "settings.worldsDir": "Dossier des nouveaux mondes",
   "settings.worldsDirHint": "Emplacement proposé quand vous créez un monde. Chaque monde y reçoit son propre dossier.",
   "settings.worldsDirDefault": "Documents\\BuilderZ (par défaut)",

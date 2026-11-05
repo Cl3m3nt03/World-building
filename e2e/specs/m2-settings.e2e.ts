@@ -2,7 +2,8 @@
  * End of M2 scenarios (docs/roadmap/M2-cartes-et-types.md, 2.19):
  * - a world theme is kept after closing and reopening the world;
  * - a custom theme's material and ornament dress the panels (#548), and its
- *   heading font sets the titles, loaded with the app (#549);
+ *   heading font sets the titles, loaded with the app (#549), and its mode
+ *   wins over the app's while the world is shown (#550);
  * - a typed card name becomes a mention, and no longer once the automatic
  *   links are switched off (kept after reopening the world);
  * - another world shows nothing of this one (#109);
@@ -67,7 +68,7 @@ describe("M2: world settings, theme and writing preferences", () => {
     });
   });
 
-  it("dresses the panels in the theme's material, ornament and heading font (#548, #549)", async () => {
+  it("dresses the panels in the theme's material, ornament, heading font and mode (#548-#550)", async () => {
     // No picker yet (#552): the theme is saved through the command, then the
     // world is reopened.
     await browser.execute(() =>
@@ -83,6 +84,7 @@ describe("M2: world settings, theme and writing preferences", () => {
           material: "stone",
           ornament: "edge",
           headingFont: "cinzel",
+          scheme: "dark",
         },
       }),
     );
@@ -98,12 +100,16 @@ describe("M2: world settings, theme and writing preferences", () => {
             root.dataset.ornament === "edge" &&
             radius === "2px" &&
             root.dataset.headingFont === "cinzel" &&
+            root.dataset.theme === "dark" &&
             title !== null &&
             getComputedStyle(title).fontFamily.startsWith('"Cinzel Variable"') &&
             document.fonts.check('700 1em "Cinzel Variable"')
           );
         }),
-      { timeoutMsg: "the stone material, the edge ornament or Cinzel were not applied" },
+      {
+        timeoutMsg:
+          "the stone material, the edge ornament, Cinzel or the dark mode were not applied",
+      },
     );
   });
 
@@ -144,6 +150,14 @@ describe("M2: world settings, theme and writing preferences", () => {
   it("shows nothing of this world in another one", async () => {
     await $("button=Mondes").click();
     await $("h1=Mondes").waitForDisplayed();
+    // The world list is in the app's mode (« Système »), not the world's dark (#550).
+    expect(
+      await browser.execute(
+        () =>
+          document.documentElement.dataset.theme ===
+          (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+      ),
+    ).toBe(true);
     await createWorld("Númenor", "Science-fiction");
     await openTab("Monde");
     await expect($("aside [role=treeitem]")).not.toBeExisting();
