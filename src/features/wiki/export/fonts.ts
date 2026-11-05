@@ -1,3 +1,9 @@
+import alegreyaSans400Latin from "@fontsource/alegreya-sans/files/alegreya-sans-latin-400-normal.woff2?url";
+import alegreyaSans700Latin from "@fontsource/alegreya-sans/files/alegreya-sans-latin-700-normal.woff2?url";
+import alegreyaSans400LatinExt from "@fontsource/alegreya-sans/files/alegreya-sans-latin-ext-400-normal.woff2?url";
+import alegreyaSans700LatinExt from "@fontsource/alegreya-sans/files/alegreya-sans-latin-ext-700-normal.woff2?url";
+import alegreyaLatinExt from "@fontsource-variable/alegreya/files/alegreya-latin-ext-wght-normal.woff2?url";
+import alegreyaLatin from "@fontsource-variable/alegreya/files/alegreya-latin-wght-normal.woff2?url";
 import cinzelLatinExt from "@fontsource-variable/cinzel/files/cinzel-latin-ext-wght-normal.woff2?url";
 import cinzelLatin from "@fontsource-variable/cinzel/files/cinzel-latin-wght-normal.woff2?url";
 import garamondLatinExt from "@fontsource-variable/eb-garamond/files/eb-garamond-latin-ext-wght-normal.woff2?url";
@@ -6,27 +12,44 @@ import interLatinExt from "@fontsource-variable/inter/files/inter-latin-ext-wght
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import loraLatinExt from "@fontsource-variable/lora/files/lora-latin-ext-wght-normal.woff2?url";
 import loraLatin from "@fontsource-variable/lora/files/lora-latin-wght-normal.woff2?url";
+import oxaniumLatinExt from "@fontsource-variable/oxanium/files/oxanium-latin-ext-wght-normal.woff2?url";
+import oxaniumLatin from "@fontsource-variable/oxanium/files/oxanium-latin-wght-normal.woff2?url";
 import playfairLatinExt from "@fontsource-variable/playfair-display/files/playfair-display-latin-ext-wght-normal.woff2?url";
 import playfairLatin from "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2?url";
 import sourceSerifLatinExt from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-wght-normal.woff2?url";
 import sourceSerifLatin from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url";
-import type { WikiFontKey } from "../theme";
+import type { SiteFontKey } from "../theme";
+
+/** One weight (or a variable range) of a font, Latin and Latin Extended. */
+type Face = { weight: string; latin: string; latinExt: string };
+
+const variable = (latin: string, latinExt: string): Face[] => [
+  { weight: "100 900", latin, latinExt },
+];
 
 /** The Latin subsets of the wiki's fonts, as the app ships them. */
-const FILES: Record<WikiFontKey, { family: string; latin: string; latinExt: string }> = {
-  inter: { family: "Inter Variable", latin: interLatin, latinExt: interLatinExt },
-  cinzel: { family: "Cinzel Variable", latin: cinzelLatin, latinExt: cinzelLatinExt },
+const FILES: Record<SiteFontKey, { family: string; faces: Face[] }> = {
+  inter: { family: "Inter Variable", faces: variable(interLatin, interLatinExt) },
+  cinzel: { family: "Cinzel Variable", faces: variable(cinzelLatin, cinzelLatinExt) },
   playfair: {
     family: "Playfair Display Variable",
-    latin: playfairLatin,
-    latinExt: playfairLatinExt,
+    faces: variable(playfairLatin, playfairLatinExt),
   },
-  garamond: { family: "EB Garamond Variable", latin: garamondLatin, latinExt: garamondLatinExt },
-  lora: { family: "Lora Variable", latin: loraLatin, latinExt: loraLatinExt },
+  garamond: { family: "EB Garamond Variable", faces: variable(garamondLatin, garamondLatinExt) },
+  lora: { family: "Lora Variable", faces: variable(loraLatin, loraLatinExt) },
   "source-serif": {
     family: "Source Serif 4 Variable",
-    latin: sourceSerifLatin,
-    latinExt: sourceSerifLatinExt,
+    faces: variable(sourceSerifLatin, sourceSerifLatinExt),
+  },
+  alegreya: { family: "Alegreya Variable", faces: variable(alegreyaLatin, alegreyaLatinExt) },
+  oxanium: { family: "Oxanium Variable", faces: variable(oxaniumLatin, oxaniumLatinExt) },
+  // Not variable: its regular and bold (the site's text and its emphasis).
+  "alegreya-sans": {
+    family: "Alegreya Sans",
+    faces: [
+      { weight: "400", latin: alegreyaSans400Latin, latinExt: alegreyaSans400LatinExt },
+      { weight: "700", latin: alegreyaSans700Latin, latinExt: alegreyaSans700LatinExt },
+    ],
   },
 };
 
@@ -46,7 +69,12 @@ function base64(bytes: ArrayBuffer): string {
   return btoa(binary);
 }
 
-async function fontFace(family: string, url: string, range: string): Promise<string> {
+async function fontFace(
+  family: string,
+  weight: string,
+  url: string,
+  range: string,
+): Promise<string> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`font not found: ${url}`);
   const data = base64(await response.arrayBuffer());
@@ -54,7 +82,7 @@ async function fontFace(family: string, url: string, range: string): Promise<str
   font-family: "${family}";
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
+  font-weight: ${weight};
   src: url(data:font/woff2;base64,${data}) format("woff2");
   unicode-range: ${range};
 }`;
@@ -64,11 +92,16 @@ async function fontFace(family: string, url: string, range: string): Promise<str
  * `fonts.css` of the exported site: the fonts the wiki uses, inside the CSS
  * itself, so the site needs no network and no extra file.
  */
-export async function fontsCss(keys: WikiFontKey[]): Promise<string> {
+export async function fontsCss(keys: SiteFontKey[]): Promise<string> {
   const faces: string[] = [];
   for (const key of new Set(keys)) {
-    const { family, latin, latinExt } = FILES[key];
-    faces.push(await fontFace(family, latin, LATIN), await fontFace(family, latinExt, LATIN_EXT));
+    const { family, faces: files } = FILES[key];
+    for (const { weight, latin, latinExt } of files) {
+      faces.push(
+        await fontFace(family, weight, latin, LATIN),
+        await fontFace(family, weight, latinExt, LATIN_EXT),
+      );
+    }
   }
   return `/* Fonts under the SIL Open Font License, shipped with BuilderZ. */\n${faces.join("\n")}\n`;
 }

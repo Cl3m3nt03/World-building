@@ -2,6 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 import "../fonts.css";
 import { ChapterLinksContext, DocumentLinkContext } from "@/lib/documentLinks";
 import { useWikiSettings } from "../hooks/useWiki";
+import { useWikiLook, WikiPopoverScheme } from "../hooks/useWikiLook";
 import { useWikiLinks } from "../links";
 import { themeScheme, themeStyle } from "../theme";
 import { SiteStyle } from "./SiteStyle";
@@ -11,27 +12,32 @@ import { WikiBar } from "./WikiBar";
  * The Wiki tab: its pages under the wiki's own theme. The theme's variables
  * sit on this root only; the app around keeps its own. Links to documents
  * lead to their wiki pages, or are plain text. The wiki's bar sits above,
- * « Style du site » at the bottom.
+ * « Style du site » at the bottom. Atlas follows the world's theme and the
+ * mode shown; its popovers take the wiki's scheme.
  */
 export function WikiLayout() {
   const settings = useWikiSettings();
+  const look = useWikiLook();
   const { resolve } = useWikiLinks();
+  const scheme = settings.data ? themeScheme(settings.data.theme, look) : undefined;
   return (
     <div
       data-wiki
-      data-wiki-scheme={settings.data ? themeScheme(settings.data.theme) : undefined}
-      style={settings.data ? themeStyle(settings.data.theme) : undefined}
+      data-wiki-scheme={scheme}
+      style={settings.data ? themeStyle(settings.data.theme, look) : undefined}
       className="relative flex h-full flex-col overflow-hidden rounded-lg bg-wiki-background font-wiki-body text-wiki-text"
     >
-      <DocumentLinkContext.Provider value={resolve}>
-        <ChapterLinksContext.Provider value={false}>
-          <WikiBar />
-          <div className="min-h-0 flex-1">
-            <Outlet />
-          </div>
-          {settings.data && <SiteStyle settings={settings.data} />}
-        </ChapterLinksContext.Provider>
-      </DocumentLinkContext.Provider>
+      <WikiPopoverScheme.Provider value={scheme === look.mode ? undefined : scheme}>
+        <DocumentLinkContext.Provider value={resolve}>
+          <ChapterLinksContext.Provider value={false}>
+            <WikiBar />
+            <div className="min-h-0 flex-1">
+              <Outlet />
+            </div>
+            {settings.data && <SiteStyle settings={settings.data} />}
+          </ChapterLinksContext.Provider>
+        </DocumentLinkContext.Provider>
+      </WikiPopoverScheme.Provider>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import i18next, { type TFunction } from "i18next";
-import { afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { initI18n } from "@/i18n";
 import type {
   Card,
@@ -12,6 +12,7 @@ import type {
   WikiSettings,
   Map as WorldMap,
 } from "@/lib/bindings";
+import type { WikiLook } from "../theme";
 import { exportWiki } from "./exportWiki";
 import { assetFile } from "./site";
 
@@ -325,7 +326,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function run() {
+async function run(look?: WikiLook) {
   const steps: string[] = [];
   const dir = await exportWiki({
     parent: "C:/Sites",
@@ -333,6 +334,7 @@ async function run() {
     t,
     language: "fr",
     typeColors: { "--bz-type-blue": "#7aa7f5" },
+    look,
     onProgress: ({ step }) => steps.push(step),
   });
   return { dir, steps };
@@ -417,6 +419,47 @@ test("the search index has names, aliases and text; the styles have the theme", 
   expect(fonts).toContain('font-family: "Cinzel Variable"');
   expect(fonts).toContain('font-family: "Lora Variable"');
   expect(fonts).toContain("data:font/woff2;base64,AQID");
+});
+
+describe("the Atlas theme in the site", () => {
+  beforeEach(() => {
+    SETTINGS.theme = { preset: "atlas" };
+  });
+  afterEach(() => {
+    SETTINGS.theme = { preset: "night" };
+  });
+
+  test("without the mode shown, is light Vellum, with its fonts inside", async () => {
+    await run();
+    const style = file("style.css");
+    expect(style).toContain("--scheme: light;");
+    expect(style).toContain("--wiki-background: #f2e9d4;");
+    const fonts = file("fonts.css");
+    expect(fonts).toContain('font-family: "Alegreya Variable"');
+    expect(fonts).toContain('font-family: "Alegreya Sans"');
+    expect(fonts).toContain("font-weight: 400;");
+    expect(fonts).toContain("font-weight: 700;");
+    // No network: every font is inside the CSS.
+    expect(fonts).not.toMatch(/url\((?!data:)/);
+  });
+
+  test("keeps the mode shown and the world's theme when exporting", async () => {
+    await run({
+      world: {
+        kind: "custom",
+        background: null,
+        accent: "#4fd6f0",
+        material: "coldGlass",
+        headingFont: "oxanium",
+      },
+      mode: "dark",
+    });
+    const style = file("style.css");
+    expect(style).toContain("--scheme: dark;");
+    expect(style).toContain("--wiki-background: #060b11;");
+    expect(style).toContain("--wiki-accent: #4fd6f0;");
+    expect(file("fonts.css")).toContain('font-family: "Oxanium Variable"');
+  });
 });
 
 test("images are named as the Rust side copies them", () => {

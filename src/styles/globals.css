@@ -66,11 +66,12 @@
 }
 
 /*
- * Below a root that changes the --bz-* tokens (the wiki, Quill's writing
- * mode, the design system page), the semantic tokens are declared again, so
- * they read the new ones.
+ * Below a root that changes the --bz-* tokens (the wiki and its popovers,
+ * Quill's writing mode, the design system page), the semantic tokens are
+ * declared again, so they read the new ones.
  */
 [data-wiki],
+[data-wiki-scheme],
 [data-quill-scheme],
 [data-scheme] {
   --background: var(--bz-bg);

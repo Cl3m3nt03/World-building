@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { commands, type SiteFile } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
-import { resolveTheme, themeScheme, themeStyle } from "../theme";
+import { DEFAULT_LOOK, resolveTheme, themeScheme, themeStyle, type WikiLook } from "../theme";
 import { collectSite, type SiteData } from "./collect";
 import { fontsCss } from "./fonts";
 import {
@@ -35,6 +35,11 @@ type Options = {
   language: string;
   /** The card-type colours as the wiki shows them (its light or dark set). */
   typeColors: Record<string, string>;
+  /**
+   * What the Atlas theme follows: the world's theme and the mode shown when
+   * exporting, frozen in the site. Absent: Vélin in light.
+   */
+  look?: WikiLook;
   onProgress: (progress: ExportProgress) => void;
 };
 
@@ -52,9 +57,9 @@ function searchIndex(data: SiteData): string {
 }
 
 /** The site's stylesheet: the theme's variables, then the site's rules. */
-function styleCss(data: SiteData, typeColors: Record<string, string>): string {
-  const variables: Record<string, string> = { "--scheme": themeScheme(data.settings.theme) };
-  for (const [name, value] of Object.entries(themeStyle(data.settings.theme))) {
+function styleCss(data: SiteData, typeColors: Record<string, string>, look: WikiLook): string {
+  const variables: Record<string, string> = { "--scheme": themeScheme(data.settings.theme, look) };
+  for (const [name, value] of Object.entries(themeStyle(data.settings.theme, look))) {
     if (name.startsWith("--")) variables[name] = String(value);
   }
   return rootCss({ ...variables, ...typeColors }) + SITE_CSS;
@@ -71,6 +76,7 @@ export async function exportWiki({
   t,
   language,
   typeColors,
+  look = DEFAULT_LOOK,
   onProgress,
 }: Options): Promise<string> {
   const data = await collectSite(worldName, (done, total) =>
@@ -79,7 +85,7 @@ export async function exportWiki({
   const dir = await unwrap(commands.startWikiExport(parent, data.title));
   const pageIds = new Set(data.pages.map((page) => page.id));
   const ctx = (base: string): SiteContext => ({ data, t, language, base, pageIds });
-  const { headingFont, bodyFont } = resolveTheme(data.settings.theme);
+  const { headingFont, bodyFont } = resolveTheme(data.settings.theme, look);
 
   const files: SiteFile[] = [
     { path: "index.html", content: renderDocument(<HomePage ctx={ctx("")} />) },
@@ -97,7 +103,7 @@ export async function exportWiki({
     })),
     { path: "search.js", content: searchIndex(data) },
     { path: "site.js", content: SITE_JS },
-    { path: "style.css", content: styleCss(data, typeColors) },
+    { path: "style.css", content: styleCss(data, typeColors, look) },
     { path: "fonts.css", content: await fontsCss([headingFont, bodyFont]) },
   ];
   for (let at = 0; at < files.length; at += FILES_PER_BATCH) {

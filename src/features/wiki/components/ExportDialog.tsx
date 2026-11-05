@@ -17,6 +17,7 @@ import { commands } from "@/lib/bindings";
 import { openDialog } from "@/lib/dialogs";
 import { unwrap } from "@/lib/ipc";
 import { type ExportProgress, exportWiki } from "../export/exportWiki";
+import { useWikiLook } from "../hooks/useWikiLook";
 import { WIKI_BUTTON } from "./styles";
 
 type State =
@@ -46,6 +47,7 @@ function typeColors(): Record<string, string> {
 export function ExportDialog() {
   const { t, i18n } = useTranslation();
   const { data: world } = useCurrentWorld();
+  const look = useWikiLook();
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<State>({ kind: "idle" });
   const running = state.kind === "running";
@@ -61,6 +63,8 @@ export function ExportDialog() {
         t,
         language: i18n.language,
         typeColors: typeColors(),
+        // The site keeps the mode shown now, and the world's theme, for Atlas.
+        look,
         onProgress: (progress) => setState({ kind: "running", progress }),
       });
       setState({ kind: "done", dir });
