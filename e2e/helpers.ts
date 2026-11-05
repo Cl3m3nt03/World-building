@@ -107,6 +107,6 @@ export async function openCard(title: string) {
 /** Source of the full-screen backdrop image, or null for the default gradient. */
 export async function backdropSource(): Promise<string | null> {
   return browser.execute(
-    () => document.querySelector<HTMLImageElement>("div[aria-hidden] > img")?.src ?? null,
+    () => document.querySelector<HTMLImageElement>("div.fixed[aria-hidden] > img")?.src ?? null,
   );
 }

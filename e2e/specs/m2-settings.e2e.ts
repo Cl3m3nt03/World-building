@@ -58,6 +58,7 @@ describe("M2: world settings, theme and writing preferences", () => {
   it("keeps the theme chosen for the world after reopening it", async () => {
     await openSettings("Thème");
     await $('[role="dialog"] [role="radio"][aria-label="Forêt ancienne"]').click();
+    await $('[role="dialog"] button=Appliquer').click();
     await browser.waitUntil(async () => (await backdropSource())?.includes("forest") ?? false, {
       timeoutMsg: "the forest illustration never became the backdrop",
     });
@@ -72,6 +73,35 @@ describe("M2: world settings, theme and writing preferences", () => {
   it("dresses the world in a shipped ambiance, Station (#551)", async () => {
     await openSettings("Thème");
     await $('[role="dialog"] [role="radio"][aria-label="Station"]').click();
+    // The gallery previews it on a subtree first (#552): the window keeps Forêt.
+    await browser.waitUntil(
+      async () =>
+        browser.execute(() => {
+          const previews = [...document.querySelectorAll<HTMLElement>("[data-theme-preview]")];
+          return (
+            previews.length === 2 &&
+            previews.every(
+              (preview) =>
+                preview.inert &&
+                preview.dataset.material === "coldGlass" &&
+                preview.dataset.headingFont === "oxanium",
+            ) &&
+            document.documentElement.dataset.material === undefined
+          );
+        }),
+      { timeoutMsg: "the gallery did not preview Station on its own subtree" },
+    );
+    expect(await backdropSource()).toContain("forest");
+    // A first Escape cancels the preview and keeps the window open.
+    await browser.keys("Escape");
+    await $('[role="dialog"] [role="radio"][aria-label="Forêt ancienne, Actuel"]').waitUntil(
+      async function () {
+        return (await this.getAttribute("aria-checked")) === "true";
+      },
+      { timeoutMsg: "Escape did not go back to the current theme" },
+    );
+    await $('[role="dialog"] [role="radio"][aria-label="Station"]').click();
+    await $('[role="dialog"] button=Appliquer').click();
     await browser.waitUntil(
       async () =>
         ((await backdropSource())?.includes("station") ?? false) &&

@@ -164,29 +164,95 @@ async function renderThemeSection() {
   return screen.findByRole("dialog", { name: "Réglages du monde" });
 }
 
-const backdrop = () => document.querySelector("div[aria-hidden] > img");
+const backdrop = () => document.querySelector("div.fixed[aria-hidden] > img");
 const accentVariable = (mode: "light" | "dark") =>
   document.documentElement.style.getPropertyValue(`--bz-world-accent-${mode}`);
 
-test("choosing a shipped theme changes the background and the accent at once", async () => {
+const previews = (dialog: HTMLElement) => [
+  ...dialog.querySelectorAll<HTMLElement>("[data-theme-preview]"),
+];
+
+test("a shipped theme is previewed, then applied once with « Appliquer »", async () => {
   const dialog = await renderThemeSection();
   const gallery = within(dialog).getByRole("radiogroup", { name: "Thèmes" });
   expect(
-    within(gallery).getByRole("radio", { name: "Par défaut" }).getAttribute("aria-checked"),
+    within(gallery).getByRole("radio", { name: "Par défaut, Actuel" }).getAttribute("aria-checked"),
   ).toBe("true");
+  const apply = within(dialog).getByRole("button", { name: "Appliquer" });
+  expect(apply.hasAttribute("disabled")).toBe(true);
 
   fireEvent.click(within(gallery).getByRole("radio", { name: "Forêt ancienne" }));
 
+  // The preview shows it, light and dark, inert; nothing is saved nor applied.
   const forest = findPreset("forest");
+  await waitFor(() =>
+    expect(previews(dialog).map((preview) => preview.dataset.scheme)).toEqual(["light", "dark"]),
+  );
+  for (const preview of previews(dialog)) {
+    expect(preview.hasAttribute("inert")).toBe(true);
+    expect(preview.querySelector("img")?.getAttribute("src")).toBe(forest?.image);
+    expect(preview.style.getPropertyValue("--bz-world-accent-dark")).toBe(
+      accentFor("#8bc97a", "dark"),
+    );
+  }
+  expect(saved).toEqual([]);
+  expect(accentVariable("dark")).toBe("");
+  expect(backdrop()?.getAttribute("src")).not.toBe(forest?.image);
+
+  fireEvent.click(apply);
+
   await waitFor(() => expect(backdrop()?.getAttribute("src")).toBe(forest?.image));
   expect(accentVariable("dark")).toBe(accentFor("#8bc97a", "dark"));
   expect(accentVariable("light")).toBe(accentFor("#8bc97a", "light"));
   expect(saved).toEqual([{ kind: "preset", id: "forest" }]);
+  expect(within(gallery).getByRole("radio", { name: "Forêt ancienne, Actuel" })).toBeTruthy();
 
-  // Back to the default theme: the default accents come back.
-  fireEvent.click(within(gallery).getByRole("radio", { name: "Par défaut" }));
+  // Back to the default theme, with Enter: the default accents come back.
+  const fallback = within(gallery).getByRole("radio", { name: "Par défaut" });
+  fireEvent.click(fallback);
+  fireEvent.keyDown(fallback, { key: "Enter" });
   await waitFor(() => expect(accentVariable("dark")).toBe(""));
   expect(saved.at(-1)).toEqual({ kind: "default" });
+  expect(saved).toHaveLength(2);
+});
+
+test("an ambiance is previewed in its material, ornament and font, the window untouched", async () => {
+  const dialog = await renderThemeSection();
+  const gallery = within(dialog).getByRole("radiogroup", { name: "Thèmes" });
+
+  fireEvent.pointerEnter(within(gallery).getByRole("radio", { name: "Crypte" }));
+
+  await waitFor(() => expect(previews(dialog)[0]?.dataset.material).toBe("stone"));
+  for (const preview of previews(dialog)) {
+    expect(preview.dataset.ornament).toBe("edge");
+    expect(preview.dataset.headingFont).toBe("playfair");
+  }
+  expect(within(dialog).getByRole("heading", { name: "Aperçu : Crypte" })).toBeTruthy();
+  const root = document.documentElement;
+  expect(root.dataset.material).toBeUndefined();
+  expect(root.dataset.ornament).toBeUndefined();
+
+  // Leaving the gallery shows the selected theme again.
+  fireEvent.pointerLeave(gallery);
+  await waitFor(() => expect(previews(dialog)[0]?.dataset.material).toBe("vellum"));
+});
+
+test("« Annuler » and Escape keep the current theme, a first Escape without closing", async () => {
+  world = { ...WORLD, theme: { kind: "preset", id: "sea" } };
+  const dialog = await renderThemeSection();
+  const gallery = within(dialog).getByRole("radiogroup", { name: "Thèmes" });
+  const sea = () => within(gallery).getByRole("radio", { name: "Haute mer, Actuel" });
+
+  fireEvent.click(within(gallery).getByRole("radio", { name: "Station" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Annuler" }));
+  expect(sea().getAttribute("aria-checked")).toBe("true");
+
+  const station = within(gallery).getByRole("radio", { name: "Station" });
+  fireEvent.click(station);
+  fireEvent.keyDown(station, { key: "Escape" });
+  expect(sea().getAttribute("aria-checked")).toBe("true");
+  expect(screen.getByRole("dialog", { name: "Réglages du monde" })).toBeTruthy();
+  expect(saved).toEqual([]);
 });
 
 test("the edit tab makes the world's own theme from the current accent", async () => {
