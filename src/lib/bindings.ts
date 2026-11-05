@@ -346,8 +346,30 @@ export const commands = {
 	 *  Creates a world named `name`, of the given genre, in a new folder inside
 	 *  `parent_dir` (the folder is named after the world), and opens it. `id`,
 	 *  a UUID chosen by the interface, lets it preview the world's atlas.
+	 *  `theme`: the one picked in « Nouveau monde » (ADR 0015); absent, the default.
 	 */
-	createWorld: (parentDir: string, name: string, genre: Genre, tones: Tone[], id: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre, tones, id })),
+	createWorld: (parentDir: string, name: string, genre: Genre, tones: Tone[], theme: 
+/**  The app's look: the main image as background, the ochre accent. */
+{ kind: "default" } | 
+/**
+ *  A theme shipped with the app, by id (`dawn`, `forest`…). The front
+ *  shows an id it does not know as the default theme.
+ */
+{ kind: "preset"; id: string } | 
+/**  The user's own theme. */
+{ kind: "custom"; 
+/**  Asset id of the background image; `None`: the main image. */
+background: string | null; 
+/**  Accent color, `#rrggbb` in lower case. */
+accent: string; 
+/**  Material of the panels. Absent: vellum. */
+material?: Material; 
+/**  Ornament of the panels. Absent: none. */
+ornament?: Ornament; 
+/**  Font of the headings. Absent: Alegreya. */
+headingFont?: HeadingFont; 
+/**  Light or dark mode while the world is open. Absent: the app's. */
+scheme?: Scheme } | null, id: string | null) => typedError<WorldInfo, AppError>(__TAURI_INVOKE("create_world", { parentDir, name, genre, tones, theme, id })),
 	/**
 	 *  Opens the world in `path`, migrating it if needed. Closes the world that
 	 *  was open, if any.
@@ -874,6 +896,11 @@ export type GraphViewport = {
 	zoom: number | null,
 };
 
+/**  Font of the headings (ADR 0015); running text stays Alegreya Sans. */
+export type HeadingFont = "alegreya" | "cinzel" | "ebGaramond" | "playfair" | 
+/**  The technical font of the Station theme. */
+"oxanium";
+
 /**  Result of an import: the asset, and whether it is new to the world. */
 export type ImportedAsset = {
 	asset: Asset,
@@ -976,6 +1003,9 @@ export type MapZone = {
 	pattern: ZonePattern,
 };
 
+/**  Material of the panels (ADR 0015): its `--bz-*` tokens, light and dark. */
+export type Material = "vellum" | "parchment" | "coldGlass" | "stone";
+
 export type Month = {
 	/**  Empty: « Mois 3 » (translated by the front). */
 	name: string,
@@ -1019,6 +1049,15 @@ export type Note = {
 
 /**  Shape of the card's image. */
 export type Orientation = "portrait" | "landscape";
+
+/**  Ornament drawn on the panels (ADR 0015). */
+export type Ornament = "none" | 
+/**  Thin rules along the panels. */
+"rules" | 
+/**  Corner marks. */
+"marks" | 
+/**  A colored edge. */
+"edge";
 
 export type PageTheme = "light" | "dark" | "sepia";
 
@@ -1212,6 +1251,11 @@ export type RelationTypeInput = {
 	/**  The relation is its own inverse (siblings, friends). */
 	symmetric: boolean,
 };
+
+/**  Light or dark mode imposed by the world while it is open (ADR 0015). */
+export type Scheme = 
+/**  Follows the app's Appearance setting. */
+"app" | "light" | "dark";
 
 export type SearchHit = {
 	id: string,
@@ -1599,7 +1643,15 @@ export type WorldTheme =
 /**  Asset id of the background image; `None`: the main image. */
 background: string | null; 
 /**  Accent color, `#rrggbb` in lower case. */
-accent: string };
+accent: string; 
+/**  Material of the panels. Absent: vellum. */
+material?: Material; 
+/**  Ornament of the panels. Absent: none. */
+ornament?: Ornament; 
+/**  Font of the headings. Absent: Alegreya. */
+headingFont?: HeadingFont; 
+/**  Light or dark mode while the world is open. Absent: the app's. */
+scheme?: Scheme };
 
 export type ZonePattern = "solid" | "hatch" | "dots" | "cross";
 

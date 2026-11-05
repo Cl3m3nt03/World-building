@@ -19,6 +19,7 @@ use crate::world::{
 /// Creates a world named `name`, of the given genre, in a new folder inside
 /// `parent_dir` (the folder is named after the world), and opens it. `id`,
 /// a UUID chosen by the interface, lets it preview the world's atlas.
+/// `theme`: the one picked in « Nouveau monde » (ADR 0015); absent, the default.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_world(
@@ -27,6 +28,7 @@ pub async fn create_world(
     name: String,
     genre: Genre,
     tones: Vec<Tone>,
+    theme: Option<WorldTheme>,
     id: Option<String>,
 ) -> AppResult<WorldInfo> {
     let id = id
@@ -36,7 +38,16 @@ pub async fn create_world(
         })
         .transpose()?;
     let root = Path::new(&parent_dir).join(world::folder_name(&name)?);
-    let world = world::create_with(&root, &name, genre, &tones, id, &db::MIGRATOR).await?;
+    let world = world::create_with(
+        &root,
+        &name,
+        genre,
+        &tones,
+        theme.unwrap_or_default(),
+        id,
+        &db::MIGRATOR,
+    )
+    .await?;
     ensure_card_types(&state, &world).await;
     Ok(activate(&state, world).await)
 }

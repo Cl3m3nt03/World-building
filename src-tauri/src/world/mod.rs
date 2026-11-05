@@ -87,6 +87,7 @@ pub struct WorldFile {
     #[serde(
         default,
         deserialize_with = "theme::deserialize_lenient",
+        serialize_with = "theme::serialize_compact",
         skip_serializing_if = "WorldTheme::is_default"
     )]
     pub theme: WorldTheme,
@@ -523,22 +524,39 @@ fn validate_name(name: &str) -> AppResult<String> {
 /// Creates a new world of the default genre (used by the tests).
 #[cfg(test)]
 pub async fn create(root: &Path, name: &str, migrator: &Migrator) -> AppResult<OpenWorld> {
-    create_with(root, name, Genre::default(), &[], None, migrator).await
+    create_with(
+        root,
+        name,
+        Genre::default(),
+        &[],
+        WorldTheme::Default,
+        None,
+        migrator,
+    )
+    .await
 }
 
 /// Creates a new world of the given genre in `root`, which must not exist or
 /// be an empty folder. `id` is the world's id when the interface chose it (to
-/// preview the world's atlas before it exists), a new one otherwise.
+/// preview the world's atlas before it exists), a new one otherwise. `theme`
+/// is the one picked in « Nouveau monde » (ADR 0015); it has no background,
+/// since the world has no media yet.
 pub async fn create_with(
     root: &Path,
     name: &str,
     genre: Genre,
     tones: &[tones::Tone],
+    theme: WorldTheme,
     id: Option<Uuid>,
     migrator: &Migrator,
 ) -> AppResult<OpenWorld> {
     let name = validate_name(name)?;
     let name = name.as_str();
+    let theme = theme.validated()?;
+    if let Some(id) = theme.background() {
+        // A new world has no media yet.
+        return Err(AppError::InvalidInput(format!("asset not found: {id}")));
+    }
     if !root.is_absolute() {
         return Err(AppError::InvalidInput(format!(
             "path is not absolute: {}",
@@ -556,6 +574,7 @@ pub async fn create_with(
         name,
         genre,
         tones,
+        theme,
         id.unwrap_or_else(Uuid::new_v4),
         migrator,
     )
@@ -591,6 +610,7 @@ async fn create_in(
     name: &str,
     genre: Genre,
     tones: &[tones::Tone],
+    theme: WorldTheme,
     id: Uuid,
     migrator: &Migrator,
 ) -> AppResult<OpenWorld> {
@@ -611,7 +631,7 @@ async fn create_in(
         tones: tones::normalize(tones),
         description: String::new(),
         main_image: None,
-        theme: WorldTheme::Default,
+        theme,
         preferences: WorldPreferences::default(),
         calendar: WorldCalendar::default(),
         storage_limit: None,

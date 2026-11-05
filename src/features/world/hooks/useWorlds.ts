@@ -57,6 +57,7 @@ export function useCreateWorld() {
       name,
       genre,
       tones = [],
+      theme = null,
       id = null,
     }: {
       parentDir: string;
@@ -64,9 +65,11 @@ export function useCreateWorld() {
       genre: Genre;
       /** Tones beside the genre (ADR 0013). */
       tones?: Tone[];
+      /** The theme picked in « Nouveau monde » (ADR 0015); absent: the default. */
+      theme?: WorldTheme | null;
       /** The id chosen by the interface (to preview the world's atlas). */
       id?: string | null;
-    }) => unwrap(commands.createWorld(parentDir, name, genre, tones, id)),
+    }) => unwrap(commands.createWorld(parentDir, name, genre, tones, theme, id)),
     onSuccess: async (world) => {
       onWorldOpened(queryClient, world);
       await navigate({ to: "/world/$worldId/home", params: { worldId: world.id } });
