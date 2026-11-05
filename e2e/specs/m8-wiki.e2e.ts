@@ -2,7 +2,8 @@
  * M8 scenarios (docs/roadmap/M8-wiki.md, ADR 0008):
  * - a card made visible in the wiki, then hidden;
  * - a text written from the wiki, found in World;
- * - a theme chosen for the wiki, kept after a relaunch;
+ * - the Atlas theme by default, in the app's mode; a theme chosen for the
+ *   wiki, kept after a relaunch, its popover in the wiki's scheme;
  * - the wiki exported as a site that needs no network, with its search.
  */
 
@@ -175,12 +176,25 @@ describe("M8: the wiki", () => {
   it("keeps the wiki's theme after a relaunch, without changing the app's", async () => {
     const appTheme = await browser.execute(() => document.documentElement.dataset.theme);
     await wikiTab().click();
+    // Atlas by default: the wiki is in the app's mode.
+    expect((await invoke<{ theme: { preset?: string } }>("wiki_settings")).theme.preset).toBe(
+      "atlas",
+    );
+    expect(await $("[data-wiki]").getAttribute("data-wiki-scheme")).toBe(appTheme);
     await $("button=Style du site").click();
     await $('//*[@role="dialog"]//button[normalize-space()="Nuit"]').click();
     await browser.waitUntil(
       async () =>
         (await invoke<{ theme: { preset?: string } }>("wiki_settings")).theme.preset === "night",
       { timeoutMsg: "the theme was not saved" },
+    );
+    // The popover takes the wiki's scheme when it differs from the app's.
+    await browser.waitUntil(
+      async () =>
+        (await $('[role="dialog"][data-slot="popover-content"]').getAttribute(
+          "data-wiki-scheme",
+        )) === (appTheme === "dark" ? null : "dark"),
+      { timeoutMsg: "the popover did not take the wiki's scheme" },
     );
     await browser.keys("Escape");
 

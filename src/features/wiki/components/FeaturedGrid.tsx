@@ -26,6 +26,7 @@ import { AssetImage } from "@/features/media";
 import type { WikiPage } from "@/lib/bindings";
 import { fold } from "@/lib/text";
 import { cn } from "@/lib/utils";
+import { useWikiPopoverScheme } from "../hooks/useWikiLook";
 import { pageRoute } from "../links";
 import { featuredPages, moveFeatured } from "../pages";
 import { PageIcon } from "./PageIcon";
@@ -237,6 +238,7 @@ function SortableTile({ page, onRemove }: { page: WikiPage; onRemove: () => void
 /** « Ajouter une page »: the pages not yet featured, with a filter. */
 function AddPage({ pages, onAdd }: { pages: WikiPage[]; onAdd: (id: string) => void }) {
   const { t } = useTranslation();
+  const scheme = useWikiPopoverScheme();
   const [filter, setFilter] = useState("");
   const wanted = fold(filter.trim());
   const shown = pages
@@ -251,7 +253,11 @@ function AddPage({ pages, onAdd }: { pages: WikiPage[]; onAdd: (id: string) => v
           {t("wiki.grid.add")}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-72 flex-col gap-2 p-2">
+      <PopoverContent
+        align="end"
+        data-wiki-scheme={scheme}
+        className="flex w-72 flex-col gap-2 p-2"
+      >
         <Input
           value={filter}
           onChange={(event) => setFilter(event.target.value)}

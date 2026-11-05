@@ -58,7 +58,7 @@ pub struct WikiTheme {
 impl Default for WikiTheme {
     fn default() -> Self {
         Self {
-            preset: "parchment".into(),
+            preset: "atlas".into(),
             palette: None,
             heading_font: None,
             body_font: None,

@@ -16,16 +16,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { WikiPalette, WikiSettings, WikiTheme } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { useSaveWikiSettings } from "../hooks/useWiki";
+import { useWikiLook, useWikiPopoverScheme } from "../hooks/useWikiLook";
 import {
   contrast,
   FONT_NAMES,
   MIN_TEXT_CONTRAST,
   PRESET_KEYS,
   presetKey,
+  presetOf,
   resolveTheme,
-  WIKI_FONTS,
-  WIKI_PRESETS,
-  type WikiFontKey,
+  SITE_FONTS,
+  type SiteFontKey,
 } from "../theme";
 import { WIKI_BUTTON } from "./styles";
 
@@ -37,7 +38,7 @@ const MAX_SAVED_PALETTES = 50;
 
 const COLORS = ["background", "surface", "text", "muted", "accent"] as const;
 
-const FONT_KEYS = Object.keys(WIKI_FONTS) as WikiFontKey[];
+const FONT_KEYS = Object.keys(SITE_FONTS) as SiteFontKey[];
 
 /**
  * « Style du site », at the bottom of the wiki: its theme (provided themes
@@ -47,6 +48,7 @@ const FONT_KEYS = Object.keys(WIKI_FONTS) as WikiFontKey[];
 export function SiteStyle({ settings }: { settings: WikiSettings }) {
   const { t } = useTranslation();
   const save = useSaveWikiSettings();
+  const scheme = useWikiPopoverScheme();
   const theme = settings.theme;
   const setTheme = (change: Partial<WikiTheme>) =>
     save.mutate({ ...settings, theme: { ...theme, ...change } });
@@ -62,7 +64,7 @@ export function SiteStyle({ settings }: { settings: WikiSettings }) {
           {t("wiki.style.open")}
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" className="flex w-96 flex-col gap-3 p-3">
+      <PopoverContent side="top" data-wiki-scheme={scheme} className="flex w-96 flex-col gap-3 p-3">
         <h2 className="text-sm font-bold">{t("wiki.style.title")}</h2>
         {save.error && <AppErrorMessage error={save.error} />}
         <Tabs defaultValue="themes">
@@ -101,6 +103,7 @@ function Swatches({ palette }: { palette: WikiPalette }) {
 /** The provided themes, then the saved palettes. */
 function Themes({ theme, onChange }: TabProps) {
   const { t } = useTranslation();
+  const look = useWikiLook();
   const current = presetKey(theme);
   const custom = theme.palette ?? null;
   const saved = theme.savedPalettes ?? [];
@@ -108,7 +111,7 @@ function Themes({ theme, onChange }: TabProps) {
     <div className="flex flex-col gap-3">
       <ul className="grid grid-cols-2 gap-2">
         {PRESET_KEYS.map((key) => {
-          const preset = WIKI_PRESETS[key];
+          const preset = presetOf(key, look);
           const active = key === current && !custom && !theme.headingFont && !theme.bodyFont;
           return (
             <li key={key}>
@@ -128,12 +131,17 @@ function Themes({ theme, onChange }: TabProps) {
                 <span
                   className="text-base font-bold"
                   style={{
-                    fontFamily: WIKI_FONTS[preset.headingFont],
+                    fontFamily: SITE_FONTS[preset.headingFont],
                     color: preset.palette.accent,
                   }}
                 >
                   {t(`wiki.style.presets.${key}`)}
                 </span>
+                {key === "atlas" && (
+                  <span className="text-xs" style={{ color: preset.palette.muted }}>
+                    {t("wiki.style.atlasHint")}
+                  </span>
+                )}
                 <Swatches palette={preset.palette} />
               </button>
             </li>
@@ -177,7 +185,7 @@ function Themes({ theme, onChange }: TabProps) {
 /** The colours one by one, a contrast warning, and « Enregistrer la palette ». */
 function Colors({ theme, onChange }: TabProps) {
   const { t } = useTranslation();
-  const shown = resolveTheme(theme).palette;
+  const shown = resolveTheme(theme, useWikiLook()).palette;
   const [draft, setDraft] = useState<WikiPalette>(shown);
   const [name, setName] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -300,7 +308,7 @@ function ColorRow({
 /** The fonts of the titles and of the text. */
 function Fonts({ theme, onChange }: TabProps) {
   const { t } = useTranslation();
-  const { headingFont, bodyFont } = resolveTheme(theme);
+  const { headingFont, bodyFont } = resolveTheme(theme, useWikiLook());
   return (
     <div className="flex flex-col gap-3">
       <FontSelect
@@ -323,22 +331,23 @@ function FontSelect({
   onChange,
 }: {
   label: string;
-  value: WikiFontKey;
-  onChange: (key: WikiFontKey) => void;
+  value: SiteFontKey;
+  onChange: (key: SiteFontKey) => void;
 }) {
   const id = useId();
+  const scheme = useWikiPopoverScheme();
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-sm">
         {label}
       </label>
-      <Select value={value} onValueChange={(key) => onChange(key as WikiFontKey)}>
-        <SelectTrigger id={id} className="w-full" style={{ fontFamily: WIKI_FONTS[value] }}>
+      <Select value={value} onValueChange={(key) => onChange(key as SiteFontKey)}>
+        <SelectTrigger id={id} className="w-full" style={{ fontFamily: SITE_FONTS[value] }}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent data-wiki-scheme={scheme}>
           {FONT_KEYS.map((key) => (
-            <SelectItem key={key} value={key} style={{ fontFamily: WIKI_FONTS[key] }}>
+            <SelectItem key={key} value={key} style={{ fontFamily: SITE_FONTS[key] }}>
               {FONT_NAMES[key]}
             </SelectItem>
           ))}

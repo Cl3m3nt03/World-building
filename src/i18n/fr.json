@@ -730,6 +730,8 @@
   "wiki.style.themes": "Thèmes",
   "wiki.style.colors": "Couleurs",
   "wiki.style.fonts": "Polices",
+  "wiki.style.presets.atlas": "Atlas",
+  "wiki.style.atlasHint": "Suit le thème du monde et le mode affiché",
   "wiki.style.presets.parchment": "Parchemin",
   "wiki.style.presets.night": "Nuit",
   "wiki.style.presets.forest": "Forêt",

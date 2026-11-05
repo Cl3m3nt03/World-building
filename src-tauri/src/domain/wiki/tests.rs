@@ -29,7 +29,43 @@ async fn a_new_world_has_an_empty_wiki_with_the_default_theme() {
     assert_eq!(settings.title, "");
     assert!(settings.featured.is_empty());
     assert_eq!(settings.theme, WikiTheme::default());
+    // Atlas (ADR 0015 §8): it follows the world's theme and the mode shown.
+    assert_eq!(settings.theme.preset, "atlas");
     assert!(pages(&world.pool).await.unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn a_wiki_without_a_theme_takes_atlas_and_a_chosen_one_is_kept() {
+    let (_dir, world) = world().await;
+    // An existing world that never chose a theme: the row's default, `{}`.
+    sqlx::query("UPDATE wiki_settings SET theme = '{}'")
+        .execute(&world.pool)
+        .await
+        .unwrap();
+    assert_eq!(settings(&world.pool).await.unwrap().theme.preset, "atlas");
+
+    // An existing world that chose Parchemin (stored before Atlas existed).
+    let stored = r##"{"preset":"parchment","palette":null,"headingFont":"cinzel","bodyFont":null,"savedPalettes":[{"name":"Ors","palette":{"background":"#f5efe3","surface":"#fffaf0","text":"#1f1a14","muted":"#6b6155","accent":"#c8912e"}}]}"##;
+    sqlx::query("UPDATE wiki_settings SET theme = ?")
+        .bind(stored)
+        .execute(&world.pool)
+        .await
+        .unwrap();
+    let read = settings(&world.pool).await.unwrap();
+    assert_eq!(read.theme.preset, "parchment");
+    assert_eq!(read.theme.heading_font.as_deref(), Some("cinzel"));
+    assert_eq!(read.theme.saved_palettes.len(), 1);
+    // Saved back as read (another setting changed), it is the same theme.
+    save_settings(
+        &world.pool,
+        &WikiSettings {
+            title: "Eldefleur".into(),
+            ..read.clone()
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(settings(&world.pool).await.unwrap().theme, read.theme);
 }
 
 #[tokio::test]
