@@ -13,6 +13,7 @@ Le travail passe par une équipe d'agents, chacun avec une compétence et une mi
 | `critique-design` | Juge le visuel et l'expérience au niveau d'une app de 2026 | Non |
 | `relecteur` | Relit le diff : bugs, données, conformité aux règles | Non |
 | `correcteur` | Corrige les retours bloquants sur une PR existante | Oui |
+| `securite` | Audite la chaîne d'approvisionnement (`cargo audit`, `pnpm audit`), la CSP, les capacités IPC, la signature et les secrets | Non (sauf correctif confié par le manager) |
 
 ## Le circuit d'une feature
 
