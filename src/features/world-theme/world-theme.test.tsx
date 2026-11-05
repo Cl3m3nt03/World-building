@@ -228,6 +228,25 @@ test("a background is chosen in the media library, and the main image taken back
   );
 });
 
+test("changing the accent keeps the material, ornament, font and mode of the theme", async () => {
+  const rich = {
+    kind: "custom",
+    background: null,
+    accent: "#c8912e",
+    material: "stone",
+    ornament: "edge",
+    headingFont: "playfair",
+    scheme: "dark",
+  } as const;
+  world = { ...WORLD, theme: rich };
+  const dialog = await renderThemeSection();
+
+  const swatches = await within(dialog).findByRole("radiogroup", { name: "Couleurs proposées" });
+  fireEvent.click(within(swatches).getByRole("radio", { name: "Violet" }));
+
+  await waitFor(() => expect(saved.at(-1)).toEqual({ ...rich, accent: "#b39af5" }));
+});
+
 test("a free color shows at once and is saved once the drag settles", async () => {
   world = { ...WORLD, theme: { kind: "custom", background: null, accent: "#c8912e" } };
   const dialog = await renderThemeSection();

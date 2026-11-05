@@ -163,6 +163,8 @@ test("creates a world in the default location and opens it", async () => {
     parentDir: "C:/Users/me/Documents/BuilderZ",
     name: "Terres du Nord",
     genre: "fantasy",
+    // No theme picked yet (ADR 0015): the default one.
+    theme: null,
   });
 });
 
