@@ -11,8 +11,8 @@ import { useResolvedTheme } from "@/app/theme";
 
 export type Rgb = readonly [number, number, number];
 
-/** AA for body text, plus a margin for the atlas engraved over the veil. */
-export const VEIL_TARGET_CONTRAST = 4.7;
+/** AA for body text (4.5:1), plus a little for the sampling of the image. */
+export const VEIL_TARGET_CONTRAST = 4.6;
 
 /** Side of the canvas the image is measured on (its blur makes this enough). */
 const SAMPLE_SIZE = 48;
