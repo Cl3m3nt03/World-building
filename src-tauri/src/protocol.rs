@@ -168,16 +168,34 @@ pub fn handle_thumbnail<R: Runtime>(
 ) {
     let app = context.app_handle().clone();
     let id = request.uri().path().trim_start_matches('/').to_owned();
+    let origin = request
+        .headers()
+        .get(header::ORIGIN)
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_owned);
     tauri::async_runtime::spawn(async move {
         let response = match app.try_state::<AppState>() {
-            Some(state) => respond_thumbnail(&state.config_dir, &id).await,
+            Some(state) => respond_thumbnail(&state.config_dir, &id, origin.as_deref()).await,
             None => status(StatusCode::SERVICE_UNAVAILABLE),
         };
         responder.respond(response);
     });
 }
 
-async fn respond_thumbnail(config_dir: &Path, id: &str) -> Response<Vec<u8>> {
+/// The app's own origins (release builds on each platform, the dev server).
+const APP_ORIGINS: [&str; 4] = [
+    "http://tauri.localhost",
+    "https://tauri.localhost",
+    "tauri://localhost",
+    "http://localhost:1420",
+];
+
+/// `origin` if it is one of the app's own, to echo in `Access-Control-Allow-Origin`.
+fn allowed_origin(origin: Option<&str>) -> Option<&str> {
+    origin.filter(|origin| APP_ORIGINS.contains(origin))
+}
+
+async fn respond_thumbnail(config_dir: &Path, id: &str, origin: Option<&str>) -> Response<Vec<u8>> {
     let path = match thumbnails::path(config_dir, id) {
         Ok(path) => path,
         Err(error) => {
@@ -186,17 +204,23 @@ async fn respond_thumbnail(config_dir: &Path, id: &str) -> Response<Vec<u8>> {
         }
     };
     match tokio::fs::read(&path).await {
-        Ok(bytes) => Response::builder()
-            .status(StatusCode::OK)
-            .header(header::CONTENT_TYPE, "image/png")
-            .header(header::X_CONTENT_TYPE_OPTIONS, "nosniff")
-            // Regenerated in place when the main image changes: no caching.
-            .header(header::CACHE_CONTROL, "no-cache")
-            // The backdrop measures the thumbnail's brightness on a canvas
-            // to set its veil (ADR 0003): the app's origin differs.
-            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-            .body(bytes)
-            .unwrap_or_else(|_| status(StatusCode::INTERNAL_SERVER_ERROR)),
+        Ok(bytes) => {
+            let mut response = Response::builder()
+                .status(StatusCode::OK)
+                .header(header::CONTENT_TYPE, "image/png")
+                .header(header::X_CONTENT_TYPE_OPTIONS, "nosniff")
+                // Regenerated in place when the main image changes: no caching.
+                .header(header::CACHE_CONTROL, "no-cache")
+                .header(header::VARY, "Origin");
+            // The backdrop measures the thumbnail's brightness on a canvas to
+            // set its veil (ADR 0003): only the app's own origins may read it.
+            if let Some(origin) = allowed_origin(origin) {
+                response = response.header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            }
+            response
+                .body(bytes)
+                .unwrap_or_else(|_| status(StatusCode::INTERNAL_SERVER_ERROR))
+        }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => status(StatusCode::NOT_FOUND),
         Err(error) => {
             tracing::warn!(%error, %id, "cannot read thumbnail");
@@ -261,22 +285,56 @@ mod tests {
         image::RgbImage::new(4, 4).save(&source).unwrap();
         thumbnails::refresh(dir.path(), id, Some(&source)).unwrap();
 
-        let ok = respond_thumbnail(dir.path(), id).await;
+        let ok = respond_thumbnail(dir.path(), id, None).await;
         assert_eq!(ok.status(), StatusCode::OK);
         assert_eq!(ok.headers()[header::CONTENT_TYPE], "image/png");
-        assert_eq!(ok.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN], "*");
         assert_eq!(
-            respond_thumbnail(dir.path(), "../settings.json")
+            respond_thumbnail(dir.path(), "../settings.json", None)
                 .await
                 .status(),
             StatusCode::BAD_REQUEST
         );
         assert_eq!(
-            respond_thumbnail(dir.path(), "6f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11")
+            respond_thumbnail(dir.path(), "6f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11", None)
                 .await
                 .status(),
             StatusCode::NOT_FOUND
         );
+    }
+
+    #[tokio::test]
+    async fn thumbnails_are_readable_by_the_app_origins_only() {
+        let dir = tempfile::tempdir().unwrap();
+        let id = "5f0c4ba6-1f55-4c0e-9d6c-3f1a2a8e6c11";
+        let source = dir.path().join("a.png");
+        image::RgbImage::new(4, 4).save(&source).unwrap();
+        thumbnails::refresh(dir.path(), id, Some(&source)).unwrap();
+
+        for origin in APP_ORIGINS {
+            let response = respond_thumbnail(dir.path(), id, Some(origin)).await;
+            assert_eq!(
+                response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+                origin
+            );
+            assert_eq!(response.headers()[header::VARY], "Origin");
+        }
+        for origin in [
+            Some("https://evil.example"),
+            Some("http://tauri.localhost.evil.example"),
+            Some("http://localhost:5173"),
+            Some("null"),
+            None,
+        ] {
+            let response = respond_thumbnail(dir.path(), id, origin).await;
+            assert_eq!(response.status(), StatusCode::OK);
+            assert!(
+                !response
+                    .headers()
+                    .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN),
+                "{origin:?} must not be allowed"
+            );
+            assert_eq!(response.headers()[header::VARY], "Origin");
+        }
     }
 
     #[tokio::test]
