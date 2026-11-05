@@ -161,7 +161,7 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - chaque chapitre sur une nouvelle page, un peu plus bas ou sous son image d'en-tête ;
   - les pages numérotées en pied à partir du premier chapitre.
 - Le texte est justifié, avec retrait de première ligne, titres, citations, listes, séparateurs et images.
-- La police est celle des réglages si le PC l'a, sinon une proche (Georgia, Garamond…) ou Libertinus Serif, embarquée par Typst. Le fond et la taille du texte suivent aussi les réglages.
+- La police est celle des réglages, toujours : les six polices de lecture (EB Garamond, Inter, Cinzel, Playfair Display, Lora, Source Serif 4) sont livrées avec l'app en TTF (SIL OFL, `src-tauri/fonts/`, licences dans `licenses/fonts/`), le code est en Space Mono (OFL). Les polices propres à Typst ne sont plus embarquées (l'une d'elles, NewCM10, est sous GPL, #564). Un caractère absent de ces polices (autre écriture, symbole) est pris dans les polices du PC. Le fond et la taille du texte suivent aussi les réglages.
 - Une image illisible est laissée de côté plutôt que de faire échouer le livre.
 
 **Réalisé en M10 (10.8)** : l'export **Word (DOCX)**.
