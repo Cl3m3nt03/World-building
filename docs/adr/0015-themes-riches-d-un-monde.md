@@ -1,6 +1,6 @@
 # ADR 0015 — Thèmes riches d'un monde
 
-- **Statut** : proposé (2026-11-05), en attente des choix de Clément
+- **Statut** : accepté (2026-11-05), choix de Clément ci-dessous
 - **Contexte** : thème du monde (`docs/features/00-interface.md`, « Thème du monde » et « Thèmes riches »), ADR 0003, 0012, 0013, audit F35 (`docs/audits/2026-11-audit-design.md`), #528
 
 ## Contexte
@@ -48,7 +48,7 @@ Clément a accepté d'aller plus loin : une matière des panneaux, des ornements
 5. Aucune migration de la base : c'est une métadonnée du monde, comme le genre, les tonalités et le thème actuel.
 6. `set_world_theme` reçoit la forme élargie. `create_world` reçoit un thème facultatif : celui proposé ou choisi dans « Nouveau monde » (absent : `default`).
 7. La table qui propose un thème à partir du genre et des tonalités vit dans le front. Elle n'est pas stockée : seul le thème retenu l'est.
-8. Le wiki gagne un thème fourni `atlas` (`WikiTheme.preset`), qui suit le thème du monde et le mode affiché. Il devient le défaut des **nouveaux** mondes. Le défaut lu pour un monde existant sans réglage reste `parchment`, pour ne rien changer sous les pieds de l'utilisateur (voir les questions).
+8. Le wiki gagne un thème fourni `atlas` (`WikiTheme.preset`), qui suit le thème du monde et le mode affiché. Il devient le défaut de **tous** les mondes sans réglage de wiki, existants compris (choix de Clément). Un monde qui a déjà choisi un thème de wiki le garde.
 
 ## Conséquences
 
@@ -69,10 +69,10 @@ Clément a accepté d'aller plus loin : une matière des panneaux, des ornements
 | **Textures en images (parchemin ou pierre scannés)** | Écarté par l'ADR 0012 : lourd et flou. Grain et ornements restent en SVG et CSS. |
 | **Polices chargées depuis un CDN** | Interdit par la CSP, et l'app doit marcher hors ligne. |
 
-## Questions pour Clément
+## Choix de Clément (2026-11-05)
 
-1. Jusqu'où aller : les trois ambiances des maquettes, ou seulement certains réglages (matière et police, sans ornement par exemple) ?
-2. Police technique de Station : Chakra Petch, Oxanium ou Exo 2 (toutes SIL OFL) ? La maquette utilise Bahnschrift, police système de Windows, qu'on ne peut pas livrer.
-3. Mode imposé par le monde : le garder (avec « Suivre l'app » par défaut), ou le laisser à l'app seule ?
-4. À la création : thème proposé **présélectionné** (on peut le changer), ou seulement suggéré, « Par défaut » restant présélectionné ?
-5. Wiki : le thème Atlas pour les mondes existants sans réglage de wiki, ou seulement pour les nouveaux ?
+1. Les trois ambiances des maquettes, complètes : Grimoire, Station, Crypte.
+2. Police des titres de Station : **Oxanium** (SIL OFL), livrée avec l'app.
+3. Un monde peut imposer le mode clair ou sombre ; « Suivre l'app » reste le défaut.
+4. À la création, le thème proposé selon le genre et les tonalités est **présélectionné**, et on peut le changer.
+5. Le thème Atlas du wiki s'applique aussi aux mondes existants sans réglage de wiki.
