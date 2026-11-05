@@ -99,13 +99,13 @@ test("changes the theme and the transparency effects", async () => {
   expect(useUiStore.getState().transparency).toBe("off");
 });
 
-test("says when the open world imposes its mode, shown meanwhile in the app's", () => {
+test("says when the open world imposes its mode, in that mode", () => {
   const world = renderHook(() => useImposedTheme("dark"));
   expect(document.documentElement.dataset.theme).toBe("dark");
   renderDialog();
   expect(screen.getByText(/Le monde ouvert s'affiche toujours en sombre/)).toBeTruthy();
-  // « Système » in jsdom: light.
-  expect(document.documentElement.dataset.theme).toBe("light");
+  // The dialog stays in the mode on screen.
+  expect(document.documentElement.dataset.theme).toBe("dark");
   world.unmount();
   expect(screen.queryByText(/Le monde ouvert s'affiche toujours en sombre/)).toBeNull();
 });

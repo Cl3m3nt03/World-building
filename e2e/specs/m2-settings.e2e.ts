@@ -111,6 +111,12 @@ describe("M2: world settings, theme and writing preferences", () => {
           "the stone material, the edge ornament, Cinzel or the dark mode were not applied",
       },
     );
+    // The app settings stay in the world's mode and say it imposes one (#550).
+    await $("aria/Réglages").click();
+    await $("p*=Le monde ouvert s'affiche toujours en sombre").waitForDisplayed();
+    expect(await browser.execute(() => document.documentElement.dataset.theme)).toBe("dark");
+    await browser.keys("Escape");
+    await $('[role="dialog"]').waitForExist({ reverse: true });
   });
 
   it("turns a typed card name into a mention, and no longer once switched off", async () => {

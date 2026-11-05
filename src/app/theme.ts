@@ -24,8 +24,6 @@ function systemPrefersDark(): boolean {
 /** The app's own mode (its preference), and the one an open world imposes over it (ADR 0015). */
 let preferred: ResolvedTheme = "light";
 let imposed: ResolvedTheme | null = null;
-/** How many app screens (the app settings) show the app's own mode over an imposed one. */
-let lifted = 0;
 const imposedListeners = new Set<() => void>();
 
 function applyTheme(theme: ResolvedTheme): void {
@@ -34,7 +32,7 @@ function applyTheme(theme: ResolvedTheme): void {
 }
 
 function renderTheme(): void {
-  document.documentElement.dataset.theme = lifted > 0 ? preferred : (imposed ?? preferred);
+  document.documentElement.dataset.theme = imposed ?? preferred;
 }
 
 function applyTransparency(transparency: TransparencyPreference): void {
@@ -115,17 +113,4 @@ export function useImposedThemeValue(): ResolvedTheme | null {
     () => imposed,
     () => null,
   );
-}
-
-/** While `active`, shows the app's own mode over an imposed one (the app settings). */
-export function useAppTheme(active: boolean): void {
-  useLayoutEffect(() => {
-    if (!active) return;
-    lifted += 1;
-    renderTheme();
-    return () => {
-      lifted -= 1;
-      renderTheme();
-    };
-  }, [active]);
 }

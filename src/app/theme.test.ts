@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { renderHook } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
-import { initTheme, resolveTheme, useAppTheme, useImposedTheme } from "./theme";
+import { initTheme, resolveTheme, useImposedTheme } from "./theme";
 
 describe("resolveTheme", () => {
   test("explicit preferences win over the system", () => {
@@ -18,18 +18,12 @@ describe("resolveTheme", () => {
 describe("an imposed mode", () => {
   const root = document.documentElement;
 
-  test("wins over the preference while imposed, except on the app's own screens", () => {
+  test("wins over the preference while imposed", () => {
     initTheme();
     expect(root.dataset.theme).toBe("light");
     const world = renderHook(({ theme }) => useImposedTheme(theme), {
       initialProps: { theme: "dark" as "dark" | null },
     });
-    expect(root.dataset.theme).toBe("dark");
-    const settings = renderHook(({ active }) => useAppTheme(active), {
-      initialProps: { active: true },
-    });
-    expect(root.dataset.theme).toBe("light");
-    settings.rerender({ active: false });
     expect(root.dataset.theme).toBe("dark");
     world.rerender({ theme: null });
     expect(root.dataset.theme).toBe("light");
