@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import { useUiStore } from "@/app/stores/ui";
 
 export type ThemePreference = "light" | "dark" | "system";
@@ -21,8 +21,18 @@ function systemPrefersDark(): boolean {
   return window.matchMedia(DARK_QUERY).matches;
 }
 
+/** The app's own mode (its preference), and the one an open world imposes over it (ADR 0015). */
+let preferred: ResolvedTheme = "light";
+let imposed: ResolvedTheme | null = null;
+const imposedListeners = new Set<() => void>();
+
 function applyTheme(theme: ResolvedTheme): void {
-  document.documentElement.dataset.theme = theme;
+  preferred = theme;
+  renderTheme();
+}
+
+function renderTheme(): void {
+  document.documentElement.dataset.theme = imposed ?? preferred;
 }
 
 function applyTransparency(transparency: TransparencyPreference): void {
@@ -70,4 +80,37 @@ function subscribeTheme(onChange: () => void): () => void {
 /** The theme shown now (for components that draw their own colours: the canvas). */
 export function useResolvedTheme(): ResolvedTheme {
   return useSyncExternalStore(subscribeTheme, readTheme, () => "light");
+}
+
+/**
+ * Imposes `theme` over the app's preference while mounted (an open world's
+ * mode, ADR 0015); null imposes nothing. Set before the browser paints, so
+ * the change never shows a frame in the other mode.
+ */
+export function useImposedTheme(theme: ResolvedTheme | null): void {
+  useLayoutEffect(() => {
+    if (theme === null) return;
+    setImposed(theme);
+    return () => setImposed(null);
+  }, [theme]);
+}
+
+function setImposed(theme: ResolvedTheme | null): void {
+  imposed = theme;
+  renderTheme();
+  for (const listener of imposedListeners) listener();
+}
+
+function subscribeImposed(onChange: () => void): () => void {
+  imposedListeners.add(onChange);
+  return () => imposedListeners.delete(onChange);
+}
+
+/** The mode the open world imposes, or null (for the app settings to say so). */
+export function useImposedThemeValue(): ResolvedTheme | null {
+  return useSyncExternalStore(
+    subscribeImposed,
+    () => imposed,
+    () => null,
+  );
 }

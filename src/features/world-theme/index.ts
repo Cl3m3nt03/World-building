@@ -9,3 +9,4 @@ export { PRESETS, resolveTheme } from "./presets";
 export { useWorldAccent } from "./useWorldAccent";
 export { useWorldHeadingFont } from "./useWorldHeadingFont";
 export { themeLook, useWorldMaterial } from "./useWorldMaterial";
+export { themeScheme, useWorldScheme } from "./useWorldScheme";

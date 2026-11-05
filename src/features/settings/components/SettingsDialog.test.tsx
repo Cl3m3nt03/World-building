@@ -1,9 +1,18 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { useUiStore } from "@/app/stores/ui";
+import { useImposedTheme } from "@/app/theme";
 import { i18n } from "@/i18n";
 import type { AppSettings, Asset } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
@@ -88,6 +97,17 @@ test("changes the theme and the transparency effects", async () => {
 
   expect(useUiStore.getState().theme).toBe("dark");
   expect(useUiStore.getState().transparency).toBe("off");
+});
+
+test("says when the open world imposes its mode, in that mode", () => {
+  const world = renderHook(() => useImposedTheme("dark"));
+  expect(document.documentElement.dataset.theme).toBe("dark");
+  renderDialog();
+  expect(screen.getByText(/Le monde ouvert s'affiche toujours en sombre/)).toBeTruthy();
+  // The dialog stays in the mode on screen.
+  expect(document.documentElement.dataset.theme).toBe("dark");
+  world.unmount();
+  expect(screen.queryByText(/Le monde ouvert s'affiche toujours en sombre/)).toBeNull();
 });
 
 test("puts the sections in a rail and opens on Appearance", () => {
