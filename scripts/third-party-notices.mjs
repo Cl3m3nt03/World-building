@@ -13,7 +13,16 @@
 // Usage: node scripts/third-party-notices.mjs [--out <file>]
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
 
@@ -136,20 +145,24 @@ const bump = (kind, licence, item) => {
 
 // --- Rust: cargo-about. -----------------------------------------------------
 
-const about = JSON.parse(
-  run("cargo", [
-    "about",
-    "generate",
-    "--format",
-    "json",
-    "--fail",
-    "--locked",
-    "--config",
-    "src-tauri/about.toml",
-    "--manifest-path",
-    "src-tauri/Cargo.toml",
-  ]),
-);
+// Through a file: cargo-about refuses to write to a pipe under PowerShell.
+const aboutJson = path.join(mkdtempSync(path.join(tmpdir(), "notices-")), "about.json");
+run("cargo", [
+  "about",
+  "generate",
+  "--format",
+  "json",
+  "--fail",
+  "--locked",
+  "--config",
+  "src-tauri/about.toml",
+  "--manifest-path",
+  "src-tauri/Cargo.toml",
+  "--output-file",
+  aboutJson,
+]);
+const about = JSON.parse(readFileSync(aboutJson, "utf8"));
+rmSync(path.dirname(aboutJson), { recursive: true, force: true });
 const rustNotices = new Map();
 for (const licence of about.licenses) {
   for (const { crate } of licence.used_by) {
