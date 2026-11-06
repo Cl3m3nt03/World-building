@@ -1,6 +1,6 @@
 # V2-M2+ — Accueil enrichi
 
-**Objectif** : reprendre dans BuilderZ quatre comportements de vvd vus pendant la session REA du 2026-10-25 (`docs/outils/vvd/accueil-navigation.md`), choisis par Clément le même jour. On reprend leur ergonomie, jamais les fichiers de vvd.
+**Objectif** : ajouter à BuilderZ quatre comportements choisis par Clément le 2026-10-25, conçus avec nos propres choix.
 
 **Ordre d'exécution** : 2+.1 → 2+.2 → 2+.3 → 2+.4, puis la recette.
 

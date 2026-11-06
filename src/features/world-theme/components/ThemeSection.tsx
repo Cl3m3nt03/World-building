@@ -403,7 +403,7 @@ function EditTab({
 }
 
 /**
- * "Theme" section of the world settings (after vvd): "Explore" the themes
+ * "Theme" section of the world settings: "Explore" the themes
  * shipped with the app in a gallery with a preview, applied with « Appliquer »,
  * or "Edit" the world's own, whose changes apply at once.
  */

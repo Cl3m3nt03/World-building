@@ -377,7 +377,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
           </div>
         ) : null}
 
-        {/* The tools, floating at the bottom (after vvd); the player while a story plays. */}
+        {/* The tools, floating at the bottom; the player while a story plays. */}
         {story !== null && told[story] ? (
           <StoryPlayer
             count={told.length}

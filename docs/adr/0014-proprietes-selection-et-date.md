@@ -7,7 +7,7 @@
 
 ## Contexte
 
-vvd propose deux genres de propriétés que BuilderZ n'a pas (`docs/outils/vvd/fiches.md`) : une liste de choix propre à la propriété, et une date. Ajouter un genre change le format des données d'un monde : la table `property_definitions` limite `kind` par une contrainte `CHECK`, et les valeurs des cartes ont des formes connues (`PropertyValue`).
+Deux genres de propriétés courants dans les outils de worldbuilding manquent à BuilderZ : une liste de choix propre à la propriété, et une date. Ajouter un genre change le format des données d'un monde : la table `property_definitions` limite `kind` par une contrainte `CHECK`, et les valeurs des cartes ont des formes connues (`PropertyValue`).
 
 Clément a décidé que :
 

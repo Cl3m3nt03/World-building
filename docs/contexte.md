@@ -4,16 +4,16 @@ Ce document résume les discussions qui ont précédé la création du repo, pou
 
 ## Origine
 
-Clément fait du worldbuilding et utilisait vvd.world (https://vvd.world), une plateforme web de worldbuilding payante. Pour son usage, l'abonnement ne se justifie pas. Atlasaga (ex-BuilderZ) reproduit donc **les fonctionnalités et l'ergonomie** de vvd dans une application **desktop Windows (.exe)**, pour un usage strictement personnel. Il n'y aura ni revente ni distribution.
+Clément fait du worldbuilding et utilisait des plateformes web payantes, dont l'abonnement ne se justifiait pas pour son usage. Atlasaga (ex-BuilderZ) est donc une application de worldbuilding **desktop Windows (.exe)**, avec ses propres fonctionnalités et sa propre ergonomie, pour un usage strictement personnel. Il n'y aura ni revente ni distribution.
 
 Les règles qui en découlent :
 
-- On reproduit les **comportements** et la **direction artistique** de vvd (voir ADR 0003). Le nom, le logo, les assets, les textes et le code de vvd ne sont jamais repris : le style est reconstruit avec nos propres tokens et des ressources libres.
+- On conçoit nos propres comportements et notre propre direction artistique (voir ADR 0003) ; on ne reprend jamais le code, les assets, les textes ni les captures d'une autre application. Le style est construit avec nos propres tokens et des ressources libres.
 - Les exigences de départ sont une qualité maximale, pas le droit à l'erreur, et un projet reprenable dans 5 ans.
 
 ## Source des specs
 
-Clément a découpé toutes les features de vvd dans un board FigJam : pour chaque module, un texte explicatif en anglais accompagné de captures d'écran.
+Clément a décrit toutes les features voulues dans un board FigJam : pour chaque module, un texte explicatif en anglais accompagné de captures d'écran.
 
 - Board : https://www.figma.com/board/DcVIIr1VrAYJ95Ycq0FucC/Worldbuilding-APP-Claude
 - Les specs rédigées à partir de ce board sont dans `docs/features/`. Pour le détail visuel d'un écran, consulter les captures situées **sous** le bloc de texte du module concerné, via le MCP Figma (`get_figjam`, file key `DcVIIr1VrAYJ95Ycq0FucC`).
@@ -39,11 +39,11 @@ Clément a découpé toutes les features de vvd dans un board FigJam : pour chaq
 4. **Local et mono-utilisateur**. Adaptations validées par Clément :
    - Plan, abonnement, membres et collaboration temps réel : **retirés**.
    - Publication en ligne du wiki et des histoires : **remplacée par des exports** (site HTML statique ; PDF, DOCX, ePub).
-   - Bibliothèques fournies par vvd (templates de maps, sons de la radio et du mode audio) : **remplacées par les fichiers importés** par l'utilisateur.
+   - Bibliothèques en ligne (templates de maps, sons de la radio et du mode audio) : **remplacées par les fichiers importés** par l'utilisateur.
    - Recherche Google d'images dans le Canvas : **remplacée** par le glisser-déposer et le collage depuis le PC.
    - Fil de nouveautés et formulaire de bug/suggestion : **retirés** (les issues GitHub font ce travail).
 5. **Nom de l'app** : Atlasaga depuis la 1.8 (ADR 0016) ; BuilderZ jusqu'à la 1.7 (nom choisi par Clément dans le board).
-6. **Direction artistique** : la même que vvd (fond illustré flouté, panneaux en verre dépoli, titres monospace, accent ocre), sans reprendre aucun de ses fichiers. Voir ADR 0003.
+6. **Direction artistique** : fond illustré flouté, panneaux en verre dépoli, titres monospace, accent ocre, avec nos propres fichiers. Voir ADR 0003.
 
 ## Roadmap
 

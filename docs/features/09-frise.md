@@ -6,7 +6,7 @@
 
 Raconter l'histoire du monde dans le temps : ses ères, ses guerres, les vies de ses personnages, les règnes de ses maisons. La frise montre **quand** les choses arrivent et **combien de temps** elles durent. Elle reste reliée aux cartes, comme la map, le graph et les arbres.
 
-Le board FigJam ne la contient pas. La frise a d'abord été conçue d'après les outils de référence du worldbuilding (World Anvil, LegendKeeper, Aeon Timeline) : calendrier propre au monde, ères, pistes parallèles, événements ponctuels et périodes, zoom. Une capture de la « Chronologie » de vvd, envoyée par Clément, a ensuite fixé son apparence : un axe sur fond pointillé, des bulles au-dessus, une carte d'élément flottante, une barre d'outils en bas (11.5b).
+Le board FigJam ne la contient pas. La frise a d'abord été conçue d'après les outils de référence du worldbuilding (World Anvil, LegendKeeper, Aeon Timeline) : calendrier propre au monde, ères, pistes parallèles, événements ponctuels et périodes, zoom. Clément a ensuite fixé son apparence : un axe sur fond pointillé, des bulles au-dessus, une carte d'élément flottante, une barre d'outils en bas (11.5b).
 
 ## Calendrier du monde
 
@@ -83,7 +83,7 @@ Une frise marquée visible apparaît dans le wiki en lecture : pistes, ères et 
 - **« Cité dans »** d'une carte placée sur une frise montre la frise ; le lien l'ouvre centrée sur l'élément de la carte, sélectionné.
 - **Bloc « Frise »** dans une carte (menu « + » ou « / ») : on choisit une frise du monde, elle s'affiche en lecture, centrée sur l'élément de cette carte s'il existe. La molette fait défiler la carte, Ctrl + molette zoome. « Ouvrir la frise » l'ouvre centrée sur cette carte, « Changer » en choisit une autre. L'export HTML du wiki laisse ce bloc de côté jusqu'en 11.6.
 
-**Réalisé en M11 (11.5b)** : la frise prend le visage de celle de vvd (capture envoyée par Clément).
+**Réalisé en M11 (11.5b)** : la frise prend son visage définitif.
 - **Vue « Axe »**, par défaut : un axe horizontal sur un fond pointillé, graduation dessous. Chaque élément est un point sur l'axe, son nom une bulle au-dessus (avec l'image de l'élément ou de sa carte), reliée par un trait. Une période est un segment épais sur l'axe, dont les bouts l'étirent. Les bulles montent d'un cran quand elles se chevaucheraient, et l'axe descend pour leur laisser la place. Les ères sont des bandes nommées quand il y a la place.
 - **Vue « Pistes »** : celle de 11.3, au choix dans la barre d'outils.
 - **Barre d'outils flottante** en bas : « Ajouter » (un événement, une période, des cartes), filtre par étiquette, « Gérer les pistes », annuler, rétablir, choix Axe / Pistes. **Zoom** en bas à droite (zoomer, dézoomer, tout voir) ; l'aide des raccourcis derrière le « ? » en bas à gauche.

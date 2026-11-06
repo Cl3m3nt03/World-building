@@ -2,17 +2,17 @@
 
 **Objectif** : les premiers écrans qu'on voit et ceux qu'on traverse sans cesse donnent envie d'entrer dans son monde. On refait la liste des mondes, la création d'un monde, la Home du monde, la barre du haut et la sidebar avec le socle de V2-M1 (ADR 0012).
 
-**Référence** : vvd, étudié avec REA (`docs/outils/rea.md`). On reprend ses comportements et son ergonomie, jamais ses fichiers. Chaque écran commence par une note d'observation (`docs/outils/vvd/<écran>.md`), écrite avec nos mots.
+**Principe** : on conçoit nos propres comportements et notre propre ergonomie ; on ne reprend jamais le code, les assets, les textes ni les captures d'une autre application.
 
 **Ordre d'exécution** : V2-2.0 d'abord (elle sert toutes les autres), puis 2.1 → 2.2, 2.3, 2.4 → 2.5, 2.6, et 2.7 en dernier.
 
 ---
 
-## V2-2.0 — Étude de vvd avec REA (#442)
-- [x] Clément ouvre vvd dans un Chrome dédié (port de débogage local) ; Claude observe la liste des mondes, la création d'un monde, la Home, la barre du haut et la sidebar
+## V2-2.0 — Cadrage des écrans (#442)
+- [x] Cadrage de la liste des mondes, de la création d'un monde, de la Home, de la barre du haut et de la sidebar
 - [x] Une note par écran : zones, hiérarchie, mesures, états, interactions, raccourcis, accessibilité ; écarts voulus avec BuilderZ (local, mono-utilisateur)
 
-**Critères d'acceptation** : aucune ressource ni ligne de code de vvd dans le dépôt ; chaque issue suivante cite sa note.
+**Critères d'acceptation** : aucune ressource ni ligne de code d'une autre application dans le dépôt ; chaque issue suivante cite sa note.
 
 ## V2-2.1 — Liste des mondes (#443)
 - [x] L'écran d'ouverture devient un atlas : en-tête sur l'atlas vivant, mondes en « folios » (couverture, nom en serif, genre, dernière ouverture), le dernier ouvert mis en avant
@@ -55,4 +55,4 @@
 - [x] E2E mis à jour pour les nouveaux écrans (liste, création, Home, barre, sidebar) à 1028×749
 - [x] Captures dans l'app réelle, deux thèmes ; issue de recette pour Clément (#458)
 
-**Critères d'acceptation** : Clément valide l'accueil et la navigation avant V2-M3. Validé le 2026-10-25 (recette #458) ; les ajouts tirés de la session REA vont dans V2-M2+.
+**Critères d'acceptation** : Clément valide l'accueil et la navigation avant V2-M3. Validé le 2026-10-25 (recette #458) ; les ajouts décidés le même jour vont dans V2-M2+.

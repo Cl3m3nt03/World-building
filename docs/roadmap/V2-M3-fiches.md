@@ -1,6 +1,6 @@
 # V2-M3 — Les fiches
 
-**Objectif** : la fiche est le cœur du monde. On la rend aussi directe que celle de vvd (`docs/outils/vvd/fiches.md`, session REA du 2026-10-25) et on la pose dans le socle V2 (ADR 0012) : en-tête clair, propriétés ajoutées en deux gestes, sections lisibles, menus rapides au clavier. On reprend l'ergonomie de vvd, jamais ses fichiers.
+**Objectif** : la fiche est le cœur du monde. On la rend directe, selon les standards du genre, et on la pose dans le socle V2 (ADR 0012) : en-tête clair, propriétés ajoutées en deux gestes, sections lisibles, menus rapides au clavier.
 
 **Ordre d'exécution** : 3.1 → 3.2 → 3.3 → 3.4 → 3.5, puis 3.6, et 3.7 en dernier.
 

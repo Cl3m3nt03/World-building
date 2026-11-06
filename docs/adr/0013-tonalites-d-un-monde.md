@@ -5,7 +5,7 @@
 
 ## Contexte
 
-Pendant la session REA du 2026-10-25 (`docs/outils/vvd/accueil-navigation.md`), on a vu que vvd laisse choisir **plusieurs genres** pour un monde : une vingtaine de pastilles (fantasy, grimdark, steampunk, cozy…). Clément a demandé le même jour qu'on reprenne ce comportement.
+Le 2026-10-25, Clément a demandé qu'on puisse choisir **plusieurs genres** pour un monde, comme le font couramment les apps du genre : une vingtaine de pastilles (fantasy, grimdark, steampunk, cozy…).
 
 Dans BuilderZ, le **genre** d'un monde (un seul, ADR de M2) a un rôle précis : il décide des types de cartes proposés à la création (`m2-decisions`). Le rendre multiple brouillerait ce rôle (quel jeu de types pour « fantasy + science-fiction » ?).
 

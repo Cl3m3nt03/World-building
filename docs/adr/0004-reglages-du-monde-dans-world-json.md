@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté
 - **Date** : 2026-09-27
-- **Décideur** : Clément (captures de vvd du 27/09/2026 : thème et préférences du monde)
+- **Décideur** : Clément (échange du 27/09/2026 : thème et préférences du monde)
 
 ## Contexte
 

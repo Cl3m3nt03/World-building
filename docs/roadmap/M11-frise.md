@@ -2,7 +2,7 @@
 
 **Objectif** : raconter l'histoire du monde dans le temps. Chaque monde a son calendrier (ères, mois). Une frise est un document de World : des pistes, des événements et des périodes, reliés aux cartes, qu'on parcourt en zoomant des siècles aux jours.
 
-**Spec** : `docs/features/09-frise.md`. Le board FigJam ne la décrit pas. Elle a d'abord été conçue d'après les outils de référence du worldbuilding, puis alignée sur la « Chronologie » de vvd d'après une capture envoyée par Clément (11.5b). **Décision** : ADR 0011.
+**Spec** : `docs/features/09-frise.md`. Le board FigJam ne la décrit pas. Elle a d'abord été conçue d'après les outils de référence du worldbuilding, puis son apparence a été fixée par Clément (11.5b). **Décision** : ADR 0011.
 
 **Choix de conception** :
 - **Un document de World** : la frise a la sidebar, la corbeille, la recherche, les épingles et le wiki, comme la map et le graph.
@@ -71,16 +71,16 @@
 
 **Critères d'acceptation** : la carte Robert Baratheon, placée sur la frise, la montre dans « Cité dans », qui ouvre la frise centrée sur lui.
 
-## 11.5b — Frise façon vvd (#403)
-**Branche** : `feat/timeline-vvd` · **Dépend de** : 11.5
+## 11.5b — Vue « Axe » de la frise (#403)
+**Dépend de** : 11.5
 
-Ajoutée après la capture de la « Chronologie » de vvd envoyée par Clément.
+Ajoutée à la demande de Clément.
 
 - [ ] Vue « Axe » par défaut (axe, points, bulles), vue « Pistes » en second mode
 - [ ] Carte d'élément flottante : image, nom, visibilité, supprimer, date, description, étiquettes, cartes
 - [ ] Étiquettes (migration 0021) et filtre ; barre d'outils flottante en bas, zoom en bas à droite
 
-**Critères d'acceptation** : la frise GoT ressemble à la capture vvd ; tout ce qui marchait en 11.3–11.5 marche dans les deux vues.
+**Critères d'acceptation** : la frise GoT se lit sur l'axe, bulles au-dessus ; tout ce qui marchait en 11.3–11.5 marche dans les deux vues.
 
 ## 11.6 — La frise dans le wiki (#393)
 **Branche** : `feat/timeline-wiki` · **Dépend de** : 11.3

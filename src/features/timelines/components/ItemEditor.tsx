@@ -57,7 +57,7 @@ type Props = {
   onUnlink?: (linkId: string) => void;
 };
 
-/** A section that opens and closes, like vvd's « Étiquettes ». */
+/** A section that opens and closes, like « Étiquettes ». */
 function Fold({
   label,
   children,
@@ -97,7 +97,7 @@ function Fold({
 }
 
 /**
- * The selected item, in a card floating over the timeline (after vvd,
+ * The selected item, in a card floating over the timeline (
  * 11.5b): its image, name, visibility in the wiki and deletion; its dates;
  * its description; its tags; the card it stands for; then its track and
  * colour. Each change is saved at once (texts when the field is left) and

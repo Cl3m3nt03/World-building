@@ -33,5 +33,5 @@ Retours reçus le 29/09/2026, classés par milestone (une issue chacun, à cadre
 | Blocs de carte côte à côte sur une même ligne | M3 | #111 |
 | Stockage : place utilisée et restante, limite choisie par l'utilisateur | M3 | #112 |
 | Médiathèque partagée entre les mondes (ADR à écrire : un monde doit rester autonome, ADR 0001) | M3 | #113 |
-| Frise chronologique (nouvelle feature de vvd) | M11 | #114 |
+| Frise chronologique | M11 | #114 |
 

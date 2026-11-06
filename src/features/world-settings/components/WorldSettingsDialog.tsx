@@ -76,7 +76,7 @@ function LinkSection({
 }
 
 /**
- * World settings screen, in sections (after vvd): general information, card
+ * World settings screen, in sections: general information, card
  * types, media library, preferences and the danger zone. Opened from the
  * world button of the top bar and from Home › Manage.
  */

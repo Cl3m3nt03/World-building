@@ -6,7 +6,7 @@
 
 ## Contexte
 
-BuilderZ est une application de worldbuilding **desktop, Windows, 100 % locale, mono-utilisateur**, inspirée fonctionnellement de vvd.world. Elle est distribuée sous forme d'installeur `.exe`. Il n'y a ni serveur, ni compte, ni synchronisation cloud.
+BuilderZ est une application de worldbuilding **desktop, Windows, 100 % locale, mono-utilisateur**. Elle est distribuée sous forme d'installeur `.exe`. Il n'y a ni serveur, ni compte, ni synchronisation cloud.
 
 Les exigences structurantes sont les suivantes :
 

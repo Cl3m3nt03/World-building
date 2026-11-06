@@ -36,8 +36,7 @@ export type PresetLook = {
 
 /**
  * A theme shipped with BuilderZ. The illustrations were drawn for BuilderZ
- * (generated SVG, original work of the project), never taken from vvd
- * (ADR 0003).
+ * (generated SVG, original work of the project, ADR 0003).
  */
 export type ThemePreset = {
   id: string;

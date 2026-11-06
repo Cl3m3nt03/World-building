@@ -6,7 +6,7 @@
 
 **Hors M6 → M7** : un arbre de relations posé sur un canvas (« l'arbre posé sur un canvas arrive avec M7 », roadmap M6) entre dans 7.5 avec les maps et graphs.
 
-**Hors M7** : la recherche d'images Google de vvd est remplacée par le glisser-déposer et le collage (contexte.md) ; la collaboration en temps réel d'Excalidraw n'est pas utilisée (mono-utilisateur).
+**Hors M7** : pas de recherche d'images en ligne, remplacée par le glisser-déposer et le collage (contexte.md) ; la collaboration en temps réel d'Excalidraw n'est pas utilisée (mono-utilisateur).
 
 **Choix de conception (dans les PR, sans ADR : ils suivent l'ADR 0001 et le modèle indicatif de la spec)** :
 - **Comme une map ou un arbre**, le front tient la scène et l'envoie en entier à chaque sauvegarde (après une courte pause, en quittant, avant la fermeture) ; le Rust la vérifie (JSON, taille bornée, pas de binaire) et la remplace. Annuler / rétablir est celui d'Excalidraw.

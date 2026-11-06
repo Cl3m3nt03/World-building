@@ -1,5 +1,5 @@
 //! Writing preferences of a world (ADR 0004), saved in `world.json`. All are
-//! on by default, as in vvd.
+//! on by default.
 
 use serde::{Deserialize, Deserializer, Serialize};
 use specta::Type;

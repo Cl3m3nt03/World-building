@@ -195,7 +195,7 @@ Correctif : popover dans la colonne de droite, pour voir l'effet des curseurs.
 **F27. B. Écran peu lisible, pistes absentes.**
 Écrans : `12-frise-L1600`, `12-frise-D1028`.
 Quoi : 4 pistes réduites à un seul trait multicolore. Les étiquettes, très petites à 1600, s'empilent autour de l'axe avec une grande hauteur vide. La première graduation est coupée à gauche.
-Correctif : aligner sur la référence vvd de l'étape 11.5b : bulles à 13 px, tiges nettes, axe neutre, durées en barres teintées par piste. Marge de 32 px à gauche des graduations. La frise du wiki (`14e-wiki-frise-D1028`) respire déjà mieux : partir de ses espacements.
+Correctif : aligner sur la vue « Axe » décidée à l'étape 11.5b : bulles à 13 px, tiges nettes, axe neutre, durées en barres teintées par piste. Marge de 32 px à gauche des graduations. La frise du wiki (`14e-wiki-frise-D1028`) respire déjà mieux : partir de ses espacements.
 
 **F28. D. Minimap plus forte que le contenu.**
 Écrans : `12-frise-L1600`, `38-vide-frise-D1028`.
@@ -305,6 +305,5 @@ Correctif : **question produit** pour Clément, à trancher avant les onglets de
 - **Survol** : vu seulement par endroits. **Chargement et erreur** : non provoqués.
 - **Effets de transparence coupés**, `prefers-reduced-motion`, version anglaise.
 - **Gros monde** : au-delà de 29 cartes, non mesuré.
-- **vvd** : pas de nouvelle session REA, comparaison limitée à `docs/outils/vvd/` et aux notes.
 - **Couverture des captures** : L1600 et les écrans principaux de D1028 lus en planches, D1600 sur une planche, L1028 sur quelques captures de doutes. Les corrections à 1028 ne sont donc confirmées qu'en sombre pour la plupart.
 - **Contraste** : mesuré seulement sur le fond nu en clair. Les panneaux verre reposent sur la mesure du PR #425, non refaite ici.

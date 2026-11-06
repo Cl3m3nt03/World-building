@@ -164,7 +164,7 @@ test("welcomes to the open world and sums it up", async () => {
   ]);
   // No link between cards yet: the graph says how to make some.
   expect(await screen.findByText(/reliez-les par des mentions @/)).toBeTruthy();
-  // The world in three figures, after vvd's Home.
+  // The world in three figures.
   const figures = screen.getByRole("region", { name: "Le monde en chiffres" });
   expect(figures.textContent).toContain("mots");
   expect(figures.textContent).toContain("5documents");

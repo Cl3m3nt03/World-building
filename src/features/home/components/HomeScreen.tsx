@@ -170,7 +170,7 @@ export function HomeScreen() {
           </div>
         </header>
 
-        {/* The world in three figures (V2-2+.2, after vvd's Home). */}
+        {/* The world in three figures (V2-2+.2). */}
         <section aria-label={t("home.stats")} className="flex flex-wrap gap-x-10 gap-y-3 px-2">
           <Stat
             value={stats.data?.words}

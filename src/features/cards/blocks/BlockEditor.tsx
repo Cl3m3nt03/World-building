@@ -170,7 +170,7 @@ const TEXT_FORMATS: {
 
 /**
  * Menu of block types; `children` is the trigger, or the menu is controlled.
- * Opened by « / » in a text (V2-3.4, after vvd), it also offers what the
+ * Opened by « / » in a text (V2-3.4), it also offers what the
  * line can become, in a second family, with each shortcut shown.
  */
 function BlockTypeMenu({

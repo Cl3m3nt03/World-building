@@ -165,7 +165,7 @@ function moveInRail(event: KeyboardEvent<HTMLElement>) {
 }
 
 /**
- * The world rail (V2-2+.1, after vvd): a thin column on the left with the
+ * The world rail (V2-2+.1): a thin column on the left with the
  * world list, one round emblem per recent world (the open one ringed in
  * gold), « + » for a new world, and the app settings at the bottom. One click
  * switches world from anywhere. Folded, it takes no room.
