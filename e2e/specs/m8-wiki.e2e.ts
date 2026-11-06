@@ -245,9 +245,12 @@ describe("M8: the wiki", () => {
       [`${cards.Alvar}.html`, `${cards.Apex}.html`].sort(),
     );
 
-    // Nothing is fetched from the network.
+    // Nothing is fetched from the network. CSS comments fetch nothing: the
+    // licence notice of fonts.css cites its fonts' URLs (OFL condition 2).
     for (const file of ["index.html", "style.css", "site.js", "fonts.css"]) {
-      expect(readFileSync(path.join(site, file), "utf8")).not.toMatch(/https?:\/\//);
+      const text = readFileSync(path.join(site, file), "utf8");
+      const code = file.endsWith(".css") ? text.replace(/\/\*[\s\S]*?\*\//g, "") : text;
+      expect(code).not.toMatch(/https?:\/\//);
     }
     // Every link opens a file of the site.
     for (const file of [
