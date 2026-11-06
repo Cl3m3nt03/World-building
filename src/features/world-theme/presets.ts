@@ -26,12 +26,15 @@ export function accentOf(accent: ThemeAccent, mode: Mode): string {
 
 /**
  * The look of an ambiance (ADR 0015 §2): set by the shipped theme itself,
- * never written in world.json. Its mode follows the app (§3).
+ * never written in world.json. Its mode follows the app unless it imposes
+ * one (§3).
  */
 export type PresetLook = {
   material: Material;
   ornament: Ornament;
   headingFont: HeadingFont;
+  /** The mode imposed while the world is open; none: the app's. */
+  scheme?: Mode;
 };
 
 /**
@@ -79,7 +82,8 @@ export const PRESETS: readonly ThemePreset[] = [
     name: "worldTheme.preset.crypt",
     image: crypt,
     accent: { light: "#8c1a1c", dark: "#d0393f" },
-    look: { material: "stone", ornament: "edge", headingFont: "playfair" },
+    // Always dark (Clément, 2026-11-06): the crypt is lit by torches.
+    look: { material: "stone", ornament: "edge", headingFont: "playfair", scheme: "dark" },
   },
 ];
 
@@ -127,7 +131,7 @@ export function resolveTheme(theme: WorldTheme, mainImage: string | null): Resol
     return {
       presetImage: null,
       backgroundAsset: theme.background ?? mainImage,
-      accent: theme.accent,
+      accent: theme.accentLight ? { light: theme.accentLight, dark: theme.accent } : theme.accent,
     };
   }
   return { presetImage: null, backgroundAsset: mainImage, accent: null };

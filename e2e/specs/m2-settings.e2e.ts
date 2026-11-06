@@ -120,6 +120,29 @@ describe("M2: world settings, theme and writing preferences", () => {
     await closeSettings();
   });
 
+  it("shows Crypte always dark, in its preview and once applied (#574)", async () => {
+    await openSettings("Thème");
+    await $('[role="dialog"] [role="radio"][aria-label="Crypte"]').click();
+    await browser.waitUntil(
+      async () =>
+        browser.execute(() => {
+          const previews = [...document.querySelectorAll<HTMLElement>("[data-theme-preview]")];
+          return previews.length === 1 && previews[0]?.dataset.scheme === "dark";
+        }),
+      { timeoutMsg: "the gallery did not preview Crypte in dark mode only" },
+    );
+    await $('//*[@role="dialog"]//button[normalize-space()="Appliquer"]').click();
+    await browser.waitUntil(
+      async () =>
+        browser.execute(() => {
+          const root = document.documentElement;
+          return root.dataset.material === "stone" && root.dataset.theme === "dark";
+        }),
+      { timeoutMsg: "Crypte was not applied in dark mode" },
+    );
+    await closeSettings();
+  });
+
   it("dresses the panels in the theme's material, ornament, heading font and mode (#548-#550)", async () => {
     // No picker yet (#552): the theme is saved through the command, then the
     // world is reopened.

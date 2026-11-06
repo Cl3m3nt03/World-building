@@ -16,14 +16,15 @@ const VARIABLES = {
  * the default accents.
  */
 export function useWorldAccent(accent: ThemeAccent | null): void {
+  // The colors, not the object: a custom theme's is rebuilt at each render.
+  const light = accent === null ? null : accentFor(accentOf(accent, "light"), "light");
+  const dark = accent === null ? null : accentFor(accentOf(accent, "dark"), "dark");
   useEffect(() => {
     const style = document.documentElement.style;
-    if (accent === null) {
+    if (light === null || dark === null) {
       for (const variable of Object.values(VARIABLES)) style.removeProperty(variable);
       return;
     }
-    const light = accentFor(accentOf(accent, "light"), "light");
-    const dark = accentFor(accentOf(accent, "dark"), "dark");
     style.setProperty(VARIABLES.light, light);
     style.setProperty(VARIABLES.dark, dark);
     style.setProperty(VARIABLES.lightForeground, foregroundOn(light));
@@ -31,5 +32,5 @@ export function useWorldAccent(accent: ThemeAccent | null): void {
     return () => {
       for (const variable of Object.values(VARIABLES)) style.removeProperty(variable);
     };
-  }, [accent]);
+  }, [light, dark]);
 }
