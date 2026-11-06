@@ -27,6 +27,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new().commands(collect_commands![
         commands::app::app_info,
         commands::app::default_worlds_dir,
+        commands::app::third_party_notices,
         commands::assets::import_asset,
         commands::assets::import_asset_data,
         commands::assets::list_assets,

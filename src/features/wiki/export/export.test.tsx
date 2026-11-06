@@ -431,6 +431,11 @@ test("the search index has names, aliases and text; the styles have the theme", 
   expect(fonts).toContain('font-family: "Cinzel Variable"');
   expect(fonts).toContain('font-family: "Lora Variable"');
   expect(fonts).toContain("data:font/woff2;base64,AQID");
+  // The OFL notice of the fonts it embeds, with their copyright.
+  expect(fonts).toContain("Cinzel Variable: Copyright 2020 The Cinzel Project Authors");
+  expect(fonts).toContain("Lora Variable: Copyright 2011 The Lora Project Authors");
+  expect(fonts).toContain("SIL OPEN FONT LICENSE Version 1.1");
+  expect(fonts).not.toContain("Inter Variable:");
 });
 
 describe("the Atlas theme in the site", () => {

@@ -21,6 +21,7 @@
     "test:e2e": "wdio run e2e/wdio.conf.ts",
     "bindings": "cargo test --manifest-path src-tauri/Cargo.toml export_bindings",
     "db:prepare": "node scripts/sqlx-prepare.mjs",
+    "notices": "node scripts/third-party-notices.mjs",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:rust"
   },
   "dependencies": {

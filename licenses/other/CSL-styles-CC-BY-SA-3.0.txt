@@ -1,0 +1,10 @@
+Citation Style Language styles and locales
+
+The citation styles and locales bundled by hayagriva (through Typst, used
+for book exports) come from the Citation Style Language project
+(https://citationstyles.org/, https://github.com/citation-style-language/styles
+and https://github.com/citation-style-language/locales). They are
+distributed unmodified, with the credits written in each style, under the
+Creative Commons Attribution-ShareAlike 3.0 Unported licence:
+
+  https://creativecommons.org/licenses/by-sa/3.0/

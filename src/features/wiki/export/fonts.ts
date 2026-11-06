@@ -18,6 +18,9 @@ import playfairLatinExt from "@fontsource-variable/playfair-display/files/playfa
 import playfairLatin from "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2?url";
 import sourceSerifLatinExt from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-wght-normal.woff2?url";
 import sourceSerifLatin from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url";
+// The SIL Open Font License, for the notice of fonts.css (its first line is
+// Inter's copyright, the licence follows).
+import oflText from "../../../../licenses/fonts/Inter-OFL.txt?raw";
 import type { SiteFontKey } from "../theme";
 
 /** One weight (or a variable range) of a font, Latin and Latin Extended. */
@@ -27,22 +30,53 @@ const variable = (latin: string, latinExt: string): Face[] => [
   { weight: "100 900", latin, latinExt },
 ];
 
-/** The Latin subsets of the wiki's fonts, as the app ships them. */
-const FILES: Record<SiteFontKey, { family: string; faces: Face[] }> = {
-  inter: { family: "Inter Variable", faces: variable(interLatin, interLatinExt) },
-  cinzel: { family: "Cinzel Variable", faces: variable(cinzelLatin, cinzelLatinExt) },
+/** The Latin subsets of the wiki's fonts, as the app ships them, and their copyright. */
+const FILES: Record<SiteFontKey, { family: string; faces: Face[]; copyright: string }> = {
+  inter: {
+    family: "Inter Variable",
+    faces: variable(interLatin, interLatinExt),
+    copyright: "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)",
+  },
+  cinzel: {
+    family: "Cinzel Variable",
+    faces: variable(cinzelLatin, cinzelLatinExt),
+    copyright: "Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)",
+  },
   playfair: {
     family: "Playfair Display Variable",
     faces: variable(playfairLatin, playfairLatinExt),
+    copyright:
+      'Copyright 2017 The Playfair Display Project Authors (https://github.com/clauseggers/Playfair-Display), with Reserved Font Name "Playfair Display".',
   },
-  garamond: { family: "EB Garamond Variable", faces: variable(garamondLatin, garamondLatinExt) },
-  lora: { family: "Lora Variable", faces: variable(loraLatin, loraLatinExt) },
+  garamond: {
+    family: "EB Garamond Variable",
+    faces: variable(garamondLatin, garamondLatinExt),
+    copyright:
+      "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)",
+  },
+  lora: {
+    family: "Lora Variable",
+    faces: variable(loraLatin, loraLatinExt),
+    copyright:
+      'Copyright 2011 The Lora Project Authors (https://github.com/cyrealtype/Lora-Cyrillic), with Reserved Font Name "Lora".',
+  },
   "source-serif": {
     family: "Source Serif 4 Variable",
     faces: variable(sourceSerifLatin, sourceSerifLatinExt),
+    copyright:
+      "Copyright 2014 The Source Serif 4 Project Authors (https://github.com/adobe-fonts/source-serif)",
   },
-  alegreya: { family: "Alegreya Variable", faces: variable(alegreyaLatin, alegreyaLatinExt) },
-  oxanium: { family: "Oxanium Variable", faces: variable(oxaniumLatin, oxaniumLatinExt) },
+  alegreya: {
+    family: "Alegreya Variable",
+    faces: variable(alegreyaLatin, alegreyaLatinExt),
+    copyright:
+      "Copyright 2011 The Alegreya Project Authors (https://github.com/huertatipografica/Alegreya)",
+  },
+  oxanium: {
+    family: "Oxanium Variable",
+    faces: variable(oxaniumLatin, oxaniumLatinExt),
+    copyright: "Copyright 2019 The Oxanium Project Authors (https://github.com/sevmeyer/oxanium)",
+  },
   // Not variable: its regular and bold (the site's text and its emphasis).
   "alegreya-sans": {
     family: "Alegreya Sans",
@@ -50,6 +84,8 @@ const FILES: Record<SiteFontKey, { family: string; faces: Face[] }> = {
       { weight: "400", latin: alegreyaSans400Latin, latinExt: alegreyaSans400LatinExt },
       { weight: "700", latin: alegreyaSans700Latin, latinExt: alegreyaSans700LatinExt },
     ],
+    copyright:
+      "Copyright 2013 The Alegreya Sans Project Authors (https://github.com/huertatipografica/Alegreya-Sans)",
   },
 };
 
@@ -89,12 +125,24 @@ async function fontFace(
 }
 
 /**
+ * The licence notice of the fonts in fonts.css (OFL condition 2: each copy
+ * carries the copyright notice and the licence, here as a readable header).
+ */
+export function fontsNotice(keys: SiteFontKey[]): string {
+  const copyrights = keys.map((key) => `${FILES[key].family}: ${FILES[key].copyright}`);
+  const licence = oflText.replace(/\r\n?/g, "\n").split("\n").slice(1).join("\n").trim();
+  const lines = ["Fonts of this site, shipped with Atlasaga:", ...copyrights, "", licence];
+  return `/*\n${lines.join("\n").replaceAll("*/", "* /")}\n*/`;
+}
+
+/**
  * `fonts.css` of the exported site: the fonts the wiki uses, inside the CSS
  * itself, so the site needs no network and no extra file.
  */
 export async function fontsCss(keys: SiteFontKey[]): Promise<string> {
   const faces: string[] = [];
-  for (const key of new Set(keys)) {
+  const unique = [...new Set(keys)];
+  for (const key of unique) {
     const { family, faces: files } = FILES[key];
     for (const { weight, latin, latinExt } of files) {
       faces.push(
@@ -103,5 +151,5 @@ export async function fontsCss(keys: SiteFontKey[]): Promise<string> {
       );
     }
   }
-  return `/* Fonts under the SIL Open Font License, shipped with Atlasaga. */\n${faces.join("\n")}\n`;
+  return `${fontsNotice(unique)}\n${faces.join("\n")}\n`;
 }
