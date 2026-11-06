@@ -205,17 +205,17 @@ fn ensure_third_party_notices() {
         );
     }
     if !notices.exists() {
-        std::fs::create_dir_all("notices").expect("create notices/");
-        std::fs::write(
-            notices,
-            format!(
-                "{NOTICES_PLACEHOLDER}
+        let stand_in = format!(
+            "{NOTICES_PLACEHOLDER}
 
 Run `pnpm notices` to generate the third-party notices of this build.
 "
-            ),
-        )
-        .expect("write the stand-in notices");
+        );
+        if let Err(error) =
+            std::fs::create_dir_all("notices").and_then(|()| std::fs::write(notices, stand_in))
+        {
+            panic!("cannot write {}: {error}", notices.display());
+        }
     }
 }
 

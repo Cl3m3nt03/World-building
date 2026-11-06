@@ -147,6 +147,11 @@ jobs:
             cargo install tauri-driver@2.0.6 --locked
           fi
 
+      # beforeBuildCommand generates the third-party notices (pinned, as below).
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.3
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
