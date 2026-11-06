@@ -136,6 +136,14 @@ describe("M1: worlds, preferences and relocation", () => {
     await browser.waitUntil(async () =>
       browser.execute((img) => (img as HTMLImageElement).naturalWidth > 0, emblem),
     );
+    // The third-party notices, read from the app's resources: the e2e debug
+    // build has the stand-in written by build.rs (no `pnpm notices` there).
+    await $("aria/Licences tierces").click();
+    await $(
+      '//*[@role="dialog"]//pre[contains(., "Atlasaga - third-party notices")]',
+    ).waitForDisplayed();
+    await $("aria/Retour").click();
+    await $("aria/Licences tierces").waitForDisplayed();
     await closeDialog();
   });
 
