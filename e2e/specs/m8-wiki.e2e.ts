@@ -232,6 +232,7 @@ describe("M8: the wiki", () => {
     const site = path.join(parent, `${WORLD} - wiki`);
     expect(readdirSync(site).sort()).toEqual([
       "assets",
+      "favicon.svg",
       "fonts.css",
       "index.html",
       "pages",

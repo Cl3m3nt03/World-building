@@ -347,6 +347,7 @@ test("writes the home page, a page per page, the search, styles and fonts, then 
   expect(dir).toBe("C:/Sites/Les Protecteurs - wiki");
   expect(started).toEqual({ parent: "C:/Sites", title: "Les Protecteurs" });
   expect(written.map((f) => f.path).sort()).toEqual([
+    "favicon.svg",
     "fonts.css",
     "index.html",
     "pages/ages.html",
@@ -360,6 +361,17 @@ test("writes the home page, a page per page, the search, styles and fonts, then 
   expect(copied.sort()).toEqual([BANNER, BACKGROUND, IMAGE].sort());
   expect(steps).toContain("read");
   expect(steps.at(-1)).toBe("assets");
+});
+
+test("the site's favicon is the app's icon, in every page", async () => {
+  await run();
+  expect(file("favicon.svg")).toMatch(
+    /^<svg [^>]*><image href="data:image\/png;base64,[A-Za-z0-9+/=]+"/,
+  );
+  expect(file("index.html")).toContain(
+    '<link rel="icon" type="image/svg+xml" href="favicon.svg"/>',
+  );
+  expect(file("pages/arda.html")).toContain('href="../favicon.svg"');
 });
 
 test("no dead link: every link leads to a file of the site", async () => {

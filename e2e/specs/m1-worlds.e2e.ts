@@ -127,6 +127,18 @@ describe("M1: worlds, preferences and relocation", () => {
     await browser.waitUntil(async () => (await backdropSource())?.includes("bzasset") ?? false);
   });
 
+  it("shows the app's emblem in About, loaded", async () => {
+    // From the open world: the next step goes back to the world list itself.
+    await $("aria/Réglages").click();
+    await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="À propos"]').click();
+    const emblem = await $("aria/Emblème : une rose des vents au-dessus d'un livre ouvert");
+    await emblem.waitForDisplayed();
+    await browser.waitUntil(async () =>
+      browser.execute((img) => (img as HTMLImageElement).naturalWidth > 0, emblem),
+    );
+    await closeDialog();
+  });
+
   it("keeps the language and theme after a relaunch", async () => {
     await backToWorldList();
     await $("aria/Réglages").click();

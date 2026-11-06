@@ -111,6 +111,7 @@ export function SiteDocument({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
+        <link rel="icon" type="image/svg+xml" href={`${ctx.base}favicon.svg`} />
         <link rel="stylesheet" href={`${ctx.base}fonts.css`} />
         <link rel="stylesheet" href={`${ctx.base}style.css`} />
         <script src={`${ctx.base}search.js`} defer />

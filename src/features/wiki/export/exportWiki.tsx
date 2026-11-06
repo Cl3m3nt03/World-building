@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import faviconPng from "@/assets/brand/favicon.png?inline";
 import { commands, type SiteFile } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
 import { DEFAULT_LOOK, resolveTheme, themeScheme, themeStyle, type WikiLook } from "../theme";
@@ -56,6 +57,12 @@ function searchIndex(data: SiteData): string {
   return `window.BZ_SEARCH = ${JSON.stringify({ pages })};\n`;
 }
 
+/**
+ * The site's favicon, the app's icon: an SVG wrapping the PNG, since the
+ * site's files are text (one file for every page, not a copy in each).
+ */
+const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><image href="${faviconPng}" width="32" height="32"/></svg>\n`;
+
 /** The site's stylesheet: the theme's variables, then the site's rules. */
 function styleCss(data: SiteData, typeColors: Record<string, string>, look: WikiLook): string {
   const variables: Record<string, string> = { "--scheme": themeScheme(data.settings.theme, look) };
@@ -105,6 +112,7 @@ export async function exportWiki({
     { path: "site.js", content: SITE_JS },
     { path: "style.css", content: styleCss(data, typeColors, look) },
     { path: "fonts.css", content: await fontsCss([headingFont, bodyFont]) },
+    { path: "favicon.svg", content: FAVICON_SVG },
   ];
   for (let at = 0; at < files.length; at += FILES_PER_BATCH) {
     await unwrap(commands.writeWikiExport(files.slice(at, at + FILES_PER_BATCH)));

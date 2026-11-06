@@ -1,6 +1,7 @@
 import { Palette } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { BrandEmblem } from "@/components/BrandEmblem";
 import { MiddleTruncate } from "@/components/MiddleTruncate";
 import { Button } from "@/components/ui/button";
 // The font list alone: the feature's index would pull the world feature in.
@@ -23,7 +24,10 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground">{t("about.description")}</p>
+      <div className="flex items-center gap-3">
+        <BrandEmblem className="size-12 shrink-0" />
+        <p className="text-sm text-muted-foreground">{t("about.description")}</p>
+      </div>
       {appInfo.isPending && <p className="text-sm text-muted-foreground">{t("about.loading")}</p>}
       {appInfo.isError && <AppErrorMessage error={appInfo.error} />}
       {appInfo.isSuccess && (

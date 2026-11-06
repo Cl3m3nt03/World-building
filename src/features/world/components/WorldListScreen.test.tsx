@@ -109,6 +109,7 @@ test("welcomes the first launch with the two ways in", { timeout: 20_000 }, asyn
     .parentElement as HTMLElement;
   expect(within(welcome).getByRole("button", { name: "Créer un monde" })).toBeDefined();
   expect(within(welcome).getByRole("button", { name: "Ouvrir un monde" })).toBeDefined();
+  expect(within(welcome).getByRole("img", { name: /^Emblème/ })).toBeDefined();
 });
 
 test("puts the last opened world forward and the others in the grid", async () => {
