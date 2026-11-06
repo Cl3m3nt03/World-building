@@ -4,6 +4,7 @@ version = "1.7.1"
 description = "BuilderZ — local worldbuilding desktop app"
 authors = ["Clément Le Goffic"]
 edition = "2024"
+license-file = "../LICENSE"
 publish = false
 
 [lib]

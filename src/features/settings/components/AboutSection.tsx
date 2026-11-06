@@ -89,6 +89,7 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
         </Button>
         <span className="text-xs text-muted-foreground">{t("about.licences.hint")}</span>
       </div>
+      <p className="text-xs text-muted-foreground">{t("about.copyright")}</p>
     </div>
   );
 }

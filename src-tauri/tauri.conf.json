@@ -30,7 +30,7 @@
     "active": true,
     "targets": ["nsis"],
     "publisher": "Atlasaga",
-    "copyright": "Copyright © 2026 Clément (Cl3m3nt03)",
+    "copyright": "© 2026 Atlasaga. Tous droits réservés.",
     "homepage": "https://github.com/Cl3m3nt03/World-building",
     "category": "Productivity",
     "shortDescription": "Local worldbuilding desktop app",
