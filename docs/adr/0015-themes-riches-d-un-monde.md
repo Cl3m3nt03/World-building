@@ -76,3 +76,10 @@ Clément a accepté d'aller plus loin : une matière des panneaux, des ornements
 3. Un monde peut imposer le mode clair ou sombre ; « Suivre l'app » reste le défaut.
 4. À la création, le thème proposé selon le genre et les tonalités est **présélectionné**, et on peut le changer.
 5. Le thème Atlas du wiki s'applique aussi aux mondes existants sans réglage de wiki.
+
+## Amendement (2026-11-06, choix de Clément, #574)
+
+1. **Crypte impose le sombre.** C'est le premier thème fourni à user du §3 : son `look` dans `presets.ts` porte `scheme: "dark"`, appliqué comme le « Toujours sombre » d'un thème personnalisé (#550). Grimoire, Station et les huit autres suivent l'app. `world.json` ne change pas (`{ "kind": "preset", "id": "crypt" }`).
+2. **« Modifier » garde les deux accents.** Le thème `custom` gagne un champ facultatif `accentLight` (`#rrggbb`, l'accent du mode clair) ; `accent` reste l'accent sombre, et celui du clair quand `accentLight` manque. Absent, il n'est pas écrit : les thèmes de la 1.7.x et de la 1.8 s'ouvrent et se réécrivent à l'identique. Une valeur qui n'est pas une couleur est lue comme absente, avec un avertissement, et réécrite telle quelle (comme les choix du §4). Choisir une autre couleur d'accent retire `accentLight`. « Modifier » reprend aussi le mode imposé dans `scheme` : une Crypte personnalisée reste sombre (pour Clément, c'est toujours Crypte) ; Grimoire et Station personnalisés suivent l'app.
+3. **Version antérieure** : la 1.8 garde `accentLight` comme clé inconnue et affiche l'accent clair dérivé de `accent`. Si l'on y change l'accent, l'ancien `accentLight` reste écrit et reviendra en clair dans une version plus récente : accepté (un seul utilisateur, retour en arrière peu probable, seul l'accent est en jeu).
+4. Les titres de Station restent tels qu'on les tape (pas de capitales imposées), et le thème du wiki des mondes existants n'est pas changé automatiquement (§8 inchangé).

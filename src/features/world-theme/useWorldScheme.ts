@@ -3,13 +3,16 @@ import { useRef } from "react";
 import { type ResolvedTheme, useImposedTheme } from "@/app/theme";
 import { useCurrentWorld } from "@/features/world";
 import type { WorldTheme } from "@/lib/bindings";
+import { findPreset } from "./presets";
 
 /**
  * The mode `theme` imposes: « Toujours clair » or « Toujours sombre » of a
- * custom theme, else none (« Suivre l'app », a shipped theme, or a value
- * saved by a newer app).
+ * custom theme, the one of an ambiance that has one (Crypte, always dark),
+ * else none (« Suivre l'app », the other shipped themes, or a value saved by
+ * a newer app).
  */
 export function themeScheme(theme: WorldTheme): ResolvedTheme | null {
+  if (theme.kind === "preset") return findPreset(theme.id)?.look?.scheme ?? null;
   if (theme.kind !== "custom") return null;
   return theme.scheme === "light" || theme.scheme === "dark" ? theme.scheme : null;
 }

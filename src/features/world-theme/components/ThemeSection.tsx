@@ -244,16 +244,24 @@ function ExploreTab({
   );
 }
 
-/** The look a shipped ambiance hands to « Modifier »; nothing for the others. */
+/**
+ * The look a shipped ambiance hands to « Modifier », its imposed mode
+ * included (a customised Crypte stays dark); nothing for the others.
+ */
 function presetLook(
   theme: WorldTheme,
-): Pick<Extract<WorldTheme, { kind: "custom" }>, "material" | "ornament" | "headingFont"> {
+): Pick<
+  Extract<WorldTheme, { kind: "custom" }>,
+  "material" | "ornament" | "headingFont" | "scheme"
+> {
   const { material, ornament } = themeLook(theme);
   const headingFont = themeHeadingFont(theme);
+  const scheme = themeScheme(theme);
   return {
     ...(material !== "vellum" && { material }),
     ...(ornament !== "none" && { ornament }),
     ...(headingFont !== "alegreya" && { headingFont }),
+    ...(scheme && { scheme }),
   };
 }
 
@@ -273,16 +281,18 @@ function EditTab({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pending = useRef<WorldTheme | null>(null);
 
-  // Starts from what is shown: the current accent (its dark reference for an
-  // ambiance), its material, ornament and heading font, the main image.
+  // Starts from what is shown: the current accent (both of an ambiance that
+  // has one per mode), its material, ornament and heading font, the main
+  // image, and the mode it imposes.
   const shownAccent = resolveTheme(world.theme, world.mainImage).accent;
-  const current =
+  const current: Extract<WorldTheme, { kind: "custom" }> =
     world.theme.kind === "custom"
       ? world.theme
       : {
-          kind: "custom" as const,
+          kind: "custom",
           background: null,
           accent: shownAccent ? accentOf(shownAccent, "dark") : DEFAULT_ACCENT,
+          ...(shownAccent && typeof shownAccent !== "string" && { accentLight: shownAccent.light }),
           ...presetLook(world.theme),
         };
   const isCustom = world.theme.kind === "custom";
@@ -299,11 +309,16 @@ function EditTab({
 
   const set = (changes: Partial<Omit<typeof current, "kind">>) =>
     onChange({ ...current, ...changes });
+  // Another accent is one color, made readable in each mode.
+  const withAccent = (accent: string): WorldTheme => {
+    const { accentLight: _, ...rest } = current;
+    return { ...rest, accent };
+  };
 
   // The free color is shown at once and saved when the drag settles.
   const dragColor = (accent: string) => {
     if (!isHexColor(accent)) return;
-    const theme = { ...current, accent: accent.toLowerCase() };
+    const theme = withAccent(accent.toLowerCase());
     onPreview(theme);
     pending.current = theme;
     clearTimeout(timer.current);
@@ -357,7 +372,7 @@ function EditTab({
           <RadioGroupPrimitive.Root
             aria-label={t("worldTheme.accentSwatches")}
             value={ACCENT_SWATCHES.find((swatch) => swatch.color === current.accent)?.color ?? ""}
-            onValueChange={(accent) => set({ accent })}
+            onValueChange={(accent) => onChange(withAccent(accent))}
             className="flex flex-wrap gap-2"
           >
             {ACCENT_SWATCHES.map((swatch) => (

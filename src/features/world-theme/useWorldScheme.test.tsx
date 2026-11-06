@@ -22,12 +22,12 @@ type World = { id: string; name: string; theme: WorldTheme };
 const DARK: World = { id: "dark-world", name: "Crypte", theme: { ...CUSTOM, scheme: "dark" } };
 const FOLLOWS: World = { id: "app-world", name: "Aldoria", theme: CUSTOM };
 
-test("a theme's mode: « Toujours clair » or « Toujours sombre » of a custom theme, else none", () => {
+test("a theme's mode: « Toujours clair » or « Toujours sombre » of a custom theme, Crypte's dark, else none", () => {
   expect(themeScheme({ kind: "default" })).toBeNull();
   expect(themeScheme({ kind: "preset", id: "dawn" })).toBeNull();
-  // The ambiances follow the app too (ADR 0015 §3).
-  for (const id of ["grimoire", "station", "crypt"])
-    expect(themeScheme({ kind: "preset", id })).toBeNull();
+  // Grimoire and Station follow the app; Crypte is always dark (ADR 0015 §3).
+  for (const id of ["grimoire", "station"]) expect(themeScheme({ kind: "preset", id })).toBeNull();
+  expect(themeScheme({ kind: "preset", id: "crypt" })).toBe("dark");
   expect(themeScheme(CUSTOM)).toBeNull();
   expect(themeScheme({ ...CUSTOM, scheme: "app" })).toBeNull();
   expect(themeScheme({ ...CUSTOM, scheme: "dark" })).toBe("dark");

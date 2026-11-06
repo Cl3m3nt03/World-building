@@ -58,6 +58,13 @@ test("a theme resolves to its background and accent", () => {
   expect(
     resolveTheme({ kind: "custom", background: null, accent: "#5fcdc0" }, "main.png"),
   ).toMatchObject({ backgroundAsset: "main.png", accent: "#5fcdc0" });
+  // A light accent kept from an ambiance: one color per mode.
+  expect(
+    resolveTheme(
+      { kind: "custom", background: null, accent: "#d0393f", accentLight: "#8c1a1c" },
+      null,
+    ).accent,
+  ).toEqual({ light: "#8c1a1c", dark: "#d0393f" });
 });
 
 // --- The theme section, in the app ------------------------------------------
@@ -232,9 +239,13 @@ test("an ambiance is previewed in its material, ornament and font, the window un
   expect(root.dataset.material).toBeUndefined();
   expect(root.dataset.ornament).toBeUndefined();
 
+  // Crypte is always dark: its preview shows that mode only.
+  expect(previews(dialog).map((preview) => preview.dataset.scheme)).toEqual(["dark"]);
+
   // Leaving the gallery shows the selected theme again.
   fireEvent.pointerLeave(gallery);
   await waitFor(() => expect(previews(dialog)[0]?.dataset.material).toBe("vellum"));
+  expect(previews(dialog).map((preview) => preview.dataset.scheme)).toEqual(["light", "dark"]);
 });
 
 test("« Annuler » and Escape keep the current theme, a first Escape without closing", async () => {
@@ -274,7 +285,34 @@ test("the edit tab makes the world's own theme from the current accent", async (
   expect(within(dialog).getByText("Ce monde utilise son propre thème.")).toBeTruthy();
 });
 
-test("the edit tab starts from an ambiance's look and its dark accent", async () => {
+test("the edit tab keeps both accents of an ambiance and its mode", async () => {
+  world = { ...WORLD, theme: { kind: "preset", id: "crypt" } };
+  const dialog = await renderThemeSection();
+
+  fireEvent.mouseDown(within(dialog).getByRole("tab", { name: "Modifier" }));
+  fireEvent.click(
+    await within(dialog).findByRole("button", { name: "Choisir dans la médiathèque" }),
+  );
+  fireEvent.doubleClick(await screen.findByRole("option", { name: "Fiche du monde.png" }));
+
+  await waitFor(() =>
+    expect(saved.at(-1)).toEqual({
+      kind: "custom",
+      background: IMAGE.id,
+      accent: "#d0393f",
+      accentLight: "#8c1a1c",
+      material: "stone",
+      ornament: "edge",
+      headingFont: "playfair",
+      scheme: "dark",
+    }),
+  );
+  // The light red of the mock-up, not the one derived from the dark red.
+  await waitFor(() => expect(accentVariable("light")).toBe(accentFor("#8c1a1c", "light")));
+  expect(accentVariable("dark")).toBe(accentFor("#d0393f", "dark"));
+});
+
+test("another accent replaces both of an ambiance", async () => {
   world = { ...WORLD, theme: { kind: "preset", id: "crypt" } };
   const dialog = await renderThemeSection();
 
@@ -290,8 +328,21 @@ test("the edit tab starts from an ambiance's look and its dark accent", async ()
       material: "stone",
       ornament: "edge",
       headingFont: "playfair",
+      scheme: "dark",
     }),
   );
+});
+
+test("the edit tab leaves the mode of an ambiance that follows the app", async () => {
+  world = { ...WORLD, theme: { kind: "preset", id: "grimoire" } };
+  const dialog = await renderThemeSection();
+
+  fireEvent.mouseDown(within(dialog).getByRole("tab", { name: "Modifier" }));
+  const swatches = await within(dialog).findByRole("radiogroup", { name: "Couleurs proposées" });
+  fireEvent.click(within(swatches).getByRole("radio", { name: "Violet" }));
+
+  await waitFor(() => expect(saved.at(-1)).toMatchObject({ accent: "#b39af5" }));
+  expect(saved.at(-1)).not.toHaveProperty("scheme");
 });
 
 test("a background is chosen in the media library, and the main image taken back", async () => {
