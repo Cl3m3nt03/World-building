@@ -42,6 +42,7 @@
   "about.dataDir": "Data",
   "about.logDir": "Logs",
   "about.loading": "Loading…",
+  "about.copyright": "© 2026 Atlasaga. All rights reserved.",
   "errors.io": "A file operation failed.",
   "errors.path_unavailable": "A system folder could not be found.",
   "errors.internal": "An unexpected internal error occurred.",

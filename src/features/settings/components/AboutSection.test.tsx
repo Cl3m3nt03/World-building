@@ -96,3 +96,11 @@ test("opens the third-party licences, searches them and comes back", async () =>
   fireEvent.click(screen.getByRole("button", { name: "Retour" }));
   expect(document.activeElement).toBe(screen.getByRole("button", { name: "Licences tierces" }));
 });
+
+test("shows the copyright line", () => {
+  mockIPC(() => undefined);
+
+  renderDialog();
+
+  expect(screen.getByText("© 2026 Atlasaga. Tous droits réservés.")).toBeTruthy();
+});

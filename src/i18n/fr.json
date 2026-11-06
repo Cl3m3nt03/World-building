@@ -42,6 +42,7 @@
   "about.dataDir": "Données",
   "about.logDir": "Journaux",
   "about.loading": "Chargement…",
+  "about.copyright": "© 2026 Atlasaga. Tous droits réservés.",
   "errors.io": "Une opération sur les fichiers a échoué.",
   "errors.path_unavailable": "Un dossier système est introuvable.",
   "errors.internal": "Une erreur interne inattendue est survenue.",
