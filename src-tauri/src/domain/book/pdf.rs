@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use typst::diag::{FileError, FileResult};
-use typst::foundations::{Bytes, Datetime};
+use typst::foundations::{Bytes, Datetime, Smart};
 use typst::syntax::{FileId, RootedPath, Source, VirtualPath, VirtualRoot};
 use typst::text::{Font, FontBook};
 use typst::utils::LazyHash;
@@ -361,10 +361,17 @@ pub fn compile(book: &Book) -> AppResult<PagedDocument> {
         })
 }
 
+/// The app named as the PDF's creator (Typst's own name otherwise).
+pub const CREATOR: &str = "Atlasaga";
+
 /// The PDF file of the book.
 pub fn write(book: &Book) -> AppResult<Vec<u8>> {
     let document = compile(book)?;
-    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|errors| {
+    let options = typst_pdf::PdfOptions {
+        creator: Smart::Custom(Some(CREATOR.to_string())),
+        ..typst_pdf::PdfOptions::default()
+    };
+    typst_pdf::pdf(&document, &options).map_err(|errors| {
         let messages: Vec<String> = errors
             .iter()
             .map(|error| error.message.to_string())

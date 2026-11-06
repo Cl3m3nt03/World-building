@@ -246,6 +246,16 @@ async fn the_epub_has_its_structure_cover_and_chapters() {
         .unwrap();
     assert!(opf.contains("La Chute &amp; le Roi"), "{opf}");
     assert!(opf.contains("cover-image"), "{opf}");
+    // The app is named as its generator.
+    let mut nav = String::new();
+    zip.by_name("OEBPS/nav.xhtml")
+        .unwrap()
+        .read_to_string(&mut nav)
+        .unwrap();
+    assert!(
+        nav.contains(r#"<meta name="generator" content="Atlasaga""#),
+        "{nav}"
+    );
 }
 
 #[test]
@@ -310,6 +320,13 @@ async fn the_pdf_is_made_with_its_cover_and_chapters() {
     write(&book, ExportFormat::Pdf, &path).unwrap();
     let bytes = std::fs::read(&path).unwrap();
     assert!(bytes.starts_with(b"%PDF-"));
+    // The app, not Typst, is named as its creator.
+    let creator = format!("({})", pdf::CREATOR);
+    assert!(
+        bytes
+            .windows(creator.len())
+            .any(|w| w == creator.as_bytes())
+    );
     // Cover, title, contents, then the two chapters.
     let marker = b"/Type /Page\n";
     let alt = b"/Type/Page";

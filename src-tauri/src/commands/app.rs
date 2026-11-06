@@ -34,7 +34,7 @@ pub fn app_info(app: AppHandle) -> AppResult<AppInfo> {
 }
 
 /// Suggested parent folder for new worlds: the one chosen in the settings,
-/// else `Documents/BuilderZ`.
+/// else `Documents/Atlasaga` (or `Documents/BuilderZ` if it exists, ADR 0016).
 #[tauri::command]
 #[specta::specta]
 pub async fn default_worlds_dir(app: AppHandle, state: State<'_, AppState>) -> AppResult<String> {

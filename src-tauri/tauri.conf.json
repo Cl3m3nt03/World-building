@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "BuilderZ",
+  "productName": "Atlasaga",
   "identifier": "app.builderz.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -13,7 +13,7 @@
       {
         "label": "main",
         "create": false,
-        "title": "BuilderZ",
+        "title": "Atlasaga",
         "width": 1440,
         "height": 900,
         "minWidth": 1024,
@@ -29,14 +29,15 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "publisher": "BuilderZ",
+    "publisher": "Atlasaga",
     "copyright": "Copyright © 2026 Clément (Cl3m3nt03)",
     "homepage": "https://github.com/Cl3m3nt03/World-building",
     "category": "Productivity",
     "shortDescription": "Local worldbuilding desktop app",
-    "longDescription": "BuilderZ is a local, single-user worldbuilding app: typed cards, an interactive map, a graph, relation trees, a canvas, a wiki and a writing space. Worlds stay on your computer.",
+    "longDescription": "Atlasaga is a local, single-user worldbuilding app: typed cards, an interactive map, a graph, relation trees, a canvas, a wiki and a writing space. Worlds stay on your computer.",
     "windows": {
-      "webviewInstallMode": { "type": "embedBootstrapper", "silent": true }
+      "webviewInstallMode": { "type": "embedBootstrapper", "silent": true },
+      "nsis": { "installerHooks": "windows/installer-hooks.nsh" }
     },
     "icon": [
       "icons/32x32.png",

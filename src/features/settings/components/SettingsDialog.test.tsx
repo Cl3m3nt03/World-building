@@ -57,6 +57,7 @@ beforeEach(async () => {
       settings = { ...settings, defaultWorldsDir: (payload as { path: string | null }).path };
       return settings;
     }
+    if (command === "default_worlds_dir") return "C:/Users/me/Documents/BuilderZ";
     if (command === "list_library_assets") return library;
     if (command === "remove_library_asset") {
       const { id } = payload as { id: string };
@@ -155,8 +156,9 @@ test("shows the chosen worlds folder and resets it to the default", async () => 
     fireEvent.click(screen.getByRole("button", { name: "Par défaut" }));
   });
 
+  // The default comes from Rust: a PC used before the rename keeps Documents\BuilderZ.
   await waitFor(() =>
-    expect((folder as HTMLInputElement).value).toBe("Documents\\BuilderZ (par défaut)"),
+    expect((folder as HTMLInputElement).value).toBe("C:/Users/me/Documents/BuilderZ (par défaut)"),
   );
   expect(calls.find((call) => call.command === "set_default_worlds_dir")?.payload).toEqual({
     path: null,

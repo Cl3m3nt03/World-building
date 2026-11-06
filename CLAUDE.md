@@ -1,6 +1,6 @@
-# CLAUDE.md — BuilderZ
+# CLAUDE.md — Atlasaga
 
-BuilderZ est une application desktop Windows (Tauri 2) de worldbuilding, locale et mono-utilisateur. Elle comprend des cartes (fiches) typées, une Map interactive, un Graph, un Relation Tree, un Canvas, un Wiki et Quill (écriture).
+Atlasaga est une application desktop Windows (Tauri 2) de worldbuilding, locale et mono-utilisateur. Elle comprend des cartes (fiches) typées, une Map interactive, un Graph, un Relation Tree, un Canvas, un Wiki et Quill (écriture).
 Les specs fonctionnelles sont dans `docs/features/`, les décisions dans `docs/adr/` et la roadmap dans `docs/roadmap/`.
 **Avant toute tâche, lis `docs/contexte.md` (pourquoi le projet existe, décisions déjà prises), l'ADR 0001 (stack) et l'ADR 0002 (workflow). Avant toute tâche d'interface, lis aussi l'ADR 0003 (direction artistique).**
 Avant de travailler sur un module, lis sa spec dans `docs/features/`. Pour le détail visuel, consulte les captures du board FigJam via le MCP Figma : le file key et les nodes sont indiqués dans `docs/contexte.md`. On reproduit les comportements et la direction artistique de vvd, mais jamais ses fichiers (assets, logo, polices, CSS, textes).

@@ -199,7 +199,7 @@ test('"Add to the library" copies an image of the world into the library', async
   fireEvent.click(await screen.findByRole("menuitem", { name: "Ajouter à la bibliothèque" }));
 
   expect(
-    await screen.findByText("« Carte du monde.png » est dans la bibliothèque BuilderZ."),
+    await screen.findByText("« Carte du monde.png » est dans la bibliothèque Atlasaga."),
   ).toBeTruthy();
   expect(calls).toContainEqual({ command: "add_assets_to_library", payload: { ids: [IMAGE.id] } });
 });

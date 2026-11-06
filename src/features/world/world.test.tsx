@@ -201,7 +201,7 @@ test("creates a world of the chosen genre", async () => {
 
 test("each navigation is announced and titles the window", async () => {
   const router = await renderStartScreen();
-  await waitFor(() => expect(document.title).toBe("Mondes · BuilderZ"));
+  await waitFor(() => expect(document.title).toBe("Mondes · Atlasaga"));
   await act(async () => {
     fireEvent.click(await screen.findByRole("button", { name: "Ouvrir Eldefleur" }));
   });
@@ -209,7 +209,7 @@ test("each navigation is announced and titles the window", async () => {
   await waitFor(() =>
     expect(screen.getByRole("status").textContent).toBe("Page : Bienvenue dans Eldefleur"),
   );
-  expect(document.title).toBe("Bienvenue dans Eldefleur · BuilderZ");
+  expect(document.title).toBe("Bienvenue dans Eldefleur · Atlasaga");
   // The button clicked is gone: the focus is on the new page's title.
   expect(document.activeElement).toBe(
     screen.getByRole("heading", { name: "Bienvenue dans Eldefleur" }),
@@ -344,7 +344,7 @@ test("shows a translated error when a world cannot be opened", async () => {
   });
 
   const alert = await screen.findByRole("alert");
-  expect(alert.textContent).toContain("n'est pas un monde BuilderZ valide");
+  expect(alert.textContent).toContain("n'est pas un monde Atlasaga valide");
 });
 
 test("a world whose folder moved is flagged and can be relocated", async () => {

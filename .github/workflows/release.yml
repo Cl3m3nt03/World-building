@@ -124,7 +124,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ needs.release-please.outputs.tag_name || github.ref_name }}
-          releaseName: BuilderZ ${{ needs.release-please.outputs.tag_name || github.ref_name }}
+          releaseName: Atlasaga ${{ needs.release-please.outputs.tag_name || github.ref_name }}
           releaseBody: ${{ vars.WINDOWS_SIGNING && 'See CHANGELOG.md.' || 'See CHANGELOG.md. The installer is not signed, so Windows SmartScreen asks for confirmation on first launch.' }}
           releaseDraft: false
           prerelease: false
@@ -170,6 +170,6 @@ jobs:
           if ($sig.Status -ne 'Valid') { throw "Installer signature is $($sig.Status)." }
           gh release view $env:TAG *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $env:TAG --title "BuilderZ $env:TAG" --notes 'See CHANGELOG.md.'
+            gh release create $env:TAG --title "Atlasaga $env:TAG" --notes 'See CHANGELOG.md.'
           }
           gh release upload $env:TAG $files.FullName --clobber

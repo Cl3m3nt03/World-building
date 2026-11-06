@@ -1,9 +1,9 @@
 ---
 name: correcteur
-description: Fixes the blocking feedback left on an existing BuilderZ PR, then gets CI green. Use after testeur, critique-design or relecteur report problems.
+description: Fixes the blocking feedback left on an existing Atlasaga PR, then gets CI green. Use after testeur, critique-design or relecteur report problems.
 ---
 
-You fix reported problems on an existing BuilderZ PR. You do only that: no refactor, no new scope.
+You fix reported problems on an existing Atlasaga PR. You do only that: no refactor, no new scope.
 
 Start with `CLAUDE.md`, `docs/workflow-agents.md`, the PR and the feedback you were given. Check out the PR's branch in your own worktree.
 

@@ -7,9 +7,12 @@
 //! |---|---|---|
 //! | Settings | `%APPDATA%\app.builderz.desktop` | `$BUILDERZ_HOME\config` |
 //! | Logs | `%LOCALAPPDATA%\app.builderz.desktop\logs` | `$BUILDERZ_HOME\logs` |
-//! | New worlds (default) | `Documents\BuilderZ` | `$BUILDERZ_HOME\worlds` |
+//! | New worlds (default) | `Documents\Atlasaga`, or `Documents\BuilderZ` if it exists | `$BUILDERZ_HOME\worlds` |
+//!
+//! The app was called BuilderZ up to 1.7.x (ADR 0016): the bundle identifier
+//! and the `BUILDERZ_*` variables keep that name so nothing moves.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tauri::{AppHandle, Manager, Runtime};
 
@@ -41,14 +44,65 @@ pub fn log_dir<R: Runtime>(app: &AppHandle<R>) -> AppResult<PathBuf> {
     }
 }
 
+/// Folder of new worlds under Documents since the rename (ADR 0016).
+const WORLDS_FOLDER: &str = "Atlasaga";
+/// The one used up to 1.7.x, when the app was called BuilderZ.
+const LEGACY_WORLDS_FOLDER: &str = "BuilderZ";
+
 /// Suggested parent folder for new worlds.
 pub fn default_worlds_dir<R: Runtime>(app: &AppHandle<R>) -> AppResult<PathBuf> {
     match home_override() {
         Some(home) => Ok(home.join("worlds")),
-        None => Ok(app
-            .path()
-            .document_dir()
-            .map_err(unavailable("documents"))?
-            .join("BuilderZ")),
+        None => Ok(worlds_dir_in(
+            &app.path()
+                .document_dir()
+                .map_err(unavailable("documents"))?,
+        )),
+    }
+}
+
+/// `documents\BuilderZ` when it exists (someone who used the app before the
+/// rename keeps their new worlds next to the old ones), else
+/// `documents\Atlasaga`.
+fn worlds_dir_in(documents: &Path) -> PathBuf {
+    let legacy = documents.join(LEGACY_WORLDS_FOLDER);
+    if legacy.is_dir() {
+        legacy
+    } else {
+        documents.join(WORLDS_FOLDER)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_worlds_go_to_atlasaga_without_a_builderz_folder() {
+        let documents = tempfile::tempdir().unwrap();
+        assert_eq!(
+            worlds_dir_in(documents.path()),
+            documents.path().join("Atlasaga")
+        );
+    }
+
+    #[test]
+    fn an_existing_builderz_folder_stays_the_default() {
+        let documents = tempfile::tempdir().unwrap();
+        std::fs::create_dir(documents.path().join("BuilderZ")).unwrap();
+        assert_eq!(
+            worlds_dir_in(documents.path()),
+            documents.path().join("BuilderZ")
+        );
+    }
+
+    #[test]
+    fn a_builderz_file_is_not_a_worlds_folder() {
+        let documents = tempfile::tempdir().unwrap();
+        std::fs::write(documents.path().join("BuilderZ"), b"").unwrap();
+        assert_eq!(
+            worlds_dir_in(documents.path()),
+            documents.path().join("Atlasaga")
+        );
     }
 }

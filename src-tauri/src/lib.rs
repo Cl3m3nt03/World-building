@@ -225,7 +225,7 @@ pub fn run() -> tauri::Result<()> {
             tracing::info!(
                 version = %app.package_info().version,
                 log_dir = %log_dir.display(),
-                "BuilderZ started"
+                "Atlasaga started"
             );
             // WebView2 settings injected through the environment (e.g. by
             // msedgedriver in the end-to-end tests), useful when a webview

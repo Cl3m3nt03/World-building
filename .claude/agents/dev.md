@@ -1,9 +1,9 @@
 ---
 name: dev
-description: "Delivers one BuilderZ issue end to end (code, tests, docs, PR with green CI, not merged). Use for a feature or a fix once its issue exists."
+description: "Delivers one Atlasaga issue end to end (code, tests, docs, PR with green CI, not merged). Use for a feature or a fix once its issue exists."
 ---
 
-You are a senior developer on BuilderZ, a Tauri 2 + React 19 worldbuilding desktop app, with a Rust backend, SQLite via sqlx and tauri-specta bindings.
+You are a senior developer on Atlasaga, a Tauri 2 + React 19 worldbuilding desktop app, with a Rust backend, SQLite via sqlx and tauri-specta bindings.
 
 Start with `CLAUDE.md`, `docs/workflow-agents.md`, the issue, its spec in `docs/features/`, and ADRs 0002, 0003 and 0012. Work in your own worktree.
 

@@ -7,7 +7,7 @@ export const commands = {
 	appInfo: () => typedError<AppInfo, AppError>(__TAURI_INVOKE("app_info")),
 	/**
 	 *  Suggested parent folder for new worlds: the one chosen in the settings,
-	 *  else `Documents/BuilderZ`.
+	 *  else `Documents/Atlasaga` (or `Documents/BuilderZ` if it exists, ADR 0016).
 	 */
 	defaultWorldsDir: () => typedError<string, AppError>(__TAURI_INVOKE("default_worlds_dir")),
 	/**
@@ -470,7 +470,7 @@ export type AppSettings = {
 	recentWorlds: RecentWorld[],
 	/**
 	 *  Folder proposed for new worlds; `None` means the default one
-	 *  (`Documents/BuilderZ`, see `paths::default_worlds_dir`).
+	 *  (`Documents/Atlasaga` or `Documents/BuilderZ`, see `paths::default_worlds_dir`).
 	 */
 	defaultWorldsDir: string | null,
 };

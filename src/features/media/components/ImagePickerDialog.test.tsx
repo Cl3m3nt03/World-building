@@ -157,7 +157,7 @@ test("several images: Space ticks them, Enter returns them in the order ticked",
 test("the library tab copies the chosen image into the world, then returns it", async () => {
   const { onPick, onOpenChange } = renderPicker();
 
-  const tab = await screen.findByRole("tab", { name: "Bibliothèque BuilderZ" });
+  const tab = await screen.findByRole("tab", { name: "Bibliothèque Atlasaga" });
   fireEvent.mouseDown(tab);
   fireEvent.click(tab);
   const blason = await screen.findByRole("option", { name: "Blason.png" });

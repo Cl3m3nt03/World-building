@@ -169,7 +169,7 @@ pub fn write(book: &Book) -> AppResult<Vec<u8>> {
     builder.epub_version(EpubVersion::V30);
     builder.set_title(book.title.clone());
     builder.set_languages(vec![book.language.clone()]);
-    builder.set_generator("BuilderZ");
+    builder.set_generator("Atlasaga");
     builder
         .stylesheet(stylesheet(book).as_bytes())
         .map_err(failed)?;
