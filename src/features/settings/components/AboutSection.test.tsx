@@ -46,3 +46,14 @@ test("shows a translated message when the Rust command fails", async () => {
   expect(alert.textContent).toContain("Un dossier système est introuvable.");
   expect(alert.textContent).toContain("log: no local app data");
 });
+
+test("shows the app's emblem, described for a screen reader", () => {
+  mockIPC(() => undefined);
+
+  renderDialog();
+
+  const emblem = screen.getByRole("img", {
+    name: "Emblème : une rose des vents au-dessus d'un livre ouvert",
+  });
+  expect(emblem.getAttribute("src")).toMatch(/emblem/);
+});

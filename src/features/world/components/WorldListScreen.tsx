@@ -1,9 +1,10 @@
-import { Compass, FolderOpen, Plus, Search } from "lucide-react";
+import { FolderOpen, Plus, Search } from "lucide-react";
 import { type KeyboardEvent, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RailToggle } from "@/app/shell/WorldRail";
 import { useUiStore } from "@/app/stores/ui";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
+import { BrandEmblem } from "@/components/BrandEmblem";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -184,7 +185,7 @@ export function WorldListScreen() {
         {firstLaunch ? (
           // First launch: a welcome on the atlas, with the two ways in.
           <section className="glass-panel mx-auto mt-8 flex max-w-lg flex-col items-center gap-4 rounded-xl px-8 py-10 text-center">
-            <Compass aria-hidden className="size-12 text-primary" strokeWidth={1.25} />
+            <BrandEmblem className="size-20" />
             <h2 className="text-2xl font-bold">{t("worlds.welcomeTitle")}</h2>
             <p className="text-muted-foreground">{t("worlds.empty")}</p>
             <div className="flex flex-wrap justify-center gap-2">{actions}</div>
