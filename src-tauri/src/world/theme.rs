@@ -29,8 +29,15 @@ pub enum WorldTheme {
     Custom {
         /// Asset id of the background image; `None`: the main image.
         background: Option<String>,
-        /// Accent color, `#rrggbb` in lower case.
+        /// Accent color, `#rrggbb` in lower case: the dark mode's, and the
+        /// light mode's when `accent_light` is absent.
         accent: String,
+        /// Accent color of light mode, `#rrggbb` in lower case, kept by
+        /// « Modifier » from an ambiance that has one per mode (ADR 0015,
+        /// 2026-11-06 amendment). Absent: the light variant of `accent`.
+        #[serde(default)]
+        #[specta(optional)]
+        accent_light: Option<String>,
         /// Material of the panels. Absent: vellum.
         #[serde(default)]
         #[specta(optional)]
@@ -153,20 +160,23 @@ impl WorldTheme {
             Self::Custom {
                 background,
                 accent,
+                accent_light,
                 material,
                 ornament,
                 heading_font,
                 scheme,
             } => {
-                let hex = accent.strip_prefix('#').unwrap_or_default();
-                if hex.len() != 6 || !hex.chars().all(|c| c.is_ascii_hexdigit()) {
-                    return Err(AppError::InvalidInput(format!(
-                        "invalid accent color: {accent:?}"
-                    )));
+                for color in std::iter::once(&accent).chain(&accent_light) {
+                    if !is_hex_color(color) {
+                        return Err(AppError::InvalidInput(format!(
+                            "invalid accent color: {color:?}"
+                        )));
+                    }
                 }
                 Ok(Self::Custom {
                     background,
                     accent: accent.to_ascii_lowercase(),
+                    accent_light: accent_light.map(|color| color.to_ascii_lowercase()),
                     material,
                     ornament,
                     heading_font,
@@ -177,6 +187,13 @@ impl WorldTheme {
     }
 }
 
+/// Whether `color` is `#rrggbb` (any case).
+fn is_hex_color(color: &str) -> bool {
+    color
+        .strip_prefix('#')
+        .is_some_and(|hex| hex.len() == 6 && hex.chars().all(|c| c.is_ascii_hexdigit()))
+}
+
 /// Keys of the `theme` of `world.json` this app reads, by kind.
 fn known_keys(kind: &str) -> &'static [&'static str] {
     match kind {
@@ -185,6 +202,7 @@ fn known_keys(kind: &str) -> &'static [&'static str] {
             "kind",
             "background",
             "accent",
+            "accentLight",
             "material",
             "ornament",
             "headingFont",
@@ -194,14 +212,23 @@ fn known_keys(kind: &str) -> &'static [&'static str] {
     }
 }
 
-/// The four choices of a custom theme, as written in `world.json`.
-const CHOICES: [&str; 4] = ["material", "ornament", "headingFont", "scheme"];
+/// The optional fields of a custom theme, as written in `world.json`: a
+/// value this app does not know reads as their default (none for
+/// `accentLight`) instead of making the whole theme unreadable.
+const CHOICES: [&str; 5] = [
+    "accentLight",
+    "material",
+    "ornament",
+    "headingFont",
+    "scheme",
+];
 
 fn is_known_choice(field: &str, value: &serde_json::Value) -> bool {
     fn parses<T: DeserializeOwned>(value: &serde_json::Value) -> bool {
         serde_json::from_value::<T>(value.clone()).is_ok()
     }
     match field {
+        "accentLight" => value.as_str().is_some_and(is_hex_color),
         "material" => parses::<Material>(value),
         "ornament" => parses::<Ornament>(value),
         "headingFont" => parses::<HeadingFont>(value),
@@ -212,6 +239,7 @@ fn is_known_choice(field: &str, value: &serde_json::Value) -> bool {
 /// Whether `theme` sets the choice `field` to something else than its default.
 fn choice_is_set(theme: &WorldTheme, field: &str) -> bool {
     let WorldTheme::Custom {
+        accent_light,
         material,
         ornament,
         heading_font,
@@ -222,6 +250,7 @@ fn choice_is_set(theme: &WorldTheme, field: &str) -> bool {
         return false;
     };
     match field {
+        "accentLight" => accent_light.is_some(),
         "material" => !material.is_default(),
         "ornament" => !ornament.is_default(),
         "headingFont" => !heading_font.is_default(),
@@ -278,8 +307,8 @@ impl StoredTheme {
         self.theme = theme;
     }
 
-    /// Reads a `theme` value tolerantly (ADR 0015). An unknown material,
-    /// ornament, heading font or scheme reads as its default, with a warning,
+    /// Reads a `theme` value tolerantly (ADR 0015). An unknown light accent,
+    /// material, ornament, heading font or scheme reads as its default, with a warning,
     /// and the rest of the theme is kept. A theme this app cannot read
     /// otherwise reads as the default theme instead of refusing to open the
     /// world. Neither is dropped: both are written back as they were.
@@ -359,6 +388,8 @@ impl Serialize for StoredTheme {
             Custom {
                 background: Option<&'a str>,
                 accent: &'a str,
+                #[serde(skip_serializing_if = "Option::is_none")]
+                accent_light: Option<&'a str>,
                 #[serde(skip_serializing_if = "Material::is_default")]
                 material: Material,
                 #[serde(skip_serializing_if = "Ornament::is_default")]
@@ -381,6 +412,7 @@ impl Serialize for StoredTheme {
             WorldTheme::Custom {
                 background,
                 accent,
+                accent_light,
                 material,
                 ornament,
                 heading_font,
@@ -388,6 +420,7 @@ impl Serialize for StoredTheme {
             } => Compact::Custom {
                 background: background.as_deref(),
                 accent,
+                accent_light: accent_light.as_deref(),
                 material: *material,
                 ornament: *ornament,
                 heading_font: *heading_font,
@@ -407,6 +440,7 @@ mod tests {
         WorldTheme::Custom {
             background: None,
             accent: accent.into(),
+            accent_light: None,
             material: Material::Vellum,
             ornament: Ornament::None,
             heading_font: HeadingFont::Alegreya,
@@ -540,6 +574,7 @@ mod tests {
             WorldTheme::Custom {
                 background: None,
                 accent: "#4fd6f0".into(),
+                accent_light: None,
                 material: Material::ColdGlass,
                 ornament: Ornament::Marks,
                 heading_font: HeadingFont::Oxanium,
@@ -596,6 +631,7 @@ mod tests {
                 ornament,
                 heading_font,
                 scheme,
+                ..
             } = theme
             else {
                 panic!("{field}: not a custom theme");
@@ -683,11 +719,77 @@ mod tests {
             WorldTheme::Custom {
                 background: None,
                 accent: "#4fd6f0".into(),
+                accent_light: None,
                 material: Material::Vellum,
                 ornament: Ornament::Edge,
                 heading_font: HeadingFont::Alegreya,
                 scheme: Scheme::App,
             }
+        );
+    }
+
+    fn dual(light: &str) -> WorldTheme {
+        let mut theme = custom("#d0393f");
+        if let WorldTheme::Custom { accent_light, .. } = &mut theme {
+            *accent_light = Some(light.into());
+        }
+        theme
+    }
+
+    #[test]
+    fn a_light_accent_is_read_validated_and_written_back() {
+        let json = r##"{"theme":{"kind":"custom","background":null,"accent":"#d0393f","accentLight":"#8c1a1c","material":"stone","ornament":"edge","headingFont":"playfair"}}"##;
+        let WorldTheme::Custom {
+            accent,
+            accent_light,
+            ..
+        } = read(json)
+        else {
+            panic!("not a custom theme");
+        };
+        assert_eq!(accent, "#d0393f");
+        assert_eq!(accent_light.as_deref(), Some("#8c1a1c"));
+        assert_eq!(round_trip(json), json);
+
+        assert_eq!(dual("#8C1A1C").validated().unwrap(), dual("#8c1a1c"));
+        for bad in ["8c1a1c", "#8c1a1", "red"] {
+            assert!(
+                matches!(dual(bad).validated(), Err(AppError::InvalidInput(_))),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_unknown_light_accent_keeps_the_theme_and_is_written_back() {
+        for bad in [r#""crimson""#, "null", "3", r##""#8c1a1""##] {
+            let json = format!(
+                r##"{{"theme":{{"kind":"custom","background":null,"accent":"#d0393f","accentLight":{bad},"material":"stone"}}}}"##
+            );
+            let (theme, logged) = read_logged(&json);
+            let mut expected = custom("#d0393f");
+            if let WorldTheme::Custom { material, .. } = &mut expected {
+                *material = Material::Stone;
+            }
+            assert_eq!(theme, expected, "{bad}");
+            assert!(logged.contains("accentLight"), "{bad}: {logged}");
+            assert_eq!(value(&round_trip(&json)), value(&json), "{bad}");
+        }
+
+        // A light accent set here replaces the unknown one.
+        let mut theme = stored(
+            r##"{"theme":{"kind":"custom","background":null,"accent":"#d0393f","accentLight":"crimson"}}"##,
+        );
+        theme.set(dual("#8c1a1c"));
+        assert_eq!(
+            write(theme.clone()),
+            r##"{"theme":{"kind":"custom","background":null,"accent":"#d0393f","accentLight":"#8c1a1c"}}"##
+        );
+        // One accent chosen again: the light one goes.
+        theme.set(custom("#f07178"));
+        assert_eq!(
+            write(theme),
+            r##"{"theme":{"kind":"custom","background":null,"accent":"#f07178"}}"##
         );
     }
 

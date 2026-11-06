@@ -360,8 +360,17 @@ export const commands = {
 { kind: "custom"; 
 /**  Asset id of the background image; `None`: the main image. */
 background: string | null; 
-/**  Accent color, `#rrggbb` in lower case. */
+/**
+ *  Accent color, `#rrggbb` in lower case: the dark mode's, and the
+ *  light mode's when `accent_light` is absent.
+ */
 accent: string; 
+/**
+ *  Accent color of light mode, `#rrggbb` in lower case, kept by
+ *  « Modifier » from an ambiance that has one per mode (ADR 0015,
+ *  2026-11-06 amendment). Absent: the light variant of `accent`.
+ */
+accentLight?: string | null; 
 /**  Material of the panels. Absent: vellum. */
 material?: Material; 
 /**  Ornament of the panels. Absent: none. */
@@ -1642,8 +1651,17 @@ export type WorldTheme =
 { kind: "custom"; 
 /**  Asset id of the background image; `None`: the main image. */
 background: string | null; 
-/**  Accent color, `#rrggbb` in lower case. */
+/**
+ *  Accent color, `#rrggbb` in lower case: the dark mode's, and the
+ *  light mode's when `accent_light` is absent.
+ */
 accent: string; 
+/**
+ *  Accent color of light mode, `#rrggbb` in lower case, kept by
+ *  « Modifier » from an ambiance that has one per mode (ADR 0015,
+ *  2026-11-06 amendment). Absent: the light variant of `accent`.
+ */
+accentLight?: string | null; 
 /**  Material of the panels. Absent: vellum. */
 material?: Material; 
 /**  Ornament of the panels. Absent: none. */

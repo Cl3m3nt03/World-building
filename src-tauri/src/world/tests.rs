@@ -573,6 +573,7 @@ fn custom_theme(background: Option<String>) -> WorldTheme {
     WorldTheme::Custom {
         background,
         accent: "#5FCDC0".into(),
+        accent_light: None,
         material: Material::default(),
         ornament: Ornament::default(),
         heading_font: HeadingFont::default(),
@@ -584,6 +585,7 @@ fn rich_theme() -> WorldTheme {
     WorldTheme::Custom {
         background: None,
         accent: "#4fd6f0".into(),
+        accent_light: None,
         material: Material::ColdGlass,
         ornament: Ornament::Marks,
         heading_font: HeadingFont::Oxanium,
@@ -761,6 +763,7 @@ async fn an_unknown_material_keeps_the_rest_of_the_theme() {
         WorldTheme::Custom {
             background: None,
             accent: "#4fd6f0".into(),
+            accent_light: None,
             material: Material::Vellum,
             ornament: Ornament::None,
             heading_font: HeadingFont::Alegreya,
@@ -808,6 +811,7 @@ async fn a_world_is_not_created_with_a_bad_theme() {
         WorldTheme::Custom {
             background: None,
             accent: "blue".into(),
+            accent_light: None,
             material: Material::Stone,
             ornament: Ornament::Edge,
             heading_font: HeadingFont::Cinzel,
