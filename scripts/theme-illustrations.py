@@ -1,6 +1,6 @@
 """Generates the illustrations of the world themes shipped with BuilderZ
-(src/features/world-theme/illustrations). They were drawn for BuilderZ,
-never taken from vvd (ADR 0003).
+(src/features/world-theme/illustrations). They were drawn for BuilderZ
+(ADR 0003).
 
 Each is a 1600x1000 landscape with its subject near the center, so a
 portrait crop (gallery card) keeps it. Deterministic (fixed seeds): running

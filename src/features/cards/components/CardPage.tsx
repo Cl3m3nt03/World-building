@@ -182,7 +182,7 @@ function Aliases({ card }: { card: Card }) {
   };
 
   return (
-    // One compact line (V2-3.2, after vvd): the aliases as pills, then a small field.
+    // One compact line (V2-3.2): the aliases as pills, then a small field.
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap items-center gap-1.5" title={t("cards.aliasesHint")}>
         <span className="rubric flex items-center gap-1">
@@ -361,7 +361,7 @@ export function CardPage() {
           <CardProperties key={`${card.data.id}-${card.data.typeId}`} cardId={card.data.id} />
           {trash.isError && <AppErrorMessage error={trash.error} />}
         </div>
-        {/* The portrait on the right, after vvd. */}
+        {/* The portrait on the right. */}
         <CardImage card={card.data} type={type} />
       </header>
       <CardContent

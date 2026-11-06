@@ -1,4 +1,4 @@
-/** One figure of the world: the number, its name, a fine line ending in a gold dot (after vvd). */
+/** One figure of the world: the number, its name, a fine line ending in a gold dot. */
 export function Stat({ value, label }: { value: number | undefined; label: string }) {
   return (
     <div className="flex flex-col gap-1">

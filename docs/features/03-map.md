@@ -10,7 +10,7 @@ Transformer une illustration de carte du monde en espace interactif : des pins r
 
 On crée une map depuis l'espace World, comme les autres documents, en important une image de fond (via la médiathèque). La map s'ouvre alors en édition. Son nom se modifie en haut à gauche et elle apparaît dans la sidebar.
 
-*Adaptation locale* : vvd propose une bibliothèque de templates de maps. Ici, on importe ses propres images uniquement. Une bibliothèque de fonds pourra être ajoutée plus tard, à partir d'images libres de droits.
+*Adaptation locale* : Pas de bibliothèque de templates de maps en ligne. Ici, on importe ses propres images uniquement. Une bibliothèque de fonds pourra être ajoutée plus tard, à partir d'images libres de droits.
 
 ## Navigation
 

@@ -15,7 +15,7 @@ function folded(text: string) {
 }
 
 /**
- * The type picker (V2-3.1, after vvd's « Sélectionner un type »): a search
+ * The type picker (V2-3.1, « Sélectionner un type »): a search
  * field over the types, their subtypes indented under them, arrows to move,
  * Enter to pick, and « New type » at the bottom. The search field keeps the
  * focus; the list follows it (combobox pattern).

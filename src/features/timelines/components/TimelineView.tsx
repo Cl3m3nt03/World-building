@@ -48,7 +48,7 @@ import { useCalendarWords } from "../useCalendar";
 const RULER_H = 48;
 const LANE_H = 34;
 const TRACK_PAD = 10;
-/** The axis view (vvd's): a bubble's height and the gap between its levels. */
+/** The axis view: a bubble's height and the gap between its levels. */
 const BUBBLE_H = 28;
 const LEVEL_GAP = 36;
 /** Below the axis: the graduation's labels. */
@@ -93,7 +93,7 @@ type Props = {
   /** Inside a card: the wheel scrolls the card, Ctrl + wheel zooms. */
   embedded?: boolean;
   /**
-   * « axis » (vvd's look, the default): one axis, events as dots with their
+   * « axis » (the default): one axis, events as dots with their
    * names in bubbles above; « tracks »: one row per track.
    */
   mode?: "axis" | "tracks";

@@ -247,7 +247,7 @@ h1[tabindex="-1"]:focus {
     var(--bz-shadow-panel);
 }
 
-/* The timeline's canvas (M11, after vvd): a dot grid over the world's
+/* The timeline's canvas (M11): a dot grid over the world's
    backdrop, from the theme's border colour. */
 @utility timeline-dots {
   background-color: color-mix(in oklab, var(--bz-surface) 55%, transparent);
@@ -405,7 +405,7 @@ h1[tabindex="-1"]:focus {
   outline-offset: 1px;
 }
 /*
- * The titles of a card's text read as section bars (V2-3.4, after vvd): the
+ * The titles of a card's text read as section bars (V2-3.4): the
  * title in the serif, on a fine line that runs the whole width.
  */
 .card-text :is(h1, h2) {

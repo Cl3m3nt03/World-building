@@ -4,11 +4,11 @@
 
 **Spec** : `docs/features/01-cartes-et-types.md` (board : node `4:70`, pavé « Cards and Cards type »). Socle commun : `docs/features/README.md` (documents, liens, éditeur, corbeille).
 
-**Hors M2** : la sidebar complète (dossiers, parent/enfant, épingles, tri, filtres, recherche) est M3 ; M2 n'a qu'une **liste simple** des cartes pour les ouvrir et les créer. Le bloc Map attend les maps (M4) : il est visible mais signalé « Bientôt disponible ». La recherche plein texte (FTS5) et la détection de noms dans Quill utilisent les données posées ici, mais arrivent avec M3 et M9. Dans l'écran des réglages du monde, les sections Importer et Exporter arrivent avec leurs modules ; Collaboration et Site & domaine de vvd sont retirées (voir `docs/contexte.md`).
+**Hors M2** : la sidebar complète (dossiers, parent/enfant, épingles, tri, filtres, recherche) est M3 ; M2 n'a qu'une **liste simple** des cartes pour les ouvrir et les créer. Le bloc Map attend les maps (M4) : il est visible mais signalé « Bientôt disponible ». La recherche plein texte (FTS5) et la détection de noms dans Quill utilisent les données posées ici, mais arrivent avec M3 et M9. Dans l'écran des réglages du monde, les sections Importer et Exporter arrivent avec leurs modules ; Collaboration et Site & domaine sont retirées (voir `docs/contexte.md`).
 
 **Ordre d'exécution** : 2.1 → 2.2 → 2.3, puis 2.4 → 2.5 → 2.6, puis 2.7 → 2.8, puis 2.9 → 2.10 → 2.11 → 2.12 → 2.13, puis 2.14, puis 2.16 → 2.17 → 2.18 → 2.19, et la recette 2.15 en dernier.
 
-Les étapes 2.16 à 2.19 ont été ajoutées le 27/09/2026, d'après les captures de vvd envoyées par Clément (réglages du monde et thème).
+Les étapes 2.16 à 2.19 ont été ajoutées le 27/09/2026, à la demande de Clément (réglages du monde et thème).
 
 ---
 
@@ -171,7 +171,7 @@ Les étapes 2.16 à 2.19 ont été ajoutées le 27/09/2026, d'après les capture
 ## 2.17 — Thème du monde
 **Branche** : `feat/world-theme` · **Dépend de** : 2.16
 
-- [ ] Onglet **Explorer** : galerie de thèmes fournis par BuilderZ (nom, illustration de fond, couleur d'accent), plus « Par défaut » (image principale et ocre). Illustrations dessinées pour BuilderZ, jamais celles de vvd (ADR 0003)
+- [ ] Onglet **Explorer** : galerie de thèmes fournis par BuilderZ (nom, illustration de fond, couleur d'accent), plus « Par défaut » (image principale et ocre). Illustrations dessinées pour BuilderZ (ADR 0003)
 - [ ] Onglet **Modifier** : thème personnalisé, avec l'image de fond choisie dans la médiathèque (par défaut l'image principale) et la couleur d'accent (palette ou couleur libre)
 - [ ] Le thème s'applique au fond et à l'accent de l'app pour ce monde, lisible dans les deux modes clair et sombre
 - [ ] Enregistré dans `world.json`, lu avec tolérance (un thème inconnu ou abîmé revient au thème par défaut) ; une image de fond est listée dans les usages de la médiathèque

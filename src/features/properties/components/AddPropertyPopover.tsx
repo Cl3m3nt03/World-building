@@ -20,7 +20,7 @@ function Family({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /**
- * « + Ajouter une propriété » (V2-3.3, after vvd): a small window with the
+ * « + Ajouter une propriété » (V2-3.3): a small window with the
  * property's name first, then its kind in two families, a value (text,
  * number, select, date) or a link to a card (any card, or a card of a given
  * type; one or several). Picking a kind creates the property.

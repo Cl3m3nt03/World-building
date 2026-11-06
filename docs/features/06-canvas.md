@@ -35,7 +35,7 @@ On se déplace avec l'outil main, ou en maintenant le **bouton du milieu** de la
 
 ## Adaptation locale
 
-La recherche d'images Google intégrée à vvd est remplacée par le glisser-déposer et le collage depuis le PC. Les images collées sont importées dans la médiathèque du monde.
+Pas de recherche d'images en ligne : on passe par le glisser-déposer et le collage depuis le PC. Les images collées sont importées dans la médiathèque du monde.
 
 ## Sauvegarde
 

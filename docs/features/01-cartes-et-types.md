@@ -18,7 +18,7 @@ Dans les trois cas, on choisit d'abord un type (ou un sous-type). La carte s'ouv
 
 **Réalisé en M2 (2.4)** : la tuile « Fiche » de l'espace vide ouvre le menu de création : les types, leurs sous-types en retrait dessous, puis « Nouveau type » (qui ouvre l'écran des types). La carte créée s'appelle « <Type> sans nom » (« Untitled <Type> » en anglais) et s'ouvre avec ce nom sélectionné. Le même menu s'ouvre par le bouton « Nouvelle fiche » en bas de la sidebar et par un clic droit n'importe où dans la sidebar (2.5). Après Échap, le focus revient là où il était ; après une création, il reste sur le nom de la nouvelle carte.
 
-**V2-3.1 (d'après vvd)** : « Nouvelle fiche » (sidebar, Home, tuile « Fiche » de « Commencer avec… ») ouvre le **sélecteur de types**, un petit panneau :
+**V2-3.1** : « Nouvelle fiche » (sidebar, Home, tuile « Fiche » de « Commencer avec… ») ouvre le **sélecteur de types**, un petit panneau :
 - en tête, une recherche qui garde le focus (sans casse ni accents : « eve » trouve « Événement ») ;
 - puis la liste des types, leurs sous-types en retrait. Un sous-type qui correspond à la recherche fait aussi apparaître son type ;
 - les flèches (et Début, Fin) se déplacent dans la liste, Entrée crée la carte du type en surbrillance, Échap ferme ;
@@ -37,7 +37,7 @@ La pastille du type d'une carte ouvre le même sélecteur, intitulé « Changer 
 - **Propriétés** : des champs structurés (voir plus bas).
 - **Contenu** : une suite de **blocs**.
 
-**V2-3.2 (d'après vvd)** : l'en-tête de la carte s'organise ainsi :
+**V2-3.2** : l'en-tête de la carte s'organise ainsi :
 - le **titre** en grand à gauche ; sur sa ligne, la pastille du **type**, un **œil** qui montre ou retire la carte du wiki (allumé ou barré, avec une info-bulle qui dit l'état), puis le menu « … ». Sous 700 px de largeur de contenu de l'article (donc à 1028 px de fenêtre, barre latérale ouverte), ces trois éléments passent **toujours** sous le titre, sur toutes les cartes, pour que la fiche ne bouge pas d'une carte à l'autre ;
 - l'**image en portrait à droite** ;
 - dessous, les **alias** sur une seule ligne : l'étiquette « Alias », les alias en pastilles (chacune se retire d'un clic) et un petit champ « + Ajouter » qui s'élargit au focus. Entrée ajoute l'alias, et le bouton « Ajouter » apparaît dès qu'on tape. L'explication sur les alias passe en info-bulle ;
@@ -78,7 +78,7 @@ Les blocs peuvent être réordonnés par glisser-déposer et supprimés.
 - **Détection d'entités** : les noms déjà écrits (texte collé, écrit avant la carte, lien refusé par Retour arrière, liens automatiques désactivés) sont soulignés en pointillés. Quand on place le curseur sur l'un d'eux (clic, flèches), une petite pastille « Lier à « Gondor » » apparaît dessous ; elle le transforme en mention, comme `Alt+Entrée`. Elle n'apparaît jamais pendant la frappe.
 - **Animer les nouveaux liens** : une mention créée par un lien automatique ou par « Lier » apparaît avec une courte animation, jamais si Windows demande de réduire les animations.
 
-**V2-3.4 (d'après vvd)** :
+**V2-3.4** :
 - Les **titres** du texte d'une carte (titre 1, 2 et 3) se lisent comme des **barres de section** : le titre en serif, posé sur une fine ligne qui court sur toute la largeur.
 - Chaque bloc a, à côté de sa poignée, un bouton pour le **replier** : il ne montre plus que sa première ligne, fondue, et son contenu est hors d'atteinte. Le même bouton le **déplie**. C'est un état d'affichage, non enregistré.
 - Le menu d'un bloc gagne « **Ajouter un bloc dessous** » (sous-menu des genres de blocs ; un bloc de texte ajouté ainsi, comme par « / », prend aussitôt le focus) et « **Copier le bloc** » : une copie du bloc, avec son propre identifiant, sur sa propre ligne, juste sous la ligne du bloc.
@@ -165,7 +165,7 @@ Renommer une propriété de type la renomme partout. La supprimer demande une co
 
 **Réalisé en M2 (2.7)** : une propriété ajoutée à un type s'affiche sur les cartes créées ensuite ; le bandeau « Appliquer les changements à toutes les fiches de ce type ? » propose de l'afficher aussi sur les cartes existantes (« Oui ») ou de les laisser telles quelles (« Ignorer »). Une propriété s'édite dans une petite fenêtre (nom, nature, suppression) ; changer sa nature efface ses valeurs. Sur une carte, les valeurs s'enregistrent sans bouton : un texte vide ou un nombre effacé retire la valeur, une saisie qui n'est pas un nombre est signalée et n'est pas enregistrée (la virgule décimale est acceptée). « Propriété propre à cette fiche » en ajoute une qui ne concerne que cette carte. Pour une propriété lien (2.8), la fenêtre propose aussi les types de cartes acceptés (aucun coché : toutes les cartes ; un type accepte ses sous-types). Sur la carte, la valeur se choisit dans une liste qui recherche dans les noms et les alias, au clavier (flèches, Entrée) ; chaque carte liée s'affiche comme une étiquette qui l'ouvre et se retire d'un clic. Une carte liée introuvable (supprimée définitivement) s'affiche comme telle.
 
-**V2-3.3 (d'après vvd)** : « + Ajouter une propriété » ouvre une petite fenêtre :
+**V2-3.3** : « + Ajouter une propriété » ouvre une petite fenêtre :
 - en tête, le **nom** de la propriété, qui a le focus ; Entrée seule crée une propriété texte ;
 - puis son genre, en deux familles. **Valeur** : texte, nombre, sélection, date. **Lien vers une carte** : n'importe quelle carte, ou une carte d'un type principal précis. La case « Plusieurs fiches à la fois » fait de ce lien une liste de cartes ;
 - un clic sur un genre crée la propriété, propre à cette carte, et ouvre son réglage comme avant. Sans nom, elle s'appelle « Nouvelle propriété ».
@@ -180,7 +180,7 @@ Les lignes de propriétés sont serrées, à 28 px de pas : un libellé, puis un
 - Le wiki et son export suivent le même ordre. Une carte dupliquée garde l'ordre de ses propriétés propres.
 - Si l'enregistrement échoue, l'erreur s'affiche et l'ordre enregistré revient.
 
-**V2-3.3b (d'après vvd, ADR 0014)** : deux genres de plus dans la famille **Valeur**, sur les cartes comme sur l'écran des types.
+**V2-3.3b (ADR 0014)** : deux genres de plus dans la famille **Valeur**, sur les cartes comme sur l'écran des types.
 
 - **Sélection** : une liste de choix propre à la propriété (Statut : vivant, mort, disparu).
   - Sa petite fenêtre liste les choix : on les renomme sur place, on les monte ou descend, « Ajouter un choix » (Entrée) en ajoute un. Elle s'ouvre seule quand on vient de créer la propriété.

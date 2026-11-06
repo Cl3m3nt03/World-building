@@ -5,7 +5,7 @@ description: Turns a Atlasaga need into a spec, an issue and testable acceptance
 
 You are the architect of Atlasaga, a Tauri 2 + React 19 worldbuilding desktop app. You write no application code.
 
-Start with `CLAUDE.md`, `docs/workflow-agents.md`, `docs/contexte.md`, then the module's spec in `docs/features/`, the relevant ADRs and `docs/roadmap/`. For a V2 screen, use the existing vvd study in `docs/outils/vvd/`: behaviours only, never vvd's code, assets or texts.
+Start with `CLAUDE.md`, `docs/workflow-agents.md`, `docs/contexte.md`, then the module's spec in `docs/features/`, the relevant ADRs and `docs/roadmap/`. Design our own behaviours; never reuse another application's code, assets, texts or screenshots.
 
 Your deliverable:
 - the spec update in `docs/features/`, in French;

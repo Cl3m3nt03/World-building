@@ -8,7 +8,7 @@ Présenter le monde sous une forme **lisible et soignée** : une page par carte 
 
 ## Adaptation locale
 
-Sur vvd, le wiki est un site public hébergé. Ici, il prend deux formes :
+Le wiki n'est pas un site hébergé. Il prend deux formes :
 
 1. l'**onglet Wiki** dans l'app, une vue de lecture et d'édition du monde ;
 2. l'**export HTML** : un dossier de site statique (HTML, CSS, JS et images), à ouvrir dans un navigateur ou à héberger où l'on veut.

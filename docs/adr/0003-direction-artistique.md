@@ -7,7 +7,7 @@
 
 ## Contexte
 
-`docs/contexte.md` prévoyait que BuilderZ reprenne les comportements de vvd.world, mais pas son identité visuelle. Après avoir revu les captures du board FigJam, Clément veut **la même direction artistique** que vvd : même ambiance, même organisation visuelle, même langage de composants.
+`docs/contexte.md` laissait la direction artistique ouverte. Après avoir revu les captures du board FigJam, Clément fixe **une direction artistique précise** : une ambiance, une organisation visuelle et un langage de composants, décrits ci-dessous.
 
 L'app reste strictement personnelle, sans revente ni distribution. Il reste une limite : on reprend un **style**, pas des **fichiers**.
 
@@ -30,8 +30,8 @@ L'ambiance et le langage visuel observés dans le board (nodes listés dans `doc
 
 ### Ce qu'on ne reprend pas
 
-- **Aucun fichier de vvd** : ni illustrations, ni icônes propres, ni logo, ni polices sous licence, ni CSS, ni code.
-- Ni le nom ni les textes de vvd. Les libellés sont écrits pour BuilderZ, dans `fr.json` et `en.json`.
+- **Aucun fichier d'une autre application** : ni illustrations, ni icônes propres, ni logo, ni polices sous licence, ni CSS, ni code.
+- Aucun nom ni texte d'une autre application. Les libellés sont écrits pour BuilderZ, dans `fr.json` et `en.json`.
 
 L'illustration de fond est l'**image principale du monde ouvert**. Sans image, le fond est un dégradé sombre défini par les tokens. Sur la liste des mondes, c'est l'image du dernier monde ouvert.
 
@@ -81,8 +81,8 @@ Les thèmes du wiki (M8) et de Quill (M9) pourront proposer d'autres polices, av
 
 | Alternative | Raison |
 |---|---|
-| **DA propre à BuilderZ** (décision initiale) | Clément préfère l'ergonomie visuelle de vvd, qu'il connaît et apprécie. |
-| **Copier les assets et le CSS de vvd** | Ce ne sont pas nos fichiers. Le style se reproduit avec nos propres tokens et des ressources libres. |
+| **DA laissée ouverte** (décision initiale) | Clément préfère fixer tôt une ergonomie visuelle claire, qu'il connaît et apprécie. |
+| **Reprendre les assets ou le CSS d'une autre application** | Ce ne sont pas nos fichiers. Le style se construit avec nos propres tokens et des ressources libres. |
 | **Polices chargées depuis Google Fonts** | Interdit par la CSP (aucun appel réseau) et incompatible avec un usage hors ligne. |
 
 ## Conséquences
