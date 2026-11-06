@@ -13,6 +13,9 @@ const host = process.env.TAURI_DEV_HOST;
  * works offline and its CSP allows fonts from itself only. Excalidraw finds
  * them under `window.EXCALIDRAW_ASSET_PATH` (set to `/excalidraw/` by the
  * canvas); they are served from node_modules in dev and copied at build.
+ * Liberation Sans is left out: Excalidraw ships version 1.05, from before
+ * Liberation moved to the OFL (GPL-2.0 with a font exception), and only uses
+ * it for server-side exports (docs/outils/licences.md).
  */
 function excalidrawFonts(): Plugin {
   const source = path.resolve(
@@ -20,6 +23,7 @@ function excalidrawFonts(): Plugin {
     "node_modules/@excalidraw/excalidraw/dist/prod/fonts",
   );
   const prefix = "/excalidraw/fonts/";
+  const excluded = path.join(source, "Liberation");
   let outDir = "dist";
   return {
     name: "builderz-excalidraw-fonts",
@@ -31,7 +35,12 @@ function excalidrawFonts(): Plugin {
         const url = request.url?.split("?")[0] ?? "";
         if (!url.startsWith(prefix)) return next();
         const file = path.join(source, decodeURIComponent(url.slice(prefix.length)));
-        if (!file.startsWith(source) || !existsSync(file) || !statSync(file).isFile()) {
+        if (
+          !file.startsWith(source) ||
+          file.startsWith(excluded) ||
+          !existsSync(file) ||
+          !statSync(file).isFile()
+        ) {
           return next();
         }
         response.setHeader("Content-Type", "font/woff2");
@@ -39,7 +48,10 @@ function excalidrawFonts(): Plugin {
       });
     },
     writeBundle() {
-      cpSync(source, path.join(outDir, "excalidraw", "fonts"), { recursive: true });
+      cpSync(source, path.join(outDir, "excalidraw", "fonts"), {
+        recursive: true,
+        filter: (file) => !file.startsWith(excluded),
+      });
     },
   };
 }

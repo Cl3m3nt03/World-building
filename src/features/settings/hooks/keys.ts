@@ -4,4 +4,5 @@ export const appKeys = {
   info: () => [...appKeys.all(), "info"] as const,
   settings: () => [...appKeys.all(), "settings"] as const,
   defaultWorldsDir: () => [...appKeys.all(), "defaultWorldsDir"] as const,
+  notices: () => [...appKeys.all(), "notices"] as const,
 };

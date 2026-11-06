@@ -76,6 +76,48 @@ jobs:
             exit 1
           fi
 
+  # Third-party notices (docs/outils/licences.md): generates them as a release
+  # would, so a dependency under a licence that src-tauri/about.toml does not
+  # accept (GPL, AGPL, unknown...) fails here. Linux: no build, only metadata.
+  licences:
+    name: Third-party licences
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # The crate sources cargo-about reads the licence files from.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-targets: false
+
+      # Prebuilt binary, pinned (same version in release.yml).
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the notices
+        run: pnpm notices
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: third-party-notices
+          path: src-tauri/notices/THIRD-PARTY-NOTICES.txt
+          if-no-files-found: error
+
   e2e:
     name: End-to-end tests
     runs-on: windows-latest
@@ -104,6 +146,11 @@ jobs:
           if ! command -v tauri-driver >/dev/null; then
             cargo install tauri-driver@2.0.6 --locked
           fi
+
+      # beforeBuildCommand generates the third-party notices (pinned, as below).
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.3
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

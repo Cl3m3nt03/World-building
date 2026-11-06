@@ -10,6 +10,8 @@ export const commands = {
 	 *  else `Documents/Atlasaga` (or `Documents/BuilderZ` if it exists, ADR 0016).
 	 */
 	defaultWorldsDir: () => typedError<string, AppError>(__TAURI_INVOKE("default_worlds_dir")),
+	/**  Text of the third-party notices shipped with the app (Settings › About). */
+	thirdPartyNotices: () => typedError<string, AppError>(__TAURI_INVOKE("third_party_notices")),
 	/**
 	 *  Copies the file at `path` into the open world's media library, named by
 	 *  its content hash. Importing the same content again returns the existing asset.

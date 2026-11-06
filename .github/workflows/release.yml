@@ -76,6 +76,12 @@ jobs:
         with:
           workspaces: src-tauri
 
+      # cargo-about, for the third-party notices that beforeBuildCommand
+      # generates (docs/outils/licences.md); same version as ci.yml.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.3
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

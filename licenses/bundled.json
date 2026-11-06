@@ -1,0 +1,91 @@
+{
+  "$comment": "Assets bundled with Atlasaga that no package manager lists. Each entry: what is shipped, its SPDX licence, and the licence file (relative to licenses/). Read by scripts/third-party-notices.mjs.",
+  "assets": [
+    {
+      "name": "EB Garamond (fonts of the book PDF)",
+      "licence": "OFL-1.1",
+      "file": "fonts/EB-Garamond-OFL.txt"
+    },
+    {
+      "name": "Inter (fonts of the book PDF)",
+      "licence": "OFL-1.1",
+      "file": "fonts/Inter-OFL.txt"
+    },
+    {
+      "name": "Cinzel (fonts of the book PDF)",
+      "licence": "OFL-1.1",
+      "file": "fonts/Cinzel-OFL.txt"
+    },
+    {
+      "name": "Playfair Display (fonts of the book PDF)",
+      "licence": "OFL-1.1",
+      "file": "fonts/Playfair-Display-OFL.txt"
+    },
+    { "name": "Lora (fonts of the book PDF)", "licence": "OFL-1.1", "file": "fonts/Lora-OFL.txt" },
+    {
+      "name": "Source Serif 4 (fonts of the book PDF)",
+      "licence": "OFL-1.1",
+      "file": "fonts/Source-Serif-4-OFL.txt"
+    },
+    {
+      "name": "Space Mono (fonts of the book PDF)",
+      "licence": "OFL-1.1",
+      "file": "fonts/Space-Mono-OFL.txt"
+    },
+    {
+      "name": "Excalifont (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Excalifont-OFL.txt"
+    },
+    {
+      "name": "Virgil (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Virgil-OFL.txt"
+    },
+    {
+      "name": "Xiaolai SC (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Xiaolai-OFL.txt"
+    },
+    {
+      "name": "Nunito (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Nunito-OFL.txt"
+    },
+    {
+      "name": "Lilita One (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Lilita-One-OFL.txt"
+    },
+    {
+      "name": "Assistant (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Assistant-OFL.txt"
+    },
+    {
+      "name": "Cascadia Code (Excalidraw canvas font)",
+      "licence": "OFL-1.1",
+      "file": "fonts/excalidraw/Cascadia-Code-OFL.txt"
+    },
+    {
+      "name": "Comic Shanns (Excalidraw canvas font)",
+      "licence": "MIT",
+      "file": "fonts/excalidraw/Comic-Shanns-MIT.txt"
+    },
+    {
+      "name": "Citation Style Language styles and locales (hayagriva, book exports)",
+      "licence": "CC-BY-SA-3.0",
+      "file": "other/CSL-styles-CC-BY-SA-3.0.txt"
+    },
+    {
+      "name": "WebView2 SDK loader (WebView2LoaderStatic.lib, linked by webview2-com-sys)",
+      "licence": "BSD-3-Clause",
+      "file": "other/WebView2-SDK-BSD-3-Clause.txt"
+    },
+    {
+      "name": "Microsoft Edge WebView2 Evergreen Bootstrapper (installer)",
+      "licence": "LicenseRef-Microsoft-WebView2",
+      "file": "other/WebView2-Runtime.txt"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
-import { Palette } from "lucide-react";
+import { Palette, ScrollText } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { BrandEmblem } from "@/components/BrandEmblem";
@@ -9,6 +10,7 @@ import { HEADING_FONT_NAMES } from "@/features/world-theme/headingFonts";
 import type { TranslationKey } from "@/i18n";
 import type { AppInfo } from "@/lib/bindings";
 import { useAppInfo } from "../hooks/useAppInfo";
+import { ThirdPartyLicences } from "./ThirdPartyLicences";
 
 const ROWS: { key: keyof AppInfo; label: TranslationKey }[] = [
   { key: "version", label: "about.version" },
@@ -17,10 +19,35 @@ const ROWS: { key: keyof AppInfo; label: TranslationKey }[] = [
   { key: "logDir", label: "about.logDir" },
 ];
 
-/** Version and folders of the app, shown in the settings, and the way to the design system. */
+/**
+ * Version and folders of the app, shown in the settings, the way to the
+ * design system and the third-party licences (shown in place of the section).
+ */
 export function AboutSection({ enabled = true }: { enabled?: boolean }) {
   const { t } = useTranslation();
   const appInfo = useAppInfo({ enabled });
+  const [licences, setLicences] = useState(false);
+  const licencesButton = useRef<HTMLButtonElement>(null);
+  const returning = useRef(false);
+
+  // Back from the licences: focus goes back to the button that opened them.
+  useEffect(() => {
+    if (!licences && returning.current) {
+      returning.current = false;
+      licencesButton.current?.focus();
+    }
+  }, [licences]);
+
+  if (licences) {
+    return (
+      <ThirdPartyLicences
+        onBack={() => {
+          returning.current = true;
+          setLicences(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -54,6 +81,13 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
           </a>
         </Button>
         <span className="text-xs text-muted-foreground">{t("about.designSystemHint")}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Button ref={licencesButton} variant="outline" size="sm" onClick={() => setLicences(true)}>
+          <ScrollText />
+          {t("about.licences.open")}
+        </Button>
+        <span className="text-xs text-muted-foreground">{t("about.licences.hint")}</span>
       </div>
     </div>
   );
