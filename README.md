@@ -1,4 +1,4 @@
-# BuilderZ
+# Atlasaga
 
 Application desktop Windows de worldbuilding, locale et mono-utilisateur : cartes (fiches) typées, Map interactive, Graph, Relation Tree, Canvas, Wiki et Quill (écriture).
 
@@ -51,9 +51,11 @@ Tauri 2 · Rust (SQLite via `sqlx`) · React 19 + TypeScript · Vite · Tailwind
 | `docs/architecture.md` | Vue d'ensemble du code |
 | `CLAUDE.md` | Règles de travail pour Claude Code |
 
-## Installer BuilderZ
+## Installer Atlasaga
 
-Les installeurs Windows (`BuilderZ_X.Y.Z_x64-setup.exe`) sont attachés aux [releases GitHub](https://github.com/Cl3m3nt03/World-building/releases). L'installeur n'est pas signé : au premier lancement, Windows SmartScreen demande de confirmer (« Informations complémentaires » puis « Exécuter quand même »).
+Les installeurs Windows (`Atlasaga_X.Y.Z_x64-setup.exe`) sont attachés aux [releases GitHub](https://github.com/Cl3m3nt03/World-building/releases). L'installeur n'est pas signé : au premier lancement, Windows SmartScreen demande de confirmer (« Informations complémentaires » puis « Exécuter quand même »).
+
+Atlasaga s'appelait BuilderZ jusqu'à la 1.7. L'installeur 1.8 remplace une installation BuilderZ (ancien programme, raccourcis, entrée « Applications installées ») et garde les mondes, les mondes récents et les réglages, qui ne changent pas de place (ADR 0016).
 
 ## Contribuer
 

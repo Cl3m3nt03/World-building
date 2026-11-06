@@ -8,7 +8,7 @@ fn main() -> ExitCode {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             // Proper logging arrives with `tracing` in 0.8.
-            eprintln!("BuilderZ failed to start: {error}");
+            eprintln!("Atlasaga failed to start: {error}");
             ExitCode::FAILURE
         }
     }

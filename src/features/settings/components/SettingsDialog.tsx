@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { LibrarySection } from "@/features/media/components/LibrarySection";
 import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
 import { openDialog as pickFolder } from "@/lib/dialogs";
+import { useDefaultWorldsDir } from "../hooks/useDefaultWorldsDir";
 import { useSetDefaultWorldsDir } from "../hooks/useSetDefaultWorldsDir";
 import { useSettings } from "../hooks/useSettings";
 import { AboutSection } from "./AboutSection";
@@ -144,7 +145,11 @@ function WorldsFolderSection() {
   const settings = useSettings();
   const setFolder = useSetDefaultWorldsDir();
   const folder = settings.data?.defaultWorldsDir ?? null;
-  const shown = folder ?? t("settings.worldsDirDefault");
+  // Without a chosen folder, the one Rust picks (it depends on the PC, ADR 0016).
+  const fallback = useDefaultWorldsDir({ enabled: settings.isSuccess && folder === null });
+  const shown =
+    folder ??
+    (fallback.data === undefined ? "" : t("settings.worldsDirDefault", { path: fallback.data }));
   const inputId = useId();
 
   const choose = async () => {

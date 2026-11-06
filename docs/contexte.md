@@ -4,7 +4,7 @@ Ce document résume les discussions qui ont précédé la création du repo, pou
 
 ## Origine
 
-Clément fait du worldbuilding et utilisait vvd.world (https://vvd.world), une plateforme web de worldbuilding payante. Pour son usage, l'abonnement ne se justifie pas. BuilderZ reproduit donc **les fonctionnalités et l'ergonomie** de vvd dans une application **desktop Windows (.exe)**, pour un usage strictement personnel. Il n'y aura ni revente ni distribution.
+Clément fait du worldbuilding et utilisait vvd.world (https://vvd.world), une plateforme web de worldbuilding payante. Pour son usage, l'abonnement ne se justifie pas. Atlasaga (ex-BuilderZ) reproduit donc **les fonctionnalités et l'ergonomie** de vvd dans une application **desktop Windows (.exe)**, pour un usage strictement personnel. Il n'y aura ni revente ni distribution.
 
 Les règles qui en découlent :
 
@@ -42,7 +42,7 @@ Clément a découpé toutes les features de vvd dans un board FigJam : pour chaq
    - Bibliothèques fournies par vvd (templates de maps, sons de la radio et du mode audio) : **remplacées par les fichiers importés** par l'utilisateur.
    - Recherche Google d'images dans le Canvas : **remplacée** par le glisser-déposer et le collage depuis le PC.
    - Fil de nouveautés et formulaire de bug/suggestion : **retirés** (les issues GitHub font ce travail).
-5. **Nom de l'app** : BuilderZ (nom choisi par Clément dans le board).
+5. **Nom de l'app** : Atlasaga depuis la 1.8 (ADR 0016) ; BuilderZ jusqu'à la 1.7 (nom choisi par Clément dans le board).
 6. **Direction artistique** : la même que vvd (fond illustré flouté, panneaux en verre dépoli, titres monospace, accent ocre), sans reprendre aucun de ses fichiers. Voir ADR 0003.
 
 ## Roadmap

@@ -103,5 +103,5 @@ export async function fontsCss(keys: SiteFontKey[]): Promise<string> {
       );
     }
   }
-  return `/* Fonts under the SIL Open Font License, shipped with BuilderZ. */\n${faces.join("\n")}\n`;
+  return `/* Fonts under the SIL Open Font License, shipped with Atlasaga. */\n${faces.join("\n")}\n`;
 }

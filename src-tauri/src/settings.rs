@@ -101,7 +101,7 @@ pub struct AppSettings {
     /// Most recently opened first.
     pub recent_worlds: Vec<RecentWorld>,
     /// Folder proposed for new worlds; `None` means the default one
-    /// (`Documents/BuilderZ`, see `paths::default_worlds_dir`).
+    /// (`Documents/Atlasaga` or `Documents/BuilderZ`, see `paths::default_worlds_dir`).
     pub default_worlds_dir: Option<String>,
 }
 

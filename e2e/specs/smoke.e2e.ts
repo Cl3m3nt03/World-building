@@ -9,7 +9,7 @@ function builderzHome(): string {
   return home;
 }
 
-describe("BuilderZ smoke test", () => {
+describe("Atlasaga smoke test", () => {
   it("starts on the world list", async () => {
     const title = await $("h1=Mondes");
     await title.waitForDisplayed({ timeout: 30_000 });

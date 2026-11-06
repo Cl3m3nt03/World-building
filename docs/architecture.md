@@ -4,7 +4,7 @@
 
 ## Vue d'ensemble
 
-BuilderZ est une app Tauri 2 en deux couches (voir ADR 0001) :
+Atlasaga est une app Tauri 2 en deux couches (voir ADR 0001) :
 
 - **Rust (`src-tauri/`)** : possède toutes les données et tous les accès disque. Il expose des commandes Tauri typées via `tauri-specta`.
 - **React (`src/`)** : toute la logique d'interface. Il appelle le Rust uniquement par les bindings générés dans `src/lib/bindings.ts`, enveloppés dans des hooks TanStack Query.
@@ -46,7 +46,7 @@ React (UI)  ──bindings.ts──▶  commandes Tauri  ──▶  domain  ─�
 
 ### Dossiers de l'app et `BUILDERZ_HOME`
 
-`src-tauri/src/paths.rs` centralise les dossiers de l'app : réglages (`%APPDATA%pp.builderz.desktop`), logs (`%LOCALAPPDATA%pp.builderz.desktop\logs`) et emplacement proposé pour les nouveaux mondes (`Documents\BuilderZ`, via la commande `default_worlds_dir`). Si la variable d'environnement **`BUILDERZ_HOME`** est définie, les trois vont dans `$BUILDERZ_HOME\config`, `\logs` et `\worlds`. Les tests de bout en bout s'en servent pour ne jamais toucher aux vrais réglages ni au dossier Documents.
+`src-tauri/src/paths.rs` centralise les dossiers de l'app : réglages (`%APPDATA%pp.builderz.desktop`), logs (`%LOCALAPPDATA%pp.builderz.desktop\logs`) et emplacement proposé pour les nouveaux mondes (`Documents\Atlasaga`, ou `Documents\BuilderZ` s'il existe déjà, ADR 0016, via la commande `default_worlds_dir`). Si la variable d'environnement **`BUILDERZ_HOME`** est définie, les trois vont dans `$BUILDERZ_HOME\config`, `\logs` et `\worlds`. Les tests de bout en bout s'en servent pour ne jamais toucher aux vrais réglages ni au dossier Documents.
 
 ### Tests de bout en bout
 
@@ -223,7 +223,7 @@ La liste des mondes affiche l'image principale de chaque monde **sans l'ouvrir**
 
 ### Réglages de l'app
 
-`settings.json` dans `%APPDATA%pp.builderz.desktop\` : préférences (langue, thème, effets de transparence), dossier des nouveaux mondes (`defaultWorldsDir`, chemin absolu ou `null` pour `Documents\BuilderZ`, via `set_default_worlds_dir` ; `default_worlds_dir` renvoie ce choix sinon la valeur par défaut) et mondes récents (10 au plus, le plus récent d'abord). Écriture atomique. Un fichier absent donne les valeurs par défaut ; un fichier illisible est mis de côté (`settings.corrupted.json`) et remplacé par les valeurs par défaut, sans bloquer le démarrage. Les champs manquants ou inconnus sont tolérés.
+`settings.json` dans `%APPDATA%pp.builderz.desktop\` : préférences (langue, thème, effets de transparence), dossier des nouveaux mondes (`defaultWorldsDir`, chemin absolu ou `null` pour le dossier par défaut, `Documents\Atlasaga` ou `Documents\BuilderZ` s'il existe, via `set_default_worlds_dir` ; `default_worlds_dir` renvoie ce choix sinon la valeur par défaut) et mondes récents (10 au plus, le plus récent d'abord). Écriture atomique. Un fichier absent donne les valeurs par défaut ; un fichier illisible est mis de côté (`settings.corrupted.json`) et remplacé par les valeurs par défaut, sans bloquer le démarrage. Les champs manquants ou inconnus sont tolérés.
 
 Côté front, `loadPreferences()` charge les préférences **avant** le premier rendu (pas de flash de thème), puis `usePreferencesSync()` les enregistre à chaque changement.
 
@@ -244,7 +244,7 @@ Ajouter une commande : l'écrire dans `commands/`, l'ajouter à `specta_builder(
 
 ### Logs
 
-`tracing` écrit dans un fichier journalier de `%LOCALAPPDATA%\app.builderz.desktop\logs\` (14 fichiers gardés), et aussi sur la sortie d'erreur en debug. Le niveau par défaut est `info` (`debug` pour BuilderZ), modifiable avec `RUST_LOG`. Initialisation dans `src-tauri/src/logging.rs`.
+`tracing` écrit dans un fichier journalier de `%LOCALAPPDATA%\app.builderz.desktop\logs\` (14 fichiers gardés), et aussi sur la sortie d'erreur en debug. Le niveau par défaut est `info` (`debug` pour le code de l'app, `builderz_lib`), modifiable avec `RUST_LOG`. Initialisation dans `src-tauri/src/logging.rs`.
 
 ### Windows : manifeste et tests
 
@@ -285,7 +285,7 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
 
 - `theme` (ADR 0004, `src-tauri/src/world/theme.rs`) : absent pour le thème par défaut, sinon `{ "kind": "preset", "id" }` (thème fourni, identifiant `[a-z0-9-]`) ou `{ "kind": "custom", "background": <asset id> | null, "accent": "#rrggbb" }`. Lu avec tolérance (illisible = thème par défaut, avec un avertissement dans les logs), écrit par `set_world_theme(theme)` après validation (un fond doit exister dans `assets/`). `forget_asset` retire un asset supprimé de l'image principale et du fond du thème.
 - `preferences` (ADR 0004, `src-tauri/src/world/preferences.rs`) : préférences d'écriture, absentes quand toutes sont activées (la valeur par défaut). Lues champ par champ : un champ absent ou qui n'est pas un booléen reprend sa valeur par défaut. Écrites par `set_world_preferences(preferences)`.
-- `schemaVersion` est le numéro de la dernière migration appliquée. `format` permet de reconnaître un dossier BuilderZ.
+- `schemaVersion` est le numéro de la dernière migration appliquée. `format` permet de reconnaître un dossier Atlasaga.
 - `genre` (`fantasy`, `scienceFiction`, `romance`, `cyberpunk`, `contemporary`, `other`), `description` et `mainImage` (identifiant d'asset) sont apparus après la 0.1.0 : ils sont optionnels à la lecture, un monde plus ancien s'ouvre avec `other`, une description vide et pas d'image. Ils se modifient avec `update_world(patch)` (nom, genre, description ; champs absents inchangés) et `set_world_main_image(assetId | null)` (l'asset doit exister dans `assets/`). Renommer un monde met aussi à jour son nom dans les mondes récents.
 - **Création** (`create_world(parentDir, name)`) : le monde est créé dans un **nouveau dossier à son nom** dans `parentDir`. Le nom de dossier est dérivé par Rust (`world::folder_name`) : caractères interdits sous Windows et caractères de contrôle retirés, espaces fusionnés, pas de point ni d'espace final, noms réservés (`CON`, `NUL`, `COM1`…) suffixés par `_`, 100 caractères au plus. Ce dossier ne doit pas exister ou doit être vide. En cas d'échec, ce qui a été créé est retiré.
 - **Ouverture** (`open_world`) :
@@ -309,7 +309,7 @@ Automatisées par **release-please** et **tauri-action** (`.github/workflows/rel
 
 1. À chaque push sur `main`, release-please ouvre ou met à jour la **PR de release** : `CHANGELOG.md` (sections `feat`, `fix`, `perf` ; le reste est masqué) et la version dans `package.json`, `src-tauri/Cargo.toml` et `src-tauri/Cargo.lock`. `tauri.conf.json` n'a volontairement pas de champ `version` : Tauri reprend celle de `Cargo.toml` (et l'updater JSON de release-please reformaterait tout le fichier). Configuration : `release-please-config.json`, dernière version publiée : `.release-please-manifest.json`.
 2. **Fusionner la PR de release** crée le tag `vX.Y.Z` et la release GitHub.
-3. Dans le même workflow, le job « Windows installer » construit l'installeur NSIS (`BuilderZ_X.Y.Z_x64-setup.exe`) et l'attache à la release.
+3. Dans le même workflow, le job « Windows installer » construit l'installeur NSIS (`Atlasaga_X.Y.Z_x64-setup.exe`) et l'attache à la release.
 
 En phase `0.x`, une `feat` monte la version mineure et un changement cassant aussi (`bump-minor-pre-major`). La première release est fixée à `0.1.0` (`initial-version`, sans quoi release-please propose `1.0.0`) ; la `1.0.0` sera décidée à la fin de M8.
 
