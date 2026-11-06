@@ -47,10 +47,12 @@ Changer `productName` change la clé de désinstallation : l'installeur 1.8 **ne
 
 On ajoute donc un hook NSIS (`src-tauri/windows/installer-hooks.nsh`, `bundle.windows.nsis.installerHooks`), exécuté **après** l'installation d'Atlasaga (`NSIS_HOOK_POSTINSTALL`) :
 
-1. il cherche une installation BuilderZ de l'utilisateur (clé de désinstallation ou clé du dossier d'installation, dans `HKCU`) ;
-2. il supprime ses raccourcis `BuilderZ.lnk` (menu Démarrer, bureau) **seulement s'ils pointent vers son exe**, et les désépingle ; s'il y avait un raccourci sur le bureau, il en crée un « Atlasaga » ;
-3. il supprime `builderz.exe` et `uninstall.exe` de l'ancien dossier puis le dossier s'il est vide, sauf si Atlasaga a été installé dans ce même dossier ;
-4. il supprime les clés de registre de l'ancienne installation (désinstallation, dossier d'installation, démarrage automatique).
+1. il lit la clé de désinstallation et la clé du dossier d'installation de BuilderZ (`HKCU`) ;
+2. il n'agit que sur une vraie installation BuilderZ : un dossier qui n'est pas une racine de disque (plus de 3 caractères), `builderz.exe` présent dedans, et une commande de désinstallation égale à `"<dossier>\uninstall.exe"` (guillemets compris). Sinon il ne touche ni fichier ni clé ;
+3. il supprime `builderz.exe` ; s'il est encore là (fichier verrouillé, BuilderZ ouvert), **il garde toute l'ancienne installation** (fichiers, raccourcis, clés), qui reste visible et désinstallable dans « Applications installées ». Sinon il supprime `uninstall.exe` et le dossier s'il est vide (les autres fichiers d'un dossier partagé restent). Si Atlasaga a été installé dans ce même dossier, aucun fichier n'est supprimé ;
+4. une fois l'ancienne installation partie, il supprime ses raccourcis `BuilderZ.lnk` (menu Démarrer, bureau) **seulement s'ils pointent vers son exe**, les désépingle, recrée un raccourci « Atlasaga » sur le bureau s'il y en avait un, puis supprime ses clés de registre (désinstallation, dossier d'installation, démarrage automatique).
+
+Les registres utilisés par le hook (`$0` à `$3`, `$R6` à `$R8`) sont sauvegardés et rendus.
 
 On ne lance pas l'ancien désinstalleur : son comportement exact en mode silencieux dépend de la version 1.7.x, alors que la suppression à la main ne touche que ce qu'on nomme. **Les données ne sont jamais touchées** : `%APPDATA%\app.builderz.desktop`, `%LOCALAPPDATA%\app.builderz.desktop` et les dossiers de mondes ne figurent pas dans le hook. Comme l'`identifier` ne change pas, Atlasaga lit les mêmes réglages et retrouve les mêmes mondes récents.
 
@@ -75,5 +77,5 @@ On ne renomme pas `Documents\BuilderZ` en `Documents\Atlasaga` : déplacer les m
 
 ## Vérification
 
-- Le hook a été testé dans un script NSIS jetable, avec des clés de registre de test et des dossiers temporaires : ancienne installation, raccourcis et clés supprimés, raccourci sans rapport et données conservés, cas « même dossier » sans suppression de l'exe.
+- Le hook a été testé dans un script NSIS jetable, avec des clés de registre de test et des dossiers temporaires : cinq cas : installation normale, dossier partagé avec d'autres fichiers, Atlasaga installé dans le même dossier, exe verrouillé, commande de désinstallation qui ne correspond pas. Partout, données, raccourci sans rapport et autre valeur de démarrage conservés, registres rendus ; exe verrouillé et commande différente ne touchent rien.
 - Le chemin de mise à jour complet (installeur 1.7.1 puis 1.8) n'a pas été rejoué : l'installeur écrit dans le profil Windows de l'utilisateur courant, et il n'existe pas sur le poste de profil ni de bac à sable à jeter qui ne soit pas celui de Clément. À vérifier lors de la recette, sur son poste, avec l'installeur de la release.
