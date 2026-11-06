@@ -11,9 +11,15 @@
 ; %LOCALAPPDATA%\app.builderz.desktop, the bundle identifier did not change)
 ; and the worlds, wherever they are.
 
-!define LEGACY_PRODUCTNAME "BuilderZ"
-!define LEGACY_UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${LEGACY_PRODUCTNAME}"
-!define LEGACY_MANUPRODUCTKEY "Software\${LEGACY_PRODUCTNAME}\${LEGACY_PRODUCTNAME}"
+; /ifndef: a test build of the hook can point them at throwaway places.
+!define /ifndef LEGACY_PRODUCTNAME "BuilderZ"
+!define /ifndef LEGACY_MANUKEY "Software\${LEGACY_PRODUCTNAME}"
+!define /ifndef LEGACY_MANUPRODUCTKEY "${LEGACY_MANUKEY}\${LEGACY_PRODUCTNAME}"
+!define /ifndef LEGACY_UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${LEGACY_PRODUCTNAME}"
+!define /ifndef LEGACY_RUNKEY "Software\Microsoft\Windows\CurrentVersion\Run"
+!define /ifndef LEGACY_DEFAULT_DIR "$LOCALAPPDATA\${LEGACY_PRODUCTNAME}"
+!define /ifndef LEGACY_STARTMENU_DIR "$SMPROGRAMS"
+!define /ifndef LEGACY_DESKTOP_DIR "$DESKTOP"
 
 !macro NSIS_HOOK_POSTINSTALL
   Push $R7
@@ -31,27 +37,27 @@
   ${If} $R7 != ""
     StrCpy $R9 1
   ${Else}
-    StrCpy $R7 "$LOCALAPPDATA\${LEGACY_PRODUCTNAME}"
+    StrCpy $R7 "${LEGACY_DEFAULT_DIR}"
   ${EndIf}
 
   ${If} $R9 = 1
     DetailPrint "Removing the previous BuilderZ install from $R7"
 
     ; Its shortcuts, only when they point to its exe.
-    !insertmacro IsShortcutTarget "$SMPROGRAMS\${LEGACY_PRODUCTNAME}.lnk" "$R7\${MAINBINARYNAME}.exe"
+    !insertmacro IsShortcutTarget "${LEGACY_STARTMENU_DIR}\${LEGACY_PRODUCTNAME}.lnk" "$R7\${MAINBINARYNAME}.exe"
     Pop $0
     ${If} $0 = 1
-      !insertmacro UnpinShortcut "$SMPROGRAMS\${LEGACY_PRODUCTNAME}.lnk"
-      Delete "$SMPROGRAMS\${LEGACY_PRODUCTNAME}.lnk"
+      !insertmacro UnpinShortcut "${LEGACY_STARTMENU_DIR}\${LEGACY_PRODUCTNAME}.lnk"
+      Delete "${LEGACY_STARTMENU_DIR}\${LEGACY_PRODUCTNAME}.lnk"
     ${EndIf}
-    !insertmacro IsShortcutTarget "$DESKTOP\${LEGACY_PRODUCTNAME}.lnk" "$R7\${MAINBINARYNAME}.exe"
+    !insertmacro IsShortcutTarget "${LEGACY_DESKTOP_DIR}\${LEGACY_PRODUCTNAME}.lnk" "$R7\${MAINBINARYNAME}.exe"
     Pop $0
     ${If} $0 = 1
-      !insertmacro UnpinShortcut "$DESKTOP\${LEGACY_PRODUCTNAME}.lnk"
-      Delete "$DESKTOP\${LEGACY_PRODUCTNAME}.lnk"
+      !insertmacro UnpinShortcut "${LEGACY_DESKTOP_DIR}\${LEGACY_PRODUCTNAME}.lnk"
+      Delete "${LEGACY_DESKTOP_DIR}\${LEGACY_PRODUCTNAME}.lnk"
       ; There was a desktop shortcut: keep one, under the new name.
-      CreateShortcut "$DESKTOP\${PRODUCTNAME}.lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
-      !insertmacro SetLnkAppUserModelId "$DESKTOP\${PRODUCTNAME}.lnk"
+      CreateShortcut "${LEGACY_DESKTOP_DIR}\${PRODUCTNAME}.lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
+      !insertmacro SetLnkAppUserModelId "${LEGACY_DESKTOP_DIR}\${PRODUCTNAME}.lnk"
     ${EndIf}
 
     ; Its two files, unless Atlasaga was installed in the same folder.
@@ -61,11 +67,11 @@
       RMDir "$R7"
     ${EndIf}
 
-    ; Its registry entries: « Apps & features », install location, autostart.
+    ; Its registry entries: « Installed apps », install location, autostart.
     DeleteRegKey HKCU "${LEGACY_UNINSTKEY}"
     DeleteRegKey HKCU "${LEGACY_MANUPRODUCTKEY}"
-    DeleteRegKey /ifempty HKCU "Software\${LEGACY_PRODUCTNAME}"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${LEGACY_PRODUCTNAME}"
+    DeleteRegKey /ifempty HKCU "${LEGACY_MANUKEY}"
+    DeleteRegValue HKCU "${LEGACY_RUNKEY}" "${LEGACY_PRODUCTNAME}"
   ${EndIf}
 
   Pop $R9
