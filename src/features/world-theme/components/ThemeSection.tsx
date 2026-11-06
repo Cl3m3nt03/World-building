@@ -244,16 +244,24 @@ function ExploreTab({
   );
 }
 
-/** The look a shipped ambiance hands to « Modifier »; nothing for the others. */
+/**
+ * The look a shipped ambiance hands to « Modifier », its imposed mode
+ * included (a customised Crypte stays dark); nothing for the others.
+ */
 function presetLook(
   theme: WorldTheme,
-): Pick<Extract<WorldTheme, { kind: "custom" }>, "material" | "ornament" | "headingFont"> {
+): Pick<
+  Extract<WorldTheme, { kind: "custom" }>,
+  "material" | "ornament" | "headingFont" | "scheme"
+> {
   const { material, ornament } = themeLook(theme);
   const headingFont = themeHeadingFont(theme);
+  const scheme = themeScheme(theme);
   return {
     ...(material !== "vellum" && { material }),
     ...(ornament !== "none" && { ornament }),
     ...(headingFont !== "alegreya" && { headingFont }),
+    ...(scheme && { scheme }),
   };
 }
 
@@ -275,7 +283,7 @@ function EditTab({
 
   // Starts from what is shown: the current accent (both of an ambiance that
   // has one per mode), its material, ornament and heading font, the main
-  // image. The mode is not handed over: the custom theme follows the app.
+  // image, and the mode it imposes.
   const shownAccent = resolveTheme(world.theme, world.mainImage).accent;
   const current: Extract<WorldTheme, { kind: "custom" }> =
     world.theme.kind === "custom"

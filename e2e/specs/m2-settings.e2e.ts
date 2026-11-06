@@ -140,7 +140,27 @@ describe("M2: world settings, theme and writing preferences", () => {
         }),
       { timeoutMsg: "Crypte was not applied in dark mode" },
     );
+    // Customised, it is still Crypte: dark, and its world.json says so.
+    await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="Modifier"]').click();
+    await $('[role="dialog"] [role="radio"][aria-label="Violet"]').click();
+    await browser.waitUntil(
+      async () =>
+        browser.execute(() => {
+          const root = document.documentElement;
+          return (
+            root.style.getPropertyValue("--bz-world-accent-dark") !== "#d0393f" &&
+            root.style.getPropertyValue("--bz-world-accent-dark") !== "" &&
+            root.dataset.theme === "dark"
+          );
+        }),
+      { timeoutMsg: "the customised Crypte did not stay dark" },
+    );
     await closeSettings();
+    await reopenWorld();
+    await browser.waitUntil(
+      async () => browser.execute(() => document.documentElement.dataset.theme === "dark"),
+      { timeoutMsg: "the customised Crypte was not dark after reopening" },
+    );
   });
 
   it("dresses the panels in the theme's material, ornament, heading font and mode (#548-#550)", async () => {

@@ -1,0 +1,3 @@
+Atlasaga - third-party notices (not generated)
+
+Run `pnpm notices` to generate the third-party notices of this build.
