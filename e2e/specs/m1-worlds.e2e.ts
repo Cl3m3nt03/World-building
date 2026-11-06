@@ -128,7 +128,7 @@ describe("M1: worlds, preferences and relocation", () => {
   });
 
   it("shows the app's emblem in About, loaded", async () => {
-    await backToWorldList();
+    // From the open world: the next step goes back to the world list itself.
     await $("aria/Réglages").click();
     await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="À propos"]').click();
     const emblem = await $("aria/Emblème : une rose des vents au-dessus d'un livre ouvert");
