@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.8.0](https://github.com/Cl3m3nt03/World-building/compare/v1.7.1...v1.8.0) (2026-11-07)
+
+
+### Fonctionnalités
+
+* **brand:** new app icon and emblem in place of the Tauri icon ([#573](https://github.com/Cl3m3nt03/World-building/issues/573)) ([d276788](https://github.com/Cl3m3nt03/World-building/commit/d276788bd67d2fa267b11e46d5c01e85da2c0d15))
+* **theme:** always show crypt dark, keep both accents on edit ([#575](https://github.com/Cl3m3nt03/World-building/issues/575)) ([41dfddd](https://github.com/Cl3m3nt03/World-building/commit/41dfdddc1379463d0f6814014873b65f0934f9f8))
+* **theme:** let a world force light or dark over the app's mode ([#563](https://github.com/Cl3m3nt03/World-building/issues/563)) ([58fe3bc](https://github.com/Cl3m3nt03/World-building/commit/58fe3bc2c39c65cce618857108d8fab91a37c2d1))
+* **theme:** theme gallery with a live preview ([#569](https://github.com/Cl3m3nt03/World-building/issues/569)) ([bf64c96](https://github.com/Cl3m3nt03/World-building/commit/bf64c96958c1255573e3e597fab6cc80c8e6d4f3))
+* **wiki:** Atlas wiki theme that follows the world and the mode shown ([#566](https://github.com/Cl3m3nt03/World-building/issues/566)) ([1a870a5](https://github.com/Cl3m3nt03/World-building/commit/1a870a51c987d7fae3dfb4feceb05a1379ba23a5))
+* **world-theme:** bundled heading fonts of the rich themes ([#562](https://github.com/Cl3m3nt03/World-building/issues/562)) ([125586a](https://github.com/Cl3m3nt03/World-building/commit/125586a4893c5af542389927b638dee6904781a8))
+* **world-theme:** panel materials and ornaments ([#558](https://github.com/Cl3m3nt03/World-building/issues/558)) ([d50348a](https://github.com/Cl3m3nt03/World-building/commit/d50348a85fe8f28707e2f7b7d266d21efa622a29))
+* **world-theme:** ship the Grimoire, Station and Crypt ambiances ([#565](https://github.com/Cl3m3nt03/World-building/issues/565)) ([b967b37](https://github.com/Cl3m3nt03/World-building/commit/b967b375f1deb42fbd36d8b0da070bc90f5221fd))
+* **world:** rich world theme format in world.json ([#557](https://github.com/Cl3m3nt03/World-building/issues/557)) ([72e2b54](https://github.com/Cl3m3nt03/World-building/commit/72e2b54e84245f82a80c9f9d1b3c6d0facb8d94b))
+
+
+### Corrections
+
+* **book:** ship the PDF with OFL fonts instead of Typst's GPL font ([#567](https://github.com/Cl3m3nt03/World-building/issues/567)) ([cd9b426](https://github.com/Cl3m3nt03/World-building/commit/cd9b42672c515ce296ee6496bebd4b2430f670d1))
+* **cards:** hang the slash menu on its whole line ([#538](https://github.com/Cl3m3nt03/World-building/issues/538)) ([aa08f7a](https://github.com/Cl3m3nt03/World-building/commit/aa08f7abf4b26476b113c33e3055cf6cd9adf1bf)), closes [#536](https://github.com/Cl3m3nt03/World-building/issues/536)
+* **cards:** keep a hidden choice menu from taking room in its property row ([#539](https://github.com/Cl3m3nt03/World-building/issues/539)) ([c4526cd](https://github.com/Cl3m3nt03/World-building/commit/c4526cd24e4fbce80a8eee04568f4d203e2730bb)), closes [#535](https://github.com/Cl3m3nt03/World-building/issues/535)
+* **shell:** compute the backdrop veil per image for AA bare text ([#559](https://github.com/Cl3m3nt03/World-building/issues/559)) ([9001c82](https://github.com/Cl3m3nt03/World-building/commit/9001c82d1feabf178e746926de7fe42daf77f761))
+
 ## [1.7.1](https://github.com/Cl3m3nt03/World-building/compare/v1.7.0...v1.7.1) (2026-10-31)
 
 
