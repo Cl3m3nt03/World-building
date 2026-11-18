@@ -182,6 +182,20 @@ describe("M3: organisation of the sidebar", () => {
     await browser.waitUntil(async () => (await results())[0]?.startsWith("Taverne") === true, {
       timeoutMsg: "Taverne not found by its content",
     });
+
+    // #598: a search made before the text changed is made again after.
+    await search.setValue("marimba");
+    await browser.pause(800);
+    expect(await results()).toEqual([]);
+    await browser.keys("Escape");
+    await (await sidebarItem("Taverne")).click();
+    await writeInCard();
+    await browser.keys(" Marimba.");
+    await browser.pause(1500);
+    await search.setValue("marimba");
+    await browser.waitUntil(async () => (await results())[0]?.startsWith("Taverne") === true, {
+      timeoutMsg: "the search did not see the new text of Taverne",
+    });
     await browser.keys("Escape");
     await $("aside [role=tree]").waitForDisplayed();
   });
