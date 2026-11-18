@@ -116,7 +116,7 @@ test("links to the design system in a development build only (#615)", () => {
   cleanup();
 
   // A published build is a production bundle.
-  vi.stubEnv("DEV", false);
+  vi.stubEnv("MODE", "production");
   renderDialog();
   expect(screen.queryByRole("link", { name: "Système de design" })).toBeNull();
   expect(screen.getByRole("button", { name: "Licences tierces" })).toBeTruthy();

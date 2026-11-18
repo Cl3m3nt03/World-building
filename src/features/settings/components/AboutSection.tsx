@@ -73,8 +73,8 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
       <p className="text-xs text-muted-foreground">
         {t("about.fonts", { fonts: Object.values(HEADING_FONT_NAMES).join(", ") })}
       </p>
-      {/* A development page (#615): published builds have neither the link nor the page. */}
-      {import.meta.env.DEV && (
+      {/* A development page (#615): builds have neither the link nor the page (router.tsx). */}
+      {import.meta.env.MODE !== "production" && (
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" asChild>
             {/* A plain hash link: the hash history follows it, with or without a router around. */}

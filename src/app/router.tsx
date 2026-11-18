@@ -146,19 +146,22 @@ const worldListRoute = createRoute({
 
 /**
  * The development pages: the design system, a showcase of the interface's
- * pieces (V2-1.7), confused a tester (#587). Only development builds have it
+ * pieces (V2-1.7), confused a tester (#587). Only the dev server has it
  * (`pnpm tauri dev`); a published or e2e build is a production bundle, where
  * the condition is `false` at build time and the page is left out of it.
+ * The mode, not `DEV`: the e2e runner sets NODE_ENV, which turns `DEV` on in
+ * a `vite build` too, while the mode of any build stays "production".
  */
-const developmentRoutes = import.meta.env.DEV
-  ? [
-      createRoute({
-        getParentRoute: () => rootRoute,
-        path: "/design-system",
-        component: DesignSystemPage,
-      }),
-    ]
-  : [];
+const developmentRoutes =
+  import.meta.env.MODE !== "production"
+    ? [
+        createRoute({
+          getParentRoute: () => rootRoute,
+          path: "/design-system",
+          component: DesignSystemPage,
+        }),
+      ]
+    : [];
 
 const worldRoute = createRoute({
   getParentRoute: () => rootRoute,
