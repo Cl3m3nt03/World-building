@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.1](https://github.com/Cl3m3nt03/World-building/compare/v1.8.0...v1.8.1) (2026-11-18)
+
+
+### Corrections
+
+* **build:** copy bundle resources next to the exe with Rust 1.100 ([#597](https://github.com/Cl3m3nt03/World-building/issues/597)) ([b4b0ef9](https://github.com/Cl3m3nt03/World-building/commit/b4b0ef9bce39c00622d757944f820d7cd49363bb)), closes [#596](https://github.com/Cl3m3nt03/World-building/issues/596)
+* **editor:** start the next editor from the text just typed ([#586](https://github.com/Cl3m3nt03/World-building/issues/586)) ([#602](https://github.com/Cl3m3nt03/World-building/issues/602)) ([99858dd](https://github.com/Cl3m3nt03/World-building/commit/99858dd172045739148523494c3fd0a651f6b8be))
+* **maps:** allow typing the font size of map texts and zone labels ([#594](https://github.com/Cl3m3nt03/World-building/issues/594)) ([4474da4](https://github.com/Cl3m3nt03/World-building/commit/4474da4b7bf84e559d3379a29589842d5bfcc163))
+* **quill:** keep the free colour picker smooth while dragging ([#593](https://github.com/Cl3m3nt03/World-building/issues/593)) ([4ed790a](https://github.com/Cl3m3nt03/World-building/commit/4ed790a0d615082d5f41a009b6102c61dea87925))
+* **search:** search again after a card's text changes ([#598](https://github.com/Cl3m3nt03/World-building/issues/598)) ([#603](https://github.com/Cl3m3nt03/World-building/issues/603)) ([67fd1f0](https://github.com/Cl3m3nt03/World-building/commit/67fd1f02543b9272e6c45beca4b423a7ec8ad655))
+* **shell:** lead the World tab back to the world screen from any document ([#595](https://github.com/Cl3m3nt03/World-building/issues/595)) ([6d0cab4](https://github.com/Cl3m3nt03/World-building/commit/6d0cab43ee603ce0c65a517311df7c56a2fb82af)), closes [#583](https://github.com/Cl3m3nt03/World-building/issues/583)
+
 ## [1.8.0](https://github.com/Cl3m3nt03/World-building/compare/v1.7.1...v1.8.0) (2026-11-07)
 
 
