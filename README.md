@@ -10,7 +10,7 @@ Tauri 2 · Rust (SQLite via `sqlx`) · React 19 + TypeScript · Vite · Tailwind
 
 ## Prérequis (Windows)
 
-- Rust stable via `rustup`
+- Rust via `rustup`, dans la version épinglée par `rust-toolchain.toml` (à la racine) : rustup l'installe, avec `clippy` et `rustfmt`, à la première commande `cargo` dans le dépôt (ou `rustup toolchain install` à la racine). La CI utilise la même. Pour la changer : ADR 0017.
 - Visual Studio Build Tools, composant « Développement Desktop en C++ »
 - WebView2 (déjà présent sur Windows 11)
 - Node.js LTS et pnpm

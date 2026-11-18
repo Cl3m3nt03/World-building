@@ -34,9 +34,13 @@ jobs:
           node-version: lts/*
           cache: pnpm
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+      # Installs the toolchain pinned in rust-toolchain.toml (version,
+      # components, profile): the file is the only source of the version (ADR 0017).
+      - name: Install Rust (rust-toolchain.toml)
+        shell: bash
+        run: |
+          rustup toolchain install
+          rustc --version
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -93,7 +97,13 @@ jobs:
           node-version: lts/*
           cache: pnpm
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Installs the toolchain pinned in rust-toolchain.toml (version,
+      # components, profile): the file is the only source of the version (ADR 0017).
+      - name: Install Rust (rust-toolchain.toml)
+        shell: bash
+        run: |
+          rustup toolchain install
+          rustc --version
 
       # The crate sources cargo-about reads the licence files from.
       - uses: Swatinem/rust-cache@v2
@@ -132,7 +142,13 @@ jobs:
           node-version: lts/*
           cache: pnpm
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Installs the toolchain pinned in rust-toolchain.toml (version,
+      # components, profile): the file is the only source of the version (ADR 0017).
+      - name: Install Rust (rust-toolchain.toml)
+        shell: bash
+        run: |
+          rustup toolchain install
+          rustc --version
 
       - uses: Swatinem/rust-cache@v2
         with:
