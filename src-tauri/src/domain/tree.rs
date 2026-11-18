@@ -328,14 +328,28 @@ pub async fn move_document(
     Ok(())
 }
 
+/// What undoing a trash needs (#604): where the document was in its place,
+/// and its children, which took its place.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashUndo {
+    /// Its place then: if it is not its place any more (its folder deleted
+    /// since, say), undoing restores it like `restore_document`.
+    pub place: Place,
+    /// Its index among the items of its place.
+    pub index: u32,
+    /// Its live children when it was trashed, in their order.
+    pub children: Vec<String>,
+}
+
 /// Puts a document in the trash. Its live children do not go with it: they
 /// take its place, in their order. It keeps its own place, to go back there
-/// when restored.
+/// when restored. Returns what undoing it needs.
 pub async fn trash_document(
     tx: &mut Transaction<'_, Sqlite>,
     id: &str,
     now: &str,
-) -> AppResult<()> {
+) -> AppResult<TrashUndo> {
     let place = live_place(tx, id).await?;
     let items = items_of(tx, &place).await?;
     let index = items
@@ -360,10 +374,22 @@ pub async fn trash_document(
         .filter(|item| *item != Item::Document(id.to_owned()))
         .collect();
     let at = index.min(lifted.len());
+    let undo = TrashUndo {
+        place: place.clone(),
+        index: u32::try_from(at).unwrap_or(u32::MAX),
+        children: children
+            .iter()
+            .filter_map(|child| match child {
+                Item::Document(child_id) => Some(child_id.clone()),
+                Item::Folder(_) => None,
+            })
+            .collect(),
+    };
     lifted.splice(at..at, children);
     write_order(tx, &lifted).await?;
     // It leaves the pins; its `pinned_order` stays, to come back there.
-    renumber_pins(tx).await
+    renumber_pins(tx).await?;
+    Ok(undo)
 }
 
 /// Takes a document out of the trash, back to its place (at the end) if that
@@ -384,7 +410,66 @@ pub async fn restore_document(tx: &mut Transaction<'_, Sqlite>, id: &str) -> App
     queries::set_document_place(tx, id, folder, parent).await?;
     queries::set_trashed(tx, id, None).await?;
     insert_at(tx, &place, Item::Document(id.to_owned()), usize::MAX).await?;
-    // Pinned when trashed: back among the pins, where it was.
+    restore_pin(tx, id).await
+}
+
+/// Undoes `trash_document` (#604): the document goes back to its index in
+/// its place, and its children that are still where they were lifted go
+/// back under it, in their order. If its place is gone or is not the same
+/// any more (a folder deleted since), it is restored like
+/// `restore_document`. A document out of the trash is left as it is.
+pub async fn undo_trash(
+    tx: &mut Transaction<'_, Sqlite>,
+    id: &str,
+    undo: &TrashUndo,
+) -> AppResult<()> {
+    let row = queries::place(tx, id)
+        .await?
+        .ok_or_else(|| AppError::InvalidInput(format!("document not found: {id}")))?;
+    if !row.trashed {
+        return Ok(());
+    }
+    let wanted = place_of(row.folder_id, row.parent_id);
+    if wanted != undo.place || check_document_target(tx, id, &wanted).await.is_err() {
+        return restore_document(tx, id).await;
+    }
+    let (folder, parent) = columns(&wanted);
+    queries::set_document_place(tx, id, folder, parent).await?;
+    queries::set_trashed(tx, id, None).await?;
+    let index = usize::try_from(undo.index).unwrap_or(usize::MAX);
+    insert_at(tx, &wanted, Item::Document(id.to_owned()), index).await?;
+
+    // Its children, if nobody moved them since: siblings of it, so taking
+    // them under it cannot make a cycle.
+    let mut adopted: Vec<Item> = Vec::new();
+    for child in &undo.children {
+        let still_there = child != id
+            && adopted
+                .iter()
+                .all(|item| *item != Item::Document(child.clone()))
+            && live_place(tx, child)
+                .await
+                .is_ok_and(|place| place == wanted);
+        if still_there {
+            queries::set_document_place(tx, child, None, Some(id)).await?;
+            adopted.push(Item::Document(child.clone()));
+        }
+    }
+    if !adopted.is_empty() {
+        renumber(tx, &wanted).await?;
+        let others: Vec<Item> = items_of(tx, &Place::Parent { id: id.to_owned() })
+            .await?
+            .into_iter()
+            .filter(|item| !adopted.contains(item))
+            .collect();
+        adopted.extend(others);
+        write_order(tx, &adopted).await?;
+    }
+    restore_pin(tx, id).await
+}
+
+/// A document pinned when trashed goes back among the pins, where it was.
+async fn restore_pin(tx: &mut Transaction<'_, Sqlite>, id: &str) -> AppResult<()> {
     if let Some(Some(order)) = queries::pinned_order(tx, id).await? {
         let mut pins: Vec<String> = queries::live_pins(tx)
             .await?

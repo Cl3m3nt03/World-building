@@ -1,8 +1,9 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
-use crate::domain::documents::{self, Document, DocumentFilter, RecentDocument};
+use crate::domain::documents::{self, Document, DocumentFilter, RecentDocument, TrashedDocument};
 use crate::domain::search::{self, SearchHit};
+use crate::domain::tree::TrashUndo;
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
@@ -55,10 +56,23 @@ pub async fn rename_document(
 }
 
 /// Puts a document in the world's trash, from where it can be restored.
+/// Gives what `undo_trash_document` needs to put it back exactly.
 #[tauri::command]
 #[specta::specta]
-pub async fn trash_document(state: State<'_, AppState>, id: String) -> AppResult<Document> {
-    documents::trash(&pool(&state, "trash_document").await?, &id).await
+pub async fn trash_document(state: State<'_, AppState>, id: String) -> AppResult<TrashedDocument> {
+    documents::trash_with_undo(&pool(&state, "trash_document").await?, &id).await
+}
+
+/// Undoes `trash_document`: the document goes back to its place and
+/// position, with its children under it again.
+#[tauri::command]
+#[specta::specta]
+pub async fn undo_trash_document(
+    state: State<'_, AppState>,
+    id: String,
+    undo: TrashUndo,
+) -> AppResult<Document> {
+    documents::undo_trash(&pool(&state, "undo_trash_document").await?, &id, &undo).await
 }
 
 #[tauri::command]

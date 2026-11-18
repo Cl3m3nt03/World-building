@@ -25,6 +25,7 @@ export {
   useCardCounts,
   useCardList,
   useRecentDocuments,
+  useTrashDocument,
   useWorldStats,
 } from "./hooks/useCards";
 export { typeLabel } from "./typeLabel";

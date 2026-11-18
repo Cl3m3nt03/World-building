@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useToasts } from "@/app/stores/toasts";
 import { propertyKeys } from "@/features/properties";
 import { type Card, commands } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
@@ -73,15 +75,48 @@ export function useSetCardAliases(id: string) {
   });
 }
 
-export function useTrashCard(id: string) {
+export type TrashRequest = {
+  id: string;
+  /** Runs once an undo has put the document back (to reopen it, focus its row…). */
+  onUndone?: () => void;
+};
+
+/**
+ * Puts a document in the trash at once, and offers to undo it (#604): a
+ * notification names it, with « Annuler », which puts it back exactly where
+ * it was (place, position, children). Trashing is reversible, so it asks
+ * nothing first.
+ */
+export function useTrashDocument() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const show = useToasts((state) => state.show);
+  const changed = (id: string) =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: cardKeys.detail(id) }),
+      queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
+    ]);
   return useMutation({
-    mutationFn: () => unwrap(commands.trashDocument(id)),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: cardKeys.detail(id) }),
-        queryClient.invalidateQueries({ queryKey: documentKeys.all() }),
-      ]),
+    mutationFn: ({ id }: TrashRequest) => unwrap(commands.trashDocument(id)),
+    onSuccess: ({ document, undo }, { id, onUndone }) => {
+      const title = document.title;
+      show({
+        message: t("trash.toast.moved", { title }),
+        action: {
+          label: t("trash.toast.undo"),
+          altText: t("trash.toast.undoAlt", { title }),
+          run: () => {
+            unwrap(commands.undoTrashDocument(id, undo))
+              .then(() => changed(id))
+              .then(
+                () => onUndone?.(),
+                () => show({ tone: "error", message: t("trash.toast.undoFailed", { title }) }),
+              );
+          },
+        },
+      });
+      return changed(id);
+    },
   });
 }
 

@@ -2,7 +2,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { clearMocks, mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { useUiStore } from "@/app/stores/ui";
@@ -80,6 +80,8 @@ let cards: Map<string, Card>;
 /** Saved contents, by card id. */
 let contents: Map<string, string>;
 let contentSaveFails: boolean;
+/** A command that fails, to check how its error shows. */
+let mockFailure: string | null;
 
 function newCard(id: string, title: string, typeId: string): Card {
   return {
@@ -108,8 +110,10 @@ beforeEach(() => {
   cards = new Map([["aragorn", newCard("aragorn", "Aragorn", "character")]]);
   contents = new Map();
   contentSaveFails = false;
+  mockFailure = null;
   mockIPC((command, payload) => {
     calls.push({ command, payload });
+    if (command === mockFailure) throw { kind: "database", message: "locked" };
     const args = payload as Record<string, unknown>;
     switch (command) {
       case "current_world":
@@ -176,7 +180,12 @@ beforeEach(() => {
       case "set_card_aliases":
         return update(args.id as string, { aliases: args.aliases as string[] });
       case "trash_document":
-        return update(args.id as string, { trashedAt: "2026-09-27T11:00:00Z" });
+        return {
+          document: update(args.id as string, { trashedAt: "2026-09-27T11:00:00Z" }),
+          undo: { place: { kind: "root" }, index: 0, children: [] },
+        };
+      case "undo_trash_document":
+        return update(args.id as string, { trashedAt: null });
       case "restore_document":
         return update(args.id as string, { trashedAt: null });
       case "delete_document":
@@ -354,6 +363,69 @@ test("moving a card to the trash goes back to the empty workspace", async () => 
   expect(callsOf("trash_document")[0]?.payload).toEqual({ id: "aragorn" });
 });
 
+test("a card moved to the trash says so, and its notification undoes it and reopens the card (#604)", async () => {
+  const router = await renderAt("/world/demo/world/card/aragorn");
+
+  await openMenu(await screen.findByRole("button", { name: "Actions de la fiche" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Mettre à la corbeille" }));
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
+
+  // Nothing was asked first: the card is in the trash, and the notification says it.
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  const notification = (await screen.findByText("« Aragorn » est dans la corbeille")).closest(
+    "li",
+  ) as HTMLElement;
+  // Reachable with F8, and named for what it does.
+  expect(screen.getByRole("region", { name: "Notifications (F8)" })).toBeTruthy();
+  const undo = within(notification).getByRole("button", { name: "Annuler" });
+  // What screen readers hear in place of the button's label.
+  expect(
+    notification
+      .querySelector("[data-radix-toast-announce-alt]")
+      ?.getAttribute("data-radix-toast-announce-alt"),
+  ).toBe("Annuler : sortir « Aragorn » de la corbeille");
+
+  await act(async () => {
+    fireEvent.click(undo);
+  });
+  await waitFor(() =>
+    expect(callsOf("undo_trash_document")[0]?.payload).toEqual({
+      id: "aragorn",
+      undo: { place: { kind: "root" }, index: 0, children: [] },
+    }),
+  );
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/world/demo/world/card/aragorn"),
+  );
+  expect(cards.get("aragorn")?.trashedAt).toBeNull();
+});
+
+test("an undo that fails says so in a notification (#604)", async () => {
+  const router = await renderAt("/world/demo/world/card/aragorn");
+  await openMenu(await screen.findByRole("button", { name: "Actions de la fiche" }));
+  await act(async () => {
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Mettre à la corbeille" }));
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
+  const notification = (await screen.findByText("« Aragorn » est dans la corbeille")).closest(
+    "li",
+  ) as HTMLElement;
+
+  mockFailure = "undo_trash_document";
+  await act(async () => {
+    fireEvent.click(within(notification).getByRole("button", { name: "Annuler" }));
+  });
+
+  expect(
+    await screen.findByText(
+      "« Aragorn » n'a pas pu sortir de la corbeille. Ouvrez la corbeille pour le restaurer.",
+    ),
+  ).toBeTruthy();
+  expect(router.state.location.pathname).toBe("/world/demo/world");
+});
+
 test("the sidebar lists the cards and highlights the open one", async () => {
   cards.set("bree", newCard("bree", "Bree", "city"));
   const router = await renderAt("/world/demo/world/card/aragorn");
@@ -404,7 +476,24 @@ test("the trash restores, deletes for good and empties after confirmation", asyn
   fireEvent.click(await screen.findByRole("button", { name: "Restaurer Gollum" }));
   await waitFor(() => expect(callsOf("restore_document")[0]?.payload).toEqual({ id: "gollum" }));
 
+  // Deleting one item for good asks first (#604); cancelling keeps it, with the focus back.
+  const deleteSaruman = screen.getByRole("button", { name: "Supprimer définitivement Saroumane" });
+  fireEvent.click(deleteSaruman);
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Supprimer « Saroumane » définitivement ?",
+  );
+  const cancel = screen.getByRole("button", { name: "Annuler" });
+  expect(document.activeElement).toBe(cancel);
+  fireEvent.click(cancel);
+  await waitFor(() =>
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Supprimer définitivement Saroumane" }),
+    ),
+  );
+  expect(callsOf("delete_document")).toHaveLength(0);
+
   fireEvent.click(screen.getByRole("button", { name: "Supprimer définitivement Saroumane" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Supprimer" }));
   await waitFor(() => expect(callsOf("delete_document")[0]?.payload).toEqual({ id: "saruman" }));
 
   await screen.findByRole("button", { name: "Restaurer Smaug" });

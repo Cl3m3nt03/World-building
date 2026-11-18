@@ -116,6 +116,7 @@
     "allow-recent-documents",
     "allow-rename-document",
     "allow-trash-document",
+    "allow-undo-trash-document",
     "allow-restore-document",
     "allow-delete-document",
     "allow-empty-trash",

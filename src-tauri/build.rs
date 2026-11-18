@@ -103,6 +103,7 @@ const COMMANDS: &[&str] = &[
     "recent_documents",
     "rename_document",
     "trash_document",
+    "undo_trash_document",
     "restore_document",
     "delete_document",
     "empty_trash",

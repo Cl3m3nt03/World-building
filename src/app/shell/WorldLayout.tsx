@@ -6,6 +6,7 @@ import { CardTypesDialog } from "@/features/card-types";
 import { useCurrentWorld } from "@/features/world";
 import { WorldSettingsDialog } from "@/features/world-settings";
 import { usePageTransition } from "./navigation";
+import { Toaster } from "./Toaster";
 import { type ShellTab, TopBar } from "./TopBar";
 
 export const SHELL_TABS = ["home", "world", "wiki", "quill"] as const satisfies readonly ShellTab[];
@@ -119,6 +120,8 @@ export function WorldLayout() {
       </TabsContent>
       <CardTypesDialog open={cardTypesOpen} onOpenChange={setCardTypesOpen} />
       {world && <WorldSettingsDialog world={world} />}
+      {/* One per world: switching worlds drops the notifications (and their undo). */}
+      <Toaster key={worldId} />
     </Tabs>
   );
 }
