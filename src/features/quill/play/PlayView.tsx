@@ -13,12 +13,11 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { type Chapter, commands } from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
+import type { Chapter } from "@/lib/bindings";
 import { useSoundNames } from "../audio/CueMargin";
 import { cueSpans } from "../audio/cueMark";
 import { useDraftCues } from "../audio/useCues";
-import { quillKeys } from "../hooks/useQuill";
+import { draftQuery } from "../hooks/useQuill";
 import { BookText, blockTexts } from "../reader/BookText";
 import { pageColors, readerFont, TEXT_SIZES, useReaderSettings } from "../reader/settings";
 import { SoundEngine } from "./engine";
@@ -45,10 +44,7 @@ export function PlayView({ chapter, draftId }: Props) {
   const { t, i18n } = useTranslation();
   const speedId = useId();
   const volumeId = useId();
-  const draft = useQuery({
-    queryKey: quillKeys.draft(draftId),
-    queryFn: () => unwrap(commands.getDraft(draftId)),
-  });
+  const draft = useQuery(draftQuery(draftId));
   const cues = useDraftCues(draftId);
   const names = useSoundNames();
   const reader = useReaderSettings(chapter.storyId);

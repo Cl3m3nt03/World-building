@@ -171,6 +171,25 @@ describe("M8: the wiki", () => {
       async () => (await $("aria/Bloc de texte 1").getText()).includes("Écrit depuis le wiki."),
       { timeoutMsg: "World did not show the text written in the wiki" },
     );
+
+    // #586: written in World, the card opened in the wiki at once, before
+    // its save: the page shows the words, and writing there keeps them.
+    await $("aria/Bloc de texte 1").click();
+    await browser.keys(["Control", "End"]);
+    await browser.keys(" Dit en hâte.");
+    await $("aria/Actions de la fiche").click();
+    await menuItem("Ouvrir dans le wiki").click();
+    await $('article[aria-label="Alvar"]').waitForDisplayed();
+    expect(await $("aria/Bloc de texte 1").getText()).toContain("Dit en hâte.");
+    await $("aria/Bloc de texte 1").click();
+    await browser.keys(["Control", "End"]);
+    await browser.keys(" Puis relu.");
+    await browser.waitUntil(
+      async () =>
+        (await invoke<string>("get_card_content", { id: cards.Alvar })).includes("Puis relu"),
+      { timeoutMsg: "the text written in the wiki was not saved" },
+    );
+    expect(await invoke<string>("get_card_content", { id: cards.Alvar })).toContain("Dit en hâte.");
   });
 
   it("keeps the wiki's theme after a relaunch, without changing the app's", async () => {

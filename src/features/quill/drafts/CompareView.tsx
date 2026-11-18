@@ -13,18 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type Chapter, commands } from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
+import type { Chapter } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
-import { quillKeys } from "../hooks/useQuill";
+import { draftQuery } from "../hooks/useQuill";
 import { compareDrafts, type Piece, paragraphs } from "./diff";
 import { draftRoute } from "./routes";
 
 function useDraft(id: string) {
-  return useQuery({
-    queryKey: quillKeys.draft(id),
-    queryFn: () => unwrap(commands.getDraft(id)),
-  });
+  return useQuery(draftQuery(id));
 }
 
 /**

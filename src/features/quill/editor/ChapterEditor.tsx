@@ -1,24 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
-import { documentKeys, useWorldInText, WorldInTextOverlay } from "@/features/cards";
+import { useWorldInText, WorldInTextOverlay } from "@/features/cards";
 import { ImagePickerDialog } from "@/features/media";
-import {
-  type CueKind,
-  commands,
-  type Draft,
-  type DraftInfo,
-  type StoryOutline,
-} from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
+import type { CueKind, Draft } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { CueMargin } from "../audio/CueMargin";
 import { cuePositions } from "../audio/cueMark";
 import { SoundPickerDialog } from "../audio/SoundPickerDialog";
 import { useCreateCue, useDraftCues } from "../audio/useCues";
-import { quillKeys } from "../hooks/useQuill";
+import { draftQuery, quillKeys } from "../hooks/useQuill";
 import { NoteMargin } from "../notes/NoteMargin";
 import { notePositions } from "../notes/noteMark";
 import { useCreateNote, useStoryNotes } from "../notes/useNotes";
@@ -28,6 +21,7 @@ import { quillExtensions, type SlashCommand } from "./extensions";
 import { createListStore } from "./listStore";
 import { SelectionMenu } from "./SelectionMenu";
 import { SlashMenu } from "./SlashMenu";
+import { useSaveDraft } from "./useSaveDraft";
 import { countWords } from "./words";
 
 /** Pause after the last change before the draft is saved. */
@@ -59,22 +53,6 @@ function cardIdAt(target: EventTarget | null): string | null {
   return href.startsWith("#card-") ? href.slice("#card-".length) : null;
 }
 
-/** The outline as a draft save left it: its words in its chapter and story. */
-function withSaved(outline: StoryOutline, saved: DraftInfo): StoryOutline {
-  let delta = 0;
-  const chapters = outline.chapters.map((chapter) => {
-    if (!chapter.drafts.some((draft) => draft.id === saved.id)) return chapter;
-    const drafts = chapter.drafts.map((draft) => (draft.id === saved.id ? saved : draft));
-    if (chapter.currentDraftId !== saved.id) return { ...chapter, drafts };
-    delta = saved.wordCount - chapter.wordCount;
-    return { ...chapter, drafts, wordCount: saved.wordCount };
-  });
-  return {
-    story: { ...outline.story, wordCount: outline.story.wordCount + delta },
-    chapters,
-  };
-}
-
 /**
  * A chapter's text (its draft): the editor with its toolbar and "/"
  * commands. It is saved half a second after the last change, before the
@@ -92,28 +70,26 @@ export function ChapterEditor({
 }: Props) {
   const queryClient = useQueryClient();
   const draft = useQuery({
-    queryKey: quillKeys.draft(draftId),
-    queryFn: () => unwrap(commands.getDraft(draftId)),
+    ...draftQuery(draftId),
     // The text being typed is the truth: never read again under it.
     staleTime: Number.POSITIVE_INFINITY,
   });
-  const save = useMutation({
-    mutationFn: (content: string) => unwrap(commands.saveDraft(draftId, content)),
-    onSuccess: (saved, content) => {
-      queryClient.setQueryData<Draft>(quillKeys.draft(draftId), (draft) =>
-        draft ? { ...draft, content, wordCount: saved.wordCount } : draft,
-      );
-      queryClient.setQueryData<StoryOutline>(quillKeys.outline(storyId), (outline) =>
-        outline ? withSaved(outline, saved) : outline,
-      );
-      void queryClient.invalidateQueries({ queryKey: quillKeys.stories() });
-      // The chapter's mentions may have changed: « Cité dans » of the cards.
-      void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
-    },
-  });
+  const save = useSaveDraft(storyId, draftId);
+
+  // The text the editor starts from: the cache as it is once this editor is
+  // in place, not as its first render saw it. An editor of the same draft
+  // left in the same change of page (a draft made current) has just put its
+  // last words there, from a layout cleanup that runs before this (#586).
+  const [initial, setInitial] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    if (initial !== null || !draft.data) return;
+    setInitial(
+      queryClient.getQueryData<Draft>(quillKeys.draft(draftId))?.content ?? draft.data.content,
+    );
+  }, [draft.data, initial, queryClient, draftId]);
 
   if (draft.error) return <AppErrorMessage error={draft.error} />;
-  if (!draft.data) return null;
+  if (!draft.data || initial === null) return null;
   return (
     <LoadedEditor
       storyId={storyId}
@@ -121,8 +97,8 @@ export function ChapterEditor({
       focusNote={focusNote}
       audio={audio}
       focusCue={focusCue}
-      initial={draft.data.content}
-      onSave={(content) => save.mutateAsync(content).then(() => undefined)}
+      initial={initial}
+      onSave={(content) => save.save(content).then(() => undefined)}
       saveError={save.error}
       onWords={onWords}
       onHeader={onHeader}
@@ -311,9 +287,10 @@ function LoadedEditor({
     );
   };
 
-  // Leaving the chapter saves what was typed.
+  // Leaving the chapter saves what was typed. A layout cleanup: it runs
+  // before the next editor of the draft reads the cache (#586).
   // biome-ignore lint/correctness/useExhaustiveDependencies: flush reads refs only
-  useEffect(() => () => void flush(), []);
+  useLayoutEffect(() => () => void flush(), []);
 
   if (!editor) return null;
   return (

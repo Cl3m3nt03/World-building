@@ -4,9 +4,7 @@ import { AudioLines, Music2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
-import { commands } from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
-import { quillKeys } from "../hooks/useQuill";
+import { draftQuery } from "../hooks/useQuill";
 import { useSoundNames } from "./CueMargin";
 import { cueSpans } from "./cueMark";
 import { useDeleteCue, useDraftCues } from "./useCues";
@@ -22,8 +20,7 @@ const SNIPPET = 80;
 export function CueList({ draftId, onOpen }: { draftId: string; onOpen: (cueId: string) => void }) {
   const { t } = useTranslation();
   const draft = useQuery({
-    queryKey: quillKeys.draft(draftId),
-    queryFn: () => unwrap(commands.getDraft(draftId)),
+    ...draftQuery(draftId),
     staleTime: Number.POSITIVE_INFINITY,
   });
   const cues = useDraftCues(draftId);
