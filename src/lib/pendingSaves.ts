@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 /**
  * Edits waiting to be saved: text is saved a short time after the last
@@ -25,6 +25,31 @@ export function usePendingSave(flush: Flush): void {
     registered.add(entry);
     return () => {
       registered.delete(entry);
+    };
+  }, []);
+}
+
+/**
+ * Saves the pending edits of a field however it goes away: before the world
+ * or the window closes (`usePendingSave`), and when the component unmounts.
+ * A closing window (Escape, a click outside) or a route change takes a field
+ * away without a blur, so saving on blur is not enough (#609, #614). The
+ * unmount save is a layout cleanup: it starts before a field mounted in the
+ * same change reads the cache. `flush` must send nothing when nothing changed
+ * (it also runs after a blur that has saved already).
+ */
+export function useSaveOnLeave(flush: Flush): void {
+  usePendingSave(flush);
+  const ref = useRef(flush);
+  ref.current = flush;
+  useLayoutEffect(() => {
+    const entry = ref;
+    return () => {
+      try {
+        void entry.current();
+      } catch {
+        // A broken editor never blocks leaving it.
+      }
     };
   }, []);
 }

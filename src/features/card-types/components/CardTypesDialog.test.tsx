@@ -2,9 +2,11 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { CardType, CardTypePatch, NewCardType, PropertyDefinition } from "@/lib/bindings";
+import { flushPendingSaves } from "@/lib/pendingSaves";
 import { createQueryClient } from "@/lib/query";
 import { CardTypesDialog } from "./CardTypesDialog";
 
@@ -345,4 +347,64 @@ test("Escape cancels moving a property and leaves the screen open, then closes i
 
   fireEvent.keyDown(handle, { code: "Escape", key: "Escape" });
   expect(onOpenChange).toHaveBeenCalledWith(false);
+});
+
+function ClosableDialog() {
+  const [open, setOpen] = useState(true);
+  return <CardTypesDialog open={open} onOpenChange={setOpen} />;
+}
+
+test("a type renamed, then the screen closed with Escape, keeps its name (#614)", async () => {
+  render(
+    <QueryClientProvider client={createQueryClient()}>
+      <TooltipProvider>
+        <ClosableDialog />
+      </TooltipProvider>
+    </QueryClientProvider>,
+  );
+  const name = await screen.findByLabelText("Nom du type");
+
+  fireEvent.change(name, { target: { value: "Héros" } });
+  // No blur, and before the pause that saves: the closing screen takes the field away.
+  fireEvent.keyDown(name, { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(callsOf("update_card_type")).toHaveLength(1));
+  expect(callsOf("update_card_type")[0]?.payload).toEqual({
+    id: "character",
+    patch: { name: "Héros" },
+  });
+});
+
+test("a type's name typed is saved before the world closes, once (#614)", async () => {
+  renderDialog();
+  const name = await screen.findByLabelText("Nom du type");
+
+  fireEvent.change(name, { target: { value: "Héros" } });
+  await act(() => flushPendingSaves());
+  expect(callsOf("update_card_type").map((call) => call.payload)).toEqual([
+    { id: "character", patch: { name: "Héros" } },
+  ]);
+  fireEvent.blur(name);
+  await act(() => new Promise((resolve) => setTimeout(resolve, 600)));
+  expect(callsOf("update_card_type")).toHaveLength(1);
+});
+
+test("a type deleted while its name is typed is not saved after (#614)", async () => {
+  renderDialog();
+  fireEvent.click(await screen.findByRole("button", { name: "Lieu" }));
+  const name = screen.getByLabelText("Nom du type") as HTMLInputElement;
+  await waitFor(() => expect(name.value).toBe("Lieu"));
+
+  fireEvent.change(name, { target: { value: "Endroit" } });
+  // No blur: the deletion dialog opens over the field.
+  fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
+  const buttons = await screen.findAllByRole("button", { name: "Supprimer" });
+  const confirm = buttons[buttons.length - 1] as HTMLButtonElement;
+  await waitFor(() => expect(confirm.disabled).toBe(false));
+  fireEvent.click(confirm);
+
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Lieu" })).toBeNull());
+  await act(() => flushPendingSaves());
+  expect(callsOf("delete_card_type")).toHaveLength(1);
+  expect(callsOf("update_card_type")).toHaveLength(0);
 });

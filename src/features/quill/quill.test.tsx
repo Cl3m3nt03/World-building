@@ -7,6 +7,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createAppRouter } from "@/app/router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppSettings, NewStory, Story, StoryOutline, WorldInfo } from "@/lib/bindings";
+import { flushPendingSaves } from "@/lib/pendingSaves";
 import { createQueryClient } from "@/lib/query";
 
 const WORLD: WorldInfo = {
@@ -317,4 +318,38 @@ test("another draft opens with a note, becomes current, and two drafts compare",
   const table = await screen.findByRole("table");
   await waitFor(() => expect(table.querySelector("del")?.textContent).toContain("était une fois"));
   expect(table.querySelector("ins")?.textContent).toContain("neigeait sur la vallée");
+});
+
+test("a chapter title typed, then the chapter left without a blur, is saved once (#614)", async () => {
+  const router = await renderAt("/world/demo/quill/story/s1/chapter/s1-c1");
+  const title = await screen.findByRole("textbox", { name: "Titre du chapitre" });
+
+  fireEvent.change(title, { target: { value: "Le départ" } });
+  await act(() => flushPendingSaves());
+  expect(renamed).toEqual([{ id: "s1-c1", title: "Le départ" }]);
+
+  fireEvent.change(title, { target: { value: "Le grand départ" } });
+  // No blur: the chapter goes away with the page.
+  await act(() => router.navigate({ to: "/world/$worldId/quill", params: { worldId: "demo" } }));
+  await waitFor(() =>
+    expect(renamed).toEqual([
+      { id: "s1-c1", title: "Le départ" },
+      { id: "s1-c1", title: "Le grand départ" },
+    ]),
+  );
+});
+
+test("Escape puts the chapter title back and saves nothing, even on the way out (#614)", async () => {
+  const router = await renderAt("/world/demo/quill/story/s1/chapter/s1-c1");
+  const title = (await screen.findByRole("textbox", {
+    name: "Titre du chapitre",
+  })) as HTMLInputElement;
+
+  title.focus();
+  fireEvent.change(title, { target: { value: "Le départ" } });
+  fireEvent.keyDown(title, { key: "Escape" });
+  await waitFor(() => expect(title.value).toBe("Chapitre 1"));
+  await act(() => flushPendingSaves());
+  await act(() => router.navigate({ to: "/world/$worldId/quill", params: { worldId: "demo" } }));
+  expect(renamed).toEqual([]);
 });

@@ -1,7 +1,8 @@
 /**
  * V2-M3 scenarios (docs/roadmap/V2-M3-fiches.md, 3.7), in the order a card is
  * made, on a Fantasy world:
- * - the type panel: search, keyboard, subtypes, « Nouveau type »;
+ * - the type panel: search, keyboard, subtypes, « Nouveau type » (its name
+ *   kept when the types screen is closed at once with Escape, #614);
  * - the header: the type chip, the wiki eye, the aliases on their line;
  * - the add property window, on a card (the types screen's use of the same
  *   window is in m2-cards);
@@ -285,8 +286,9 @@ describe("V2-M3: the cards", () => {
         timeoutMsg: "the new type did not open",
       },
     );
+    // Closed at once with Escape, before the pause that saves and without a
+    // blur: the name is saved as the screen goes away (#614).
     await $("aria/Nom du type").setValue("Chronique");
-    await screen.$("//*[normalize-space()='Chronique']").waitForDisplayed();
     await browser.keys("Escape");
     await $('[role="dialog"]').waitForExist({ reverse: true });
 

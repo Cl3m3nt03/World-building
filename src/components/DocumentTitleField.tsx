@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Input } from "@/components/ui/input";
-import { usePendingSave } from "@/lib/pendingSaves";
+import { useSaveOnLeave } from "@/lib/pendingSaves";
 
 /** Typing pauses this long before the name is saved. */
 const SAVE_DELAY_MS = 500;
@@ -15,8 +15,9 @@ export type RenameMutation = {
 
 /**
  * The name of a map or a graph, at the top left of its page: saved as it is
- * typed (after a pause), on Enter and when the field is left. An empty name
- * is not saved.
+ * typed (after a pause), on Enter, when the field is left, when the page goes
+ * away without a blur (#614) and before the world or the window closes. An
+ * empty name is not saved.
  */
 export function DocumentTitleField({
   title: saved,
@@ -35,19 +36,26 @@ export function DocumentTitleField({
   // While the field is being edited, the title saved a moment ago coming
   // back from the Rust side must not replace what has been typed since.
   const editing = useRef(false);
+  // The name sent last, until the saved one changes: a blur, then the page
+  // left, send it once.
+  const sent = useRef<string | null>(null);
   useEffect(() => {
+    sent.current = null;
     if (!editing.current) setTitle(saved);
   }, [saved]);
-  useEffect(() => () => clearTimeout(timer.current), []);
 
   const save = (value: string) => {
     clearTimeout(timer.current);
     const trimmed = value.trim();
-    if (trimmed === "" || trimmed === saved) return undefined;
-    // A failure is shown under the title (`rename.error`).
-    return rename.mutateAsync(trimmed).catch(() => {});
+    if (trimmed === "" || trimmed === (sent.current ?? saved)) return undefined;
+    sent.current = trimmed;
+    // A failure is shown under the title (`rename.error`); the name is sent
+    // again with the next change or on the way out.
+    return rename.mutateAsync(trimmed).catch(() => {
+      if (sent.current === trimmed) sent.current = null;
+    });
   };
-  usePendingSave(() => save(title));
+  useSaveOnLeave(() => save(title));
 
   return (
     <div className="flex min-w-48 flex-1 flex-col gap-1">

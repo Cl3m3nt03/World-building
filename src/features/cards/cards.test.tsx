@@ -8,6 +8,7 @@ import { createAppRouter } from "@/app/router";
 import { useUiStore } from "@/app/stores/ui";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppSettings, Card, CardType, WorldInfo } from "@/lib/bindings";
+import { flushPendingSaves } from "@/lib/pendingSaves";
 import { createQueryClient } from "@/lib/query";
 
 const WORLD: WorldInfo = {
@@ -315,6 +316,30 @@ test("the card page renames the card as typed", async () => {
   await waitFor(() =>
     expect(callsOf("rename_document")[0]?.payload).toEqual({ id: "aragorn", title: "Aragorn II" }),
   );
+});
+
+test("a title typed, then the card left before the pause and without a blur, is saved (#614)", async () => {
+  const router = await renderAt("/world/demo/world/card/aragorn");
+  const title = await screen.findByLabelText("Nom de la fiche");
+
+  fireEvent.change(title, { target: { value: "Aragorn II" } });
+  // No blur, and before the pause that saves: another page takes the field away.
+  await act(() => router.navigate({ to: "/world/$worldId/world", params: { worldId: "demo" } }));
+
+  await waitFor(() => expect(callsOf("rename_document")).toHaveLength(1));
+  expect(callsOf("rename_document")[0]?.payload).toEqual({ id: "aragorn", title: "Aragorn II" });
+});
+
+test("a title saved on blur is not sent again when the card is left (#614)", async () => {
+  const router = await renderAt("/world/demo/world/card/aragorn");
+  const title = await screen.findByLabelText("Nom de la fiche");
+
+  fireEvent.change(title, { target: { value: "Aragorn II" } });
+  fireEvent.blur(title);
+  await act(() => router.navigate({ to: "/world/$worldId/world", params: { worldId: "demo" } }));
+  await act(() => flushPendingSaves());
+
+  expect(callsOf("rename_document")).toHaveLength(1);
 });
 
 test("changes the type, adds and removes aliases", async () => {

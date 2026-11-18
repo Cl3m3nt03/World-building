@@ -341,6 +341,7 @@ function TimelineScreen({ timeline, cards }: { timeline: Timeline; cards: Card[]
             calendar={calendar}
             card={selected.cardId ? cardsById.get(selected.cardId) : undefined}
             onSave={(item) => void editor.apply({ kind: "save", item })}
+            onSaveText={(patch) => editor.update(selected.id, patch)}
             onDelete={remove}
             onClose={() => setSelectedId(null)}
             side={itemSide === "right" ? "left" : "right"}
