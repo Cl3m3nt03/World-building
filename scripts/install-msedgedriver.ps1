@@ -55,7 +55,13 @@ Write-Host "Downloading msedgedriver $version from $url"
 Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $zip
 
 $extract = Join-Path $env:TEMP "edgedriver_$version"
-Expand-Archive -Path $zip -DestinationPath $extract -Force
+# tar.exe (bsdtar, shipped with Windows 10+) rather than Expand-Archive:
+# Windows PowerShell 5.1's archive module fails intermittently on the CI
+# runners ("Cannot find an overload for ExtractToDirectory", #611).
+if (Test-Path $extract) { Remove-Item -Recurse -Force $extract }
+New-Item -ItemType Directory -Force -Path $extract | Out-Null
+& "$env:SystemRoot\System32\tar.exe" -xf $zip -C $extract
+if ($LASTEXITCODE -ne 0) { throw "tar could not unpack $zip (exit $LASTEXITCODE)" }
 Copy-Item -Path (Join-Path $extract 'msedgedriver.exe') -Destination $driver -Force
 Set-Content -Path $stamp -Value $version -Encoding ascii
 Remove-Item -Recurse -Force $zip, $extract
