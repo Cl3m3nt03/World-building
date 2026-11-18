@@ -118,11 +118,14 @@ describe("M9: Quill", () => {
   });
 
   it("keeps a note closed with Escape", async () => {
+    // On a line of its own: the drafts compared below rewrite the first.
     await chapterText().click();
     await caret();
-    await caret(["Control", "Home"]);
-    await browser.keys(["Shift", "End"]);
-    await waitForSelection("Le roi entra dans la ville.");
+    await caret(["Control", "End"]);
+    await browser.keys("Enter");
+    await browser.keys("La pluie tombait.");
+    await browser.keys(["Shift", "Home"]);
+    await waitForSelection("La pluie tombait.");
     await $("button=Ajouter une note").click();
     const field = await $("aria/Note");
     await field.waitForDisplayed({ timeoutMsg: "the new note did not open" });
