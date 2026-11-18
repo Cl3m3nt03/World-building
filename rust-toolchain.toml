@@ -1,0 +1,8 @@
+# Rust toolchain of the repository, the only place its version is written.
+# rustup reads this file from the current directory and its parents, so it
+# applies to every cargo call: CI, pnpm scripts, lefthook hooks and
+# `pnpm tauri build` (run from src-tauri/). How to bump it: ADR 0017.
+[toolchain]
+channel = "1.100.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

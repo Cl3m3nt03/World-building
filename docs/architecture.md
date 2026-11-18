@@ -303,6 +303,10 @@ Les fichiers JSON (`world.json`, `settings.json`) sont lus même s'ils commencen
 
 À compléter (issues 0.3, 0.4, 0.12) : Vitest, `cargo test`, WebdriverIO + `tauri-driver`.
 
+## Version de Rust
+
+`rust-toolchain.toml`, à la racine, épingle la version de Rust, ses composants (`clippy`, `rustfmt`) et le profil `minimal`, pour le poste comme pour la CI. Les workflows l'installent avec `rustup toolchain install` et n'écrivent aucun numéro. La clé de `Swatinem/rust-cache` contient `rustc -vV` et ce fichier : changer de version repart d'un cache vide. Pourquoi et comment monter de version : ADR 0017.
+
 ## Releases
 
 Automatisées par **release-please** et **tauri-action** (`.github/workflows/release.yml`), versions SemVer (ADR 0002) :
