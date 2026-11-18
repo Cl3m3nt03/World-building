@@ -81,7 +81,7 @@ export function BookCover({ title, bookStyle, cover, className, large = false }:
           className={cn(
             "w-full font-bold break-words",
             large ? "text-3xl" : "text-base",
-            cover.assetId && position === "middle" && "rounded px-2 py-1",
+            cover.assetId && position === "middle" && "rounded-sm px-2 py-1",
             cover.assetId && position === "middle" && (light ? "bg-black/45" : "bg-white/60"),
           )}
           style={

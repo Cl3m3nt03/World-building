@@ -226,7 +226,7 @@ function Block({
           onPointerMove={follow}
           onPointerUp={stop}
           onKeyDown={keys}
-          className="flex min-w-0 flex-1 cursor-grab items-center gap-1 rounded px-1 py-0.5 text-xs font-medium outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
+          className="flex min-w-0 flex-1 cursor-grab items-center gap-1 rounded-sm px-1 py-0.5 text-xs font-medium outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
         >
           <GripHorizontal aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="truncate">{title}</span>

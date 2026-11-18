@@ -290,7 +290,7 @@ function ColorRow({
         aria-label={t("wiki.style.pickColor", { name: label })}
         value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000"}
         onChange={(event) => onChange(event.target.value)}
-        className="h-7 w-10 cursor-pointer rounded border border-border bg-transparent"
+        className="h-7 w-10 cursor-pointer rounded-sm border border-border bg-transparent"
       />
       <Input
         id={id}

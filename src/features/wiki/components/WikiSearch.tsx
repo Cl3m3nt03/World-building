@@ -105,7 +105,7 @@ export function WikiSearch({ placeholder, variant }: Props) {
                       setQuery("");
                     }}
                     className={cn(
-                      "flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-wiki-background",
+                      "flex items-start gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-wiki-background",
                       WIKI_FOCUS,
                     )}
                   >

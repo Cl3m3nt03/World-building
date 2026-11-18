@@ -15,6 +15,7 @@ const saved: AppSettings = {
     radioVolume: 70,
     radioMode: "loop",
     worldRail: false,
+    cornerRadius: 100,
   },
   recentWorlds: [],
   defaultWorldsDir: null,
@@ -39,6 +40,20 @@ test("loadPreferences applies the saved preferences to the UI store", async () =
   expect(language).toBe("en");
   expect(useUiStore.getState().theme).toBe("dark");
   expect(useUiStore.getState().transparency).toBe("off");
+  expect(useUiStore.getState().cornerRadius).toBe(100);
+});
+
+test("loadPreferences applies the saved corner radius (#616)", async () => {
+  mockIPC((command) =>
+    command === "get_settings"
+      ? { ...saved, preferences: { ...saved.preferences, cornerRadius: 30 } }
+      : undefined,
+  );
+
+  await loadPreferences();
+
+  expect(useUiStore.getState().cornerRadius).toBe(30);
+  useUiStore.setState({ cornerRadius: 100 });
 });
 
 test("loadPreferences falls back to the defaults when Rust is unavailable", async () => {
@@ -76,6 +91,7 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
       radioVolume: 70,
       radioMode: "loop",
       worldRail: false,
+      cornerRadius: 100,
     },
     {
       language: "fr",
@@ -84,6 +100,7 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
       radioVolume: 70,
       radioMode: "loop",
       worldRail: false,
+      cornerRadius: 100,
     },
     {
       language: "en",
@@ -92,7 +109,34 @@ test("usePreferencesSync saves theme, transparency and language changes", async 
       radioVolume: 70,
       radioMode: "loop",
       worldRail: false,
+      cornerRadius: 100,
     },
   ]);
   await i18n.changeLanguage("fr");
+});
+
+test("usePreferencesSync saves the corner radius once the slider settles (#616)", async () => {
+  vi.useFakeTimers();
+  const updates: Preferences[] = [];
+  mockIPC((command, payload) => {
+    if (command === "update_preferences") {
+      const { preferences } = payload as { preferences: Preferences };
+      updates.push(preferences);
+      return { ...saved, preferences };
+    }
+    return undefined;
+  });
+  renderHook(() => usePreferencesSync());
+
+  act(() => {
+    for (const percent of [90, 70, 50, 30]) useUiStore.getState().setCornerRadius(percent);
+  });
+  expect(updates).toEqual([]);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(400);
+  });
+
+  expect(updates.map((preferences) => preferences.cornerRadius)).toEqual([30]);
+  vi.useRealTimers();
+  useUiStore.setState({ cornerRadius: 100 });
 });

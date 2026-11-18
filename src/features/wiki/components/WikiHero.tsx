@@ -82,7 +82,7 @@ export function WikiHero({ pages }: { pages: WikiPage[] }) {
           <Link
             {...pageRoute(worldId, current)}
             className={cn(
-              "truncate rounded font-wiki-heading text-xl font-bold text-white drop-shadow",
+              "truncate rounded-sm font-wiki-heading text-xl font-bold text-white drop-shadow",
               WIKI_FOCUS,
             )}
           >

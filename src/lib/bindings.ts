@@ -1102,6 +1102,11 @@ export type Preferences = {
 	radioMode: RadioMode,
 	/**  Whether the world rail (V2) is shown on the left. */
 	worldRail: boolean,
+	/**
+	 *  Corners of the whole interface, in percent of the designed radii
+	 *  (0 = square, 100 = as designed, up to 200), #616.
+	 */
+	cornerRadius: number,
 };
 
 /**

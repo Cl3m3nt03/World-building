@@ -131,7 +131,7 @@ export function StoryForm({ initial, mode, pending, error, onSubmit, onCancel }:
               value={value.bookStyle.color}
               onChange={(event) => previewColor(event.target.value)}
               onBlur={flushColor}
-              className="h-8 w-10 cursor-pointer rounded border border-border bg-transparent"
+              className="h-8 w-10 cursor-pointer rounded-sm border border-border bg-transparent"
             />
           </div>
         </fieldset>

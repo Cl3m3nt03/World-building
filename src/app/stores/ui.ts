@@ -4,6 +4,12 @@ import type { RadioMode } from "@/lib/bindings";
 
 export const SIDEBAR_WIDTH = { default: 280, min: 200, max: 480 } as const;
 
+/**
+ * Corners of the whole interface (#616), in percent of the designed radii:
+ * 0 is square, 100 as designed. The bounds match the Rust side (settings.rs).
+ */
+export const CORNER_RADIUS = { default: 100, min: 0, max: 200 } as const;
+
 /** Sections of the world settings screen. */
 export const WORLD_SETTINGS_SECTIONS = [
   "general",
@@ -26,6 +32,9 @@ type UiState = {
   radioMode: RadioMode;
   setRadioVolume: (volume: number) => void;
   setRadioMode: (mode: RadioMode) => void;
+  /** Corners of the interface, in percent (CORNER_RADIUS); saved in the app settings. */
+  cornerRadius: number;
+  setCornerRadius: (percent: number) => void;
   /** The world rail (V2-2+.1), shown or folded; saved in the app settings. */
   worldRail: boolean;
   setWorldRail: (shown: boolean) => void;
@@ -71,6 +80,14 @@ export const useUiStore = create<UiState>()((set) => ({
     }
   },
   setRadioMode: (radioMode) => set({ radioMode }),
+  cornerRadius: CORNER_RADIUS.default,
+  setCornerRadius: (percent) => {
+    if (Number.isFinite(percent)) {
+      set({
+        cornerRadius: Math.round(Math.min(CORNER_RADIUS.max, Math.max(CORNER_RADIUS.min, percent))),
+      });
+    }
+  },
   worldRail: false,
   setWorldRail: (worldRail) => set({ worldRail }),
   worldRailLeaving: false,
