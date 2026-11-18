@@ -44,6 +44,40 @@ test("a chapter's text reads as a book: blocks numbered, mentions by name, notes
   expect(blockTexts(doc)).toEqual(["Avant", "Le roi  Aragorn  revint", "", "Fin"]);
 });
 
+test("a block keeps its alignment in the book; one without keeps the page's own", () => {
+  const aligned = {
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 2, textAlign: "center" },
+        content: [{ type: "text", text: "Titre" }],
+      },
+      {
+        type: "paragraph",
+        attrs: { textAlign: "right" },
+        content: [{ type: "text", text: "Signé" }],
+      },
+      { type: "paragraph", attrs: { textAlign: null }, content: [{ type: "text", text: "Rien" }] },
+      {
+        type: "paragraph",
+        attrs: { textAlign: "sideways" },
+        content: [{ type: "text", text: "Inconnu" }],
+      },
+    ],
+  };
+  const { container } = render(<BookText doc={aligned} />);
+  const [title] = container.querySelectorAll("h3");
+  const [right, none, unknown] = container.querySelectorAll("p");
+  expect(title?.style.textAlign).toBe("center");
+  expect(right?.style.textAlign).toBe("right");
+  expect(none?.hasAttribute("style")).toBe(false);
+  expect(unknown?.hasAttribute("style")).toBe(false);
+  // The old text, without the attribute, is drawn as before.
+  const old = render(<BookText doc={doc} />).container;
+  expect(old.querySelector("[style*='text-align']")).toBeNull();
+});
+
 test("a page's colours: its theme's, or its background with a text that reads on it", () => {
   expect(pageColors(DEFAULT_READER)).toEqual(PAGE_THEMES.light);
   expect(pageColors({ ...DEFAULT_READER, background: "#1b2230" }).text).toBe(PAGE_THEMES.dark.text);

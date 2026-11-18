@@ -1,5 +1,6 @@
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
 import { FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import { type Editor, Extension, mergeAttributes, type Range } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -7,6 +8,7 @@ import Suggestion from "@tiptap/suggestion";
 import { assetUrl } from "@/lib/assets";
 import { AudioCueMark } from "../audio/cueMark";
 import { NoteMark } from "../notes/noteMark";
+import { ALIGNABLE, TEXT_ALIGNS } from "./align";
 import type { ListStore } from "./listStore";
 
 /** What "/" offers at the start of a line. */
@@ -142,8 +144,9 @@ type Options = {
 
 /**
  * The extensions of a chapter's text (M9): the cards' text schema (titles,
- * lists, quotes, dividers), plus fonts and sizes, images of the media library
- * and the "/" commands.
+ * lists, quotes, dividers), plus fonts and sizes, the alignment of paragraphs
+ * and titles (Ctrl+Shift+L, E, R, J), images of the media library and the "/"
+ * commands.
  */
 export function quillExtensions({ placeholder, slash, slashLabel, pickImage }: Options) {
   return [
@@ -151,6 +154,8 @@ export function quillExtensions({ placeholder, slash, slashLabel, pickImage }: O
     TextStyle,
     FontFamily,
     FontSize,
+    // No alignment by default: the page's own (left here, justified in the book).
+    TextAlign.configure({ types: [...ALIGNABLE], alignments: [...TEXT_ALIGNS] }),
     AssetImage,
     NoteMark,
     AudioCueMark,

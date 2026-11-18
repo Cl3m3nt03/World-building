@@ -16,7 +16,7 @@ import {
 import type { Chapter } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { draftQuery } from "../hooks/useQuill";
-import { compareDrafts, type Piece, paragraphs } from "./diff";
+import { compareDrafts, draftParagraphs, type Piece } from "./diff";
 import { draftRoute } from "./routes";
 
 function useDraft(id: string) {
@@ -47,8 +47,8 @@ export function CompareView({
   const rows = useMemo(() => {
     if (!left.data || !right.data) return [];
     return compareDrafts(
-      paragraphs(JSON.parse(left.data.content) as JSONContent),
-      paragraphs(JSON.parse(right.data.content) as JSONContent),
+      draftParagraphs(JSON.parse(left.data.content) as JSONContent),
+      draftParagraphs(JSON.parse(right.data.content) as JSONContent),
     );
   }, [left.data, right.data]);
   const changed = rows.some((row) =>
@@ -126,8 +126,13 @@ export function CompareView({
             {rows.map((row, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: a comparison is drawn once, never reordered.
               <tr key={index} className="align-top">
-                <td>{row.left && <Pieces pieces={row.left} />}</td>
-                <td>{row.right && <Pieces pieces={row.right} />}</td>
+                {/* Each side with the alignment its paragraph has in its draft. */}
+                <td style={row.leftAlign ? { textAlign: row.leftAlign } : undefined}>
+                  {row.left && <Pieces pieces={row.left} />}
+                </td>
+                <td style={row.rightAlign ? { textAlign: row.rightAlign } : undefined}>
+                  {row.right && <Pieces pieces={row.right} />}
+                </td>
               </tr>
             ))}
           </tbody>

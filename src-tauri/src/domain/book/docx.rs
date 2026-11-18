@@ -8,7 +8,7 @@ use docx_rs::{
     RunFonts, SpecialIndentType, Style, StyleType,
 };
 
-use super::{Block, Book, Run};
+use super::{Align, Block, Book, Run};
 use crate::domain::quill::reader::TextSize;
 use crate::error::{AppError, AppResult};
 
@@ -61,6 +61,35 @@ fn picture(bytes: &[u8], max: (u32, u32)) -> Option<Pic> {
     Some(Pic::new_with_dimensions(png, width, height).size(size.0, size.1))
 }
 
+/// Word's alignment for an aligned block.
+fn alignment(align: Option<Align>) -> AlignmentType {
+    match align {
+        Some(Align::Left) => AlignmentType::Left,
+        Some(Align::Center) => AlignmentType::Center,
+        Some(Align::Right) => AlignmentType::Right,
+        Some(Align::Justify) | None => AlignmentType::Both,
+    }
+}
+
+/// `paragraph` with its alignment, when one was chosen (its style's
+/// otherwise). Centred and right text lose the first-line indent, which
+/// would push them off their line; `indent` (a quote's) is kept.
+fn aligned(paragraph: Paragraph, align: Option<Align>, indent: i32) -> Paragraph {
+    let Some(chosen) = align else {
+        return paragraph;
+    };
+    let paragraph = paragraph.align(alignment(align));
+    match chosen {
+        Align::Center | Align::Right => paragraph.indent(
+            (indent > 0).then_some(indent),
+            Some(SpecialIndentType::FirstLine(0)),
+            None,
+            None,
+        ),
+        Align::Left | Align::Justify => paragraph,
+    }
+}
+
 fn runs(paragraph: Paragraph, runs: &[Run]) -> Paragraph {
     runs.iter().fold(paragraph, |paragraph, run| {
         if run.line_break {
@@ -109,18 +138,23 @@ impl Writer<'_> {
     fn blocks(&mut self, blocks: &[Block], indent: i32) {
         for block in blocks {
             match block {
-                Block::Heading { level, runs: text } => {
+                Block::Heading {
+                    level,
+                    runs: text,
+                    align,
+                } => {
                     let style = format!("Heading{}", level + 1);
-                    self.add(runs(Paragraph::new().style(&style), text));
+                    let paragraph = aligned(Paragraph::new().style(&style), *align, indent);
+                    self.add(runs(paragraph, text));
                 }
-                Block::Paragraph(text) => {
+                Block::Paragraph { runs: text, align } => {
                     let paragraph = Paragraph::new().style("BookText");
                     let paragraph = if indent > 0 {
                         paragraph.indent(Some(indent), None, None, None)
                     } else {
                         paragraph
                     };
-                    self.add(runs(paragraph, text));
+                    self.add(runs(aligned(paragraph, *align, indent), text));
                 }
                 Block::Quote(inner) => self.blocks(inner, indent + 567),
                 Block::List { ordered, items } => {
@@ -131,9 +165,11 @@ impl Writer<'_> {
                             "•\t".to_owned()
                         };
                         // The mark, then the item's first paragraph after it.
-                        let (first, rest) = match item.split_first() {
-                            Some((Block::Paragraph(text), rest)) => (text.clone(), rest),
-                            _ => (Vec::new(), item.as_slice()),
+                        let (first, align, rest) = match item.split_first() {
+                            Some((Block::Paragraph { runs, align }, rest)) => {
+                                (runs.clone(), *align, rest)
+                            }
+                            _ => (Vec::new(), None, item.as_slice()),
                         };
                         let paragraph = Paragraph::new()
                             .style("BookText")
@@ -144,6 +180,11 @@ impl Writer<'_> {
                                 None,
                             )
                             .add_run(DocxRun::new().add_text(mark));
+                        let paragraph = match align {
+                            // Centred or right, the item keeps its mark's indent.
+                            Some(Align::Center | Align::Right) => paragraph.align(alignment(align)),
+                            _ => aligned(paragraph, align, indent + 567),
+                        };
                         self.add(runs(paragraph, &first));
                         self.blocks(rest, indent + 567);
                     }

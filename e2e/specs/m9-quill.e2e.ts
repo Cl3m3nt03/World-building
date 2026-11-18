@@ -1,6 +1,6 @@
 /**
  * M9 scenarios (docs/roadmap/M9-quill.md, ADR 0009):
- * - a story created, a chapter written and kept;
+ * - a story created, a chapter written and kept, a paragraph centred;
  * - a card created from a selected passage, found in the sidebar and in its
  *   « Cité dans »;
  * - two drafts compared.
@@ -93,6 +93,27 @@ describe("M9: Quill", () => {
     await $("a=Histoires").click();
     await $(`//ul//a[contains(., "${STORY}")]`).click();
     await waitForText("Le roi entra dans la ville.");
+  });
+
+  it("centres a paragraph and keeps it in the draft", async () => {
+    await chapterText().click();
+    await caret();
+    await caret(["Control", "Home"]);
+    const centre = await $('//button[@aria-label="Centrer"]');
+    await centre.click();
+    await browser.waitUntil(async () => (await centre.getAttribute("aria-pressed")) === "true", {
+      timeoutMsg: "the Centre button is not pressed",
+    });
+    expect(await chapterText().$("p").getAttribute("style")).toContain("text-align: center");
+    await browser.waitUntil(
+      async () => {
+        const draft = (await outline()).chapters[0]?.drafts[0];
+        if (!draft) return false;
+        const saved = await invoke<{ content: string }>("get_draft", { id: draft.id });
+        return saved.content.includes('"textAlign":"center"');
+      },
+      { timeoutMsg: "the alignment was not saved" },
+    );
   });
 
   it("creates a card from a selected passage, cited by the chapter", async () => {
