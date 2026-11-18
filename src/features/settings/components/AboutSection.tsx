@@ -21,7 +21,8 @@ const ROWS: { key: keyof AppInfo; label: TranslationKey }[] = [
 
 /**
  * Version and folders of the app, shown in the settings, the way to the
- * design system and the third-party licences (shown in place of the section).
+ * design system (development builds only) and the third-party licences
+ * (shown in place of the section).
  */
 export function AboutSection({ enabled = true }: { enabled?: boolean }) {
   const { t } = useTranslation();
@@ -72,16 +73,19 @@ export function AboutSection({ enabled = true }: { enabled?: boolean }) {
       <p className="text-xs text-muted-foreground">
         {t("about.fonts", { fonts: Object.values(HEADING_FONT_NAMES).join(", ") })}
       </p>
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" asChild>
-          {/* A plain hash link: the hash history follows it, with or without a router around. */}
-          <a href="#/design-system">
-            <Palette />
-            {t("about.designSystem")}
-          </a>
-        </Button>
-        <span className="text-xs text-muted-foreground">{t("about.designSystemHint")}</span>
-      </div>
+      {/* A development page (#615): builds have neither the link nor the page (router.tsx). */}
+      {import.meta.env.MODE !== "production" && (
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" asChild>
+            {/* A plain hash link: the hash history follows it, with or without a router around. */}
+            <a href="#/design-system">
+              <Palette />
+              {t("about.designSystem")}
+            </a>
+          </Button>
+          <span className="text-xs text-muted-foreground">{t("about.designSystemHint")}</span>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <Button ref={licencesButton} variant="outline" size="sm" onClick={() => setLicences(true)}>
           <ScrollText />
