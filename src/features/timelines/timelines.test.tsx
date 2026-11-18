@@ -411,6 +411,19 @@ test("tracks are renamed and recoloured from their dialog", async () => {
   await waitFor(() => expect(stored?.tracks[0]?.color).toBe("blue"));
 });
 
+test("a track renamed, then its dialog closed with Escape, keeps its name (#609)", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: "Gérer les pistes" }));
+  const dialog = await screen.findByRole("dialog", { name: "Pistes de la frise" });
+
+  const name = within(dialog).getByLabelText("Nom de la piste 1");
+  fireEvent.change(name, { target: { value: "Guerres et batailles" } });
+  // No blur: the closing dialog takes the field away.
+  fireEvent.keyDown(name, { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(stored?.tracks[0]?.name).toBe("Guerres et batailles"));
+});
+
 test("the keys zoom and frame the timeline again", async () => {
   await renderAt("/world/demo/world/timeline/tl1");
   const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });

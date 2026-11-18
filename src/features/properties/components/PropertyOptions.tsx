@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
-import { useId, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,25 @@ export function PropertyOptions({ property }: { property: PropertyDefinition }) 
     void commit([...options, { id: null, label }]);
   };
 
+  // Names typed and not saved yet. Closing the window (Escape, a click
+  // outside) takes the field away without a blur: they are saved then (#609).
+  const typed = useRef(new Map<string, string>());
+  const latest = useRef({ options, commit });
+  latest.current = { options, commit };
+  useLayoutEffect(
+    () => () => {
+      const { options: current, commit: send } = latest.current;
+      const next = current.map((each) => {
+        const label = typed.current.get(each.id)?.trim();
+        return label && label !== each.label ? { ...each, label } : each;
+      });
+      if (next.some((each, index) => each !== current[index])) void send(next);
+    },
+    [],
+  );
+
   const rename = (option: PropertyOption, input: HTMLInputElement) => {
+    typed.current.delete(option.id);
     const label = input.value.trim();
     if (label === "") input.value = option.label;
     else if (label !== option.label) {
@@ -83,6 +101,7 @@ export function PropertyOptions({ property }: { property: PropertyDefinition }) 
                 defaultValue={option.label}
                 maxLength={MAX_OPTION_LEN}
                 className="h-7 min-w-0 flex-1 px-2"
+                onChange={(event) => typed.current.set(option.id, event.target.value)}
                 onBlur={(event) => rename(option, event.currentTarget)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") rename(option, event.currentTarget);

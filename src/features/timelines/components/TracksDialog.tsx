@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -118,6 +118,20 @@ function TrackRow({
       setName(track.name);
     }
   };
+  // Closing the dialog (Escape, a click outside) takes the field away
+  // without a blur: the name typed is saved then (#609).
+  const latest = useRef({ name, track, apply: editor.apply });
+  latest.current = { name, track, apply: editor.apply };
+  useLayoutEffect(
+    () => () => {
+      const { name: typed, track: current, apply } = latest.current;
+      const trimmed = typed.trim();
+      if (trimmed && trimmed !== current.name) {
+        void apply({ kind: "track", id: current.id, name: trimmed, color: current.color });
+      }
+    },
+    [],
+  );
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-border p-2">
       <div className="flex items-center gap-1">
