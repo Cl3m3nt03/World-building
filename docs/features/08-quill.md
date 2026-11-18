@@ -37,6 +37,8 @@ L'écran se divise en trois colonnes :
 
 **Réalisé en M9 (9.3)** : l'espace d'écriture. À gauche, l'histoire (mots) et ses chapitres : « Nouveau chapitre » l'ouvre, le menu d'un chapitre le renomme (ou un double-clic) ou le supprime après confirmation (une histoire garde un chapitre), et on les réordonne au glisser ou au clavier (Espace puis flèches, annoncé). Au centre, l'image d'en-tête du chapitre (médiathèque, retirée d'un clic), son titre écrit sur place, puis le texte du brouillon courant, enregistré une demi-seconde après la dernière frappe et avant la fermeture. Le même brouillon rouvert aussitôt (un brouillon fait version courante, le mode Jeu, la lecture) montre les derniers mots tapés, même si leur enregistrement n'est pas fini (#586). La barre d'outils règle la police (les six polices libres de l'app) et la taille de la sélection, le gras, l'italique, le barré, la citation, insère une image de la médiathèque, choisit l'en-tête, annule et rétablit. « / » en début de ligne propose Titre 1 à 3, Séparateur, Citation et Image. En bas, les mots du chapitre (pendant la frappe) et de l'histoire. Le panneau monde viendra à droite (9.7).
 
+**Réalisé (#605, retours de test)** : l'alignement du texte, comme dans Word. Quatre boutons de la barre d'outils (Aligner à gauche, Centrer, Aligner à droite, Justifier), ou Ctrl+Maj+L, E, R et J, alignent le paragraphe ou le titre où se trouve le curseur, ou tous ceux de la sélection (dans une citation ou une liste aussi). Le bouton de l'alignement en cours est enfoncé. Un bloc sans alignement choisi garde celui de la page : à gauche pendant l'écriture (Aligner à gauche est alors enfoncé), justifié dans l'aperçu Publier, la Lecture, l'ePub, le PDF et le Word, à gauche dans le gabarit Mobile ; c'est le cas de tous les anciens brouillons, qui s'affichent et s'exportent comme avant. Un alignement choisi, lui, s'applique partout tel quel, gabarit Mobile compris : « à gauche » donne un texte non justifié dans le livre, et un texte centré ou à droite perd le retrait de première ligne. La comparaison des brouillons montre chaque paragraphe avec son alignement, mais un alignement changé seul n'est pas une différence de texte. L'alignement n'est qu'un attribut des blocs (`textAlign`) : les mots, les notes et les sons n'en dépendent pas.
+
 **Réalisé en M9 (9.8)** : « Minuteur », à côté des mots en bas du texte, propose une session de 15, 25, 45 ou 60 minutes, ou une autre durée (1 à 240 minutes). Le temps restant s'affiche discrètement, avec pause, reprise et arrêt. La session continue d'un chapitre à l'autre de l'histoire ; à sa fin, « Session terminée : N mots écrits » donne les mots ajoutés à l'histoire pendant la session (la version courante de chaque chapitre). Rien n'est enregistré : fermer l'histoire arrête la session.
 
 ### Brouillons
@@ -160,7 +162,7 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - la table des matières (s'il y a plusieurs chapitres) ;
   - chaque chapitre sur une nouvelle page, un peu plus bas ou sous son image d'en-tête ;
   - les pages numérotées en pied à partir du premier chapitre.
-- Le texte est justifié, avec retrait de première ligne, titres, citations, listes, séparateurs et images.
+- Le texte est justifié, avec retrait de première ligne (sauf alignement choisi, #605), titres, citations, listes, séparateurs et images.
 - La police est celle des réglages, toujours : les six polices de lecture (EB Garamond, Inter, Cinzel, Playfair Display, Lora, Source Serif 4) sont livrées avec l'app en TTF (SIL OFL, `src-tauri/fonts/`, licences dans `licenses/fonts/`), le code est en Space Mono (OFL). Les polices propres à Typst ne sont plus embarquées (l'une d'elles, NewCM10, est sous GPL, #564). Un caractère absent de ces polices (autre écriture, symbole) est pris dans les polices du PC. Le fond et la taille du texte suivent aussi les réglages.
 - Une image illisible est laissée de côté plutôt que de faire échouer le livre.
 
@@ -170,7 +172,7 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - la page de titre ;
   - chaque chapitre sur une nouvelle page, avec son image d'en-tête et son titre au style « Titre 1 » : le volet de navigation de Word liste les chapitres, et les titres du texte suivent en Titre 2 à 4 ;
   - les pages numérotées.
-- Le texte est justifié avec retrait de première ligne ; gras, italique, barré, souligné, citations en retrait, listes, séparateurs et images (ajustées à la page) sont gardés.
+- Le texte est justifié avec retrait de première ligne (sauf alignement choisi, #605) ; gras, italique, barré, souligné, citations en retrait, listes, séparateurs et images (ajustées à la page) sont gardés.
 - La police des réglages est écrite ; Word la remplace s'il ne l'a pas.
 
 ## Modèle de données (indicatif)

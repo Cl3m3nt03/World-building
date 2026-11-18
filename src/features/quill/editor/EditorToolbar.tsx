@@ -8,6 +8,10 @@ import {
   Quote,
   Redo2,
   Strikethrough,
+  TextAlignCenter,
+  TextAlignEnd,
+  TextAlignJustify,
+  TextAlignStart,
   Undo2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -20,11 +24,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FONT_NAMES, WIKI_FONTS, type WikiFontKey } from "@/features/wiki";
+import { TEXT_ALIGNS, type TextAlign } from "./align";
 
 /** Font sizes offered, in px. */
 export const FONT_SIZES = [14, 16, 18, 20, 24, 28, 32] as const;
 
 const FONT_KEYS = Object.keys(WIKI_FONTS) as WikiFontKey[];
+
+/** Each alignment's icon and keyboard shortcut (the TextAlign extension's). */
+const ALIGN_BUTTONS: Record<TextAlign, { Icon: typeof Bold; keys: string }> = {
+  left: { Icon: TextAlignStart, keys: "Control+Shift+L" },
+  center: { Icon: TextAlignCenter, keys: "Control+Shift+E" },
+  right: { Icon: TextAlignEnd, keys: "Control+Shift+R" },
+  justify: { Icon: TextAlignJustify, keys: "Control+Shift+J" },
+};
 
 /** The value of "no font set": the text's own. */
 const DEFAULT = "default";
@@ -37,8 +50,8 @@ type Props = {
 
 /**
  * The toolbar over a chapter's text: font and size of the selection, bold,
- * italic, strike, quote, an image of the media library, the chapter's header
- * image, undo and redo.
+ * italic, strike, quote, the alignment of the paragraph, an image of the
+ * media library, the chapter's header image, undo and redo.
  */
 export function EditorToolbar({ editor, onImage, onHeader }: Props) {
   const { t } = useTranslation();
@@ -51,19 +64,31 @@ export function EditorToolbar({ editor, onImage, onHeader }: Props) {
       italic: current.isActive("italic"),
       strike: current.isActive("strike"),
       quote: current.isActive("blockquote"),
+      // The block's own alignment; none shows as left, as it is written.
+      align:
+        TEXT_ALIGNS.find((align) => align !== "left" && current.isActive({ textAlign: align })) ??
+        "left",
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
     }),
   });
   const fontKey = FONT_KEYS.find((key) => WIKI_FONTS[key] === state.font) ?? DEFAULT;
 
-  const toggle = (label: string, active: boolean, run: () => void, Icon: typeof Bold) => (
+  const toggle = (
+    label: string,
+    active: boolean,
+    run: () => void,
+    Icon: typeof Bold,
+    keys?: string,
+  ) => (
     <Button
+      key={label}
       type="button"
       variant="ghost"
       size="icon-sm"
       aria-label={label}
       aria-pressed={active}
+      aria-keyshortcuts={keys}
       className="aria-pressed:bg-secondary"
       onMouseDown={(event) => event.preventDefault()}
       onClick={run}
@@ -145,6 +170,19 @@ export function EditorToolbar({ editor, onImage, onHeader }: Props) {
           () => editor.chain().focus().toggleBlockquote().run(),
           Quote,
         )}
+        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+        {/* One group: the four buttons wrap to the next line together. */}
+        <fieldset aria-label={t("quill.toolbar.align.label")} className="flex gap-1 border-0">
+          {TEXT_ALIGNS.map((align) =>
+            toggle(
+              t(`quill.toolbar.align.${align}`),
+              state.align === align,
+              () => editor.chain().focus().setTextAlign(align).run(),
+              ALIGN_BUTTONS[align].Icon,
+              ALIGN_BUTTONS[align].keys,
+            ),
+          )}
+        </fieldset>
         <span aria-hidden className="mx-1 h-5 w-px bg-border" />
         <Button type="button" variant="ghost" size="sm" onClick={onImage}>
           <ImagePlus />

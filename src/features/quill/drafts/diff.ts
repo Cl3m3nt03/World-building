@@ -1,10 +1,23 @@
 import type { JSONContent } from "@tiptap/react";
+import { type TextAlign, textAlignOf } from "../editor/align";
 
 /** A piece of a compared paragraph: kept, or only on one side. */
 export type Piece = { text: string; kind: "same" | "removed" | "added" };
 
-/** A line of the comparison: the paragraph on the left and on the right. */
-export type Row = { left: Piece[] | null; right: Piece[] | null };
+/** A paragraph of a draft: its text, and the alignment chosen for it (or none). */
+export type Paragraph = { text: string; align: TextAlign | null };
+
+/**
+ * A line of the comparison: the paragraph on the left and on the right,
+ * each drawn with its own alignment. The text is compared, not its look:
+ * an alignment changed alone shows, but is not a change of text.
+ */
+export type Row = {
+  left: Piece[] | null;
+  right: Piece[] | null;
+  leftAlign?: TextAlign | null;
+  rightAlign?: TextAlign | null;
+};
 
 /** Above this many cells, two paragraphs are compared as wholes, not word by word. */
 const MAX_WORD_CELLS = 250_000;
@@ -18,7 +31,12 @@ function text(node: JSONContent): string {
 
 /** The paragraphs of a draft (titles, quotes, list items…), as plain text. */
 export function paragraphs(doc: JSONContent): string[] {
-  const out: string[] = [];
+  return draftParagraphs(doc).map((paragraph) => paragraph.text);
+}
+
+/** The paragraphs of a draft (titles, quotes, list items…), with their alignment. */
+export function draftParagraphs(doc: JSONContent): Paragraph[] {
+  const out: Paragraph[] = [];
   const walk = (node: JSONContent) => {
     const children = node.content ?? [];
     const leafBlock =
@@ -28,11 +46,11 @@ export function paragraphs(doc: JSONContent): string[] {
       );
     if (leafBlock || node.type === "paragraph" || node.type === "heading") {
       const value = text(node).trim();
-      if (value !== "") out.push(value);
+      if (value !== "") out.push({ text: value, align: textAlignOf(node) });
       return;
     }
     if (node.type === "horizontalRule") {
-      out.push("———");
+      out.push({ text: "———", align: null });
       return;
     }
     for (const child of children) walk(child);
@@ -121,8 +139,15 @@ export function diffWords(before: string, after: string): { left: Piece[]; right
  * changed paragraphs are paired in order and compared word by word, and the
  * rest are only on one side.
  */
-export function compareDrafts(before: string[], after: string[]): Row[] {
-  const pairs = lcs(before, after, (x, y) => x === y);
+export function compareDrafts(
+  beforeParagraphs: readonly (string | Paragraph)[],
+  afterParagraphs: readonly (string | Paragraph)[],
+): Row[] {
+  const full = (item: string | Paragraph): Paragraph =>
+    typeof item === "string" ? { text: item, align: null } : item;
+  const before = beforeParagraphs.map(full);
+  const after = afterParagraphs.map(full);
+  const pairs = lcs(before, after, (x, y) => x.text === y.text);
   const rows: Row[] = [];
   let i = 0;
   let j = 0;
@@ -132,15 +157,30 @@ export function compareDrafts(before: string[], after: string[]): Row[] {
     for (let k = 0; k < Math.max(removed.length, added.length); k++) {
       const left = removed[k];
       const right = added[k];
-      if (left !== undefined && right !== undefined) rows.push(diffWords(left, right));
+      if (left !== undefined && right !== undefined)
+        rows.push({
+          ...diffWords(left.text, right.text),
+          leftAlign: left.align,
+          rightAlign: right.align,
+        });
       else if (left !== undefined)
-        rows.push({ left: [{ text: left, kind: "removed" }], right: null });
+        rows.push({
+          left: [{ text: left.text, kind: "removed" }],
+          right: null,
+          leftAlign: left.align,
+        });
       else if (right !== undefined)
-        rows.push({ left: null, right: [{ text: right, kind: "added" }] });
+        rows.push({
+          left: null,
+          right: [{ text: right.text, kind: "added" }],
+          rightAlign: right.align,
+        });
     }
-    if (pi < before.length && pj < after.length) {
-      const same: Piece[] = [{ text: before[pi] as string, kind: "same" }];
-      rows.push({ left: same, right: same });
+    const kept = before[pi];
+    const keptAfter = after[pj];
+    if (kept && keptAfter) {
+      const same: Piece[] = [{ text: kept.text, kind: "same" }];
+      rows.push({ left: same, right: same, leftAlign: kept.align, rightAlign: keptAfter.align });
     }
     i = pi + 1;
     j = pj + 1;

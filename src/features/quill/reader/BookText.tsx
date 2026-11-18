@@ -1,11 +1,13 @@
 import type { JSONContent } from "@tiptap/react";
 import type { CSSProperties, ReactNode } from "react";
 import { AssetImage } from "@/features/media";
+import { textAlignOf } from "../editor/align";
 
 /**
  * A chapter's text as a reader sees it, from its TipTap JSON: titles,
  * paragraphs, quotes, lists, dividers and images, with bold, italic, strike,
- * underline, code, fonts and sizes. A mention shows its name; notes and
+ * underline, code, fonts and sizes, and the alignment chosen for a paragraph
+ * or a title (none keeps the page's own). A mention shows its name; notes and
  * sounds do not show. Each top-level block is marked `data-block` (its
  * index), for the reading with sound to follow the text.
  */
@@ -17,12 +19,18 @@ function children(node: JSONContent, key: string): ReactNode[] {
   return (node.content ?? []).map((child, index) => inline(child, `${key}.${index}`));
 }
 
+/** The style of an aligned block, or none (the page's own alignment). */
+function alignStyle(node: JSONContent): { style?: CSSProperties } {
+  const align = textAlignOf(node);
+  return align ? { style: { textAlign: align } } : {};
+}
+
 function block(node: JSONContent, key: string, top?: number): ReactNode {
   const data = top === undefined ? {} : { "data-block": top };
   switch (node.type) {
     case "paragraph":
       return (
-        <p key={key} {...data}>
+        <p key={key} {...data} {...alignStyle(node)}>
           {children(node, key)}
         </p>
       );
@@ -30,7 +38,7 @@ function block(node: JSONContent, key: string, top?: number): ReactNode {
       const level = Number(node.attrs?.level ?? 1);
       const Tag = level === 1 ? "h2" : level === 2 ? "h3" : "h4";
       return (
-        <Tag key={key} {...data}>
+        <Tag key={key} {...data} {...alignStyle(node)}>
           {children(node, key)}
         </Tag>
       );

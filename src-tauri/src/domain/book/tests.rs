@@ -34,10 +34,11 @@ fn a_draft_reads_as_blocks_with_their_look() {
             runs: vec![Run {
                 text: "Avant".into(),
                 ..Run::default()
-            }]
+            }],
+            align: None,
         }
     );
-    let Block::Paragraph(runs) = &blocks[1] else {
+    let Block::Paragraph { runs, align: None } = &blocks[1] else {
         panic!("{:?}", blocks[1]);
     };
     let words: Vec<&str> = runs.iter().map(|run| run.text.as_str()).collect();
@@ -573,4 +574,230 @@ async fn the_docx_has_its_cover_chapters_and_styles() {
         .read_to_string(&mut styles)
         .unwrap();
     assert!(styles.contains("Heading 1"));
+}
+
+/// A chapter's text with a paragraph in each alignment, and one without.
+fn aligned_doc() -> Value {
+    let para = |align: Option<&str>, words: &str| match align {
+        Some(align) => {
+            serde_json::json!({ "type": "paragraph", "attrs": { "textAlign": align }, "content": [text(words)] })
+        }
+        None => {
+            serde_json::json!({ "type": "paragraph", "attrs": { "textAlign": null }, "content": [text(words)] })
+        }
+    };
+    serde_json::json!({ "type": "doc", "content": [
+        { "type": "heading", "attrs": { "level": 1, "textAlign": "center" }, "content": [text("Titre")] },
+        para(None, "Le livre décide."),
+        para(Some("left"), "À gauche toute."),
+        para(Some("center"), "Au milieu."),
+        para(Some("right"), "Signé : le roi."),
+        para(Some("justify"), "Justifié."),
+        para(Some("sideways"), "Inconnu."),
+        { "type": "blockquote", "content": [para(Some("right"), "Cité à droite.")] }
+    ] })
+}
+
+/// A book of one chapter holding `doc`, without a world.
+fn book_of(doc: &Value) -> Book {
+    Book {
+        title: "Livre".into(),
+        language: "fr".into(),
+        settings: ReaderSettings::default(),
+        cover: None,
+        chapters: vec![BookChapter {
+            title: "Chapitre 1".into(),
+            header: None,
+            blocks: read_text(&doc.to_string()),
+        }],
+        images: Vec::new(),
+    }
+}
+
+#[test]
+fn a_draft_keeps_the_alignment_of_its_paragraphs_and_titles() {
+    let blocks = read_text(&aligned_doc().to_string());
+    let aligns: Vec<Option<Align>> = blocks
+        .iter()
+        .map(|block| match block {
+            Block::Heading { align, .. } | Block::Paragraph { align, .. } => *align,
+            Block::Quote(inner) => match inner.first() {
+                Some(Block::Paragraph { align, .. }) => *align,
+                other => panic!("{other:?}"),
+            },
+            other => panic!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(
+        aligns,
+        [
+            Some(Align::Center),
+            None,
+            Some(Align::Left),
+            Some(Align::Center),
+            Some(Align::Right),
+            Some(Align::Justify),
+            // An alignment the app does not know is the book's own.
+            None,
+            Some(Align::Right),
+        ]
+    );
+}
+
+#[test]
+fn the_epub_aligns_the_blocks_that_chose_it() {
+    let book = book_of(&aligned_doc());
+    let page = epub::chapter_page(&book, 0);
+    for line in [
+        "<h2 class=\"align-center\">Titre</h2>",
+        // No alignment: the book's own, as before.
+        "<p>Le livre décide.</p>",
+        "<p class=\"align-left\">À gauche toute.</p>",
+        "<p class=\"align-center\">Au milieu.</p>",
+        "<p class=\"align-right\">Signé : le roi.</p>",
+        "<p class=\"align-justify\">Justifié.</p>",
+        "<p>Inconnu.</p>",
+        "<p class=\"align-right\">Cité à droite.</p>",
+    ] {
+        assert!(page.contains(line), "{line} not in {page}");
+    }
+}
+
+/// Each line of text of a frame with where it starts and ends (x, in pt).
+fn text_lines(
+    frame: &typst::layout::Frame,
+    origin: typst::layout::Point,
+    out: &mut Vec<(String, f64, f64)>,
+) {
+    for (pos, item) in frame.items() {
+        let at = origin + *pos;
+        match item {
+            typst::layout::FrameItem::Group(group) => text_lines(&group.frame, at, out),
+            typst::layout::FrameItem::Text(text) => {
+                let width = text.width().to_pt();
+                let start = at.x.to_pt();
+                // Words of one line come as several items: they are joined.
+                match out.last_mut() {
+                    Some(last) if (last.2 - start).abs() < 6.0 && !last.0.is_empty() => {
+                        last.0.push_str(&text.text);
+                        last.2 = start + width;
+                    }
+                    _ => out.push((text.text.to_string(), start, start + width)),
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[test]
+fn the_pdf_aligns_the_blocks_that_chose_it() {
+    let book = book_of(&aligned_doc());
+    let source = pdf::source(&book);
+    // No alignment: the paragraph is written as before.
+    assert!(source.contains("\n\n#\"Le livre décide.\"\n\n"), "{source}");
+    let document = pdf::compile(&book).unwrap();
+    let page = document.pages().last().unwrap();
+    let width = page.frame.width().to_pt();
+    let mut lines = Vec::new();
+    text_lines(&page.frame, typst::layout::Point::zero(), &mut lines);
+    let line = |words: &str| {
+        lines
+            .iter()
+            .find(|(text, _, _)| text.contains(words))
+            .cloned()
+            .unwrap_or_else(|| panic!("{words} not in {lines:?}"))
+    };
+    let (_, left_start, _) = line("gauche");
+    let (_, middle_start, middle_end) = line("milieu");
+    let (_, right_start, right_end) = line("roi");
+    let (_, title_start, title_end) = line("Titre");
+    // Margins of 1.8 cm on an A5 page.
+    let margin = 1.8 / 2.54 * 72.0;
+    // The text's first lines (book's own, left) start at the margin, plus
+    // the first-line indent after another paragraph.
+    assert!(left_start < margin + 20.0, "{left_start}");
+    let centre = width / 2.0;
+    assert!(
+        ((middle_start + middle_end) / 2.0 - centre).abs() < 2.0,
+        "{middle_start}..{middle_end} on {width}"
+    );
+    assert!(
+        ((title_start + title_end) / 2.0 - centre).abs() < 2.0,
+        "{title_start}..{title_end} on {width}"
+    );
+    assert!(
+        // Punctuation may hang a little into the margin.
+        (right_end - (width - margin)).abs() < 4.0,
+        "{right_start}..{right_end} on {width}"
+    );
+    assert!(right_start > centre, "{right_start}");
+}
+
+#[test]
+fn the_docx_aligns_the_blocks_that_chose_it() {
+    let dir = tempfile::tempdir().unwrap();
+    let book = book_of(&aligned_doc());
+    let path = dir.path().join("livre.docx");
+    write(&book, ExportFormat::Docx, &path).unwrap();
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(&path).unwrap()).unwrap();
+    let mut document = String::new();
+    zip.by_name("word/document.xml")
+        .unwrap()
+        .read_to_string(&mut document)
+        .unwrap();
+    // The paragraph (`<w:p …>`) up to `words`.
+    let paragraph = |words: &str| -> String {
+        let at = document
+            .find(words)
+            .unwrap_or_else(|| panic!("{words} missing"));
+        let start = document[..at].rfind("<w:p ").unwrap();
+        document[start..at].to_owned()
+    };
+    assert!(paragraph("Titre").contains("<w:jc w:val=\"center\" />"));
+    // No alignment: the style's (justified), nothing written on the paragraph.
+    assert!(!paragraph("Le livre décide.").contains("<w:jc"));
+    assert!(!paragraph("Inconnu.").contains("<w:jc"));
+    assert!(paragraph("À gauche toute.").contains("<w:jc w:val=\"left\" />"));
+    let middle = paragraph("Au milieu.");
+    assert!(middle.contains("<w:jc w:val=\"center\" />"), "{middle}");
+    assert!(middle.contains("w:firstLine=\"0\""), "{middle}");
+    assert!(paragraph("Signé : le roi.").contains("<w:jc w:val=\"right\" />"));
+    assert!(paragraph("Justifié.").contains("<w:jc w:val=\"both\" />"));
+    // A quote keeps its indent when aligned.
+    let quoted = paragraph("Cité à droite.");
+    assert!(quoted.contains("w:left=\"567\""), "{quoted}");
+    assert!(quoted.contains("<w:jc w:val=\"right\" />"), "{quoted}");
+}
+
+#[test]
+fn the_pdf_justifies_a_long_paragraph_unless_it_is_set_left() {
+    let long = "Il pleuvait sur la vallée depuis trois jours, et les bergers \
+                redescendaient lentement vers les villages avec leurs bêtes trempées.";
+    let doc = |align: Value| {
+        serde_json::json!({ "type": "doc", "content": [
+            { "type": "paragraph", "attrs": { "textAlign": align }, "content": [text(long)] }
+        ] })
+    };
+    let first_line_end = |doc: Value| {
+        let document = pdf::compile(&book_of(&doc)).unwrap();
+        let page = document.pages().last().unwrap();
+        let mut lines = Vec::new();
+        text_lines(&page.frame, typst::layout::Point::zero(), &mut lines);
+        let line = lines
+            .iter()
+            .find(|(text, _, _)| text.starts_with("Il"))
+            .cloned()
+            .unwrap_or_else(|| panic!("{lines:?}"));
+        (line.2, page.frame.width().to_pt())
+    };
+    let margin = 1.8 / 2.54 * 72.0;
+    // The book's own (and justify): the first line reaches the margin.
+    for align in [Value::Null, Value::from("justify")] {
+        let (end, width) = first_line_end(doc(align.clone()));
+        assert!((end - (width - margin)).abs() < 4.0, "{align}: {end}");
+    }
+    // Set left: it stops short of it.
+    let (end, width) = first_line_end(doc(Value::from("left")));
+    assert!(end < width - margin - 4.0, "{end}");
 }

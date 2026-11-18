@@ -15,7 +15,7 @@ use typst::{Library, LibraryExt, World};
 use typst_kit::fonts::FontStore;
 use typst_layout::PagedDocument;
 
-use super::{Block, Book, Run};
+use super::{Align, Block, Book, Run};
 use crate::domain::quill::reader::{PageTheme, TextSize};
 use crate::error::{AppError, AppResult};
 
@@ -182,19 +182,51 @@ fn runs(runs: &[Run]) -> String {
     out
 }
 
+/// The set rules of an aligned block, for a scope around it (none for the
+/// book's own: justified text with its first-line indent, titles at the
+/// start). Centred and right text lose the indent, which would push them
+/// off their line.
+fn align_rules(align: Option<Align>) -> &'static str {
+    match align {
+        None => "",
+        Some(Align::Left) => "#set par(justify: false); #set align(left); ",
+        Some(Align::Center) => {
+            "#set par(justify: false, first-line-indent: 0pt); #set align(center); "
+        }
+        Some(Align::Right) => {
+            "#set par(justify: false, first-line-indent: 0pt); #set align(right); "
+        }
+        Some(Align::Justify) => "#set par(justify: true); #set align(left); ",
+    }
+}
+
+/// `body`, in the scope of its alignment's rules when it has one.
+fn aligned(align: Option<Align>, body: &str) -> String {
+    match align {
+        None => body.to_owned(),
+        Some(_) => format!("#[{}{body}]", align_rules(align)),
+    }
+}
+
 fn blocks(blocks: &[Block], out: &mut String) {
     for block in blocks {
         match block {
-            Block::Heading { level, runs: text } => {
+            Block::Heading {
+                level,
+                runs: text,
+                align,
+            } => {
                 // The text's titles sit under the chapter's (level 1).
-                out.push_str(&format!(
-                    "#heading(level: {}, outlined: false)[{}]\n\n",
+                let heading = format!(
+                    "#heading(level: {}, outlined: false)[{}]",
                     level + 1,
                     runs(text)
-                ));
+                );
+                out.push_str(&aligned(*align, &heading));
+                out.push_str("\n\n");
             }
-            Block::Paragraph(text) => {
-                out.push_str(&runs(text));
+            Block::Paragraph { runs: text, align } => {
+                out.push_str(&aligned(*align, &runs(text)));
                 out.push_str("\n\n");
             }
             Block::Quote(inner) => {

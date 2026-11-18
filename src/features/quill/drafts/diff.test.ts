@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { compareDrafts, diffWords, paragraphs } from "./diff";
+import { compareDrafts, diffWords, draftParagraphs, paragraphs } from "./diff";
 
 describe("paragraphs", () => {
   test("titles, paragraphs, quotes, list items and dividers, mentions by name", () => {
@@ -78,5 +78,23 @@ describe("compareDrafts", () => {
   test("identical drafts have no change", () => {
     const rows = compareDrafts(["A", "B"], ["A", "B"]);
     expect(rows.every((row) => row.left?.[0]?.kind === "same")).toBe(true);
+  });
+
+  test("each side keeps its paragraph's alignment; an alignment alone is not a change of text", () => {
+    const draft = (align: string | null) => ({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { textAlign: align },
+          content: [{ type: "text", text: "Fin." }],
+        },
+      ],
+    });
+    expect(draftParagraphs(draft("center"))).toEqual([{ text: "Fin.", align: "center" }]);
+    expect(draftParagraphs(draft(null))).toEqual([{ text: "Fin.", align: null }]);
+    const [row] = compareDrafts(draftParagraphs(draft(null)), draftParagraphs(draft("right")));
+    expect(row?.left?.[0]?.kind).toBe("same");
+    expect([row?.leftAlign, row?.rightAlign]).toEqual([null, "right"]);
   });
 });

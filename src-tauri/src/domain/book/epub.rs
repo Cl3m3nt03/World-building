@@ -3,7 +3,7 @@
 
 use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ReferenceType, ZipLibrary};
 
-use super::{Block, Book, Run};
+use super::{Align, Block, Book, Run};
 use crate::domain::quill::reader::{PageTheme, TextSize};
 use crate::error::{AppError, AppResult};
 
@@ -59,6 +59,8 @@ fn stylesheet(book: &Book) -> String {
          blockquote {{ margin: 1em 1.5em; font-style: italic; }}\n\
          hr {{ width: 30%; margin: 1.5em auto; border: none; border-top: 1px solid currentColor; }}\n\
          figure {{ margin: 1em 0; text-align: center; }}\n\
+         .align-left {{ text-align: left; }} .align-center {{ text-align: center; }}\n\
+         .align-right {{ text-align: right; }} .align-justify {{ text-align: justify; }}\n\
          img {{ max-width: 100%; }}\n\
          .opening img {{ width: 100%; }}\n",
         font = font_family(&book.settings.font),
@@ -97,14 +99,32 @@ fn image_path(asset_id: &str) -> String {
     format!("images/{asset_id}")
 }
 
+/// The class attribute of an aligned block (none for the book's own).
+fn align_class(align: Option<Align>) -> &'static str {
+    match align {
+        None => "",
+        Some(Align::Left) => " class=\"align-left\"",
+        Some(Align::Center) => " class=\"align-center\"",
+        Some(Align::Right) => " class=\"align-right\"",
+        Some(Align::Justify) => " class=\"align-justify\"",
+    }
+}
+
 fn blocks(blocks: &[Block], out: &mut String) {
     for block in blocks {
         match block {
-            Block::Heading { level, runs: text } => {
+            Block::Heading {
+                level,
+                runs: text,
+                align,
+            } => {
                 let tag = format!("h{}", level + 1);
-                out.push_str(&format!("<{tag}>{}</{tag}>\n", runs(text)));
+                let class = align_class(*align);
+                out.push_str(&format!("<{tag}{class}>{}</{tag}>\n", runs(text)));
             }
-            Block::Paragraph(text) => out.push_str(&format!("<p>{}</p>\n", runs(text))),
+            Block::Paragraph { runs: text, align } => {
+                out.push_str(&format!("<p{}>{}</p>\n", align_class(*align), runs(text)))
+            }
             Block::Quote(inner) => {
                 out.push_str("<blockquote>\n");
                 self::blocks(inner, out);

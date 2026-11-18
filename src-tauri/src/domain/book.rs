@@ -61,14 +61,41 @@ pub struct Run {
     pub line_break: bool,
 }
 
+/// The alignment chosen for a paragraph or a title (TipTap's `textAlign`).
+/// None is the book's own: justified text, titles at the start.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Align {
+    Left,
+    Center,
+    Right,
+    Justify,
+}
+
+impl Align {
+    /// The alignment of a TipTap node, if it has a known one.
+    fn of(node: &Value) -> Option<Self> {
+        match node.pointer("/attrs/textAlign").and_then(Value::as_str)? {
+            "left" => Some(Self::Left),
+            "center" => Some(Self::Center),
+            "right" => Some(Self::Right),
+            "justify" => Some(Self::Justify),
+            _ => None,
+        }
+    }
+}
+
 /// A block of a chapter's text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Block {
     Heading {
         level: u8,
         runs: Vec<Run>,
+        align: Option<Align>,
     },
-    Paragraph(Vec<Run>),
+    Paragraph {
+        runs: Vec<Run>,
+        align: Option<Align>,
+    },
     Quote(Vec<Block>),
     List {
         ordered: bool,
@@ -197,7 +224,10 @@ fn plain(node: &Value) -> String {
 
 fn block(node: &Value) -> Option<Block> {
     match node.get("type").and_then(Value::as_str)? {
-        "paragraph" => Some(Block::Paragraph(inline(node))),
+        "paragraph" => Some(Block::Paragraph {
+            runs: inline(node),
+            align: Align::of(node),
+        }),
         "heading" => {
             let level = node
                 .pointer("/attrs/level")
@@ -207,6 +237,7 @@ fn block(node: &Value) -> Option<Block> {
             Some(Block::Heading {
                 level: u8::try_from(level).unwrap_or(1),
                 runs: inline(node),
+                align: Align::of(node),
             })
         }
         "blockquote" => Some(Block::Quote(blocks(node))),
@@ -224,7 +255,7 @@ fn block(node: &Value) -> Option<Block> {
         }
         _ => {
             let runs = inline(node);
-            (!runs.is_empty()).then_some(Block::Paragraph(runs))
+            (!runs.is_empty()).then_some(Block::Paragraph { runs, align: None })
         }
     }
 }
