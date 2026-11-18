@@ -162,7 +162,7 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - la table des matières (s'il y a plusieurs chapitres) ;
   - chaque chapitre sur une nouvelle page, un peu plus bas ou sous son image d'en-tête ;
   - les pages numérotées en pied à partir du premier chapitre.
-- Le texte est justifié, avec retrait de première ligne (sauf alignement choisi, #605), titres, citations, listes, séparateurs et images.
+- Le texte est justifié, avec retrait de première ligne (1,2 em, sur un paragraphe qui en suit un autre ; aucun sur un texte centré ou à droite, #605), titres, citations, listes, séparateurs et images.
 - La police est celle des réglages, toujours : les six polices de lecture (EB Garamond, Inter, Cinzel, Playfair Display, Lora, Source Serif 4) sont livrées avec l'app en TTF (SIL OFL, `src-tauri/fonts/`, licences dans `licenses/fonts/`), le code est en Space Mono (OFL). Les polices propres à Typst ne sont plus embarquées (l'une d'elles, NewCM10, est sous GPL, #564). Un caractère absent de ces polices (autre écriture, symbole) est pris dans les polices du PC. Le fond et la taille du texte suivent aussi les réglages.
 - Une image illisible est laissée de côté plutôt que de faire échouer le livre.
 
@@ -172,7 +172,7 @@ La couverture est présentée en **vue 3D** d'un livre, qu'on peut faire tourner
   - la page de titre ;
   - chaque chapitre sur une nouvelle page, avec son image d'en-tête et son titre au style « Titre 1 » : le volet de navigation de Word liste les chapitres, et les titres du texte suivent en Titre 2 à 4 ;
   - les pages numérotées.
-- Le texte est justifié avec retrait de première ligne (sauf alignement choisi, #605) ; gras, italique, barré, souligné, citations en retrait, listes, séparateurs et images (ajustées à la page) sont gardés.
+- Le texte est justifié avec le retrait de première ligne du PDF (1,2 em, écrit sur chaque paragraphe pour que Word, LibreOffice et Google Docs le lisent, #610) : un paragraphe qui en suit un autre est en retrait, pas le premier d'un chapitre, d'une citation ou d'un point de liste, ni celui qui suit un titre, un séparateur, une image, une liste ou du code ; un texte centré ou à droite n'en a pas (#605) ; gras, italique, barré, souligné, citations en retrait, listes, séparateurs et images (ajustées à la page) sont gardés.
 - La police des réglages est écrite ; Word la remplace s'il ne l'a pas.
 
 ## Modèle de données (indicatif)
