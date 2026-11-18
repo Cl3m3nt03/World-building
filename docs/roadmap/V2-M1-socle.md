@@ -44,7 +44,7 @@
 **Critères d'acceptation** : les primitives shadcn gardent leur accessibilité ; clavier inchangé.
 
 ## V2-1.7 — Page « Système de design » et recette (#431)
-- [x] Une page cachée (Réglages › À propos › « Système de design ») qui montre couleurs, typographie, verre, primitives et atlas dans les deux thèmes
+- [x] Une page cachée (Réglages › À propos › « Système de design ») qui montre couleurs, typographie, verre, primitives et atlas dans les deux thèmes (en développement seulement depuis #615)
 - [ ] Captures dans l'app réelle ; recette de Clément
 
 **Critères d'acceptation** : Clément valide le socle avant V2-M2.

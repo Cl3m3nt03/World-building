@@ -86,7 +86,8 @@ import {
  *         /draft/$draftId      one of its other drafts
  *         /compare/$l/$r       two of its drafts side by side
  *   /world/$worldId/media      Media library (reached from Home)
- *   /design-system             the V2 design system (Settings › About)
+ *   /design-system             the V2 design system (Settings › About), in
+ *                              development builds only (#615)
  */
 
 type RouterContext = { queryClient: QueryClient };
@@ -143,11 +144,21 @@ const worldListRoute = createRoute({
   component: WorldListScreen,
 });
 
-const designSystemRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/design-system",
-  component: DesignSystemPage,
-});
+/**
+ * The development pages: the design system, a showcase of the interface's
+ * pieces (V2-1.7), confused a tester (#587). Only development builds have it
+ * (`pnpm tauri dev`); a published or e2e build is a production bundle, where
+ * the condition is `false` at build time and the page is left out of it.
+ */
+const developmentRoutes = import.meta.env.DEV
+  ? [
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: "/design-system",
+        component: DesignSystemPage,
+      }),
+    ]
+  : [];
 
 const worldRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -367,7 +378,7 @@ const mediaRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   worldListRoute,
-  designSystemRoute,
+  ...developmentRoutes,
   worldRoute.addChildren([
     worldIndexRoute,
     homeRoute,
