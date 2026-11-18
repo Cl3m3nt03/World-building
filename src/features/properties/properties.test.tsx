@@ -422,6 +422,22 @@ test("choices are added, renamed and ordered by sending the whole list with thei
   });
 });
 
+test("a choice renamed, then its window closed with Escape, keeps its name (#609)", async () => {
+  typeProps = [selectProperty()];
+  renderWith(<TypeProperties typeId="character" types={[]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Modifier la propriété Statut" }));
+
+  const name = await screen.findByRole("textbox", { name: "Nom du choix Vivant" });
+  fireEvent.change(name, { target: { value: "En vie" } });
+  // No blur: the closing window takes the field away.
+  fireEvent.keyDown(name, { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("group", { name: "Choix" })).toBeNull());
+  await waitFor(() => expect(callsOf("set_property_options")).toHaveLength(1));
+  expect(callsOf("set_property_options")[0]?.payload).toMatchObject({
+    options: [{ id: "alive", label: "En vie" }, { id: "dead" }],
+  });
+});
+
 test("an emptied choice name goes back to the old one and saves nothing", async () => {
   typeProps = [selectProperty()];
   renderWith(<TypeProperties typeId="character" types={[]} />);

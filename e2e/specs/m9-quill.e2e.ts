@@ -1,6 +1,7 @@
 /**
  * M9 scenarios (docs/roadmap/M9-quill.md, ADR 0009):
  * - a story created, a chapter written and kept, a paragraph centred;
+ * - a note written on a passage and closed with Escape, kept (#609);
  * - a card created from a selected passage, found in the sidebar and in its
  *   « Cité dans »;
  * - two drafts compared.
@@ -114,6 +115,40 @@ describe("M9: Quill", () => {
       },
       { timeoutMsg: "the alignment was not saved" },
     );
+  });
+
+  it("keeps a note closed with Escape", async () => {
+    // On a line of its own: the drafts compared below rewrite the first.
+    await chapterText().click();
+    await caret();
+    await caret(["Control", "End"]);
+    await browser.keys("Enter");
+    await browser.keys("La pluie tombait.");
+    await browser.keys(["Shift", "Home"]);
+    await waitForSelection("La pluie tombait.");
+    await $("button=Ajouter une note").click();
+    const field = await $("aria/Note");
+    await field.waitForDisplayed({ timeoutMsg: "the new note did not open" });
+    await field.click();
+    await browser.keys("Le roi doute.");
+    // Closed at once: the popover takes its field away without a blur.
+    await browser.keys("Escape");
+    await field.waitForDisplayed({ reverse: true, timeoutMsg: "the note did not close" });
+    await browser.waitUntil(
+      async () =>
+        (await invoke<{ body: string }[]>("story_notes", { storyId: await storyId() })).some(
+          (note) => note.body === "Le roi doute.",
+        ),
+      { timeoutMsg: "the note closed with Escape was not saved" },
+    );
+
+    // Opened again from its icon in the margin: the text is there.
+    await $('//button[@aria-label="Note : Le roi doute."]').click();
+    await browser.waitUntil(async () => (await $("aria/Note").getValue()) === "Le roi doute.", {
+      timeoutMsg: "the note reopened without its text",
+    });
+    await browser.keys("Escape");
+    await $("aria/Note").waitForDisplayed({ reverse: true });
   });
 
   it("creates a card from a selected passage, cited by the chapter", async () => {
