@@ -21,6 +21,11 @@ const TAB_ROUTES = {
   quill: "/world/$worldId/quill",
 } as const satisfies Record<ShellTab, string>;
 
+/** A tab's home path. */
+function tabPath(tab: ShellTab, worldId: string): string {
+  return `/world/${worldId}/${tab}`;
+}
+
 /**
  * The side a tab's page comes from (Clément's decision, motion plan §8): from
  * the right when going to a later tab in the order Home, World, Wiki, Quill,
@@ -44,7 +49,10 @@ export function tabFromPath(pathname: string): ShellTab | undefined {
  */
 export function WorldLayout() {
   const { worldId } = useParams({ from: "/world/$worldId" });
-  const pathTab = useLocation({ select: (location) => tabFromPath(location.pathname) });
+  const pathTab = useLocation({
+    select: (location) => tabFromPath(location.pathname),
+  });
+  const pathname = useLocation({ select: (location) => location.pathname });
   const tab = pathTab ?? "home";
   const navigate = useNavigate();
   const cardTypesOpen = useUiStore((state) => state.cardTypesOpen);
@@ -58,7 +66,10 @@ export function WorldLayout() {
   const shownTab = useMatches({
     select: (matches) => tabFromPath(matches.at(-1)?.pathname ?? "") ?? "page",
   });
-  usePageTransition(page, shownTab, { target: "page", direction: tabDirection });
+  usePageTransition(page, shownTab, {
+    target: "page",
+    direction: tabDirection,
+  });
 
   // The global search: the World tab and its search field.
   const openSearch = useCallback(() => {
@@ -92,11 +103,12 @@ export function WorldLayout() {
         <TopBar
           activeTab={tab}
           onSearch={openSearch}
-          // A page outside the tabs (the media library, under Home) highlights
-          // Home: a click on it must still lead back there. Within a tab (a card
-          // in World), the click changes nothing.
+          // A page under a tab (the media library under Home, a card or a map
+          // under World) highlights that tab: a click on it must still lead back
+          // to the tab's home. Only the tab's own home page is left as it is.
           onTabClick={(value) => {
-            if (pathTab !== value) void navigate({ to: TAB_ROUTES[value], params: { worldId } });
+            if (pathname !== tabPath(value, worldId))
+              void navigate({ to: TAB_ROUTES[value], params: { worldId } });
           }}
         />
       </div>
