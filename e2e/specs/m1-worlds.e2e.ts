@@ -186,6 +186,7 @@ describe("M1: worlds, preferences and relocation", () => {
     // Back to the defaults for the other specs.
     await $("aria/Settings").click();
     await $("#theme-system").click();
+    await $('//*[@role="dialog"]//*[@role="radio"][normalize-space()="Soft"]').click();
     await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="Language"]').click();
     await $("#language-fr").click();
     await closeDialog();
