@@ -1,5 +1,5 @@
 import { Check, ImagePlus, X } from "lucide-react";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { Button } from "@/components/ui/button";
@@ -48,12 +48,31 @@ export function StoryForm({ initial, mode, pending, error, onSubmit, onCancel }:
   const set = (change: Partial<StoryFormValue>) =>
     setValue((current) => ({ ...current, ...change }));
   const setStyle = (change: Partial<BookStyle>) =>
-    set({ bookStyle: { ...value.bookStyle, ...change } });
+    setValue((current) => ({ ...current, bookStyle: { ...current.bookStyle, ...change } }));
+  // The free colour picker fires on every pointer move, and each change
+  // redraws the book's textures: the preview follows at most once a frame.
+  const pendingColor = useRef<string | null>(null);
+  const colorFrame = useRef(0);
+  const flushColor = () => {
+    cancelAnimationFrame(colorFrame.current);
+    colorFrame.current = 0;
+    const color = pendingColor.current;
+    pendingColor.current = null;
+    if (color !== null) setStyle({ color });
+  };
+  const previewColor = (color: string) => {
+    pendingColor.current = color;
+    if (!colorFrame.current) colorFrame.current = requestAnimationFrame(flushColor);
+  };
+  useEffect(() => () => cancelAnimationFrame(colorFrame.current), []);
   const setCover = (change: Partial<Cover>) => set({ cover: { ...value.cover, ...change } });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (valid) onSubmit({ ...value, title: value.title.trim() });
+    if (!valid) return;
+    const color = pendingColor.current;
+    const bookStyle = color === null ? value.bookStyle : { ...value.bookStyle, color };
+    onSubmit({ ...value, bookStyle, title: value.title.trim() });
   };
 
   return (
@@ -110,7 +129,8 @@ export function StoryForm({ initial, mode, pending, error, onSubmit, onCancel }:
               id={colorId}
               type="color"
               value={value.bookStyle.color}
-              onChange={(event) => setStyle({ color: event.target.value })}
+              onChange={(event) => previewColor(event.target.value)}
+              onBlur={flushColor}
               className="h-8 w-10 cursor-pointer rounded border border-border bg-transparent"
             />
           </div>
