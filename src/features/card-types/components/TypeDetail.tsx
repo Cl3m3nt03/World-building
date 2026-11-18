@@ -35,6 +35,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TypeProperties } from "@/features/properties";
 import type { CanvasFormat, CardType, Orientation } from "@/lib/bindings";
+import { useSaveOnLeave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
 import { colorLabel, TYPE_COLORS, typeColor } from "../colors";
 import {
@@ -143,18 +144,34 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
   const onCreateId = useId();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // The name sent last, until the saved one changes: a blur, then the
+  // window closed, send it once.
+  const sent = useRef<string | null>(null);
+  // Deleted: nothing more to save.
+  const deleted = useRef(false);
   // Another type selected, or the name changed elsewhere.
-  useEffect(() => setName(type.name), [type.name]);
+  useEffect(() => {
+    sent.current = null;
+    setName(type.name);
+  }, [type.name]);
 
+  // Saved as it is typed (after a pause), on Enter, when the field is left,
+  // when the window closes without a blur (Escape, a click outside, #614)
+  // and before the world or the window of the app closes.
   const saveName = (value: string) => {
     clearTimeout(timer.current);
     const trimmed = value.trim();
-    if (trimmed !== "" && trimmed !== type.name) {
-      update.mutate({ id: type.id, patch: { name: trimmed } });
+    if (deleted.current || trimmed === "" || trimmed === (sent.current ?? type.name)) {
+      return undefined;
     }
+    sent.current = trimmed;
+    // A failure is shown above the sheet (`update.error`); the name is sent
+    // again with the next change or on the way out.
+    return update.mutateAsync({ id: type.id, patch: { name: trimmed } }).catch(() => {
+      if (sent.current === trimmed) sent.current = null;
+    });
   };
-
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useSaveOnLeave(() => saveName(name));
 
   const patch = (changes: Parameters<typeof update.mutate>[0]["patch"]) =>
     update.mutate({ id: type.id, patch: changes });
@@ -247,11 +264,11 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
               setName(event.target.value);
               clearTimeout(timer.current);
               const value = event.target.value;
-              timer.current = setTimeout(() => saveName(value), SAVE_DELAY_MS);
+              timer.current = setTimeout(() => void saveName(value), SAVE_DELAY_MS);
             }}
-            onBlur={() => saveName(name)}
+            onBlur={() => void saveName(name)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") saveName(name);
+              if (event.key === "Enter") void saveName(name);
             }}
             aria-invalid={name.trim() === ""}
             className="h-auto border-transparent bg-transparent px-1 py-0.5 font-heading text-3xl font-bold shadow-none hover:border-border focus-visible:border-ring md:text-3xl dark:bg-transparent"
@@ -438,6 +455,9 @@ export function TypeDetail({ type, subtypes, parent, allTypes, onSelect }: TypeD
         subtypeCount={subtypes.length}
         allTypes={allTypes}
         onClose={() => setDeleting(false)}
+        onDeleting={(pending) => {
+          deleted.current = pending;
+        }}
         onDeleted={() => onSelect(parent?.id ?? null)}
       />
     </div>
@@ -449,12 +469,15 @@ function DeleteTypeDialog({
   subtypeCount,
   allTypes,
   onClose,
+  onDeleting,
   onDeleted,
 }: {
   type: CardType | null;
   subtypeCount: number;
   allTypes: CardType[];
   onClose: () => void;
+  /** The deletion starts (`true`), or failed (`false`). */
+  onDeleting: (pending: boolean) => void;
   onDeleted: () => void;
 }) {
   const { t } = useTranslation();
@@ -528,6 +551,7 @@ function DeleteTypeDialog({
             disabled={remove.isPending || cardCount.isPending || (count > 0 && !destination)}
             onClick={() => {
               if (!type) return;
+              onDeleting(true);
               remove.mutate(
                 { id: type.id, moveCardsTo: count > 0 ? destination : null },
                 {
@@ -535,6 +559,7 @@ function DeleteTypeDialog({
                     onClose();
                     onDeleted();
                   },
+                  onError: () => onDeleting(false),
                 },
               );
             }}

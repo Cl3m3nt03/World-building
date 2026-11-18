@@ -11,6 +11,7 @@ import { AssetImage, ImagePickerDialog } from "@/features/media";
 import { useCurrentWorld } from "@/features/world";
 import { type Chapter, commands, type StoryNote } from "@/lib/bindings";
 import { unwrap } from "@/lib/ipc";
+import { useSaveOnLeave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
 import { CueList } from "../audio/CueList";
 import { CompareView } from "../drafts/CompareView";
@@ -362,18 +363,42 @@ function ChapterView({
   );
 }
 
-/** The chapter's title, written in place over its text. */
+/**
+ * The chapter's title, written in place over its text: saved on Enter, when
+ * the field is left, when the chapter view goes away without a blur (another
+ * mode, #614) and before the world or the window closes. Escape puts back the
+ * title last saved (or being saved) and sends nothing.
+ */
 function ChapterTitle({ chapter }: { chapter: Chapter }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState(chapter.title);
   const rename = useChapterChange((value: string) =>
     unwrap(commands.renameChapter(chapter.id, value)),
   );
-  useEffect(() => setTitle(chapter.title), [chapter.title]);
-  const commit = () => {
-    const value = title.trim();
-    if (value === "") setTitle(chapter.title);
-    else if (value !== chapter.title) rename.mutate(value);
+  // What is typed (read by Escape's blur, before the field shows it again),
+  // and the title sent last, until the saved one changes.
+  const typed = useRef(chapter.title);
+  const sent = useRef<string | null>(null);
+  useEffect(() => {
+    typed.current = chapter.title;
+    sent.current = null;
+    setTitle(chapter.title);
+  }, [chapter.title]);
+  const known = () => sent.current ?? chapter.title;
+  const save = () => {
+    const value = typed.current.trim();
+    if (value === "" || value === known()) return undefined;
+    sent.current = value;
+    // A failure is shown under the title (`rename.error`); the title is
+    // sent again with the next change or on the way out.
+    return rename.mutateAsync(value).catch(() => {
+      if (sent.current === value) sent.current = null;
+    });
+  };
+  useSaveOnLeave(save);
+  const put = (value: string) => {
+    typed.current = value;
+    setTitle(value);
   };
   return (
     <div className="flex flex-col gap-1">
@@ -381,12 +406,16 @@ function ChapterTitle({ chapter }: { chapter: Chapter }) {
         aria-label={t("quill.chapterName")}
         value={title}
         maxLength={200}
-        onChange={(event) => setTitle(event.target.value)}
-        onBlur={commit}
+        onChange={(event) => put(event.target.value)}
+        onBlur={() => {
+          // An emptied title is not saved: the field shows the saved one.
+          if (typed.current.trim() === "") put(known());
+          else void save();
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter") event.currentTarget.blur();
           if (event.key === "Escape") {
-            setTitle(chapter.title);
+            put(known());
             event.currentTarget.blur();
           }
         }}

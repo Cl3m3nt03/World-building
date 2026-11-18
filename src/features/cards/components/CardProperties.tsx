@@ -16,7 +16,7 @@ import {
 } from "@/features/properties";
 import type { CardProperty, PropertyValue } from "@/lib/bindings";
 import { type DocumentLink, useDocumentLink } from "@/lib/documentLinks";
-import { usePendingSave } from "@/lib/pendingSaves";
+import { useSaveOnLeave } from "@/lib/pendingSaves";
 import { useCardList } from "../hooks/useCards";
 import { CardPicker } from "./CardPicker";
 import { ChoiceValue, DateValueField } from "./ChoiceAndDateValues";
@@ -89,22 +89,32 @@ function TextValue({ cardId, property, inputId }: FieldProps) {
   const invalid =
     definition.kind === "number" && text.trim() !== "" && fromText("number", text) === null;
 
-  useEffect(() => setText(saved), [saved]);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  // The value sent last, until the saved one changes: a blur, then the card
+  // left, send it once.
+  const sent = useRef<string | null>(null);
+  useEffect(() => {
+    sent.current = null;
+    setText(saved);
+  }, [saved]);
 
-  // Returns the save, awaited before the world or the window closes.
+  // Returns the save, awaited before the world or the window closes. Also
+  // sent when the field goes away without a blur (the card left, #614).
   const save = (value: string) => {
     clearTimeout(timer.current);
-    if (value === saved) return undefined;
+    if (value === (sent.current ?? saved)) return undefined;
     if (definition.kind === "number" && value.trim() !== "" && fromText("number", value) === null) {
       return undefined;
     }
-    // A failure is shown under the field (`setValue.error`).
+    sent.current = value;
+    // A failure is shown under the field (`setValue.error`); the value is
+    // sent again with the next change or on the way out.
     return setValue
       .mutateAsync({ propertyId: definition.id, value: fromText(definition.kind, value) })
-      .catch(() => {});
+      .catch(() => {
+        if (sent.current === value) sent.current = null;
+      });
   };
-  usePendingSave(() => save(text));
+  useSaveOnLeave(() => save(text));
 
   return (
     <div className="flex flex-col gap-1">

@@ -143,6 +143,11 @@ describe("M1: worlds, preferences and relocation", () => {
     await $('//*[@role="dialog"]//h3[normalize-space()="MIT"]').waitForDisplayed();
     await $("aria/Retour").click();
     await $("aria/Licences tierces").waitForDisplayed();
+    // The design system is a development page (#615): this build, a
+    // production bundle like a published one, has no way to it.
+    expect(
+      await $('//*[@role="dialog"]//a[normalize-space()="Système de design"]').isExisting(),
+    ).toBe(false);
     await closeDialog();
   });
 

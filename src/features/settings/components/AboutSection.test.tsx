@@ -2,7 +2,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import type { AppInfo } from "@/lib/bindings";
 import { createQueryClient } from "@/lib/query";
 import { AboutSection } from "./AboutSection";
@@ -10,6 +10,7 @@ import { AboutSection } from "./AboutSection";
 afterEach(() => {
   cleanup();
   clearMocks();
+  vi.unstubAllEnvs();
 });
 
 function renderDialog() {
@@ -103,4 +104,20 @@ test("shows the copyright line", () => {
   renderDialog();
 
   expect(screen.getByText("© 2026 Atlasaga. Tous droits réservés.")).toBeTruthy();
+});
+
+test("links to the design system in a development build only (#615)", () => {
+  mockIPC(() => undefined);
+
+  renderDialog();
+  expect(screen.getByRole("link", { name: "Système de design" }).getAttribute("href")).toBe(
+    "#/design-system",
+  );
+  cleanup();
+
+  // A published build is a production bundle.
+  vi.stubEnv("MODE", "production");
+  renderDialog();
+  expect(screen.queryByRole("link", { name: "Système de design" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Licences tierces" })).toBeTruthy();
 });
