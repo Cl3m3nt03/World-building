@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::Serialize;
 use specta::Type;
 use tauri::{AppHandle, Manager, State};
@@ -52,10 +54,43 @@ const THIRD_PARTY_NOTICES: &str = "THIRD-PARTY-NOTICES.txt";
 #[tauri::command]
 #[specta::specta]
 pub async fn third_party_notices(app: AppHandle) -> AppResult<String> {
-    let path = app
+    let resources = app
         .path()
         .resource_dir()
-        .map_err(|error| AppError::PathUnavailable(format!("resources: {error}")))?
-        .join(THIRD_PARTY_NOTICES);
-    Ok(tokio::fs::read_to_string(path).await?)
+        .map_err(|error| AppError::PathUnavailable(format!("resources: {error}")))?;
+    read_third_party_notices(&resources).await
+}
+
+/// Reads the notices from the resource folder. The error names the file it
+/// looked for, so a missing resource says where it was expected (#596).
+async fn read_third_party_notices(resources: &Path) -> AppResult<String> {
+    let path = resources.join(THIRD_PARTY_NOTICES);
+    tokio::fs::read_to_string(&path)
+        .await
+        .map_err(|error| AppError::Io(format!("{}: {error}", path.display())))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn reads_the_notices_from_the_resource_folder() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join(THIRD_PARTY_NOTICES), "notices").unwrap();
+        assert_eq!(
+            read_third_party_notices(dir.path()).await.unwrap(),
+            "notices"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_missing_notices_file_names_the_path_it_looked_for() {
+        let dir = tempfile::tempdir().unwrap();
+        let AppError::Io(message) = read_third_party_notices(dir.path()).await.unwrap_err() else {
+            panic!("expected an I/O error");
+        };
+        let expected = dir.path().join(THIRD_PARTY_NOTICES).display().to_string();
+        assert!(message.starts_with(&expected), "{message}");
+    }
 }
