@@ -11,7 +11,7 @@ import {
   Unlink,
   X,
 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import { ChoiceTiles, colorLabel, TYPE_COLORS, typeColor } from "@/features/card
 import { CardPicker } from "@/features/cards";
 import { AssetImage, ImagePickerDialog } from "@/features/media";
 import type { Card, Timeline, TimelineItem, WorldCalendar } from "@/lib/bindings";
+import { useSaveOnLeave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
 import { formatDate } from "../calendar";
 import { shiftDay } from "../edit";
@@ -41,6 +42,12 @@ type Props = {
   calendar: WorldCalendar;
   card: Card | undefined;
   onSave: (item: TimelineItem) => void;
+  /**
+   * Saves the item's name and description, as the item is when the change
+   * runs (nothing if it was deleted meanwhile); resolves to whether it went
+   * through.
+   */
+  onSaveText: (patch: TextPatch) => Promise<boolean>;
   onDelete: (id: string) => void;
   onClose: () => void;
   /** Where the card floats: away from the item it shows. */
@@ -56,6 +63,8 @@ type Props = {
   onLink?: (to: string) => void;
   onUnlink?: (linkId: string) => void;
 };
+
+type TextPatch = Partial<Pick<TimelineItem, "title" | "description">>;
 
 /** A section that opens and closes, like « Étiquettes ». */
 function Fold({
@@ -100,8 +109,10 @@ function Fold({
  * The selected item, in a card floating over the timeline (
  * 11.5b): its image, name, visibility in the wiki and deletion; its dates;
  * its description; its tags; the card it stands for; then its track and
- * colour. Each change is saved at once (texts when the field is left) and
- * can be undone.
+ * colour. Each change is saved at once and can be undone. The texts are
+ * saved when their field is left, on Enter (the name), and when the card
+ * goes away however it does, even without a blur (another item selected,
+ * the card closed, another page, #614), or the world or the window closes.
  */
 export function ItemEditor({
   item,
@@ -109,6 +120,7 @@ export function ItemEditor({
   calendar,
   card,
   onSave,
+  onSaveText,
   onDelete,
   onClose,
   side = "right",
@@ -129,16 +141,52 @@ export function ItemEditor({
   const [tag, setTag] = useState("");
   const [picking, setPicking] = useState(false);
   const [editingDates, setEditingDates] = useState(false);
+  // What is typed, and the text of each field sent last, until the item's
+  // own changes (null: nothing sent since).
+  const typed = useRef({ title: item.title, description: item.description });
+  const sent = useRef<{ title: string | null; description: string | null }>({
+    title: null,
+    description: null,
+  });
   // Undo, redo or a drag change the item: the fields follow.
-  useEffect(() => setTitle(item.title), [item.title]);
-  useEffect(() => setDescription(item.description), [item.description]);
+  useEffect(() => {
+    typed.current.title = item.title;
+    sent.current.title = null;
+    setTitle(item.title);
+  }, [item.title]);
+  useEffect(() => {
+    typed.current.description = item.description;
+    sent.current.description = null;
+    setDescription(item.description);
+  }, [item.description]);
   const save = (patch: Partial<TimelineItem>) => onSave({ ...item, ...patch });
-  const saveTitle = () => {
-    if (title.trim() !== item.title) save({ title: title.trim() });
+  // The texts changed since they were last sent: once, however the card is left.
+  const saveText = () => {
+    const patch: TextPatch = {};
+    const nextTitle = typed.current.title.trim();
+    if (nextTitle !== (sent.current.title ?? item.title)) patch.title = nextTitle;
+    const nextDescription = typed.current.description;
+    if (nextDescription !== (sent.current.description ?? item.description)) {
+      patch.description = nextDescription;
+    }
+    if (patch.title === undefined && patch.description === undefined) return undefined;
+    sent.current = {
+      title: patch.title ?? sent.current.title,
+      description: patch.description ?? sent.current.description,
+    };
+    // A failure is shown over the timeline: what failed is sent again with
+    // the next change or on the way out.
+    return onSaveText(patch).then((saved) => {
+      if (saved) return;
+      if (patch.title !== undefined && sent.current.title === patch.title) {
+        sent.current.title = null;
+      }
+      if (patch.description !== undefined && sent.current.description === patch.description) {
+        sent.current.description = null;
+      }
+    });
   };
-  const saveDescription = () => {
-    if (description !== item.description) save({ description });
-  };
+  useSaveOnLeave(saveText);
   const tags = item.tags ?? [];
   const addTag = () => {
     const next = tag.trim().slice(0, MAX_TAG);
@@ -215,10 +263,13 @@ export function ItemEditor({
               value={title}
               maxLength={MAX_NAME}
               placeholder={card?.title ?? t("timelines.editor.titlePlaceholder")}
-              onChange={(event) => setTitle(event.target.value)}
-              onBlur={saveTitle}
+              onChange={(event) => {
+                typed.current.title = event.target.value;
+                setTitle(event.target.value);
+              }}
+              onBlur={() => void saveText()}
               onKeyDown={(event) => {
-                if (event.key === "Enter") saveTitle();
+                if (event.key === "Enter") void saveText();
               }}
               className="h-8 border-transparent bg-transparent px-1 text-base font-semibold shadow-none hover:border-border focus-visible:border-ring"
             />
@@ -322,8 +373,11 @@ export function ItemEditor({
           maxLength={MAX_DESCRIPTION}
           rows={4}
           placeholder={t("timelines.editor.description")}
-          onChange={(event) => setDescription(event.target.value)}
-          onBlur={saveDescription}
+          onChange={(event) => {
+            typed.current.description = event.target.value;
+            setDescription(event.target.value);
+          }}
+          onBlur={() => void saveText()}
           className="min-h-24 w-full rounded-xl border border-transparent bg-secondary/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         />
       </div>

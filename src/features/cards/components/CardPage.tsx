@@ -30,7 +30,7 @@ import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
 import { useSetWikiVisible, useWikiPages } from "@/features/wiki/hooks/useWiki";
 import type { Card, CardType } from "@/lib/bindings";
 import { wikiCardRoute } from "@/lib/documentRoute";
-import { usePendingSave } from "@/lib/pendingSaves";
+import { useSaveOnLeave } from "@/lib/pendingSaves";
 import { cn } from "@/lib/utils";
 import type { BlockEditorHandle } from "../blocks/BlockEditor";
 import { effectiveTemplate } from "../blocks/template";
@@ -65,7 +65,11 @@ function TitleField({ card }: { card: Card }) {
   // While the field is being edited, the title saved a moment ago coming
   // back from the Rust side must not replace what has been typed since.
   const editing = useRef(false);
+  // The title sent last, until the saved one changes: a blur, then the card
+  // left, send it once.
+  const sent = useRef<string | null>(null);
   useEffect(() => {
+    sent.current = null;
     if (!editing.current) setTitle(card.title);
   }, [card.title]);
 
@@ -81,17 +85,20 @@ function TitleField({ card }: { card: Card }) {
     return () => cancelAnimationFrame(frame);
   }, [focusTitleOf, card.id, setFocusTitle]);
 
-  // Returns the save, awaited before the world or the window closes.
+  // Returns the save, awaited before the world or the window closes. Also
+  // sent when the card is left without a blur (another page, #614).
   const save = (value: string) => {
     clearTimeout(timer.current);
     const trimmed = value.trim();
-    if (trimmed === "" || trimmed === card.title) return undefined;
-    // A failure is shown under the title (`rename.error`).
-    return rename.mutateAsync(trimmed).catch(() => {});
+    if (trimmed === "" || trimmed === (sent.current ?? card.title)) return undefined;
+    sent.current = trimmed;
+    // A failure is shown under the title (`rename.error`); the title is
+    // sent again with the next change or on the way out.
+    return rename.mutateAsync(trimmed).catch(() => {
+      if (sent.current === trimmed) sent.current = null;
+    });
   };
-  usePendingSave(() => save(title));
-
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useSaveOnLeave(() => save(title));
 
   return (
     <div className="flex min-w-0 flex-col items-start gap-1">

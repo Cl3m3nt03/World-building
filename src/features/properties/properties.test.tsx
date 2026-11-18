@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CardProperties } from "@/features/cards/components/CardProperties";
 import type { CardProperty, PropertyDefinition, PropertyValue } from "@/lib/bindings";
+import { flushPendingSaves } from "@/lib/pendingSaves";
 import { createQueryClient } from "@/lib/query";
 import { PropertyEditor } from "./components/PropertyEditor";
 import { TypeProperties } from "./components/TypeProperties";
@@ -289,6 +290,42 @@ test("a card shows its properties and saves numbers and texts", async () => {
       value: null,
     }),
   );
+});
+
+test("a text value typed, then the card left before the pause and without a blur, is saved once (#614)", async () => {
+  const view = render(
+    <QueryClientProvider client={createQueryClient()}>
+      <TooltipProvider>
+        <CardProperties cardId="aragorn" />
+      </TooltipProvider>
+    </QueryClientProvider>,
+  );
+  const title = await screen.findByRole("textbox", { name: "Titre" });
+
+  fireEvent.change(title, { target: { value: "Roi du Gondor" } });
+  // No blur, and before the pause that saves: the card goes away.
+  view.unmount();
+
+  await waitFor(() => expect(callsOf("set_property_value")).toHaveLength(1));
+  expect(callsOf("set_property_value")[0]?.payload).toEqual({
+    cardId: "aragorn",
+    propertyId: "title",
+    value: { kind: "text", value: "Roi du Gondor" },
+  });
+  await act(() => flushPendingSaves());
+  expect(callsOf("set_property_value")).toHaveLength(1);
+});
+
+test("a text value typed is saved before the world closes, and not again on blur (#614)", async () => {
+  renderWith(<CardProperties cardId="aragorn" />);
+  const title = await screen.findByRole("textbox", { name: "Titre" });
+
+  fireEvent.change(title, { target: { value: "Roi du Gondor" } });
+  await act(() => flushPendingSaves());
+  expect(callsOf("set_property_value")).toHaveLength(1);
+  fireEvent.blur(title);
+  await act(() => new Promise((resolve) => setTimeout(resolve, 600)));
+  expect(callsOf("set_property_value")).toHaveLength(1);
 });
 
 test("a named link to several cards is added from its family", async () => {

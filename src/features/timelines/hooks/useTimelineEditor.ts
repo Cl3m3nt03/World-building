@@ -159,19 +159,53 @@ export function useTimelineEditor(timelineId: string) {
     [queryClient],
   );
 
+  /** Runs `op` on `timeline`, and keeps it for « Annuler ». */
+  const record = useCallback(
+    async (timeline: Timeline, op: TimelineOp) => {
+      const inverse = inverseOf(timeline, op);
+      const result = await perform(timeline, op);
+      if (inverse) {
+        past.current = [...past.current, { op, inverse }].slice(-HISTORY);
+        future.current = [];
+        bump();
+      }
+      return result;
+    },
+    [perform, bump],
+  );
+
   const apply = useCallback(
-    (op: TimelineOp) =>
-      enqueue(async (timeline) => {
-        const inverse = inverseOf(timeline, op);
-        const result = await perform(timeline, op);
-        if (inverse) {
-          past.current = [...past.current, { op, inverse }].slice(-HISTORY);
-          future.current = [];
-          bump();
+    (op: TimelineOp) => enqueue((timeline) => record(timeline, op)),
+    [enqueue, record],
+  );
+
+  /**
+   * Changes some fields of an item as it is when the change runs, after
+   * those before it: nothing if they already hold these values, or if the
+   * item is gone (deleted meanwhile). The texts of the item card go this
+   * way: they are also saved when the card goes away, which may come just
+   * after its item was deleted (#614). Resolves to whether nothing failed
+   * (a failure is shown as `error`).
+   */
+  const update = useCallback(
+    async (id: string, patch: Partial<Omit<TimelineItem, "id">>) => {
+      let failed = false;
+      await enqueue(async (timeline) => {
+        const before = timeline.items.find((item) => item.id === id);
+        if (!before) return null;
+        const item = { ...before, ...patch };
+        const keys = Object.keys(patch) as (keyof typeof patch)[];
+        if (keys.every((key) => item[key] === before[key])) return null;
+        try {
+          return await record(timeline, { kind: "save", item });
+        } catch (caught) {
+          failed = true;
+          throw caught;
         }
-        return result;
-      }),
-    [enqueue, perform, bump],
+      });
+      return !failed;
+    },
+    [enqueue, record],
   );
 
   const undo = useCallback(
@@ -225,6 +259,7 @@ export function useTimelineEditor(timelineId: string) {
 
   return {
     apply,
+    update,
     undo,
     redo,
     addTrack,

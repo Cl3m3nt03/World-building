@@ -15,6 +15,7 @@ import type {
   WorldInfo,
 } from "@/lib/bindings";
 import { dragCard, dropCard } from "@/lib/cardDrop";
+import { flushPendingSaves } from "@/lib/pendingSaves";
 import { createQueryClient } from "@/lib/query";
 
 const YEAR = 360;
@@ -679,4 +680,74 @@ test("an arrow leads from an item to another; deleting one and undoing brings bo
   fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
   await waitFor(() => expect(stored?.items.some((item) => item.id === "crowned")).toBe(true));
   await waitFor(() => expect(stored?.links).toHaveLength(1));
+});
+
+test("the item card's texts are saved when another item is selected without a blur (#614)", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  const view = await screen.findByRole("application", { name: "Frise Histoire de Westeros" });
+  fireEvent.click(within(view).getByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+
+  fireEvent.change(within(editor).getByLabelText("Nom"), {
+    target: { value: "Rébellion de Robert Baratheon" },
+  });
+  fireEvent.change(within(editor).getByLabelText("Description"), {
+    target: { value: "Le Trident." },
+  });
+  // No blur: the card goes away with the other item selected.
+  fireEvent.click(within(view).getByRole("button", { name: /^Conquête d'Aegon, / }));
+
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")).toMatchObject({
+      title: "Rébellion de Robert Baratheon",
+      description: "Le Trident.",
+    }),
+  );
+  // Sent once, as one change, which Ctrl+Z undoes.
+  expect(calls.filter((call) => call.command === "save_timeline_item")).toHaveLength(1);
+  fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
+  await waitFor(() =>
+    expect(stored?.items.find((item) => item.id === "rebellion")).toMatchObject({
+      title: "Rébellion de Robert",
+      description: "",
+    }),
+  );
+});
+
+test("a name typed in the item card is saved before the world closes (#614)", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+  const name = within(editor).getByLabelText("Nom");
+
+  fireEvent.change(name, { target: { value: "La Rébellion" } });
+  await act(() => flushPendingSaves());
+  expect(stored?.items.find((item) => item.id === "rebellion")?.title).toBe("La Rébellion");
+
+  // Left after that: nothing more to send.
+  fireEvent.blur(name);
+  fireEvent.click(within(editor).getByRole("button", { name: "Fermer le détail" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("complementary", { name: "Élément sélectionné" })).toBeNull(),
+  );
+  expect(calls.filter((call) => call.command === "save_timeline_item")).toHaveLength(1);
+});
+
+test("an item deleted from its card while its name is typed stays deleted (#614)", async () => {
+  await renderAt("/world/demo/world/timeline/tl1");
+  fireEvent.click(await screen.findByRole("button", { name: /^Rébellion de Robert, / }));
+  const editor = await screen.findByRole("complementary", { name: "Élément sélectionné" });
+
+  fireEvent.change(within(editor).getByLabelText("Nom"), { target: { value: "La Rébellion" } });
+  // No blur: the card goes away with its item.
+  fireEvent.click(within(editor).getByRole("button", { name: "Supprimer l'élément" }));
+
+  await waitFor(() =>
+    expect(screen.queryByRole("complementary", { name: "Élément sélectionné" })).toBeNull(),
+  );
+  await waitFor(() => expect(stored?.items.some((item) => item.id === "rebellion")).toBe(false));
+  // Its name, saved on the way out, does not bring it back.
+  await act(() => flushPendingSaves());
+  expect(stored?.items.some((item) => item.id === "rebellion")).toBe(false);
+  expect(calls.filter((call) => call.command === "save_timeline_item")).toHaveLength(0);
 });
