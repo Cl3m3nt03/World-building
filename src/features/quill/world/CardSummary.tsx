@@ -2,10 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { JSONContent } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
 import { typeColor, typeIcon, useCardTypes } from "@/features/card-types";
-import { cardKeys, parseContent, typeLabel, useCardList } from "@/features/cards";
+import { cardContentQuery, typeLabel, useCardList } from "@/features/cards";
 import { AssetImage } from "@/features/media";
-import { commands } from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { paragraphs } from "../drafts/diff";
 
@@ -21,11 +19,7 @@ export function CardSummary({ cardId, className }: { cardId: string; className?:
   const cards = useCardList(false);
   const types = useCardTypes();
   const card = cards.data?.find((candidate) => candidate.id === cardId);
-  const text = useQuery({
-    queryKey: [...cardKeys.detail(cardId), "content"],
-    queryFn: async () => parseContent(await unwrap(commands.getCardContent(cardId))),
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const text = useQuery(cardContentQuery(cardId));
   if (!card) {
     return <p className="text-sm text-muted-foreground">{t("quill.preview.missing")}</p>;
   }

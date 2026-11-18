@@ -13,11 +13,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { AssetImage } from "@/features/media";
-import { type Chapter, commands, type ReaderSettings, type StoryOutline } from "@/lib/bindings";
-import { unwrap } from "@/lib/ipc";
+import type { Chapter, ReaderSettings, StoryOutline } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { BookCover } from "../components/BookCover";
-import { quillKeys } from "../hooks/useQuill";
+import { draftQuery } from "../hooks/useQuill";
 import { BookText } from "./BookText";
 import { pageColors, readerFont, TEXT_SIZES } from "./settings";
 
@@ -38,10 +37,7 @@ function parse(content: string | undefined): JSONContent | null {
 /** The current drafts' texts of a story's chapters, by chapter id. */
 export function useChapterTexts(chapters: Chapter[]): Map<string, JSONContent | null> {
   const drafts = useQueries({
-    queries: chapters.map((chapter) => ({
-      queryKey: quillKeys.draft(chapter.currentDraftId),
-      queryFn: () => unwrap(commands.getDraft(chapter.currentDraftId)),
-    })),
+    queries: chapters.map((chapter) => draftQuery(chapter.currentDraftId)),
   });
   return new Map(
     chapters.map((chapter, index) => [chapter.id, parse(drafts[index]?.data?.content)]),

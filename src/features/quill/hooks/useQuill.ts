@@ -8,6 +8,7 @@ import {
   type StoryOutline,
   type StoryPatch,
 } from "@/lib/bindings";
+import { loadAfterSaves } from "@/lib/contentSaves";
 import { unwrap } from "@/lib/ipc";
 
 /**
@@ -21,6 +22,12 @@ export const quillKeys = {
   draft: (id: string) => [...quillKeys.all(), "draft", id] as const,
   notes: (storyId: string) => [...quillKeys.all(), "notes", storyId] as const,
 };
+
+/** A draft (its text), never read under a save of it in progress (#586). */
+export const draftQuery = (id: string) => ({
+  queryKey: quillKeys.draft(id),
+  queryFn: () => loadAfterSaves(`draft:${id}`, () => unwrap(commands.getDraft(id))),
+});
 
 /** The world's stories (shared with the Quill route's loader). */
 export const storiesQuery = () => ({

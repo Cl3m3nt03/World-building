@@ -1,14 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { type CardType, commands } from "@/lib/bindings";
+import { loadAfterSaves, trackSave } from "@/lib/contentSaves";
 import { unwrap } from "@/lib/ipc";
 import { cardKeys, documentKeys } from "../hooks/keys";
 import { type Block, parseContent } from "./model";
 import { effectiveTemplate, templateBlocks } from "./template";
 
+/** Cache key of a card's blocks. */
+export const cardContentKey = (cardId: string) => [...cardKeys.detail(cardId), "content"] as const;
+
 /** A card's blocks (shared with the card route's loader). */
 export const cardContentQuery = (cardId: string) => ({
-  queryKey: [...cardKeys.detail(cardId), "content"],
-  queryFn: async () => parseContent(await unwrap(commands.getCardContent(cardId))),
+  queryKey: cardContentKey(cardId),
+  // Never read under a save of the card in progress (#586).
+  queryFn: () =>
+    loadAfterSaves(`card:${cardId}`, async () =>
+      parseContent(await unwrap(commands.getCardContent(cardId))),
+    ),
   // The editor owns the blocks once loaded: no refetch under its feet.
   staleTime: Number.POSITIVE_INFINITY,
   refetchOnWindowFocus: false,
@@ -18,16 +27,43 @@ export function useCardContent(cardId: string) {
   return useQuery(cardContentQuery(cardId));
 }
 
+/** Blocks to save, as written in the cache, and what they replaced there. */
+type Save = { blocks: Block[]; written: Block[] | undefined; previous: Block[] | undefined };
+
+/**
+ * Saves a card's blocks. They are put in the cache as the save starts, not
+ * once it is done: an editor saves on its way out, and the next editor of
+ * the card (World ↔ Wiki) starts from the cache at once (#586). A failed
+ * save puts back what was there, unless a later save has replaced it. The
+ * saves of a card run one after the other, in the order they were sent.
+ */
 export function useSaveCardContent(cardId: string) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (blocks: Block[]) =>
+  const mutation = useMutation({
+    mutationFn: ({ blocks }: Save) =>
       unwrap(commands.setCardContent(cardId, JSON.stringify(blocks))),
-    onSuccess: (_, blocks) => {
-      queryClient.setQueryData([...cardKeys.detail(cardId), "content"], blocks);
+    scope: { id: `card-content:${cardId}` },
+    onError: (_, { written, previous }) => {
+      const key = cardContentKey(cardId);
+      if (queryClient.getQueryData(key) !== written) return;
+      if (previous) queryClient.setQueryData(key, previous);
+      else void queryClient.invalidateQueries({ queryKey: key, exact: true });
+    },
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
     },
   });
+  const { mutateAsync } = mutation;
+  const save = useCallback(
+    (blocks: Block[]) => {
+      const key = cardContentKey(cardId);
+      const previous = queryClient.getQueryData<Block[]>(key);
+      const written = queryClient.setQueryData<Block[]>(key, blocks);
+      return trackSave(`card:${cardId}`, mutateAsync({ blocks, written, previous }));
+    },
+    [cardId, queryClient, mutateAsync],
+  );
+  return { save, isError: mutation.isError, error: mutation.error };
 }
 
 /**
@@ -44,6 +80,6 @@ export function useStartFromTemplate() {
     const blocks = templateBlocks([], effectiveTemplate(type, types));
     if (blocks.length === 0) return;
     await unwrap(commands.setCardContent(cardId, JSON.stringify(blocks)));
-    queryClient.setQueryData([...cardKeys.detail(cardId), "content"], blocks);
+    queryClient.setQueryData(cardContentKey(cardId), blocks);
   };
 }

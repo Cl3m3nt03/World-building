@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { documentKeys, useWorldInText, WorldInTextOverlay } from "@/features/cards";
@@ -12,13 +12,14 @@ import {
   type DraftInfo,
   type StoryOutline,
 } from "@/lib/bindings";
+import { trackSave } from "@/lib/contentSaves";
 import { unwrap } from "@/lib/ipc";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { CueMargin } from "../audio/CueMargin";
 import { cuePositions } from "../audio/cueMark";
 import { SoundPickerDialog } from "../audio/SoundPickerDialog";
 import { useCreateCue, useDraftCues } from "../audio/useCues";
-import { quillKeys } from "../hooks/useQuill";
+import { draftQuery, quillKeys } from "../hooks/useQuill";
 import { NoteMargin } from "../notes/NoteMargin";
 import { notePositions } from "../notes/noteMark";
 import { useCreateNote, useStoryNotes } from "../notes/useNotes";
@@ -92,16 +93,28 @@ export function ChapterEditor({
 }: Props) {
   const queryClient = useQueryClient();
   const draft = useQuery({
-    queryKey: quillKeys.draft(draftId),
-    queryFn: () => unwrap(commands.getDraft(draftId)),
+    ...draftQuery(draftId),
     // The text being typed is the truth: never read again under it.
     staleTime: Number.POSITIVE_INFINITY,
   });
   const save = useMutation({
-    mutationFn: (content: string) => unwrap(commands.saveDraft(draftId, content)),
-    onSuccess: (saved, content) => {
+    mutationFn: ({ content }: { content: string; previous: string | undefined }) =>
+      unwrap(commands.saveDraft(draftId, content)),
+    // The saves of a draft run one after the other, in the order they were sent.
+    scope: { id: `draft:${draftId}` },
+    onError: (_, { content, previous }) => {
+      // What was there before comes back, unless a later save has replaced it.
+      const key = quillKeys.draft(draftId);
+      if (queryClient.getQueryData<Draft>(key)?.content !== content) return;
+      if (previous === undefined)
+        void queryClient.invalidateQueries({ queryKey: key, exact: true });
+      else
+        queryClient.setQueryData<Draft>(key, (draft) => draft && { ...draft, content: previous });
+    },
+    onSuccess: (saved) => {
+      // The text is in the cache since the save started.
       queryClient.setQueryData<Draft>(quillKeys.draft(draftId), (draft) =>
-        draft ? { ...draft, content, wordCount: saved.wordCount } : draft,
+        draft ? { ...draft, wordCount: saved.wordCount } : draft,
       );
       queryClient.setQueryData<StoryOutline>(quillKeys.outline(storyId), (outline) =>
         outline ? withSaved(outline, saved) : outline,
@@ -111,9 +124,30 @@ export function ChapterEditor({
       void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
     },
   });
+  // The text is put in the cache as its save starts, not once it is done:
+  // the editor saves on its way out, and the next editor of the draft
+  // starts from the cache at once (#586).
+  const saveNow = (content: string) => {
+    const key = quillKeys.draft(draftId);
+    const previous = queryClient.getQueryData<Draft>(key)?.content;
+    queryClient.setQueryData<Draft>(key, (draft) => draft && { ...draft, content });
+    return trackSave(`draft:${draftId}`, save.mutateAsync({ content, previous }));
+  };
+
+  // The text the editor starts from: the cache as it is once this editor is
+  // in place, not as its first render saw it. An editor of the same draft
+  // left in the same change of page (a draft made current) has just put its
+  // last words there, from a layout cleanup that runs before this (#586).
+  const [initial, setInitial] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    if (initial !== null || !draft.data) return;
+    setInitial(
+      queryClient.getQueryData<Draft>(quillKeys.draft(draftId))?.content ?? draft.data.content,
+    );
+  }, [draft.data, initial, queryClient, draftId]);
 
   if (draft.error) return <AppErrorMessage error={draft.error} />;
-  if (!draft.data) return null;
+  if (!draft.data || initial === null) return null;
   return (
     <LoadedEditor
       storyId={storyId}
@@ -121,8 +155,8 @@ export function ChapterEditor({
       focusNote={focusNote}
       audio={audio}
       focusCue={focusCue}
-      initial={draft.data.content}
-      onSave={(content) => save.mutateAsync(content).then(() => undefined)}
+      initial={initial}
+      onSave={(content) => saveNow(content).then(() => undefined)}
       saveError={save.error}
       onWords={onWords}
       onHeader={onHeader}
@@ -311,9 +345,10 @@ function LoadedEditor({
     );
   };
 
-  // Leaving the chapter saves what was typed.
+  // Leaving the chapter saves what was typed. A layout cleanup: it runs
+  // before the next editor of the draft reads the cache (#586).
   // biome-ignore lint/correctness/useExhaustiveDependencies: flush reads refs only
-  useEffect(() => () => void flush(), []);
+  useLayoutEffect(() => () => void flush(), []);
 
   if (!editor) return null;
   return (

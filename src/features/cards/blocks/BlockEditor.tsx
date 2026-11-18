@@ -19,6 +19,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
   ArrowLeft,
@@ -98,7 +99,7 @@ import { Stats5eBlockView } from "./stats/Stats5eBlockView";
 import { TextBlockEditor, type TextFormat } from "./TextBlockEditor";
 import { TimelineBlockView } from "./TimelineBlockView";
 import { templateBlocks } from "./template";
-import { useCardContent, useSaveCardContent } from "./useCardContent";
+import { cardContentKey, useCardContent, useSaveCardContent } from "./useCardContent";
 
 /** Delay before changes are saved. */
 const SAVE_DELAY_MS = 600;
@@ -607,6 +608,7 @@ export function BlockEditor({
   const { t } = useTranslation();
   // Said after applying a template (a polite live region reads it).
   const [notice, setNotice] = useState("");
+  const queryClient = useQueryClient();
   const content = useCardContent(cardId);
   const save = useSaveCardContent(cardId);
   const [blocks, setBlocks] = useState<Block[] | null>(null);
@@ -628,11 +630,15 @@ export function BlockEditor({
 
   useEffect(() => {
     if (content.data && blocks === null) {
-      const loaded = normalize(content.data);
+      // The cache as it is now, not as this render saw it: an editor of
+      // this card left in the same change of page (World ↔ Wiki) has just
+      // put its last edits there, on its way out (#586).
+      const latest = queryClient.getQueryData<Block[]>(cardContentKey(cardId)) ?? content.data;
+      const loaded = normalize(latest);
       current.current = loaded;
       setBlocks(loaded);
     }
-  }, [content.data, blocks]);
+  }, [content.data, blocks, queryClient, cardId]);
 
   // The save in progress, awaited before the world closes.
   const saving = useRef<Promise<unknown> | undefined>(undefined);
@@ -640,11 +646,11 @@ export function BlockEditor({
     clearTimeout(timer.current);
     if (pending.current) {
       // A failure is shown under the blocks (`save.error`).
-      saving.current = save.mutateAsync(pending.current).catch(() => {});
+      saving.current = save.save(pending.current).catch(() => {});
       pending.current = null;
     }
     return saving.current;
-  }, [save.mutateAsync]);
+  }, [save.save]);
 
   // Unsaved changes are saved when leaving the card, and before the world
   // or the window closes.
