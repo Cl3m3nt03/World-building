@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/Cl3m3nt03/World-building/compare/v1.8.1...v1.9.0) (2026-11-18)
+
+
+### Fonctionnalités
+
+* **cards:** undo a trash from a notification, confirm a delete for good ([#607](https://github.com/Cl3m3nt03/World-building/issues/607)) ([4f5aa42](https://github.com/Cl3m3nt03/World-building/commit/4f5aa423231c8dcc58a39b247d282f4ee206e850))
+* **quill:** align paragraphs and titles (left, center, right, justify) ([#606](https://github.com/Cl3m3nt03/World-building/issues/606)) ([7bab375](https://github.com/Cl3m3nt03/World-building/commit/7bab3754355c9af776a7d8f91e98b4aa7f8d13ab))
+* **ui:** adjustable corner radius for the whole interface ([#619](https://github.com/Cl3m3nt03/World-building/issues/619)) ([8edec1f](https://github.com/Cl3m3nt03/World-building/commit/8edec1f2ce417db34facbec4693ba0d7b4edd0df))
+
+
+### Corrections
+
+* keep typed text in fields that go away without a blur ([#614](https://github.com/Cl3m3nt03/World-building/issues/614)) ([#620](https://github.com/Cl3m3nt03/World-building/issues/620)) ([6f5859f](https://github.com/Cl3m3nt03/World-building/commit/6f5859f4fa275b147f392ee5bc164f618b312784))
+* **quill:** indent the first line of DOCX body paragraphs like the PDF ([#618](https://github.com/Cl3m3nt03/World-building/issues/618)) ([a785b94](https://github.com/Cl3m3nt03/World-building/commit/a785b94214e6ce1cd9a843c552b021e246adca0e)), closes [#610](https://github.com/Cl3m3nt03/World-building/issues/610)
+* **quill:** keep a note's text however its popover closes ([#609](https://github.com/Cl3m3nt03/World-building/issues/609)) ([#613](https://github.com/Cl3m3nt03/World-building/issues/613)) ([324a22d](https://github.com/Cl3m3nt03/World-building/commit/324a22d664c98adc3b1e903e9a52146589c858fe))
+* **settings:** keep the design system page to development builds ([#617](https://github.com/Cl3m3nt03/World-building/issues/617)) ([a4795c0](https://github.com/Cl3m3nt03/World-building/commit/a4795c007f308d07819366de99057ebc4bf9984c))
+
 ## [1.8.1](https://github.com/Cl3m3nt03/World-building/compare/v1.8.0...v1.8.1) (2026-11-18)
 
 
