@@ -138,15 +138,6 @@ export function useRenameDocument() {
   });
 }
 
-/** Puts a document in the trash (from its row). */
-export function useTrashDocument() {
-  const changed = useDocumentChanged();
-  return useMutation({
-    mutationFn: (id: string) => unwrap(commands.trashDocument(id)),
-    onSuccess: (_document, id) => changed(id),
-  });
-}
-
 /** Duplicates a card, a map, a graph, a tree, a canvas or a timeline as `title`, right after it; gives the copy's id. */
 export function useDuplicateDocument() {
   const queryClient = useQueryClient();

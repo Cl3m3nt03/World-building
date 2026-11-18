@@ -54,8 +54,16 @@ export const commands = {
 	/**  Documents opened most recently, not in the trash (at most `limit`). */
 	recentDocuments: (limit: number) => typedError<RecentDocument[], AppError>(__TAURI_INVOKE("recent_documents", { limit })),
 	renameDocument: (id: string, title: string) => typedError<Document, AppError>(__TAURI_INVOKE("rename_document", { id, title })),
-	/**  Puts a document in the world's trash, from where it can be restored. */
-	trashDocument: (id: string) => typedError<Document, AppError>(__TAURI_INVOKE("trash_document", { id })),
+	/**
+	 *  Puts a document in the world's trash, from where it can be restored.
+	 *  Gives what `undo_trash_document` needs to put it back exactly.
+	 */
+	trashDocument: (id: string) => typedError<TrashedDocument, AppError>(__TAURI_INVOKE("trash_document", { id })),
+	/**
+	 *  Undoes `trash_document`: the document goes back to its place and
+	 *  position, with its children under it again.
+	 */
+	undoTrashDocument: (id: string, undo: TrashUndo) => typedError<Document, AppError>(__TAURI_INVOKE("undo_trash_document", { id, undo })),
 	restoreDocument: (id: string) => typedError<Document, AppError>(__TAURI_INVOKE("restore_document", { id })),
 	/**  Deletes a document of the trash for good. */
 	deleteDocument: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_document", { id })),
@@ -1462,6 +1470,28 @@ export type TimelineTrack = {
 export type TitlePosition = "top" | "middle" | "bottom";
 
 export type Tone = "epic" | "grimdark" | "darkFantasy" | "mythology" | "historical" | "alternateHistory" | "dystopian" | "postApocalyptic" | "steampunk" | "solarpunk" | "gaslamp" | "horror" | "mystery" | "survival" | "western" | "cozy" | "comedy";
+
+/**
+ *  What undoing a trash needs (#604): where the document was in its place,
+ *  and its children, which took its place.
+ */
+export type TrashUndo = {
+	/**
+	 *  Its place then: if it is not its place any more (its folder deleted
+	 *  since, say), undoing restores it like `restore_document`.
+	 */
+	place: Place,
+	/**  Its index among the items of its place. */
+	index: number,
+	/**  Its live children when it was trashed, in their order. */
+	children: string[],
+};
+
+/**  A document just put in the trash, and what undoing it needs (#604). */
+export type TrashedDocument = {
+	document: Document,
+	undo: TrashUndo,
+};
 
 /**  Something drawn over the tree. */
 export type TreeAnnotation = 

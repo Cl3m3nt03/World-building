@@ -46,6 +46,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         commands::documents::recent_documents,
         commands::documents::rename_document,
         commands::documents::trash_document,
+        commands::documents::undo_trash_document,
         commands::documents::restore_document,
         commands::documents::delete_document,
         commands::documents::empty_trash,

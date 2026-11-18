@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-undo-trash-document"
+description = "Enables the undo_trash_document command without any pre-configured scope."
+commands.allow = ["undo_trash_document"]
+
+[[permission]]
+identifier = "deny-undo-trash-document"
+description = "Denies the undo_trash_document command without any pre-configured scope."
+commands.deny = ["undo_trash_document"]

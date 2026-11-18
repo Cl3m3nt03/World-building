@@ -310,6 +310,125 @@ async fn a_restored_document_goes_back_to_its_place_or_the_root() {
 }
 
 #[tokio::test]
+async fn undoing_a_trash_puts_the_document_back_exactly() {
+    let fx = Fixture::new().await;
+    let places = fx.folder(None, "Lieux").await;
+    let before = fx.doc("Avant").await;
+    let kingdom = fx.doc("Royaume").await;
+    let after = fx.doc("Après").await;
+    let city = fx.doc("Ville").await;
+    let port = fx.doc("Port").await;
+    for (index, id) in [&before, &kingdom, &after].into_iter().enumerate() {
+        move_document(fx.pool(), id, &folder(&places), index)
+            .await
+            .unwrap();
+    }
+    move_document(fx.pool(), &city, &under(&kingdom), 0)
+        .await
+        .unwrap();
+    move_document(fx.pool(), &port, &under(&kingdom), 1)
+        .await
+        .unwrap();
+    set_pinned(fx.pool(), &after, true).await.unwrap();
+    set_pinned(fx.pool(), &kingdom, true).await.unwrap();
+    let outline = "Lieux/{Avant Royaume(Ville Port) Après}";
+    assert_eq!(fx.outline().await, outline);
+
+    let trashed = documents::trash_with_undo(fx.pool(), &kingdom)
+        .await
+        .unwrap();
+    assert!(trashed.document.trashed_at.is_some());
+    assert_eq!(
+        trashed.undo,
+        TrashUndo {
+            place: folder(&places),
+            index: 1,
+            children: vec![city.clone(), port.clone()],
+        }
+    );
+    assert_eq!(fx.outline().await, "Lieux/{Avant Ville Port Après}");
+    assert_eq!(pins(&fx).await, ["Après"]);
+
+    let restored = documents::undo_trash(fx.pool(), &kingdom, &trashed.undo)
+        .await
+        .unwrap();
+    assert!(restored.trashed_at.is_none());
+    assert_eq!(fx.outline().await, outline);
+    assert_eq!(pins(&fx).await, ["Après", "Royaume"]);
+}
+
+#[tokio::test]
+async fn undoing_a_trash_leaves_a_child_moved_since_where_it_is() {
+    let fx = Fixture::new().await;
+    let kingdom = fx.doc("Royaume").await;
+    let city = fx.doc("Ville").await;
+    let port = fx.doc("Port").await;
+    let elsewhere = fx.doc("Ailleurs").await;
+    move_document(fx.pool(), &city, &under(&kingdom), 0)
+        .await
+        .unwrap();
+    move_document(fx.pool(), &port, &under(&kingdom), 1)
+        .await
+        .unwrap();
+
+    let trashed = documents::trash_with_undo(fx.pool(), &kingdom)
+        .await
+        .unwrap();
+    move_document(fx.pool(), &city, &under(&elsewhere), 0)
+        .await
+        .unwrap();
+    documents::undo_trash(fx.pool(), &kingdom, &trashed.undo)
+        .await
+        .unwrap();
+
+    assert_eq!(fx.outline().await, "Royaume(Port) Ailleurs(Ville)");
+}
+
+#[tokio::test]
+async fn undoing_a_trash_whose_place_is_gone_restores_at_the_root() {
+    let fx = Fixture::new().await;
+    let places = fx.folder(None, "Lieux").await;
+    fx.doc("Gondor").await;
+    let city = fx.doc("Ville").await;
+    move_document(fx.pool(), &city, &folder(&places), 0)
+        .await
+        .unwrap();
+
+    let trashed = documents::trash_with_undo(fx.pool(), &city).await.unwrap();
+    delete_folder(fx.pool(), &places, FolderDeletion::Lift)
+        .await
+        .unwrap();
+    documents::undo_trash(fx.pool(), &city, &trashed.undo)
+        .await
+        .unwrap();
+
+    assert_eq!(fx.outline().await, "Gondor Ville");
+}
+
+#[tokio::test]
+async fn undoing_a_trash_twice_or_out_of_the_trash_changes_nothing() {
+    let fx = Fixture::new().await;
+    fx.doc("A").await;
+    let b = fx.doc("B").await;
+    fx.doc("C").await;
+
+    let trashed = documents::trash_with_undo(fx.pool(), &b).await.unwrap();
+    documents::undo_trash(fx.pool(), &b, &trashed.undo)
+        .await
+        .unwrap();
+    move_document(fx.pool(), &b, &root(), 99).await.unwrap();
+    documents::undo_trash(fx.pool(), &b, &trashed.undo)
+        .await
+        .unwrap();
+    assert_eq!(fx.outline().await, "A C B");
+    assert!(
+        documents::undo_trash(fx.pool(), "nope", &trashed.undo)
+            .await
+            .is_err()
+    );
+}
+
+#[tokio::test]
 async fn a_document_deleted_for_good_leaves_no_child_pointing_to_it() {
     let fx = Fixture::new().await;
     let parent = fx.doc("Parent").await;

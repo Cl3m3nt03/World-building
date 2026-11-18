@@ -2,6 +2,7 @@
  * M3 scenarios (docs/roadmap/M3-organisation.md, 3.14), the acceptance
  * criteria of docs/features/02-organisation.md:
  * - Royaume › Ville › Taverne built by drag and drop; Royaume onto Taverne refused;
+ * - Ville trashed, then put back exactly from its notification (#604);
  * - a folder with an icon and a subfolder;
  * - three pins in a chosen order;
  * - a card found by an alias and by a word of its content;
@@ -113,6 +114,22 @@ describe("M3: organisation of the sidebar", () => {
     const before = await rows();
     expect(await drag("Royaume", "Taverne", 0.5)).toBe("refused");
     expect(await rows()).toEqual(before);
+  });
+
+  it("puts Ville back under Royaume, with Taverne, from the trash notification (#604)", async () => {
+    const before = await rows();
+    await menu("Ville", "Mettre à la corbeille");
+    const toast = '//*[@data-slot="toast-viewport"]';
+    await $(`${toast}//*[normalize-space()="« Ville » est dans la corbeille"]`).waitForDisplayed({
+      timeoutMsg: "no notification after the trash",
+    });
+    await browser.waitUntil(async () => (await rows()).includes("Taverne 2"), {
+      timeoutMsg: "Taverne did not take Ville's place",
+    });
+    await $(`${toast}//button[normalize-space()="Annuler"]`).click();
+    await browser.waitUntil(async () => JSON.stringify(await rows()) === JSON.stringify(before), {
+      timeoutMsg: "the undo did not put Ville back exactly",
+    });
   });
 
   it("makes a folder with an icon, and a subfolder", async () => {

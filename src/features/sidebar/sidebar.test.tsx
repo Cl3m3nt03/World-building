@@ -141,6 +141,8 @@ const SEARCH_HITS: SearchHit[] = [
 
 let tree: DocumentTree;
 let sidebarState: SidebarState;
+/** Documents put in the trash, to put back on an undo. */
+let trashedDocuments: Map<string, TreeDocument>;
 let calls: { command: string; args: Record<string, unknown> }[];
 
 beforeEach(() => {
@@ -148,6 +150,7 @@ beforeEach(() => {
   mockConvertFileSrc("windows");
   tree = SAMPLE;
   sidebarState = {};
+  trashedDocuments = new Map();
   calls = [];
   mockIPC((command, payload) => {
     const args = payload as { id: string } & Record<string, unknown>;
@@ -181,9 +184,20 @@ beforeEach(() => {
           ),
         };
         return {};
-      case "trash_document":
+      case "trash_document": {
+        const trashed = tree.documents.find((d) => d.id === args.id);
         tree = { ...tree, documents: tree.documents.filter((d) => d.id !== args.id) };
-        return {};
+        trashedDocuments.set(args.id, trashed as TreeDocument);
+        return {
+          document: { id: args.id, title: trashed?.title ?? "" },
+          undo: { place: { kind: "root" }, index: trashed?.sortOrder ?? 0, children: [] },
+        };
+      }
+      case "undo_trash_document": {
+        const back = trashedDocuments.get(args.id);
+        if (back) tree = { ...tree, documents: [...tree.documents, back] };
+        return { id: args.id };
+      }
       case "duplicate_card":
       case "duplicate_map": {
         const original = tree.documents.find((d) => d.id === args.id);
@@ -692,6 +706,35 @@ test("Delete puts a document in the trash and leaves the open card", async () =>
   await waitFor(() => expect(callsOf("trash_document")[0]?.args).toEqual({ id: "Arya" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
   await waitFor(() => expect(item("Arya")).toBeUndefined());
+});
+
+test("a trashed document can be undone from its notification: row, focus and page come back (#604)", async () => {
+  const router = await renderAt("/world/demo/world/card/Arya");
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  await act(async () => item("Arya").focus());
+
+  await press("Delete");
+  const notification = await screen.findByText("« Arya » est dans la corbeille");
+  const undo = within(notification.closest("li") as HTMLElement).getByRole("button", {
+    name: "Annuler",
+  });
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
+  // Reached with the keyboard (F8, Tab), then pressed.
+  await act(async () => {
+    undo.focus();
+    fireEvent.click(undo);
+  });
+
+  await waitFor(() =>
+    expect(callsOf("undo_trash_document")[0]?.args).toEqual({
+      id: "Arya",
+      undo: { place: { kind: "root" }, index: 1, children: [] },
+    }),
+  );
+  await waitFor(() => expect(item("Arya")).toBeTruthy());
+  await waitFor(() => expect(document.activeElement).toBe(item("Arya")));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world/card/Arya"));
+  await waitFor(() => expect(screen.queryByText("« Arya » est dans la corbeille")).toBeNull());
 });
 
 test("Duplicate makes a copy named after the card", async () => {

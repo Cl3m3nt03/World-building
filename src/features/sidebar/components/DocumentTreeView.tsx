@@ -54,7 +54,7 @@ import {
   ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { useCardTypes } from "@/features/card-types";
-import { CreateCardContextMenu } from "@/features/cards";
+import { CreateCardContextMenu, useTrashDocument } from "@/features/cards";
 import { useSetWikiVisible } from "@/features/wiki";
 import type { CardType, DocumentTree } from "@/lib/bindings";
 import { dragCard, dropCard } from "@/lib/cardDrop";
@@ -65,7 +65,6 @@ import {
   useMoveInTree,
   useRenameDocument,
   useSetPinned,
-  useTrashDocument,
   useUpdateFolder,
 } from "../hooks/useDocumentTree";
 import {
@@ -509,21 +508,40 @@ export function DocumentTreeView({
     return node?.kind === "document" ? node : null;
   };
 
-  /** Trashes a document; the focus goes to the row after it (or before). */
+  /**
+   * Trashes a document; the focus goes to the row after it (or before). Its
+   * notification can undo it (#604): its row comes back, with the focus if
+   * nothing else has it, and it opens again if it was open and the workspace
+   * is still empty.
+   */
   function trashDocument(node: TreeNode & { kind: "document" }) {
     const index = indexOf.get(node.key);
     const next = index === undefined ? undefined : (rows[index + 1] ?? rows[index - 1]);
-    trash.mutate(node.document.id, {
-      onSuccess: () => {
-        if (next) {
-          pendingFocus.current = next.node.key;
-          setActiveKey(next.node.key);
-        }
-        if (node.key === currentKey) {
-          void navigate({ to: "/world/$worldId/world", params: { worldId } });
-        }
+    const wasOpen = node.key === currentKey;
+    const worldHome = `/world/${worldId}/world`;
+    trash.mutate(
+      {
+        id: node.document.id,
+        onUndone: () => {
+          if (focusIsFree()) pendingFocus.current = node.key;
+          setRevealKey(node.key);
+          if (wasOpen && router.state.location.pathname === worldHome) {
+            void router.navigate(documentRoute(worldId, node.document.kind, node.document.id));
+          }
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          if (next) {
+            pendingFocus.current = next.node.key;
+            setActiveKey(next.node.key);
+          }
+          if (wasOpen) {
+            void navigate({ to: "/world/$worldId/world", params: { worldId } });
+          }
+        },
+      },
+    );
   }
 
   const menuDocumentNode = documentNode(menuKey);
@@ -956,6 +974,19 @@ function DocumentMenu({
 }
 
 type Visual = { Icon: LucideIcon; color?: string; label: string };
+
+/**
+ * Whether nothing holds the focus that moving it would take away: the page
+ * itself, or the notifications (where it lands once an undo closes one).
+ */
+function focusIsFree(): boolean {
+  const focused = document.activeElement;
+  return (
+    focused === null ||
+    focused === document.body ||
+    focused.closest("[data-slot=toast-viewport]") !== null
+  );
+}
 
 function nodeLabel(node: TreeNode): string {
   return node.kind === "folder" ? node.folder.name : node.document.title;

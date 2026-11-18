@@ -33,7 +33,7 @@ La pastille du type d'une carte ouvre le même sélecteur, intitulé « Changer 
 - **Type et sous-type**, modifiables après coup.
 - **Alias** : autres noms de la carte. Ils sont pris en compte par la recherche, les mentions et la détection de noms dans Quill. Une carte a 20 alias au plus ; les doublons (sans tenir compte de la casse) et les alias vides sont ignorés.
 - L'image s'affiche en portrait (3:4) ou en paysage (16:9) selon l'orientation par défaut du type. Supprimer l'image de la médiathèque la retire des cartes qui l'utilisaient.
-- « … › Mettre à la corbeille » range la carte dans la corbeille du monde (restaurable, voir 2.5).
+- « … › Mettre à la corbeille » range la carte dans la corbeille du monde (restaurable, voir 2.5), sans rien demander : une notification « « Aragorn » est dans la corbeille » propose **Annuler**, qui remet la carte exactement où elle était et la rouvre si l'espace de travail est encore vide (#604, voir `02-organisation.md`).
 - **Propriétés** : des champs structurés (voir plus bas).
 - **Contenu** : une suite de **blocs**.
 

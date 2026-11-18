@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import {
   BookOpen,
   ChevronDown,
@@ -40,7 +40,7 @@ import {
   useRenameCard,
   useSetCardAliases,
   useSetCardType,
-  useTrashCard,
+  useTrashDocument,
 } from "../hooks/useCards";
 import { typeLabel } from "../typeLabel";
 import { Backlinks } from "./Backlinks";
@@ -250,7 +250,8 @@ export function CardPage() {
   const card = useCard(cardId);
   const types = useCardTypes();
   useMarkOpened(cardId);
-  const trash = useTrashCard(cardId);
+  const router = useRouter();
+  const trash = useTrashDocument();
   const wikiPages = useWikiPages();
   const setWikiVisible = useSetWikiVisible();
   const inWiki = wikiPages.data?.some((page) => page.id === cardId) ?? false;
@@ -344,10 +345,24 @@ export function CardPage() {
                   <DropdownMenuItem
                     variant="destructive"
                     onSelect={() =>
-                      trash.mutate(undefined, {
-                        onSuccess: () =>
-                          void navigate({ to: "/world/$worldId/world", params: { worldId } }),
-                      })
+                      trash.mutate(
+                        {
+                          id: cardId,
+                          // Undone while still on the empty workspace: the card opens again.
+                          onUndone: () => {
+                            if (router.state.location.pathname === `/world/${worldId}/world`) {
+                              void router.navigate({
+                                to: "/world/$worldId/world/card/$cardId",
+                                params: { worldId, cardId },
+                              });
+                            }
+                          },
+                        },
+                        {
+                          onSuccess: () =>
+                            void navigate({ to: "/world/$worldId/world", params: { worldId } }),
+                        },
+                      )
                     }
                   >
                     <Trash2 />

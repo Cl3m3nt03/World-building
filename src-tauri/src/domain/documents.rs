@@ -248,14 +248,54 @@ pub async fn rename(pool: &SqlitePool, id: &str, title: &str) -> AppResult<Docum
 }
 
 /// Puts a document in the trash. Links to it are kept: it can come back.
-/// Its children stay in the sidebar, in its place (see `tree`).
+/// Its children stay in the sidebar, in its place (see `tree`). The app
+/// goes through `trash_with_undo`; tests use this shorter form.
+#[cfg(test)]
 pub async fn trash(pool: &SqlitePool, id: &str) -> AppResult<Document> {
+    Ok(trash_with_undo(pool, id).await?.document)
+}
+
+/// A document just put in the trash, and what undoing it needs (#604).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashedDocument {
+    pub document: Document,
+    pub undo: tree::TrashUndo,
+}
+
+/// `trash`, giving what `undo_trash` needs. A document already in the trash
+/// stays there; undoing then restores it at the end of its place.
+pub async fn trash_with_undo(pool: &SqlitePool, id: &str) -> AppResult<TrashedDocument> {
     let document = get(pool, id).await?;
-    if document.trashed_at.is_none() {
+    let undo = if document.trashed_at.is_none() {
         let mut tx = db::begin_write(pool).await?;
-        tree::trash_document(&mut tx, id, &now()).await?;
+        let undo = tree::trash_document(&mut tx, id, &now()).await?;
         tx.commit().await?;
-    }
+        undo
+    } else {
+        tree::TrashUndo {
+            place: tree::Place::Root,
+            index: u32::MAX,
+            children: Vec::new(),
+        }
+    };
+    Ok(TrashedDocument {
+        document: get(pool, id).await?,
+        undo,
+    })
+}
+
+/// Takes a document just trashed back out, exactly where it was (#604):
+/// same place, same position, its children under it again.
+pub async fn undo_trash(
+    pool: &SqlitePool,
+    id: &str,
+    undo: &tree::TrashUndo,
+) -> AppResult<Document> {
+    get(pool, id).await?;
+    let mut tx = db::begin_write(pool).await?;
+    tree::undo_trash(&mut tx, id, undo).await?;
+    tx.commit().await?;
     get(pool, id).await
 }
 
