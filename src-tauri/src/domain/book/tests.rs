@@ -2,6 +2,7 @@ use std::io::Read;
 
 use super::*;
 use crate::db;
+use crate::domain::quill::reader::TextSize;
 use crate::domain::quill::{self, BookStyle, Cover, NewStory};
 
 fn text(value: &str) -> Value {
@@ -800,4 +801,130 @@ fn the_pdf_justifies_a_long_paragraph_unless_it_is_set_left() {
     // Set left: it stops short of it.
     let (end, width) = first_line_end(doc(Value::from("left")));
     assert!(end < width - margin - 4.0, "{end}");
+}
+
+/// A part (`word/document.xml`, `word/styles.xml`…) of the Word file of `book`.
+fn docx_part(book: &Book, part: &str) -> String {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("livre.docx");
+    write(book, ExportFormat::Docx, &path).unwrap();
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(&path).unwrap()).unwrap();
+    let mut xml = String::new();
+    zip.by_name(part).unwrap().read_to_string(&mut xml).unwrap();
+    xml
+}
+
+/// A story's text with every kind of block a body paragraph can follow.
+fn indented_doc() -> Value {
+    let para = |words: &str| serde_json::json!({ "type": "paragraph", "content": [text(words)] });
+    let aligned = |align: &str, words: &str| serde_json::json!({ "type": "paragraph", "attrs": { "textAlign": align }, "content": [text(words)] });
+    serde_json::json!({ "type": "doc", "content": [
+        para("Premier du chapitre."),
+        para("Deuxième de suite."),
+        { "type": "paragraph", "content": [] },
+        para("Après une ligne vide."),
+        aligned("center", "Au milieu."),
+        para("Après le milieu."),
+        aligned("right", "Signé : le roi."),
+        aligned("left", "À gauche toute."),
+        aligned("justify", "Justifié."),
+        { "type": "heading", "attrs": { "level": 2 }, "content": [text("Un titre")] },
+        para("Après le titre."),
+        { "type": "horizontalRule" },
+        para("Après la scène."),
+        { "type": "blockquote", "content": [para("Cité en premier."), para("Cité ensuite.")] },
+        para("Après la citation."),
+        { "type": "bulletList", "content": [{ "type": "listItem", "content": [
+            para("Un point."), para("Suite du point.")
+        ] }] },
+        para("Après la liste."),
+        { "type": "codeBlock", "content": [text("let x = 1;")] },
+        para("Après le code.")
+    ] })
+}
+
+#[test]
+fn the_docx_indents_the_first_line_of_a_paragraph_after_another_as_the_pdf() {
+    let book = book_of(&indented_doc());
+    let document = docx_part(&book, "word/document.xml");
+    // The properties of the paragraph (`<w:p …>`) holding `words`.
+    let paragraph = |words: &str| -> String {
+        let at = document
+            .find(words)
+            .unwrap_or_else(|| panic!("{words} missing"));
+        let start = document[..at].rfind("<w:p ").unwrap();
+        document[start..at].to_owned()
+    };
+    // 1.2 em of the medium size (11 pt), in twips: the PDF's indent.
+    let indent = "w:firstLine=\"264\"";
+    for words in [
+        "Deuxième de suite.",
+        // An empty paragraph is passed over, as in the PDF.
+        "Après une ligne vide.",
+        "Après le milieu.",
+        "À gauche toute.",
+        "Justifié.",
+        "Cité ensuite.",
+        "Suite du point.",
+    ] {
+        let xml = paragraph(words);
+        assert!(xml.contains(indent), "{words}: {xml}");
+    }
+    // A chapter, a quote or a list item starts without it, as does the
+    // text after a title, a scene break, a quote, a list or code.
+    for words in [
+        "Premier du chapitre.",
+        "Un titre",
+        "Après le titre.",
+        "Après la scène.",
+        "Cité en premier.",
+        "Après la citation.",
+        "Un point.",
+        "Après la liste.",
+        "Après le code.",
+        "Chapitre 1",
+    ] {
+        let xml = paragraph(words);
+        assert!(!xml.contains("w:firstLine=\"2"), "{words}: {xml}");
+    }
+    // Centred and right text have none, even after a paragraph.
+    for words in ["Au milieu.", "Signé : le roi."] {
+        let xml = paragraph(words);
+        assert!(xml.contains("w:firstLine=\"0\""), "{words}: {xml}");
+    }
+    // A quote keeps its left indent, a list item its hanging mark.
+    assert!(paragraph("Cité ensuite.").contains("w:left=\"567\""));
+    assert!(paragraph("Cité en premier.").contains("w:left=\"567\""));
+    let item = paragraph("Un point.");
+    assert!(item.contains("w:hanging=\"283\""), "{item}");
+    assert!(paragraph("Suite du point.").contains("w:left=\"567\""));
+    // The alignment stays as chosen (the style's when none).
+    assert!(!paragraph("Deuxième de suite.").contains("<w:jc"));
+    assert!(paragraph("À gauche toute.").contains("<w:jc w:val=\"left\" />"));
+
+    // No style carries an indent of its own (docx-rs dropped it anyway).
+    let styles = docx_part(&book, "word/styles.xml");
+    assert!(!styles.contains("<w:ind"), "{styles}");
+}
+
+#[test]
+fn the_docx_first_line_indent_follows_the_text_size() {
+    let doc = serde_json::json!({ "type": "doc", "content": [
+        { "type": "paragraph", "content": [text("Un.")] },
+        { "type": "paragraph", "content": [text("Deux.")] }
+    ] });
+    for (size, twips) in [
+        (TextSize::Small, 240),
+        (TextSize::Medium, 264),
+        (TextSize::Large, 300),
+    ] {
+        let mut book = book_of(&doc);
+        book.settings.text_size = size;
+        let document = docx_part(&book, "word/document.xml");
+        assert_eq!(document.matches("w:firstLine=").count(), 1, "{document}");
+        assert!(
+            document.contains(&format!("w:firstLine=\"{twips}\"")),
+            "{twips}: {document}"
+        );
+    }
 }

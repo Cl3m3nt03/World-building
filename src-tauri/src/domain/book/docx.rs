@@ -118,6 +118,8 @@ fn runs(paragraph: Paragraph, runs: &[Run]) -> Paragraph {
 struct Writer<'a> {
     book: &'a Book,
     docx: Docx,
+    /// The first-line indent of a body paragraph, in twips.
+    first_line: i32,
 }
 
 impl Writer<'_> {
@@ -135,7 +137,13 @@ impl Writer<'_> {
         self.docx = docx.add_paragraph(paragraph);
     }
 
-    fn blocks(&mut self, blocks: &[Block], indent: i32) {
+    /// Writes `blocks`, `indent` twips in. Like the PDF (Typst), a body
+    /// paragraph has its first-line indent only after another paragraph:
+    /// not at the start of a chapter, a quote or a list item, nor after a
+    /// title, a separator, an image, a list or code. An empty paragraph is
+    /// passed over (the PDF drops it). `after_paragraph` tells whether the
+    /// first block follows a paragraph.
+    fn blocks(&mut self, blocks: &[Block], indent: i32, mut after_paragraph: bool) {
         for block in blocks {
             match block {
                 Block::Heading {
@@ -148,15 +156,19 @@ impl Writer<'_> {
                     self.add(runs(paragraph, text));
                 }
                 Block::Paragraph { runs: text, align } => {
+                    // Written on the paragraph in twips: Word, LibreOffice
+                    // and Google Docs all read it there.
+                    let first_line = (after_paragraph && !text.is_empty())
+                        .then_some(SpecialIndentType::FirstLine(self.first_line));
                     let paragraph = Paragraph::new().style("BookText");
-                    let paragraph = if indent > 0 {
-                        paragraph.indent(Some(indent), None, None, None)
+                    let paragraph = if indent > 0 || first_line.is_some() {
+                        paragraph.indent((indent > 0).then_some(indent), first_line, None, None)
                     } else {
                         paragraph
                     };
                     self.add(runs(aligned(paragraph, *align, indent), text));
                 }
-                Block::Quote(inner) => self.blocks(inner, indent + 567),
+                Block::Quote(inner) => self.blocks(inner, indent + 567, false),
                 Block::List { ordered, items } => {
                     for (index, item) in items.iter().enumerate() {
                         let mark = if *ordered {
@@ -185,8 +197,9 @@ impl Writer<'_> {
                             Some(Align::Center | Align::Right) => paragraph.align(alignment(align)),
                             _ => aligned(paragraph, align, indent + 567),
                         };
+                        let after_first = !first.is_empty();
                         self.add(runs(paragraph, &first));
-                        self.blocks(rest, indent + 567);
+                        self.blocks(rest, indent + 567, after_first);
                     }
                 }
                 Block::Code(text) => {
@@ -216,6 +229,10 @@ impl Writer<'_> {
                     }
                 }
             }
+            after_paragraph = match block {
+                Block::Paragraph { runs, .. } => after_paragraph || !runs.is_empty(),
+                _ => false,
+            };
         }
     }
 }
@@ -234,6 +251,12 @@ pub fn write(book: &Book) -> AppResult<Vec<u8>> {
         TextSize::Medium => 22,
         TextSize::Large => 25,
     };
+    // The first-line indent, 1.2 em as the PDF, in twips (20 a point).
+    let first_line = match book.settings.text_size {
+        TextSize::Small => 240,
+        TextSize::Medium => 264,
+        TextSize::Large => 300,
+    };
     let docx = Docx::new()
         .page_size(PAGE_WIDTH, PAGE_HEIGHT)
         .page_margin(PageMargin {
@@ -247,11 +270,11 @@ pub fn write(book: &Book) -> AppResult<Vec<u8>> {
         })
         .default_fonts(fonts.clone())
         .default_size(size)
+        // Justified; the first-line indent is on each paragraph (see `blocks`).
         .add_style(
             Style::new("BookText", StyleType::Paragraph)
                 .name("Book Text")
-                .align(AlignmentType::Both)
-                .first_line_chars(100),
+                .align(AlignmentType::Both),
         )
         .add_style(
             Style::new("Heading1", StyleType::Paragraph)
@@ -289,7 +312,11 @@ pub fn write(book: &Book) -> AppResult<Vec<u8>> {
                     .add_page_num(PageNum::new()),
             ),
         );
-    let mut writer = Writer { book, docx };
+    let mut writer = Writer {
+        book,
+        docx,
+        first_line,
+    };
 
     if let Some(cover) = &book.cover
         && let Some(pic) = picture(cover, text_box())
@@ -323,7 +350,7 @@ pub fn write(book: &Book) -> AppResult<Vec<u8>> {
                 .style("Heading1")
                 .add_run(DocxRun::new().add_text(chapter.title.clone())),
         );
-        writer.blocks(&chapter.blocks, 0);
+        writer.blocks(&chapter.blocks, 0, false);
     }
 
     let mut out = std::io::Cursor::new(Vec::new());
