@@ -188,7 +188,10 @@ describe("M2: world settings, theme and writing preferences", () => {
       async () =>
         browser.execute(() => {
           const root = document.documentElement;
-          const radius = getComputedStyle(root).getPropertyValue("--bz-radius-lg").trim();
+          // A rank radius, as drawn: the token is a calc() scaled by the
+          // app's corner setting (#616), at 100 % here.
+          const panel = document.querySelector(".rounded-lg");
+          const radius = panel && getComputedStyle(panel).borderTopLeftRadius;
           const title = document.querySelector(".font-heading");
           return (
             root.dataset.material === "stone" &&
