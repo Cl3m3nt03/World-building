@@ -16,6 +16,7 @@ import { ChoiceTiles, colorLabel, TYPE_COLORS, typeColor } from "@/features/card
 import { CardPicker } from "@/features/cards";
 import type { Card, MapContent, MapZone, ZonePattern } from "@/lib/bindings";
 import { ZONE_FONTS, ZONE_PATTERNS } from "../zones";
+import { SizeInput } from "./SizeInput";
 
 const PATTERN_LABELS = {
   solid: "maps.zones.pattern.solid",
@@ -89,17 +90,12 @@ export function ZonePanel({
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor={`${id}-size`}>{t("maps.zones.fontSize")}</Label>
-          <Input
+          <SizeInput
             id={`${id}-size`}
-            type="number"
             min={8}
             max={96}
             value={zone.labelStyle.size ?? 18}
-            onChange={(event) => {
-              const size = Number(event.target.value);
-              if (size >= 8 && size <= 96) onChange({ labelStyle: { ...zone.labelStyle, size } });
-            }}
-            className="h-8"
+            onChange={(size) => onChange({ labelStyle: { ...zone.labelStyle, size } })}
           />
         </div>
       </div>
