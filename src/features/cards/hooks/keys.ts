@@ -6,4 +6,6 @@ export const cardKeys = {
 
 export const documentKeys = {
   all: () => ["documents"] as const,
+  /** Search results, by query (sidebar and wiki, see useSearch). */
+  search: () => [...documentKeys.all(), "search"] as const,
 };

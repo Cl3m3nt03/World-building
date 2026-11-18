@@ -43,6 +43,8 @@ export function useSaveCardContent(cardId: string) {
     scope: { id: `card-content:${cardId}` },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
+      // The card's text is searched (sidebar and wiki): its words may have changed (#598).
+      void queryClient.invalidateQueries({ queryKey: documentKeys.search() });
     },
   });
   const { mutateAsync } = mutation;
@@ -80,5 +82,7 @@ export function useStartFromTemplate() {
     if (blocks.length === 0) return;
     await unwrap(commands.setCardContent(cardId, JSON.stringify(blocks)));
     queryClient.setQueryData(cardContentKey(cardId), blocks);
+    // The sections' titles are searched as the card's text (#598).
+    void queryClient.invalidateQueries({ queryKey: documentKeys.search() });
   };
 }

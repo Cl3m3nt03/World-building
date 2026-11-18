@@ -19,7 +19,7 @@ export function useSearch(query: string) {
     return () => clearTimeout(timer);
   }, [query]);
   const results = useQuery({
-    queryKey: [...documentKeys.all(), "search", searched],
+    queryKey: [...documentKeys.search(), searched],
     queryFn: () => unwrap(commands.searchDocuments(searched)),
     enabled: searched !== "",
     placeholderData: keepPreviousData,
