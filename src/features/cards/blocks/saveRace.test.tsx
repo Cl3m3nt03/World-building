@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, renderHook, screen, waitFor } from "@testing-library/react";
 import type { Editor } from "@tiptap/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { createQueryClient } from "@/lib/query";
 import { BlockEditor } from "./BlockEditor";
 import { type Block, parseContent } from "./model";
-import { cardContentKey } from "./useCardContent";
+import { cardContentKey, useSaveCardContent } from "./useCardContent";
 
 /**
  * #586: the editor left saves on its way out, and the next editor of the
@@ -22,7 +22,9 @@ const START: Block[] = [
 /** What the Rust side holds, and the saves still on their way. */
 let stored: string;
 let saved: string[];
-let held: (() => void)[];
+/** A save held on its way: `settle(true)` makes it fail. */
+type Held = { content: string; settle: (fail: boolean) => void };
+let held: Held[];
 let holdSaves: boolean;
 let failSaves: boolean;
 let loads: number;
@@ -42,20 +44,23 @@ beforeEach(() => {
     }
     if (command === "set_card_content") {
       const content = (payload as { content: string }).content;
-      const write = () => {
-        if (failSaves) throw new Error("disk full");
+      const write = (fail: boolean) => {
+        if (fail) throw new Error("disk full");
         stored = content;
         saved.push(content);
         return null;
       };
-      if (!holdSaves) return write();
+      if (!holdSaves) return write(failSaves);
       return new Promise((resolve, reject) => {
-        held.push(() => {
-          try {
-            resolve(write());
-          } catch (error) {
-            reject(error);
-          }
+        held.push({
+          content,
+          settle: (fail) => {
+            try {
+              resolve(write(fail));
+            } catch (error) {
+              reject(error);
+            }
+          },
         });
       });
     }
@@ -76,7 +81,7 @@ afterEach(async () => {
 /** Lets the saves on their way reach the Rust side. */
 async function releaseSaves() {
   await act(async () => {
-    for (const release of held.splice(0)) release();
+    for (const save of held.splice(0)) save.settle(failSaves);
   });
 }
 
@@ -190,4 +195,98 @@ test("a failed save puts back the blocks it replaced in the cache", async () => 
     expect(client.getQueryData(cardContentKey("aragorn"))).toEqual(parseContent(stored)),
   );
   expect(textOf(stored)).not.toContain("Né au Gondor");
+});
+
+// The saves themselves, as the editors send them (review of #602).
+
+const KEY = cardContentKey("aragorn");
+const text = (words: string): Block[] => [
+  {
+    id: "t1",
+    type: "text",
+    doc: {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: words }] }],
+    },
+  },
+];
+
+/** A client whose cache holds the card as loaded, and the card's save. */
+function saver() {
+  const client = createQueryClient();
+  client.setQueryData(KEY, parseContent(stored));
+  const hook = renderHook(() => useSaveCardContent("aragorn"), {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
+  const save = (blocks: Block[]) => hook.result.current.save(blocks).catch(() => undefined);
+  return { client, save };
+}
+
+/** Settles the save held first; the next one queued behind it is then sent. */
+async function settleFirst(fail: boolean) {
+  await waitFor(() => expect(held.length).toBeGreaterThan(0));
+  await act(async () => {
+    held.shift()?.settle(fail);
+  });
+}
+
+test("a failed save keeps a later save's blocks in the cache", async () => {
+  const { client, save } = saver();
+  const a = save(text("A"));
+  void save(text("B"));
+
+  await settleFirst(true);
+  await a;
+
+  // B is still on its way: the cache holds it, not the blocks before A.
+  expect(client.getQueryData(KEY)).toEqual(text("B"));
+  await settleFirst(false);
+  expect(client.getQueryData(KEY)).toEqual(text("B"));
+});
+
+test("a failed save then the same blocks saved: the cache holds what the card has", async () => {
+  // A letter typed then removed: two saves of equal blocks.
+  const { client, save } = saver();
+  void save(text("Né au Gondor"));
+  const b = save(text("Né au Gondor"));
+
+  await settleFirst(true);
+  await settleFirst(false);
+  await b;
+
+  expect(textOf(stored)).toContain("Né au Gondor");
+  expect(client.getQueryData(KEY)).toEqual(parseContent(stored));
+});
+
+test("two failed saves in a row put back the blocks saved before them", async () => {
+  const { client, save } = saver();
+  void save(text("A"));
+  const b = save(text("B"));
+
+  await settleFirst(true);
+  await settleFirst(true);
+  await b;
+
+  expect(client.getQueryData(KEY)).toEqual(START);
+});
+
+test("the saves of a card reach it in the order they were sent", async () => {
+  const { save } = saver();
+  void save(text("A"));
+  const b = save(text("B"));
+
+  // Only A is on its way: B waits for it (were both sent, B could land first).
+  await waitFor(() => expect(held).toHaveLength(1));
+  await act(async () => {
+    await Promise.resolve();
+  });
+  expect(held.map((one) => textOf(one.content))).toEqual([textOf(JSON.stringify(text("A")))]);
+  await act(async () => {
+    held.pop()?.settle(false);
+  });
+  await settleFirst(false);
+  await b;
+  expect(parseContent(stored)).toEqual(text("B"));
 });

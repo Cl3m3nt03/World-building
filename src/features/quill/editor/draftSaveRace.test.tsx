@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, renderHook, screen, waitFor } from "@testing-library/react";
 import type { Editor } from "@tiptap/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { createQueryClient } from "@/lib/query";
 import { draftQuery } from "../hooks/useQuill";
 import { ChapterEditor } from "./ChapterEditor";
+import { useSaveDraft } from "./useSaveDraft";
 
 /**
  * #586, in Quill: the chapter's editor saves on its way out, and the next
@@ -22,7 +23,8 @@ const doc = (text: string) =>
   });
 
 let stored: string;
-let held: (() => void)[];
+/** A save held on its way: `settle(true)` makes it fail. */
+let held: { content: string; settle: (fail: boolean) => void }[];
 let failSaves: boolean;
 
 beforeEach(() => {
@@ -37,13 +39,16 @@ beforeEach(() => {
         return { id: args.id, chapterId: "c1", name: "Brouillon 1", content: stored, wordCount: 4 };
       case "save_draft":
         return new Promise((resolve, reject) => {
-          held.push(() => {
-            if (failSaves) {
-              reject(new Error("disk full"));
-              return;
-            }
-            stored = args.content as string;
-            resolve({ id: args.id, name: "Brouillon 1", wordCount: 6, updatedAt: "" });
+          held.push({
+            content: args.content as string,
+            settle: (fail) => {
+              if (fail) {
+                reject(new Error("disk full"));
+                return;
+              }
+              stored = args.content as string;
+              resolve({ id: args.id, name: "Brouillon 1", wordCount: 6, updatedAt: "" });
+            },
           });
         });
       case "story_notes":
@@ -58,7 +63,7 @@ beforeEach(() => {
 
 async function releaseSaves() {
   await act(async () => {
-    for (const release of held.splice(0)) release();
+    for (const save of held.splice(0)) save.settle(failSaves);
   });
 }
 
@@ -155,4 +160,88 @@ test("a failed draft save puts back the text it replaced in the cache", async ()
       doc("Il était une fois"),
     ),
   );
+});
+
+// The saves themselves, as the editor sends them (review of #602).
+
+const KEY = draftQuery("d1").queryKey;
+const cached = (client: QueryClient) => client.getQueryData<{ content: string }>(KEY)?.content;
+
+/** A client whose cache holds the draft as loaded, and the draft's save. */
+function saver() {
+  failSaves = false;
+  const client = createQueryClient();
+  client.setQueryData(KEY, { id: "d1", chapterId: "c1", name: "Brouillon 1", content: stored });
+  const hook = renderHook(() => useSaveDraft("s1", "d1"), {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
+  const save = (text: string) => hook.result.current.save(doc(text)).catch(() => undefined);
+  return { client, save };
+}
+
+/** Settles the save held first; the next one queued behind it is then sent. */
+async function settleFirst(fail: boolean) {
+  await waitFor(() => expect(held.length).toBeGreaterThan(0));
+  await act(async () => {
+    held.shift()?.settle(fail);
+  });
+}
+
+test("a failed draft save keeps a later save's text in the cache", async () => {
+  const { client, save } = saver();
+  const a = save("A");
+  void save("B");
+
+  await settleFirst(true);
+  await a;
+
+  expect(cached(client)).toBe(doc("B"));
+  await settleFirst(false);
+  expect(cached(client)).toBe(doc("B"));
+});
+
+test("a failed draft save then the same text saved: the cache holds what the draft has", async () => {
+  const { client, save } = saver();
+  void save("deux mondes");
+  const b = save("deux mondes");
+
+  await settleFirst(true);
+  await settleFirst(false);
+  await b;
+
+  expect(stored).toBe(doc("deux mondes"));
+  expect(cached(client)).toBe(stored);
+});
+
+test("two failed draft saves in a row put back the text saved before them", async () => {
+  const { client, save } = saver();
+  void save("A");
+  const b = save("B");
+
+  await settleFirst(true);
+  await settleFirst(true);
+  await b;
+
+  expect(cached(client)).toBe(doc("Il était une fois"));
+});
+
+test("the saves of a draft reach it in the order they were sent", async () => {
+  const { save } = saver();
+  void save("A");
+  const b = save("B");
+
+  // Only A is on its way: B waits for it (were both sent, B could land first).
+  await waitFor(() => expect(held).toHaveLength(1));
+  await act(async () => {
+    await Promise.resolve();
+  });
+  expect(held.map((one) => one.content)).toEqual([doc("A")]);
+  await act(async () => {
+    held.pop()?.settle(false);
+  });
+  await settleFirst(false);
+  await b;
+  expect(stored).toBe(doc("B"));
 });

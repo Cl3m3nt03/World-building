@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { type CardType, commands } from "@/lib/bindings";
-import { loadAfterSaves, trackSave } from "@/lib/contentSaves";
+import { loadAfterSaves, saveContent } from "@/lib/contentSaves";
 import { unwrap } from "@/lib/ipc";
 import { cardKeys, documentKeys } from "../hooks/keys";
 import { type Block, parseContent } from "./model";
@@ -27,28 +27,20 @@ export function useCardContent(cardId: string) {
   return useQuery(cardContentQuery(cardId));
 }
 
-/** Blocks to save, as written in the cache, and what they replaced there. */
-type Save = { blocks: Block[]; written: Block[] | undefined; previous: Block[] | undefined };
-
 /**
  * Saves a card's blocks. They are put in the cache as the save starts, not
  * once it is done: an editor saves on its way out, and the next editor of
  * the card (World ↔ Wiki) starts from the cache at once (#586). A failed
- * save puts back what was there, unless a later save has replaced it. The
- * saves of a card run one after the other, in the order they were sent.
+ * save puts back the last saved blocks, unless a later save has started
+ * (see `saveContent`). The saves of a card run one after the other, in the
+ * order they were sent.
  */
 export function useSaveCardContent(cardId: string) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: ({ blocks }: Save) =>
+    mutationFn: (blocks: Block[]) =>
       unwrap(commands.setCardContent(cardId, JSON.stringify(blocks))),
     scope: { id: `card-content:${cardId}` },
-    onError: (_, { written, previous }) => {
-      const key = cardContentKey(cardId);
-      if (queryClient.getQueryData(key) !== written) return;
-      if (previous) queryClient.setQueryData(key, previous);
-      else void queryClient.invalidateQueries({ queryKey: key, exact: true });
-    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
     },
@@ -57,9 +49,16 @@ export function useSaveCardContent(cardId: string) {
   const save = useCallback(
     (blocks: Block[]) => {
       const key = cardContentKey(cardId);
-      const previous = queryClient.getQueryData<Block[]>(key);
-      const written = queryClient.setQueryData<Block[]>(key, blocks);
-      return trackSave(`card:${cardId}`, mutateAsync({ blocks, written, previous }));
+      return saveContent(
+        `card:${cardId}`,
+        blocks,
+        {
+          read: () => queryClient.getQueryData<Block[]>(key),
+          write: (text) => queryClient.setQueryData<Block[]>(key, text),
+          reload: () => void queryClient.invalidateQueries({ queryKey: key, exact: true }),
+        },
+        () => mutateAsync(blocks),
+      );
     },
     [cardId, queryClient, mutateAsync],
   );

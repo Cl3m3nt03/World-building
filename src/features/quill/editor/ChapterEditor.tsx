@@ -1,19 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
-import { documentKeys, useWorldInText, WorldInTextOverlay } from "@/features/cards";
+import { useWorldInText, WorldInTextOverlay } from "@/features/cards";
 import { ImagePickerDialog } from "@/features/media";
-import {
-  type CueKind,
-  commands,
-  type Draft,
-  type DraftInfo,
-  type StoryOutline,
-} from "@/lib/bindings";
-import { trackSave } from "@/lib/contentSaves";
-import { unwrap } from "@/lib/ipc";
+import type { CueKind, Draft } from "@/lib/bindings";
 import { usePendingSave } from "@/lib/pendingSaves";
 import { CueMargin } from "../audio/CueMargin";
 import { cuePositions } from "../audio/cueMark";
@@ -29,6 +21,7 @@ import { quillExtensions, type SlashCommand } from "./extensions";
 import { createListStore } from "./listStore";
 import { SelectionMenu } from "./SelectionMenu";
 import { SlashMenu } from "./SlashMenu";
+import { useSaveDraft } from "./useSaveDraft";
 import { countWords } from "./words";
 
 /** Pause after the last change before the draft is saved. */
@@ -60,22 +53,6 @@ function cardIdAt(target: EventTarget | null): string | null {
   return href.startsWith("#card-") ? href.slice("#card-".length) : null;
 }
 
-/** The outline as a draft save left it: its words in its chapter and story. */
-function withSaved(outline: StoryOutline, saved: DraftInfo): StoryOutline {
-  let delta = 0;
-  const chapters = outline.chapters.map((chapter) => {
-    if (!chapter.drafts.some((draft) => draft.id === saved.id)) return chapter;
-    const drafts = chapter.drafts.map((draft) => (draft.id === saved.id ? saved : draft));
-    if (chapter.currentDraftId !== saved.id) return { ...chapter, drafts };
-    delta = saved.wordCount - chapter.wordCount;
-    return { ...chapter, drafts, wordCount: saved.wordCount };
-  });
-  return {
-    story: { ...outline.story, wordCount: outline.story.wordCount + delta },
-    chapters,
-  };
-}
-
 /**
  * A chapter's text (its draft): the editor with its toolbar and "/"
  * commands. It is saved half a second after the last change, before the
@@ -97,42 +74,7 @@ export function ChapterEditor({
     // The text being typed is the truth: never read again under it.
     staleTime: Number.POSITIVE_INFINITY,
   });
-  const save = useMutation({
-    mutationFn: ({ content }: { content: string; previous: string | undefined }) =>
-      unwrap(commands.saveDraft(draftId, content)),
-    // The saves of a draft run one after the other, in the order they were sent.
-    scope: { id: `draft:${draftId}` },
-    onError: (_, { content, previous }) => {
-      // What was there before comes back, unless a later save has replaced it.
-      const key = quillKeys.draft(draftId);
-      if (queryClient.getQueryData<Draft>(key)?.content !== content) return;
-      if (previous === undefined)
-        void queryClient.invalidateQueries({ queryKey: key, exact: true });
-      else
-        queryClient.setQueryData<Draft>(key, (draft) => draft && { ...draft, content: previous });
-    },
-    onSuccess: (saved) => {
-      // The text is in the cache since the save started.
-      queryClient.setQueryData<Draft>(quillKeys.draft(draftId), (draft) =>
-        draft ? { ...draft, wordCount: saved.wordCount } : draft,
-      );
-      queryClient.setQueryData<StoryOutline>(quillKeys.outline(storyId), (outline) =>
-        outline ? withSaved(outline, saved) : outline,
-      );
-      void queryClient.invalidateQueries({ queryKey: quillKeys.stories() });
-      // The chapter's mentions may have changed: « Cité dans » of the cards.
-      void queryClient.invalidateQueries({ queryKey: [...documentKeys.all(), "backlinks"] });
-    },
-  });
-  // The text is put in the cache as its save starts, not once it is done:
-  // the editor saves on its way out, and the next editor of the draft
-  // starts from the cache at once (#586).
-  const saveNow = (content: string) => {
-    const key = quillKeys.draft(draftId);
-    const previous = queryClient.getQueryData<Draft>(key)?.content;
-    queryClient.setQueryData<Draft>(key, (draft) => draft && { ...draft, content });
-    return trackSave(`draft:${draftId}`, save.mutateAsync({ content, previous }));
-  };
+  const save = useSaveDraft(storyId, draftId);
 
   // The text the editor starts from: the cache as it is once this editor is
   // in place, not as its first render saw it. An editor of the same draft
@@ -156,7 +98,7 @@ export function ChapterEditor({
       audio={audio}
       focusCue={focusCue}
       initial={initial}
-      onSave={(content) => saveNow(content).then(() => undefined)}
+      onSave={(content) => save.save(content).then(() => undefined)}
       saveError={save.error}
       onWords={onWords}
       onHeader={onHeader}
