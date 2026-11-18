@@ -14,6 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import type { MapContent, MapText, TextStyle } from "@/lib/bindings";
 import { ZONE_FONTS } from "../zones";
+import { SizeInput } from "./SizeInput";
 
 const FONT_LABELS = {
   serif: "maps.fonts.serif",
@@ -79,17 +80,12 @@ export function TextPanel({
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor={`${id}-size`}>{t("maps.zones.fontSize")}</Label>
-          <Input
+          <SizeInput
             id={`${id}-size`}
-            type="number"
             min={8}
             max={200}
             value={text.style.size ?? 28}
-            onChange={(event) => {
-              const size = Number(event.target.value);
-              if (size >= 8 && size <= 200) style({ size });
-            }}
-            className="h-8"
+            onChange={(size) => style({ size })}
           />
         </div>
       </div>
