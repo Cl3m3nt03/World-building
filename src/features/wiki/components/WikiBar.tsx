@@ -64,7 +64,7 @@ export function WikiBar() {
         params={{ worldId }}
         activeOptions={{ exact: true }}
         className={cn(
-          "truncate rounded font-wiki-heading text-base font-bold text-wiki-accent",
+          "truncate rounded-sm font-wiki-heading text-base font-bold text-wiki-accent",
           WIKI_FOCUS,
         )}
       >

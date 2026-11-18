@@ -11,7 +11,7 @@ import {
 import { Tabs } from "radix-ui";
 import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useUiStore } from "@/app/stores/ui";
+import { CORNER_RADIUS, useUiStore } from "@/app/stores/ui";
 import { type ThemePreference, useImposedThemeValue } from "@/app/theme";
 import { AppErrorMessage } from "@/components/AppErrorMessage";
 import { MiddleTruncate } from "@/components/MiddleTruncate";
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { LibrarySection } from "@/features/media/components/LibrarySection";
 import { isLanguage, LANGUAGES, type Language, type TranslationKey } from "@/i18n";
 import { openDialog as pickFolder } from "@/lib/dialogs";
@@ -33,6 +34,13 @@ const THEMES: { value: ThemePreference; label: TranslationKey }[] = [
   { value: "light", label: "settings.theme.light" },
   { value: "dark", label: "settings.theme.dark" },
   { value: "system", label: "settings.theme.system" },
+];
+
+/** The corners' presets (#616), in percent of the designed radii; « Doux » is the default. */
+const CORNER_PRESETS: { value: number; label: TranslationKey }[] = [
+  { value: 0, label: "settings.corners.square" },
+  { value: CORNER_RADIUS.default, label: "settings.corners.soft" },
+  { value: 150, label: "settings.corners.round" },
 ];
 
 const LANGUAGE_LABELS: Record<Language, TranslationKey> = {
@@ -113,7 +121,66 @@ function AppearanceSection() {
           onCheckedChange={(checked) => setTransparency(checked ? "on" : "off")}
         />
       </div>
+      <CornersSetting />
     </>
+  );
+}
+
+/**
+ * The corners of the whole interface (#616): three presets and a slider, in
+ * percent of the designed radii. Applied at once (app/theme.ts), saved once
+ * the slider settles.
+ */
+function CornersSetting() {
+  const { t } = useTranslation();
+  const cornerRadius = useUiStore((state) => state.cornerRadius);
+  const setCornerRadius = useUiStore((state) => state.setCornerRadius);
+  const sliderId = useId();
+  const hintId = useId();
+  const preset = CORNER_PRESETS.find((option) => option.value === cornerRadius);
+  const value = t("settings.corners.value", { percent: cornerRadius });
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-0.5">
+        <Label htmlFor={sliderId}>{t("settings.corners")}</Label>
+        <p id={hintId} className="text-xs text-muted-foreground">
+          {t("settings.corners.hint")}
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <ToggleGroup
+          type="single"
+          aria-label={t("settings.corners.presets")}
+          value={preset === undefined ? "" : String(preset.value)}
+          onValueChange={(next) => {
+            // A second click on the current preset keeps it.
+            if (next !== "") setCornerRadius(Number(next));
+          }}
+        >
+          {CORNER_PRESETS.map((option) => (
+            <ToggleGroupItem key={option.value} value={String(option.value)} className="px-3">
+              {t(option.label)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <input
+          id={sliderId}
+          type="range"
+          min={CORNER_RADIUS.min}
+          max={CORNER_RADIUS.max}
+          step={10}
+          value={cornerRadius}
+          aria-valuetext={value}
+          aria-describedby={hintId}
+          onChange={(event) => setCornerRadius(event.target.valueAsNumber)}
+          className="h-1.5 min-w-0 flex-1 cursor-pointer accent-primary"
+        />
+        <span aria-hidden className="w-12 text-right text-muted-foreground tabular-nums">
+          {value}
+        </span>
+      </div>
+    </div>
   );
 }
 

@@ -52,8 +52,12 @@ function ChapterOpening({ chapter, settings }: { chapter: Chapter; settings: Rea
   if (image && settings.chapterLayout === "titleOver") {
     return (
       <header className="reader-opening relative">
-        <AssetImage assetId={image} alt="" className="aspect-[3/1] w-full rounded object-cover" />
-        <div className="reader-over absolute inset-0 flex items-center justify-center rounded">
+        <AssetImage
+          assetId={image}
+          alt=""
+          className="aspect-[3/1] w-full rounded-sm object-cover"
+        />
+        <div className="reader-over absolute inset-0 flex items-center justify-center rounded-sm">
           {title}
         </div>
       </header>
@@ -62,7 +66,11 @@ function ChapterOpening({ chapter, settings }: { chapter: Chapter; settings: Rea
   return (
     <header className="reader-opening">
       {image && (
-        <AssetImage assetId={image} alt="" className="aspect-[3/1] w-full rounded object-cover" />
+        <AssetImage
+          assetId={image}
+          alt=""
+          className="aspect-[3/1] w-full rounded-sm object-cover"
+        />
       )}
       {title}
     </header>

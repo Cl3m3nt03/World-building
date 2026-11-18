@@ -36,6 +36,7 @@ const SETTINGS: AppSettings = {
     radioVolume: 70,
     radioMode: "loop",
     worldRail: false,
+    cornerRadius: 100,
   },
   recentWorlds: [],
   defaultWorldsDir: null,

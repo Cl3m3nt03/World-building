@@ -82,11 +82,13 @@
   /* A faint paper grain on the glass (an SVG noise tile, no image file). */
   --bz-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 0 0.1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 
-  /* Radii by rank: fields, buttons, panels, the big floating surfaces, islands. */
-  --bz-radius-sm: 6px;
-  --bz-radius-md: 10px;
-  --bz-radius-lg: 16px;
-  --bz-radius-xl: 22px;
+  /* Radii by rank: fields, buttons, panels, the big floating surfaces, islands.
+     Each is multiplied by the app's « Arrondi des coins » (#616), set on <html>
+     by app/theme.ts: 0 squares them, 1 keeps them as designed. Pills stay pills. */
+  --bz-radius-sm: calc(6px * var(--bz-radius-scale, 1));
+  --bz-radius-md: calc(10px * var(--bz-radius-scale, 1));
+  --bz-radius-lg: calc(16px * var(--bz-radius-scale, 1));
+  --bz-radius-xl: calc(22px * var(--bz-radius-scale, 1));
   --bz-radius-pill: 9999px;
   --bz-blur-panel: 18px;
   --bz-blur-backdrop: 24px;

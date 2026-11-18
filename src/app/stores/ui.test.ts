@@ -28,3 +28,15 @@ test("radio volume is rounded, clamped, and ignores non-numbers", () => {
   useUiStore.getState().setRadioVolume(Number.NaN);
   expect(useUiStore.getState().radioVolume).toBe(100);
 });
+
+test("the corner radius is rounded, clamped to 0–200 %, and ignores non-numbers (#616)", () => {
+  useUiStore.setState({ cornerRadius: 100 });
+  useUiStore.getState().setCornerRadius(37.4);
+  expect(useUiStore.getState().cornerRadius).toBe(37);
+  useUiStore.getState().setCornerRadius(500);
+  expect(useUiStore.getState().cornerRadius).toBe(200);
+  useUiStore.getState().setCornerRadius(-10);
+  expect(useUiStore.getState().cornerRadius).toBe(0);
+  useUiStore.getState().setCornerRadius(Number.NaN);
+  expect(useUiStore.getState().cornerRadius).toBe(0);
+});

@@ -132,7 +132,7 @@ export function AddCardsDialog({
                 const Icon = typeIcon(type?.icon ?? "shapes");
                 return (
                   <li key={card.id}>
-                    <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
+                    <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
                       <input
                         type="checkbox"
                         checked={chosen.has(card.id)}

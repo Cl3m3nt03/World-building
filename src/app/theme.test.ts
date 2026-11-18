@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
-import { initTheme, resolveTheme, useImposedTheme } from "./theme";
+import { useUiStore } from "./stores/ui";
+import { initTheme, resolveTheme, useImposedTheme, useThemeSync } from "./theme";
 
 describe("resolveTheme", () => {
   test("explicit preferences win over the system", () => {
@@ -30,5 +31,23 @@ describe("an imposed mode", () => {
     world.rerender({ theme: "dark" });
     world.unmount();
     expect(root.dataset.theme).toBe("light");
+  });
+});
+
+describe("the corner radius (#616)", () => {
+  const scale = () => document.documentElement.style.getPropertyValue("--bz-radius-scale");
+
+  test("is set on <html> before the first render, then follows the setting", () => {
+    useUiStore.setState({ cornerRadius: 40 });
+    initTheme();
+    expect(scale()).toBe("0.4");
+
+    renderHook(() => useThemeSync());
+    act(() => useUiStore.getState().setCornerRadius(0));
+    expect(scale()).toBe("0");
+    act(() => useUiStore.getState().setCornerRadius(150));
+    expect(scale()).toBe("1.5");
+    act(() => useUiStore.getState().setCornerRadius(100));
+    expect(scale()).toBe("1");
   });
 });

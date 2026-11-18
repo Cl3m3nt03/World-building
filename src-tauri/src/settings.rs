@@ -50,6 +50,11 @@ pub enum RadioMode {
 /// Default radio volume, in percent.
 pub const DEFAULT_RADIO_VOLUME: u8 = 70;
 
+/// Default corner radius, in percent of the designed radii (#616).
+pub const DEFAULT_CORNER_RADIUS: u8 = 100;
+/// Largest corner radius, in percent.
+pub const MAX_CORNER_RADIUS: u8 = 200;
+
 /// Preferences edited by the user in the settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -62,6 +67,9 @@ pub struct Preferences {
     pub radio_mode: RadioMode,
     /// Whether the world rail (V2) is shown on the left.
     pub world_rail: bool,
+    /// Corners of the whole interface, in percent of the designed radii
+    /// (0 = square, 100 = as designed, up to 200), #616.
+    pub corner_radius: u8,
 }
 
 impl Default for Preferences {
@@ -73,6 +81,7 @@ impl Default for Preferences {
             radio_volume: DEFAULT_RADIO_VOLUME,
             radio_mode: RadioMode::default(),
             world_rail: false,
+            corner_radius: DEFAULT_CORNER_RADIUS,
         }
     }
 }
@@ -156,6 +165,7 @@ struct RawPreferences {
     radio_volume: serde_json::Value,
     radio_mode: serde_json::Value,
     world_rail: bool,
+    corner_radius: serde_json::Value,
 }
 
 impl Default for RawPreferences {
@@ -174,17 +184,18 @@ impl Default for RawPreferences {
             radio_volume: serde_json::Value::Null,
             radio_mode: serde_json::Value::Null,
             world_rail,
+            corner_radius: serde_json::Value::Null,
         }
     }
 }
 
-/// A volume in percent, clamped to 0..=100; the default when not a number.
-fn radio_volume(value: &serde_json::Value) -> u8 {
+/// A percentage clamped to `0..=max`, rounded; `default` when not a number.
+fn percent(value: &serde_json::Value, max: u8, default: u8) -> u8 {
     match value.as_f64() {
         // Clamped first, so the cast cannot truncate.
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-        Some(volume) if volume.is_finite() => volume.clamp(0.0, 100.0).round() as u8,
-        _ => DEFAULT_RADIO_VOLUME,
+        Some(percent) if percent.is_finite() => percent.clamp(0.0, f64::from(max)).round() as u8,
+        _ => default,
     }
 }
 
@@ -197,14 +208,16 @@ impl<'de> Deserialize<'de> for Preferences {
             radio_volume: volume,
             radio_mode: mode,
             world_rail,
+            corner_radius,
         } = RawPreferences::deserialize(deserializer)?;
         Ok(Self {
             language,
             theme,
             transparency_effects,
-            radio_volume: radio_volume(&volume),
+            radio_volume: percent(&volume, 100, DEFAULT_RADIO_VOLUME),
             radio_mode: serde_json::from_value(mode).unwrap_or_default(),
             world_rail,
+            corner_radius: percent(&corner_radius, MAX_CORNER_RADIUS, DEFAULT_CORNER_RADIUS),
         })
     }
 }
@@ -590,6 +603,49 @@ mod tests {
             DEFAULT_RADIO_VOLUME
         );
         assert!(!dir.path().join(CORRUPTED_FILE).exists());
+    }
+
+    #[test]
+    fn the_corner_radius_is_read_loosely() {
+        let dir = tempfile::tempdir().unwrap();
+        let write = |json: &str| std::fs::write(dir.path().join(SETTINGS_FILE), json).unwrap();
+
+        // Settings written before the setting existed: the corners as designed.
+        write(r#"{ "preferences": { "theme": "dark" } }"#);
+        assert_eq!(
+            load(dir.path()).preferences.corner_radius,
+            DEFAULT_CORNER_RADIUS
+        );
+
+        write(r#"{ "preferences": { "cornerRadius": 0 } }"#);
+        assert_eq!(load(dir.path()).preferences.corner_radius, 0);
+
+        write(r#"{ "preferences": { "cornerRadius": 149.6 } }"#);
+        assert_eq!(load(dir.path()).preferences.corner_radius, 150);
+
+        write(r#"{ "preferences": { "theme": "dark", "cornerRadius": 900 } }"#);
+        let preferences = load(dir.path()).preferences;
+        assert_eq!(preferences.theme, Theme::Dark);
+        assert_eq!(preferences.corner_radius, MAX_CORNER_RADIUS);
+
+        write(r#"{ "preferences": { "cornerRadius": -5 } }"#);
+        assert_eq!(load(dir.path()).preferences.corner_radius, 0);
+
+        write(r#"{ "preferences": { "cornerRadius": "round" } }"#);
+        assert_eq!(
+            load(dir.path()).preferences.corner_radius,
+            DEFAULT_CORNER_RADIUS
+        );
+        assert!(!dir.path().join(CORRUPTED_FILE).exists());
+    }
+
+    #[test]
+    fn the_corner_radius_is_saved() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut settings = AppSettings::default();
+        settings.preferences.corner_radius = 40;
+        save(dir.path(), &settings).unwrap();
+        assert_eq!(load(dir.path()).preferences.corner_radius, 40);
     }
 
     #[test]

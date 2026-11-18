@@ -43,6 +43,7 @@ beforeEach(async () => {
       radioVolume: 70,
       radioMode: "loop",
       worldRail: false,
+      cornerRadius: 100,
     },
     recentWorlds: [],
     defaultWorldsDir: "D:/Mondes",
@@ -187,4 +188,34 @@ test("the library shows its images and removes one after a confirmation", async 
 
   expect(await screen.findByText(/La bibliothèque est vide/)).toBeTruthy();
   expect(calls).toContainEqual({ command: "remove_library_asset", payload: { id: BLASON.id } });
+});
+
+test("rounds the corners with a preset or the slider (#616)", () => {
+  useUiStore.setState({ cornerRadius: 100 });
+  renderDialog();
+
+  const presets = screen.getByRole("radiogroup", { name: "Arrondis proposés" });
+  expect(presets).toBeTruthy();
+  const slider = screen.getByRole("slider", { name: "Arrondi des coins" });
+  expect(slider.getAttribute("aria-valuetext")).toBe("100 %");
+  expect(screen.getByRole("radio", { name: "Doux" }).getAttribute("aria-checked")).toBe("true");
+
+  fireEvent.click(screen.getByRole("radio", { name: "Carré" }));
+  expect(useUiStore.getState().cornerRadius).toBe(0);
+  expect((slider as HTMLInputElement).value).toBe("0");
+  expect(slider.getAttribute("aria-valuetext")).toBe("0 %");
+
+  // A second click on the current preset keeps it.
+  fireEvent.click(screen.getByRole("radio", { name: "Carré" }));
+  expect(useUiStore.getState().cornerRadius).toBe(0);
+
+  fireEvent.change(slider, { target: { value: "120" } });
+  expect(useUiStore.getState().cornerRadius).toBe(120);
+  for (const name of ["Carré", "Doux", "Arrondi"]) {
+    expect(screen.getByRole("radio", { name }).getAttribute("aria-checked")).toBe("false");
+  }
+
+  fireEvent.click(screen.getByRole("radio", { name: "Arrondi" }));
+  expect(useUiStore.getState().cornerRadius).toBe(150);
+  useUiStore.setState({ cornerRadius: 100 });
 });

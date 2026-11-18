@@ -156,6 +156,8 @@ describe("M1: worlds, preferences and relocation", () => {
     await $("aria/Réglages").click();
     // The app settings open on Appearance; the language has its own section.
     await $("#theme-dark").click();
+    // Square corners (#616): saved with the language change below.
+    await $('//*[@role="dialog"]//*[@role="radio"][normalize-space()="Carré"]').click();
     await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="Langue"]').click();
     await $("#language-en").click();
     await closeDialog();
@@ -165,6 +167,14 @@ describe("M1: worlds, preferences and relocation", () => {
 
     await $("h1=Worlds").waitForDisplayed({ timeout: 30_000 });
     expect(await browser.execute(() => document.documentElement.dataset.theme)).toBe("dark");
+    // The corners are square from the first frame: the scale is on <html>
+    // and every rank radius follows it.
+    expect(
+      await browser.execute(() => [
+        document.documentElement.style.getPropertyValue("--bz-radius-scale"),
+        getComputedStyle(document.querySelector(".rounded-md") as Element).borderTopLeftRadius,
+      ]),
+    ).toEqual(["0", "0px"]);
     // The veil is measured on the last world's thumbnail (#528): over its
     // deep blue the theme's own veil keeps bare text AA. An image that could
     // not be measured would get the darker veil of a white one.
@@ -181,6 +191,7 @@ describe("M1: worlds, preferences and relocation", () => {
     // Back to the defaults for the other specs.
     await $("aria/Settings").click();
     await $("#theme-system").click();
+    await $('//*[@role="dialog"]//*[@role="radio"][normalize-space()="Soft"]').click();
     await $('//*[@role="dialog"]//*[@role="tab"][normalize-space()="Language"]').click();
     await $("#language-fr").click();
     await closeDialog();

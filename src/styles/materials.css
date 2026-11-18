@@ -3,7 +3,8 @@
  * « Thèmes riches »). The open world's theme sets <html data-material> and
  * <html data-ornament> (features/world-theme/useWorldMaterial.ts); Vélin and
  * « Aucun » set nothing, so the default look is tokens.css alone.
- * Each material fixes its surfaces, borders, shadows, radii, blur and grain in
+ * Each material fixes its surfaces, borders, shadows, radii (multiplied by the
+ * app's « Arrondi des coins », #616, like tokens.css), blur and grain in
  * both modes, and its text colours (≥ 4.5:1 on its surfaces composed on its
  * background, tested in world-theme/materials.test.ts). Its accent is computed
  * for it (`--bz-material-accent-*`, world-theme/materials.ts). The veil over the
@@ -29,10 +30,10 @@
   --bz-glass-inner: rgb(255 246 220 / 0.25);
   --bz-shadow-panel: 0 2px 0 rgb(90 60 20 / 0.12), 0 14px 30px -12px rgb(80 50 10 / 0.35);
   --bz-shadow-float: 0 3px 0 rgb(90 60 20 / 0.12), 0 24px 48px -16px rgb(80 50 10 / 0.42);
-  --bz-radius-sm: 3px;
-  --bz-radius-md: 4px;
-  --bz-radius-lg: 6px;
-  --bz-radius-xl: 8px;
+  --bz-radius-sm: calc(3px * var(--bz-radius-scale, 1));
+  --bz-radius-md: calc(4px * var(--bz-radius-scale, 1));
+  --bz-radius-lg: calc(6px * var(--bz-radius-scale, 1));
+  --bz-radius-xl: calc(8px * var(--bz-radius-scale, 1));
   --bz-blur-panel: 2px;
   --bz-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.3 0 0 0 0 0.08 0 0 0 0.13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --bz-accent: var(--bz-material-accent-light, #7a5414);
@@ -76,10 +77,10 @@
   --bz-glass-inner: rgb(255 255 255 / 0.35);
   --bz-shadow-panel: 0 18px 40px -18px rgb(10 40 70 / 0.35);
   --bz-shadow-float: 0 28px 60px -22px rgb(10 40 70 / 0.45);
-  --bz-radius-sm: 2px;
-  --bz-radius-md: 3px;
-  --bz-radius-lg: 3px;
-  --bz-radius-xl: 4px;
+  --bz-radius-sm: calc(2px * var(--bz-radius-scale, 1));
+  --bz-radius-md: calc(3px * var(--bz-radius-scale, 1));
+  --bz-radius-lg: calc(3px * var(--bz-radius-scale, 1));
+  --bz-radius-xl: calc(4px * var(--bz-radius-scale, 1));
   --bz-blur-panel: 26px;
   --bz-grain: none;
   --bz-accent: var(--bz-material-accent-light, #006b85);
@@ -122,10 +123,10 @@
   --bz-glass-inner: transparent;
   --bz-shadow-panel: 0 3px 0 rgb(0 0 0 / 0.18), 0 10px 18px -8px rgb(0 0 0 / 0.45);
   --bz-shadow-float: 0 4px 0 rgb(0 0 0 / 0.2), 0 18px 30px -10px rgb(0 0 0 / 0.5);
-  --bz-radius-sm: 1px;
-  --bz-radius-md: 2px;
-  --bz-radius-lg: 2px;
-  --bz-radius-xl: 3px;
+  --bz-radius-sm: calc(1px * var(--bz-radius-scale, 1));
+  --bz-radius-md: calc(2px * var(--bz-radius-scale, 1));
+  --bz-radius-lg: calc(2px * var(--bz-radius-scale, 1));
+  --bz-radius-xl: calc(3px * var(--bz-radius-scale, 1));
   --bz-blur-panel: 0px;
   --bz-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.35' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.13 0 0 0 0 0.12 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --bz-accent: var(--bz-material-accent-light, #7d5e1e);

@@ -39,20 +39,32 @@ function applyTransparency(transparency: TransparencyPreference): void {
   document.documentElement.dataset.transparency = transparency;
 }
 
+/**
+ * The corners of the whole interface (#616): every rank radius
+ * (`--bz-radius-sm` to `-xl`, tokens.css and materials.css) is multiplied by
+ * `--bz-radius-scale`, so 0 % squares them and 100 % keeps them as designed.
+ */
+function applyCornerRadius(percent: number): void {
+  document.documentElement.style.setProperty("--bz-radius-scale", String(percent / 100));
+}
+
 /** Sets the initial theme before the first render to avoid a flash. */
 export function initTheme(): void {
-  const { theme, transparency } = useUiStore.getState();
+  const { theme, transparency, cornerRadius } = useUiStore.getState();
   applyTheme(resolveTheme(theme, systemPrefersDark()));
   applyTransparency(transparency);
+  applyCornerRadius(cornerRadius);
 }
 
 /**
- * Applies the UI store's theme and transparency to <html data-theme> and
- * <html data-transparency>, and follows OS theme changes in "system" mode.
+ * Applies the UI store's theme, transparency and corners to <html data-theme>,
+ * <html data-transparency> and `--bz-radius-scale`, and follows OS theme
+ * changes in "system" mode.
  */
 export function useThemeSync(): void {
   const theme = useUiStore((state) => state.theme);
   const transparency = useUiStore((state) => state.transparency);
+  const cornerRadius = useUiStore((state) => state.cornerRadius);
 
   useEffect(() => {
     const query = window.matchMedia(DARK_QUERY);
@@ -65,6 +77,10 @@ export function useThemeSync(): void {
   useEffect(() => {
     applyTransparency(transparency);
   }, [transparency]);
+
+  useEffect(() => {
+    applyCornerRadius(cornerRadius);
+  }, [cornerRadius]);
 }
 
 function readTheme(): ResolvedTheme {

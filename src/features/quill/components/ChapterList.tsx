@@ -102,7 +102,7 @@ export function ChapterList({ outline, currentId, openDraftId, onOpenNote }: Pro
       <Link
         to="/world/$worldId/quill"
         params={{ worldId }}
-        className="flex items-center gap-1.5 self-start rounded text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <ArrowLeft aria-hidden className="size-4" />
         {t("quill.title")}

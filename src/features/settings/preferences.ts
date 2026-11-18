@@ -18,6 +18,7 @@ export async function loadPreferences(): Promise<Language> {
       radioVolume: preferences.radioVolume,
       radioMode: preferences.radioMode,
       worldRail: preferences.worldRail,
+      cornerRadius: preferences.cornerRadius,
     });
     return preferences.language;
   } catch (error) {
@@ -29,7 +30,8 @@ export async function loadPreferences(): Promise<Language> {
 function currentPreferences(): Preferences | undefined {
   const language = i18n.resolvedLanguage ?? i18n.language;
   if (!isLanguage(language)) return undefined;
-  const { theme, transparency, radioVolume, radioMode, worldRail } = useUiStore.getState();
+  const { theme, transparency, radioVolume, radioMode, worldRail, cornerRadius } =
+    useUiStore.getState();
   return {
     language,
     theme,
@@ -37,13 +39,20 @@ function currentPreferences(): Preferences | undefined {
     radioVolume,
     radioMode,
     worldRail,
+    cornerRadius,
   };
 }
 
-/** Volume changes come in bursts while dragging the slider: saved once it settles. */
-const VOLUME_SAVE_DELAY_MS = 400;
+/**
+ * Volume and corner changes come in bursts while dragging their slider:
+ * saved once they settle.
+ */
+const SLIDER_SAVE_DELAY_MS = 400;
 
-/** Saves the preferences whenever the theme, transparency, language or radio settings change. */
+/**
+ * Saves the preferences whenever the theme, transparency, corners, language
+ * or radio settings change.
+ */
 export function usePreferencesSync(): void {
   useEffect(() => {
     const save = () => {
@@ -54,7 +63,7 @@ export function usePreferencesSync(): void {
       });
     };
 
-    let volumeTimer: ReturnType<typeof setTimeout> | undefined;
+    let sliderTimer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = useUiStore.subscribe((state, previous) => {
       if (
         state.theme !== previous.theme ||
@@ -63,14 +72,17 @@ export function usePreferencesSync(): void {
         state.worldRail !== previous.worldRail
       ) {
         save();
-      } else if (state.radioVolume !== previous.radioVolume) {
-        clearTimeout(volumeTimer);
-        volumeTimer = setTimeout(save, VOLUME_SAVE_DELAY_MS);
+      } else if (
+        state.radioVolume !== previous.radioVolume ||
+        state.cornerRadius !== previous.cornerRadius
+      ) {
+        clearTimeout(sliderTimer);
+        sliderTimer = setTimeout(save, SLIDER_SAVE_DELAY_MS);
       }
     });
     i18n.on("languageChanged", save);
     return () => {
-      clearTimeout(volumeTimer);
+      clearTimeout(sliderTimer);
       unsubscribe();
       i18n.off("languageChanged", save);
     };
