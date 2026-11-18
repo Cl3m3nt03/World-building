@@ -18,8 +18,15 @@ const WORLD: WorldInfo = {
   description: "",
   mainImage: null,
   theme: { kind: "default" },
-  preferences: { entityDetection: true, autoMentionLinks: true, animateNewLinks: true },
-  calendar: { eras: [], months: Array.from({ length: 12 }, () => ({ name: "", days: 30 })) },
+  preferences: {
+    entityDetection: true,
+    autoMentionLinks: true,
+    animateNewLinks: true,
+  },
+  calendar: {
+    eras: [],
+    months: Array.from({ length: 12 }, () => ({ name: "", days: 30 })),
+  },
   storageLimit: null,
   path: "C:\\Mondes\\Eldefleur",
   schemaVersion: 6,
@@ -112,14 +119,13 @@ test("from the media library, the Home tab leads back to Home", async () => {
   await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/home"));
 });
 
-test("the World tab clicked while a card is open keeps the card", async () => {
+test("the World tab clicked while a card is open leads back to the World tab", async () => {
   const router = await renderAt("/world/demo/world/card/aragorn");
   await screen.findByLabelText("Nom de la fiche");
 
   fireEvent.click(screen.getByRole("tab", { name: "Monde" }));
 
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  expect(router.state.location.pathname).toBe("/world/demo/world/card/aragorn");
+  await waitFor(() => expect(router.state.location.pathname).toBe("/world/demo/world"));
 });
 
 test("a tab's page comes from the right going to a later tab, from the left going back", () => {
