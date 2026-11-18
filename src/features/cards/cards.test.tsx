@@ -493,7 +493,7 @@ test("the trash restores, deletes for good and empties after confirmation", asyn
   expect(callsOf("delete_document")).toHaveLength(0);
 
   fireEvent.click(screen.getByRole("button", { name: "Supprimer définitivement Saroumane" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Supprimer définitivement" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Supprimer" }));
   await waitFor(() => expect(callsOf("delete_document")[0]?.payload).toEqual({ id: "saruman" }));
 
   await screen.findByRole("button", { name: "Restaurer Smaug" });

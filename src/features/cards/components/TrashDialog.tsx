@@ -129,7 +129,10 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
                   />
                   {confirmDelete === item.id ? (
                     <>
-                      <p role="alert" className="min-w-0 flex-1 truncate text-sm text-destructive">
+                      <p
+                        role="alert"
+                        className="min-w-0 flex-1 text-sm break-words text-destructive"
+                      >
                         {t("trash.deleteConfirm", { name: item.title })}
                       </p>
                       {/* The safe choice takes the focus: Enter keeps the item. */}
@@ -152,7 +155,7 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
                           remove.mutate(item.id, { onSuccess: () => setConfirmDelete(null) })
                         }
                       >
-                        {t("trash.delete")}
+                        {t("trash.deleteConfirmAction")}
                       </Button>
                     </>
                   ) : (

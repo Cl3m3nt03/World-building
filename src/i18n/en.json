@@ -373,6 +373,7 @@
   "trash.emptyConfirm_other": "Delete the {{count}} items in the trash for good?",
   "trash.emptyForGood": "Empty for good",
   "trash.deleteConfirm": "Delete “{{name}}” for good?",
+  "trash.deleteConfirmAction": "Delete",
   "trash.toast.moved": "“{{title}}” moved to the trash",
   "trash.toast.undo": "Undo",
   "trash.toast.undoAlt": "Undo: take “{{title}}” out of the trash",

@@ -120,7 +120,8 @@ export function WorldLayout() {
       </TabsContent>
       <CardTypesDialog open={cardTypesOpen} onOpenChange={setCardTypesOpen} />
       {world && <WorldSettingsDialog world={world} />}
-      <Toaster />
+      {/* One per world: switching worlds drops the notifications (and their undo). */}
+      <Toaster key={worldId} />
     </Tabs>
   );
 }
